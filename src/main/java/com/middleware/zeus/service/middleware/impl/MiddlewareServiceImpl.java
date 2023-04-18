@@ -1115,14 +1115,27 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             if (resourceQuotaDo.getCpu() != null && resourceQuotaDo.getCpu().getRequest() != null && resourceQuotaDo.getCpu().getUsed() != null){
                 memory = map.get(MEMORY) <= resourceQuotaDo.getMemory().getRequest() - resourceQuotaDo.getMemory().getUsed();
             }
-            for (String key : map.keySet()){
-                if (key.equals(CPU) || key.equals(MEMORY)){
+            for (String key : map.keySet()) {
+                if (key.equals(CPU) || key.equals(MEMORY)) {
                     continue;
                 }
-                if (!CollectionUtils.isEmpty(resourceQuotaDo.getStorageList())){
-                    Map<String, QuotaBase> storageQuota = resourceQuotaDo.getStorageList().stream().collect(Collectors.toMap(StorageQuota::getName, sq -> sq.getStorage()));
-                    if (storageQuota.containsKey(key) && storage){
-                        storage = map.get(key) <= storageQuota.get(key).getRequest() - storageQuota.get(key).getUsed();
+                if (!CollectionUtils.isEmpty(resourceQuotaDo.getStorageList())) {
+                    Map<String, QuotaBase> storageQuota = resourceQuotaDo.getStorageList().stream()
+                        .collect(Collectors.toMap(StorageQuota::getName, StorageQuota::getStorage));
+                    String[] scNames;
+                    Double storageRequest = map.get(key);
+                    if (key.contains(",")) {
+                        storageRequest = storageRequest / 2;
+                        scNames = key.split(",");
+                    } else {
+                        scNames = new String[1];
+                        scNames[0] = key;
+                    }
+                    for (String scName : scNames) {
+                        if (storageQuota.containsKey(scName) && storage) {
+                            storage = storageRequest <= storageQuota.get(scName).getRequest()
+                                - storageQuota.get(scName).getUsed();
+                        }
                     }
                 }
             }
