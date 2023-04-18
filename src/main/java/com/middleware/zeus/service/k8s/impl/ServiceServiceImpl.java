@@ -192,7 +192,7 @@ public class ServiceServiceImpl implements ServiceService {
         String svc0 = middlewareName + "namesrv-0." + middlewareName + "namesrv-headless-svc." + namespace + ":9876";
         String svc1 = middlewareName + "namesrv-1." + middlewareName + "namesrv-headless-svc." + namespace + ":9876";
         ServicePortDTO servicePortDTO0 = new ServicePortDTO();
-        servicePortDTO0.setServicePurpose("读写");
+        servicePortDTO0.setServicePurpose("服务连接");
         servicePortDTO0.setServiceName("namesrv-headless-svc");
         servicePortDTO0.setInternalAddress(svc0 + ";" + svc1);
         List<ServicePortDTO> list = new ArrayList<>();
