@@ -146,7 +146,7 @@ public class MiddlewareServicePurposeUtil {
         if (serviceName.contains("manager-svc")) {
             return "管理页面";
         } else if (serviceName.contains("external")) {
-            return "服务连接";
+            return "集群外访问";
         } else if (serviceName.equals(middlewareName + "-svc")) {
             return "服务连接";
         } else {
