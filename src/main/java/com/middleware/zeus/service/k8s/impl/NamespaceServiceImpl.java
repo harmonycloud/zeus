@@ -6,6 +6,7 @@ import com.middleware.caas.common.model.QuotaBase;
 import com.middleware.caas.common.model.ResourceQuotaDo;
 import com.middleware.caas.common.model.StorageDto;
 import com.middleware.caas.common.model.StorageQuota;
+import com.middleware.caas.common.model.middleware.StorageClassInfo;
 import com.middleware.caas.common.model.user.ProjectNamespaceDo;
 import com.middleware.zeus.annotation.Skyview;
 import com.middleware.zeus.bean.user.BeanProjectNamespace;
@@ -267,8 +268,21 @@ public class NamespaceServiceImpl implements NamespaceService {
                 .anyMatch(storageClassInfo -> storageQuotaMap.containsKey(storageClassInfo.getName())))
             .collect(Collectors.toList());
 
-        for (StorageDto storageDto : storageDtoList){
-            storageDto.setQuota(storageQuotaMap.get(storageDto.getStorageClassList().get(0).getName()));
+        for (StorageDto storageDto : storageDtoList) {
+            double requestStorage = 0.0;
+            double usedStorage = 0.0;
+            for (StorageClassInfo sc : storageDto.getStorageClassList()) {
+                if (storageQuotaMap.containsKey(sc.getName())) {
+                    QuotaBase quotaBase = storageQuotaMap.get(sc.getName());
+                    if (quotaBase.getRequest() != null) {
+                        requestStorage += quotaBase.getRequest();
+                    }
+                    if (quotaBase.getUsed() != null) {
+                        usedStorage += storageQuotaMap.get(sc.getName()).getUsed();
+                    }
+                }
+            }
+            storageDto.setQuota(new QuotaBase().setRequest(requestStorage).setUsed(usedStorage));
         }
 
         return storageDtoList;
