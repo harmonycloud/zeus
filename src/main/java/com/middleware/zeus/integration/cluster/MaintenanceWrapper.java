@@ -1,13 +1,16 @@
 package com.middleware.zeus.integration.cluster;
 
-import static com.middleware.caas.common.constants.NameConstant.FOUR_ZERO_FOUR;
+import static com.middleware.caas.common.constants.NameConstant.*;
 import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
+import com.middleware.tool.collection.MapUtils;
 import com.middleware.zeus.integration.cluster.bean.MaintenanceList;
 import com.middleware.zeus.util.K8sClient;
 import lombok.extern.slf4j.Slf4j;
@@ -63,6 +66,11 @@ public class MaintenanceWrapper {
         return maintenanceList.getItems();
     }
 
+    public List<Maintenance> listByLabels(String clusterId, String namespace, Map<String, String> labels, String action){
+        List<Maintenance> maintenanceList = listByLabels(clusterId, namespace, labels);
+        return maintenanceList = maintenanceList.stream().filter(mt -> mt.getSpec().getAction().equals(action)).collect(Collectors.toList());
+    }
+
     /**
      * 创建运维组件
      * 
@@ -96,6 +104,10 @@ public class MaintenanceWrapper {
 
     public void delete(String clusterId, String namespace, String name) throws IOException {
         K8sClient.getClient(clusterId).customResource(CONTEXT).delete(namespace, name);
+    }
+
+    public void update(String clusterId, String namespace,Maintenance mt) throws IOException {
+        K8sClient.getClient(clusterId).customResource(CONTEXT).createOrReplace(namespace, MapUtils.objectToMap(mt));
     }
 
 }

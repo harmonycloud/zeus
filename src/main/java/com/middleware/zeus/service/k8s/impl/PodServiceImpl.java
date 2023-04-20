@@ -492,44 +492,70 @@ public class PodServiceImpl implements PodService {
     public Map<String, MigrateInfo> migrateStatus(String clusterId, String namespace, String middlewareName) {
         Map<String, String> labels = new HashMap<>();
         labels.put(APP, middlewareName);
-        List<Maintenance> maintenanceList = maintenanceWrapper.listByLabels(clusterId, namespace, labels);
-        if (maintenanceList == null) {
-            maintenanceList = new ArrayList<>();
-        }
-        maintenanceList = maintenanceList.stream().filter(mt -> MIGRATE.equals(mt.getSpec().getAction())).collect(Collectors.toList());
+        List<Maintenance> maintenanceList = maintenanceWrapper.listByLabels(clusterId, namespace, labels, MIGRATE);
         HashMap<String, MigrateInfo> resultMap = new HashMap<>();
-        maintenanceList.forEach(mt -> {
-            if (mt.getStatus() != null && !CollectionUtils.isEmpty(mt.getStatus().getConditions())) {
-                if (mt.getStatus() == null || CollectionUtils.isEmpty(mt.getStatus().getConditions())) {
-                    return;
-                }
-                Map<String, String> conMap = mt.getStatus().getConditions().get(0);
-                Date mtTime;
-                try {
-                    mtTime = DateUtil.timeFormat.parse(conMap.get("migrateTimestamp"));
-                } catch (ParseException e) {
-                    log.error("获取{}迁移时间失败", mt.getMetadata().getName());
-                    return;
-                }
-                MigrateInfo migrateInfo = resultMap.get(conMap.get(POD));
-                if (migrateInfo == null || migrateInfo.getMigrateTimestamp().before(mtTime)) {
-                    MigrateInfo mtInfo = new MigrateInfo()
-                            .setMigrateTimestamp(mtTime)
-                            .setReason(conMap.get("reason"));
-                    if (RUNNING.equalsIgnoreCase(conMap.get(STATUS))) {
-                        mtInfo.setStatus(MIGRATING);
-                    } else if (FAILED.equalsIgnoreCase(conMap.get(STATUS))) {
-                        mtInfo.setStatus(MIGRATE_FAILED);
-                    } else if (SUCCEED.equalsIgnoreCase(conMap.get(STATUS))) {
-                        mtInfo.setStatus(MIGRATE_SUCCEED);
-                    } else {
-                        mtInfo.setStatus("Unknown");
-                    }
-                    resultMap.put(conMap.get(POD), mtInfo);
-                }
+        maintenanceList.stream().filter(mt -> mt.getStatus() != null && !CollectionUtils.isEmpty(mt.getStatus().getConditions()) && mt.getStatus().getConditions().get(0).containsKey("migrateTimestamp")).sorted((o1, o2) -> {
+            try {
+                Date date1 = DateUtil.timeFormat.parse(o1.getStatus().getConditions().get(0).get("migrateTimestamp"));
+                Date date2 = DateUtil.timeFormat.parse(o2.getStatus().getConditions().get(0).get("migrateTimestamp"));
+                return date1.before(date2) ? -1 : 1;
+            } catch (Exception e) {
+                return 0;
             }
+        }).forEach(mt -> {
+            Map<String, String> conMap = mt.getStatus().getConditions().get(0);
+            String podName = conMap.get(POD);
+            if (podName == null) {
+                return;
+            }
+            if (mt.getMetadata() != null && !CollectionUtils.isEmpty(mt.getMetadata().getLabels())
+                && mt.getMetadata().getLabels().containsKey("screen")) {
+                resultMap.remove(podName);
+                return;
+            }
+            Date mtTime;
+            try {
+                mtTime = DateUtil.timeFormat.parse(mt.getStatus().getConditions().get(0).get("migrateTimestamp"));
+            } catch (ParseException e) {
+                log.error("获取{}迁移时间失败", mt.getMetadata().getName());
+                return;
+            }
+            MigrateInfo mtInfo = new MigrateInfo()
+                    .setMigrateTimestamp(mtTime)
+                    .setReason(conMap.get("reason"))
+                    .setMtName(mt.getMetadata().getName());
+            if (RUNNING.equalsIgnoreCase(conMap.get(STATUS))) {
+                mtInfo.setStatus(MIGRATING);
+            } else if (FAILED.equalsIgnoreCase(conMap.get(STATUS))) {
+                mtInfo.setStatus(MIGRATE_FAILED);
+            } else if (SUCCEED.equalsIgnoreCase(conMap.get(STATUS))) {
+                mtInfo.setStatus(MIGRATE_SUCCEED);
+            } else {
+                mtInfo.setStatus("Unknown");
+            }
+            resultMap.put(conMap.get(POD), mtInfo);
+
         });
         return resultMap;
+    }
+
+    @Override
+    public void screenMigrate(String clusterId, String namespace, String middlewareName, String mtName) throws IOException {
+        Map<String, String> labels = new HashMap<>();
+        labels.put(APP, middlewareName);
+        List<Maintenance> maintenanceList = maintenanceWrapper.listByLabels(clusterId, namespace, labels, MIGRATE);
+        maintenanceList = maintenanceList.stream().filter(mt -> mtName.equals(mt.getMetadata().getName())).collect(Collectors.toList());
+        if (maintenanceList.size() == 0) {
+            return;
+        }
+        Maintenance mt = maintenanceList.get(0);
+        Map<String, String> mtLabel = mt.getMetadata().getLabels();
+        if (mtLabel == null) {
+            mtLabel = new HashMap<>();
+        }
+        mtLabel.put("screen", "true");
+        mt.getMetadata().setLabels(mtLabel);
+        maintenanceWrapper.update(clusterId, namespace, mt);
     }
 
     private List<PodInfo> addPodExtraRole(String clusterId, String namespace, String middlewareName, String type, List<PodInfo> podInfoList, MiddlewareCR mw) {
