@@ -42,7 +42,7 @@ public class NodeController {
     })
     @GetMapping("/zone")
     public BaseResult<List<Node>> listActive(@PathVariable("clusterId") String clusterId,
-                                             @RequestParam(value = "zone", required = false) String zone) {
+                                             @RequestParam(value = "zone") String zone) {
         return BaseResult.ok(nodeService.listActive(clusterId, zone));
     }
 

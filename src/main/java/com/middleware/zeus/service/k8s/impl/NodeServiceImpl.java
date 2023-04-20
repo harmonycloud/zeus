@@ -5,6 +5,7 @@ import java.math.RoundingMode;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.middleware.caas.common.constants.LabelConstant;
 import com.middleware.caas.common.constants.NameConstant;
 import com.middleware.caas.common.enums.middleware.ResourceUnitEnum;
 import com.middleware.tool.date.DateUtils;
@@ -71,7 +72,7 @@ public class NodeServiceImpl implements NodeService {
     @Override
     public List<Node> listActive(String clusterId, String zone) {
         HashMap<String, String> label = new HashMap<>();
-        if (!StringUtils.isEmpty(zone)) {
+        if (!StringUtils.isEmpty(zone) && !zone.equalsIgnoreCase("none")) {
             label.put(ZONE, zone);
         }
         List<io.fabric8.kubernetes.api.model.Node> nodes = nodeWrapper.list(clusterId, label);
@@ -168,11 +169,22 @@ public class NodeServiceImpl implements NodeService {
 
     @Override
     public List<Node> simpleConvertToDto(List<io.fabric8.kubernetes.api.model.Node> nodes) {
-        return nodes.stream().map(node -> {
+        return nodes.stream().filter(node -> {
+            // 过滤非work节点
+            if (node.getMetadata() != null && node.getMetadata().getLabels() != null
+                && node.getMetadata().getLabels().containsKey(LabelConstant.WORK_NODE_LABEL_KEY)) {
+                return true;
+            }
+            return false;
+        }).map(node -> {
             String nodeName = node.getMetadata().getName();
             String IP = node.getStatus().getAddresses().stream().filter(
                     add -> "InternalIP".equals(add.getType())).collect(Collectors.toList()).get(0).getAddress();
-            return new Node().setName(nodeName).setIp(IP);
+            Boolean schedulable = true;
+            if (node.getSpec() != null && node.getSpec().getUnschedulable() != null) {
+                schedulable = !node.getSpec().getUnschedulable();
+            }
+            return new Node().setName(nodeName).setIp(IP).setScheduable(schedulable);
         }).collect(Collectors.toList());
     }
 
