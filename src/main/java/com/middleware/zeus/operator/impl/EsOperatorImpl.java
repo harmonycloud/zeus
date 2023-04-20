@@ -96,8 +96,12 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
 
         // es参数
         if (middleware.getEsParam() != null){
-            // 端口
             EsParam param = middleware.getEsParam();
+            // 主机网络
+            if (param.getHostNetwork() !=null && values.containsKey("hostNetwork")) {
+                values.put("hostNetwork",param.getHostNetwork());
+            }
+            // 端口
             JSONObject port = values.getJSONObject("port");
             if (param != null && port != null) {
                 if (param.getHttpPort() != null) {
