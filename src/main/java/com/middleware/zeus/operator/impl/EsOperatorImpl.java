@@ -200,11 +200,16 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
     }
 
     private void convertEsParamByHelmChart(Middleware middleware, JSONObject values) {
-        // 端口
         EsParam esParam = middleware.getEsParam();
         if (esParam == null) {
             esParam = new EsParam();
         }
+        // 主机网络
+        esParam.setHostNetwork(false);
+        if (values.containsKey("hostNetwork")) {
+            esParam.setHostNetwork(values.getBoolean("hostNetwork"));
+        }
+        // 端口
         JSONObject port = values.getJSONObject("port");
         
         Integer esExporterPort = port == null ? 19114 : port.getInteger("esExporterPort");
