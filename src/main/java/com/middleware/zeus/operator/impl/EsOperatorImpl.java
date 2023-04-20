@@ -4,11 +4,14 @@ import static com.middleware.caas.common.constants.NameConstant.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.middleware.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.middleware.tool.numeric.ResourceCalculationUtil;
 import com.middleware.caas.common.model.middleware.*;
 import com.middleware.zeus.operator.api.EsOperator;
 import com.middleware.zeus.operator.miiddleware.AbstractEsOperator;
+import com.middleware.zeus.service.k8s.PodService;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 
 import com.alibaba.fastjson.JSONObject;
@@ -28,6 +31,8 @@ import io.fabric8.kubernetes.api.model.Quantity;
  */
 @Operator(paramTypes4One = Middleware.class)
 public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
+    @Autowired
+    private PodService podService;
 
     @Override
     public void replaceValues(Middleware middleware, MiddlewareClusterDTO cluster, JSONObject values) {
@@ -454,6 +459,35 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
 
     @Override
     public List<IngressDTO> listHostNetworkAddress(String clusterId, String namespace, String middlewareName, String type) {
-        return null;
+        JSONObject values = helmChartService.getInstalledValues(middlewareName, namespace, clusterService.findById(clusterId));
+        if (values == null) {
+            return Collections.emptyList();
+        }
+        if (values.containsKey("hostNetwork") && values.getBoolean("hostNetwork")) {
+            List<PodInfo> podInfoList = podService.listMiddlewarePods(clusterId, namespace, middlewareName, MiddlewareTypeEnum.ELASTIC_SEARCH.getType());
+            List<IngressDTO> resultList = new ArrayList<>();
+            podInfoList.forEach(podInfo -> {
+                IngressDTO httpIngressDTO = new IngressDTO()
+                        .setServicePurpose(podInfo.getPodName())
+                        .setExposeIP(podInfo.getHostIp())
+                        .setExposePort("9200");
+                if (values.containsKey("port") && values.getJSONObject("port").containsKey("esHttpPort")) {
+                    String httpPort = values.getJSONObject("port").getString("esHttpPort");
+                    httpIngressDTO.setExposePort(httpPort);
+                }
+                resultList.add(httpIngressDTO);
+                IngressDTO tcpIngressDTO = new IngressDTO()
+                        .setServicePurpose(podInfo.getPodName())
+                        .setExposeIP(podInfo.getHostIp())
+                        .setExposePort("9300");
+                if (values.containsKey("port") && values.getJSONObject("port").containsKey("esTcpPort")) {
+                    String tcpPort = values.getJSONObject("port").getString("esTcpPort");
+                    httpIngressDTO.setExposePort(tcpPort);
+                }
+                resultList.add(tcpIngressDTO);
+            });
+            return resultList;
+        }
+        return Collections.emptyList();
     }
 }
