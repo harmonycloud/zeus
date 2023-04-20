@@ -472,6 +472,9 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
             List<PodInfo> podInfoList = podService.listMiddlewarePods(clusterId, namespace, middlewareName, MiddlewareTypeEnum.ELASTIC_SEARCH.getType());
             List<IngressDTO> resultList = new ArrayList<>();
             podInfoList.forEach(podInfo -> {
+                if (!"master".equals(podInfo.getRole())) {
+                    return;
+                }
                 IngressDTO httpIngressDTO = new IngressDTO()
                         .setServicePurpose(podInfo.getPodName())
                         .setExposeIP(podInfo.getHostIp())
@@ -487,7 +490,7 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
                         .setExposePort("9300");
                 if (values.containsKey("port") && values.getJSONObject("port").containsKey("esTcpPort")) {
                     String tcpPort = values.getJSONObject("port").getString("esTcpPort");
-                    httpIngressDTO.setExposePort(tcpPort);
+                    tcpIngressDTO.setExposePort(tcpPort);
                 }
                 resultList.add(tcpIngressDTO);
             });
