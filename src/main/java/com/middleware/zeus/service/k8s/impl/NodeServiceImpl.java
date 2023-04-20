@@ -180,11 +180,11 @@ public class NodeServiceImpl implements NodeService {
             String nodeName = node.getMetadata().getName();
             String IP = node.getStatus().getAddresses().stream().filter(
                     add -> "InternalIP".equals(add.getType())).collect(Collectors.toList()).get(0).getAddress();
-            Boolean schedulable = true;
+            Boolean scheduable = true;
             if (node.getSpec() != null && node.getSpec().getUnschedulable() != null) {
-                schedulable = !node.getSpec().getUnschedulable();
+                scheduable = !node.getSpec().getUnschedulable();
             }
-            return new Node().setName(nodeName).setIp(IP).setScheduable(schedulable);
+            return new Node().setName(nodeName).setIp(IP).setScheduable(scheduable);
         }).collect(Collectors.toList());
     }
 
