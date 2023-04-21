@@ -65,7 +65,7 @@ public class RoleController {
     @ApiOperation(value = "查询管理类角色可分配menu列表", notes = "查询管理类角色可分配menu列表")
     @ApiImplicitParams({
     })
-    @PutMapping("/menu")
+    @GetMapping("/menu")
     public BaseResult menu() {
         return BaseResult.ok(roleService.menu());
     }
