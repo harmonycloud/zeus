@@ -5,6 +5,7 @@ import java.math.RoundingMode;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.middleware.caas.common.constants.LabelConstant;
 import com.middleware.caas.common.constants.NameConstant;
 import com.middleware.caas.common.enums.middleware.ResourceUnitEnum;
 import com.middleware.tool.date.DateUtils;
@@ -71,7 +72,7 @@ public class NodeServiceImpl implements NodeService {
     @Override
     public List<Node> listActive(String clusterId, String zone) {
         HashMap<String, String> label = new HashMap<>();
-        if (!StringUtils.isEmpty(zone)) {
+        if (!StringUtils.isEmpty(zone) && !zone.equalsIgnoreCase("none")) {
             label.put(ZONE, zone);
         }
         List<io.fabric8.kubernetes.api.model.Node> nodes = nodeWrapper.list(clusterId, label);
@@ -133,7 +134,25 @@ public class NodeServiceImpl implements NodeService {
     @Override
     public List<Node> convertToDto(List<io.fabric8.kubernetes.api.model.Node> nodes){
         return nodes.stream().map(no -> {
-            Node node = new Node().setName(no.getMetadata().getName()).setLabels(no.getMetadata().getLabels());
+            Node node = new Node().setName(no.getMetadata().getName()).setLabels(no.getMetadata().getLabels()).setScheduable(true);
+            // scheduable
+            if (no.getSpec() != null && no.getSpec().getUnschedulable() != null) {
+                node.setScheduable(!no.getSpec().getUnschedulable());
+            }
+            // role
+            if (no.getMetadata() != null && !CollectionUtils.isEmpty(no.getMetadata().getLabels())) {
+                Map<String, String> labels = no.getMetadata().getLabels();
+                StringBuilder sb = new StringBuilder();
+                for (String key : labels.keySet()) {
+                    if (key.startsWith("node-role.kubernetes.io/")) {
+                        sb.append(key.split("/")[1]).append(",");
+                    }
+                }
+                if (sb.length() > 0) {
+                    sb.deleteCharAt(sb.length() - 1);
+                }
+                node.setRole(sb.length() == 0 ? null : sb.toString());
+            }
             // taint
             if (!CollectionUtils.isEmpty(no.getSpec().getTaints())) {
                 node.setTaints(JSONArray.parseArray(JSONArray.toJSONString(no.getSpec().getTaints()), Taint.class));
@@ -168,11 +187,22 @@ public class NodeServiceImpl implements NodeService {
 
     @Override
     public List<Node> simpleConvertToDto(List<io.fabric8.kubernetes.api.model.Node> nodes) {
-        return nodes.stream().map(node -> {
+        return nodes.stream().filter(node -> {
+            // 过滤非work节点
+            if (node.getMetadata() != null && node.getMetadata().getLabels() != null
+                && node.getMetadata().getLabels().containsKey(LabelConstant.WORK_NODE_LABEL_KEY)) {
+                return true;
+            }
+            return false;
+        }).map(node -> {
             String nodeName = node.getMetadata().getName();
             String IP = node.getStatus().getAddresses().stream().filter(
                     add -> "InternalIP".equals(add.getType())).collect(Collectors.toList()).get(0).getAddress();
-            return new Node().setName(nodeName).setIp(IP);
+            Boolean scheduable = true;
+            if (node.getSpec() != null && node.getSpec().getUnschedulable() != null) {
+                scheduable = !node.getSpec().getUnschedulable();
+            }
+            return new Node().setName(nodeName).setIp(IP).setScheduable(scheduable);
         }).collect(Collectors.toList());
     }
 
@@ -198,6 +228,8 @@ public class NodeServiceImpl implements NodeService {
             nodeRs.setNodeName(node.getName());
             nodeRs.setStatus(node.getStatus());
             nodeRs.setCreateTime(node.getCreateTime());
+            nodeRs.setScheduable(node.getScheduable());
+            nodeRs.setRole(node.getRole());
             // 设置cpu
             nodeRs.setCpuUsed(nodeCpuUsed.getOrDefault(node.getName(), null));
             nodeRs.setCpuTotal(nodeCpuTotal.getOrDefault(node.getName(), null));

@@ -6,6 +6,7 @@ import com.middleware.caas.common.model.middleware.PodMigrateDTO;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
 import com.middleware.zeus.integration.cluster.bean.MigrateInfo;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -141,4 +142,14 @@ public interface PodService {
      * @param middlewareName 中间件名称
      */
     Map<String, MigrateInfo> migrateStatus(String clusterId, String namespace, String middlewareName);
+
+    /**
+     * 屏蔽迁移信息
+     *
+     * @param clusterId      集群id
+     * @param namespace      命名空间
+     * @param middlewareName 中间件名称
+     * @param mtName maintenance名称
+     */
+    void screenMigrate(String clusterId, String namespace, String middlewareName, String mtName) throws IOException;
 }

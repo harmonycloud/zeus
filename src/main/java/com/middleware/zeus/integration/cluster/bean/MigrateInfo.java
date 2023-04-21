@@ -23,4 +23,7 @@ public class MigrateInfo {
 
     @ApiModelProperty("迁移时间")
     private Date migrateTimestamp;
+
+    @ApiModelProperty("maintenance名称")
+    private String mtName;
 }

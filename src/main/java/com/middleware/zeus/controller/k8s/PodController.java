@@ -12,6 +12,8 @@ import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+
 /**
  * @author dengyulong
  * @date 2021/03/23
@@ -106,5 +108,21 @@ public class PodController {
                               @PathVariable("namespace") String namespace,
                               @PathVariable("middlewareName") String middlewareName) {
         return BaseResult.ok(podService.migrateStatus(clusterId, namespace, middlewareName));
+    }
+
+    @ApiOperation(value = "屏蔽迁移信息", notes = "屏蔽迁移信息")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "mtName", value = "maintenance名称", paramType = "query", dataTypeClass = String.class)
+    })
+    @DeleteMapping("migrate")
+    public BaseResult screenMigrate(@PathVariable("clusterId") String clusterId,
+                                    @PathVariable("namespace") String namespace,
+                                    @PathVariable("middlewareName") String middlewareName,
+                                    @RequestParam("mtName") String mtName) throws IOException {
+        podService.screenMigrate(clusterId, namespace, middlewareName, mtName);
+        return BaseResult.ok();
     }
 }
