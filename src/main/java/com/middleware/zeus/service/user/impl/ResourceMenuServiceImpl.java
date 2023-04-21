@@ -11,7 +11,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -53,5 +55,22 @@ public class ResourceMenuServiceImpl implements ResourceMenuService {
             }
             return resourceMenuDto;
         }).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ResourceMenuDto> convertMenu(List<ResourceMenuDto> resourceMenuDtoList) {
+        Map<Integer, List<ResourceMenuDto>> resourceMenuDtoMap =
+                resourceMenuDtoList.stream().collect(Collectors.groupingBy(ResourceMenuDto::getParentId));
+        List<ResourceMenuDto> firstMenuList = resourceMenuDtoMap.get(0);
+        resourceMenuDtoMap.remove(0);
+        firstMenuList.forEach(firstMenu -> {
+            if (!resourceMenuDtoMap.containsKey(firstMenu.getWeight())) {
+                return;
+            }
+            firstMenu.setSubMenu(resourceMenuDtoMap.get(firstMenu.getWeight()));
+            Collections.sort(firstMenu.getSubMenu());
+        });
+        Collections.sort(firstMenuList);
+        return firstMenuList;
     }
 }

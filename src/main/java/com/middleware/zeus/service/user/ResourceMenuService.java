@@ -25,4 +25,12 @@ public interface ResourceMenuService {
      */
     List<ResourceMenuDto> list(List<Integer> ids);
 
+    /**
+     * 封装菜单父子集
+     *
+     * @param resourceMenuDtoList 菜单列表
+     *
+     */
+    List<ResourceMenuDto> convertMenu(List<ResourceMenuDto> resourceMenuDtoList);
+
 }

@@ -264,8 +264,10 @@ public class RoleServiceImpl implements RoleService {
         if (StringUtils.isNotEmpty(managerRoleResourceMenuId)) {
             // 获取管理形角色可选择menu菜单
             List<String> managerRoleMenuIds = Arrays.asList(managerRoleResourceMenuId.split(","));
-            return resourceMenuService
-                .list(managerRoleMenuIds.stream().map(Integer::valueOf).collect(Collectors.toList()));
+            List<ResourceMenuDto> resourceMenuDtoList =
+                resourceMenuService.list(managerRoleMenuIds.stream().map(Integer::valueOf).collect(Collectors.toList()))
+                    .stream().filter(ResourceMenuDto::getOwn).collect(Collectors.toList());
+            return resourceMenuService.convertMenu(resourceMenuDtoList);
         }
         return new ArrayList<>();
     }

@@ -1,25 +1,31 @@
 package com.middleware.zeus.service.user.abstractService;
 
+import static com.middleware.caas.common.constants.CommonConstant.NUM_TWO;
+import static com.middleware.caas.common.constants.user.UserConstant.USERNAME;
+
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.ObjectUtils;
+import org.springframework.web.multipart.MultipartFile;
+
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.middleware.caas.common.enums.ErrorMessage;
-import com.middleware.caas.common.enums.SystemConfigKeyEnum;
 import com.middleware.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
-import com.middleware.caas.common.exception.BusinessException;
-import com.middleware.caas.common.model.MailUserDTO;
 import com.middleware.caas.common.model.UploadImageFileDto;
 import com.middleware.caas.common.model.user.ResourceMenuDto;
-import com.middleware.caas.common.model.user.SystemConfigDto;
 import com.middleware.caas.common.model.user.UserDto;
 import com.middleware.caas.common.model.user.UserRole;
 import com.middleware.caas.filters.token.JwtTokenComponent;
 import com.middleware.caas.filters.user.CurrentUser;
 import com.middleware.caas.filters.user.CurrentUserRepository;
-import com.middleware.tool.encrypt.PasswordUtils;
-import com.middleware.tool.encrypt.RSAUtils;
 import com.middleware.zeus.bean.BeanClusterMiddlewareInfo;
-import com.middleware.zeus.bean.BeanMailToUser;
-import com.middleware.zeus.bean.BeanSystemConfig;
 import com.middleware.zeus.bean.PersonalizedConfiguration;
 import com.middleware.zeus.bean.user.BeanUser;
 import com.middleware.zeus.dao.BeanMailToUserMapper;
@@ -27,32 +33,10 @@ import com.middleware.zeus.dao.user.BeanUserMapper;
 import com.middleware.zeus.dao.user.PersonalMapper;
 import com.middleware.zeus.service.middleware.ClusterMiddlewareInfoService;
 import com.middleware.zeus.service.system.SystemConfigService;
-import com.middleware.zeus.service.user.OrganizationUserService;
 import com.middleware.zeus.service.user.ProjectService;
+import com.middleware.zeus.service.user.ResourceMenuService;
 import com.middleware.zeus.service.user.RoleService;
-import com.middleware.zeus.service.user.UserRoleService;
-import com.middleware.zeus.util.ApplicationUtil;
 import com.middleware.zeus.util.RequestUtil;
-import org.apache.catalina.User;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.util.CollectionUtils;
-import org.springframework.util.ObjectUtils;
-import org.springframework.web.multipart.MultipartFile;
-
-import javax.servlet.http.HttpServletResponse;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import static com.middleware.caas.common.constants.CommonConstant.NUM_TWO;
-import static com.middleware.caas.common.constants.user.UserConstant.USERNAME;
-import static com.middleware.caas.filters.base.GlobalKey.NUM_ROLE_ADMIN;
-import static com.middleware.caas.filters.base.GlobalKey.USER_TOKEN;
 
 /**
  * @author xutianhong
@@ -90,6 +74,8 @@ public abstract class AbstractUserService {
     protected SystemConfigService systemConfigService;
     @Autowired
     protected ProjectService projectService;
+    @Autowired
+    protected ResourceMenuService resourceMenuService;
 
     protected String getUsername() {
         CurrentUser currentUser = CurrentUserRepository.getUser();
@@ -116,19 +102,7 @@ public abstract class AbstractUserService {
         UserDto userDto = getUserDto(username);
         List<ResourceMenuDto> resourceMenuDtoList = roleService.listMenuByRoleId(userDto, organId, projectId);
 
-        Map<Integer, List<ResourceMenuDto>> resourceMenuDtoMap =
-                resourceMenuDtoList.stream().collect(Collectors.groupingBy(ResourceMenuDto::getParentId));
-        List<ResourceMenuDto> firstMenuList = resourceMenuDtoMap.get(0);
-        resourceMenuDtoMap.remove(0);
-        firstMenuList.forEach(firstMenu -> {
-            if (!resourceMenuDtoMap.containsKey(firstMenu.getWeight())) {
-                return;
-            }
-            firstMenu.setSubMenu(resourceMenuDtoMap.get(firstMenu.getWeight()));
-            Collections.sort(firstMenu.getSubMenu());
-        });
-        Collections.sort(firstMenuList);
-        return firstMenuList;
+        return resourceMenuService.convertMenu(resourceMenuDtoList);
     }
 
 
