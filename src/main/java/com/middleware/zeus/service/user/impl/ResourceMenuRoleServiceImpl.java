@@ -93,4 +93,11 @@ public class ResourceMenuRoleServiceImpl implements ResourceMenuRoleService {
         List<String> optIdList = Arrays.asList(opsIds.split(","));
         optIdList.forEach(optId -> this.update(roleId, Integer.parseInt(optId), ops));
     }
+
+    @Override
+    public void updateRoleResourceMenu(Integer roleId, List<ResourceMenuDto> resourceMenuDtoList) {
+        for (ResourceMenuDto resourceMenuDto : resourceMenuDtoList){
+            this.update(roleId, resourceMenuDto.getId(), resourceMenuDto.getAvailable());
+        }
+    }
 }

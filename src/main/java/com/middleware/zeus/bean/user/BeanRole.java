@@ -32,6 +32,11 @@ public class BeanRole implements Serializable {
     @TableField("name")
     private String name;
     /**
+     * 名称
+     */
+    @TableField("type")
+    private String type;
+    /**
      * 描述
      */
     @TableField("description")

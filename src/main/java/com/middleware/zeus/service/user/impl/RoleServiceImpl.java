@@ -42,12 +42,12 @@ import static com.middleware.caas.common.constants.CommonConstant.*;
 @Service
 public class RoleServiceImpl implements RoleService {
 
-//    @Value("${system.disasterRecovery.enable:true}")
-//    private String disasterEnable;
     @Value("${system.disasterRecovery.menu-id:10}")
     private Integer disasterMenuId;
     @Value("${system.activeActive.menu-id:7}")
     private String activeActiveMenuId;
+    @Value("${system.managerRole.menu-id:1,2,6,8,9,11,13,16,17,18,19,20,22}")
+    private String managerRoleResourceMenuId;
     @Autowired
     private HelmChartService helmChartService;
 
@@ -157,36 +157,46 @@ public class RoleServiceImpl implements RoleService {
         if (!CollectionUtils.isEmpty(roleDto.getPower())) {
             roleAuthorityService.update(roleDto.getId(), roleDto.getPower());
         }
+        if (!CollectionUtils.isEmpty(roleDto.getResourceMenuDtoList())){
+            resourceMenuRoleService.updateRoleResourceMenu(roleDto.getId(), roleDto.getResourceMenuDtoList());
+        }
     }
 
     @Override
     public List<ResourceMenuDto> listMenuByRoleId(UserDto userDto, String organId, String projectId) {
-        Set<BeanResourceMenuRole> list;
+        Set<BeanResourceMenuRole> set;
         if (userDto.getIsAdmin() || (StringUtils.isEmpty(organId) && StringUtils.isEmpty(projectId))) {
-            list = new HashSet<>(resourceMenuRoleService.listAdminMenu());
+            set = new HashSet<>(resourceMenuRoleService.listAdminMenu());
         } else {
-            list = new HashSet<>();
+            set = new HashSet<>();
+            // 处理管理类型的角色的菜单列表
+            List<UserRole> managerUserRoleList = userDto.getUserRoleList().stream().filter(userRole -> StringUtils.isEmpty(userRole.getOrganId()) && StringUtils.isEmpty(userRole.getProjectId())).collect(Collectors.toList());
+            if (!CollectionUtils.isEmpty(managerUserRoleList)){
+                set.addAll(resourceMenuRoleService.list(String.valueOf(managerUserRoleList.get(0).getRoleId())));
+            }
             // 获取组织管理员menu
             if (StringUtils.isNotEmpty(organId)) {
-                List<UserRole> userRoleList = userDto.getUserRoleList().stream().filter(
-                    userRole -> userRole.getOrganId().equals(organId) && StringUtils.isEmpty(userRole.getProjectId()))
+                List<UserRole> userRoleList = userDto.getUserRoleList().stream()
+                    .filter(userRole -> StringUtils.isNotEmpty(userRole.getOrganId())
+                        && userRole.getOrganId().equals(organId) && StringUtils.isEmpty(userRole.getProjectId()))
                     .collect(Collectors.toList());
                 if (!CollectionUtils.isEmpty(userRoleList)) {
-                    list.addAll(resourceMenuRoleService.list(String.valueOf(userRoleList.get(0).getRoleId())));
+                    set.addAll(resourceMenuRoleService.list(String.valueOf(userRoleList.get(0).getRoleId())));
                 }
             }
             // 获取项目管理员menu
             if (StringUtils.isNotEmpty(organId) && StringUtils.isNotEmpty(projectId)) {
                 List<UserRole> userRoleList = userDto.getUserRoleList().stream()
-                    .filter(userRole -> userRole.getOrganId().equals(organId)
-                        && StringUtils.isNotEmpty(userRole.getProjectId()) && userRole.getProjectId().equals(projectId))
+                    .filter(userRole -> StringUtils.isNotEmpty(userRole.getOrganId())
+                        && userRole.getOrganId().equals(organId) && StringUtils.isNotEmpty(userRole.getProjectId())
+                        && userRole.getProjectId().equals(projectId))
                     .collect(Collectors.toList());
                 if (!CollectionUtils.isEmpty(userRoleList)) {
-                    list.addAll(resourceMenuRoleService.list(String.valueOf(userRoleList.get(0).getRoleId())));
+                    set.addAll(resourceMenuRoleService.list(String.valueOf(userRoleList.get(0).getRoleId())));
                 }
             }
-            if(CollectionUtils.isEmpty(list)){
-                list.add(new BeanResourceMenuRole().setResourceMenuId(3));
+            if(CollectionUtils.isEmpty(set)){
+                set.add(new BeanResourceMenuRole().setResourceMenuId(3));
             }
         }
         // 过滤是否开启灾备服务和双活
@@ -198,7 +208,7 @@ public class RoleServiceImpl implements RoleService {
             features.setActiveActiveEnable(false).setDisasterRecoveryEnable(false);
         }
         LicenseInfo finalFeatures = features;
-        list = list.stream().filter(menuDto -> {
+        set = set.stream().filter(menuDto -> {
             if (menuDto.getResourceMenuId().equals(disasterMenuId)) {
                 return finalFeatures.getDisasterRecoveryEnable() && userDto.getIsAdmin();
             } else if (menuDto.getResourceMenuId() == Integer.parseInt(activeActiveMenuId)) {
@@ -210,13 +220,15 @@ public class RoleServiceImpl implements RoleService {
 
         // 查询是否为灾备模式备平台
         JSONObject values = helmChartService.getZeusMysqlInstallValues();
-        boolean isSlave = "slave-slave".equals(values.getString("type"));
-        if (isSlave) {
-            list = new HashSet<>();
-            list.add(new BeanResourceMenuRole().setResourceMenuId(disasterMenuId));
+        if (values != null){
+            boolean isSlave = "slave-slave".equals(values.getString("type"));
+            if (isSlave) {
+                set = new HashSet<>();
+                set.add(new BeanResourceMenuRole().setResourceMenuId(disasterMenuId));
+            }
         }
 
-        List<Integer> ids = list.stream().map(BeanResourceMenuRole::getResourceMenuId).collect(Collectors.toList());
+        List<Integer> ids = set.stream().map(BeanResourceMenuRole::getResourceMenuId).collect(Collectors.toList());
         // 获取菜单信息
         List<ResourceMenuDto> resourceMenuDtoList = resourceMenuService.list(ids);
         return resourceMenuDtoList.stream().filter(ResourceMenuDto::getOwn).collect(Collectors.toList());
@@ -245,6 +257,17 @@ public class RoleServiceImpl implements RoleService {
     public BeanRole getOrganManagerRoleId() {
         QueryWrapper<BeanRole> wrapper = new QueryWrapper<BeanRole>().eq("weight", 2);
         return beanRoleMapper.selectOne(wrapper);
+    }
+
+    @Override
+    public List<ResourceMenuDto> menu() {
+        if (StringUtils.isNotEmpty(managerRoleResourceMenuId)) {
+            // 获取管理形角色可选择menu菜单
+            List<String> managerRoleMenuIds = Arrays.asList(managerRoleResourceMenuId.split(","));
+            return resourceMenuService
+                .list(managerRoleMenuIds.stream().map(Integer::valueOf).collect(Collectors.toList()));
+        }
+        return new ArrayList<>();
     }
 
     /**

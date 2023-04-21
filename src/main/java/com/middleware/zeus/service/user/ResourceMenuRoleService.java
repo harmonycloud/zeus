@@ -1,5 +1,6 @@
 package com.middleware.zeus.service.user;
 
+import com.middleware.caas.common.model.user.ResourceMenuDto;
 import com.middleware.zeus.bean.user.BeanResourceMenuRole;
 
 import java.util.List;
@@ -66,5 +67,14 @@ public interface ResourceMenuRoleService {
      *
      */
     void updateOpsMenu(Integer roleId, boolean ops);
+
+    /**
+     * 更新角色菜单绑定关系列表
+     *
+     * @param roleId 角色id
+     * @param resourceMenuDtoList 菜单列表
+     *
+     */
+    void updateRoleResourceMenu(Integer roleId, List<ResourceMenuDto> resourceMenuDtoList);
 
 }

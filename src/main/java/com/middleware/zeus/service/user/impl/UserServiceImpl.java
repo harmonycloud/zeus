@@ -1,14 +1,29 @@
 package com.middleware.zeus.service.user.impl;
 
-import com.alibaba.fastjson.JSONObject;
+import static com.middleware.caas.common.constants.CommonConstant.NUM_ONE;
+import static com.middleware.caas.common.constants.user.UserConstant.ADMIN;
+import static com.middleware.caas.common.constants.user.UserConstant.USERNAME;
+import static com.middleware.caas.filters.base.GlobalKey.NUM_ROLE_ADMIN;
+
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.ObjectUtils;
+
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.middleware.caas.common.enums.ErrorMessage;
 import com.middleware.caas.common.enums.SystemConfigKeyEnum;
-import com.middleware.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
 import com.middleware.caas.common.exception.BusinessException;
 import com.middleware.caas.common.model.MailUserDTO;
-import com.middleware.caas.common.model.UploadImageFileDto;
-import com.middleware.caas.common.model.user.ResourceMenuDto;
 import com.middleware.caas.common.model.user.SystemConfigDto;
 import com.middleware.caas.common.model.user.UserDto;
 import com.middleware.caas.common.model.user.UserRole;
@@ -18,45 +33,21 @@ import com.middleware.caas.filters.user.CurrentUserRepository;
 import com.middleware.tool.encrypt.PasswordUtils;
 import com.middleware.tool.encrypt.RSAUtils;
 import com.middleware.zeus.annotation.Skyview;
-import com.middleware.zeus.bean.BeanClusterMiddlewareInfo;
 import com.middleware.zeus.bean.BeanMailToUser;
 import com.middleware.zeus.bean.BeanSystemConfig;
-import com.middleware.zeus.bean.PersonalizedConfiguration;
 import com.middleware.zeus.bean.user.BeanUser;
 import com.middleware.zeus.dao.BeanMailToUserMapper;
 import com.middleware.zeus.dao.user.BeanUserMapper;
 import com.middleware.zeus.dao.user.PersonalMapper;
 import com.middleware.zeus.service.middleware.ClusterMiddlewareInfoService;
 import com.middleware.zeus.service.system.SystemConfigService;
-import com.middleware.zeus.service.user.*;
-import com.middleware.zeus.util.ApplicationUtil;
-import com.middleware.zeus.util.RequestUtil;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.stereotype.Service;
-
+import com.middleware.zeus.service.user.OrganizationUserService;
+import com.middleware.zeus.service.user.RoleService;
+import com.middleware.zeus.service.user.UserRoleService;
+import com.middleware.zeus.service.user.UserService;
 import com.middleware.zeus.service.user.abstractService.AbstractUserService;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.util.CollectionUtils;
-import org.springframework.util.ObjectUtils;
-import org.springframework.web.multipart.MultipartFile;
-
-import javax.servlet.http.HttpServletResponse;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import static com.middleware.caas.common.constants.CommonConstant.NUM_TWO;
-import static com.middleware.caas.common.constants.user.UserConstant.ADMIN;
-import static com.middleware.caas.common.constants.user.UserConstant.USERNAME;
-import static com.middleware.caas.filters.base.GlobalKey.NUM_ROLE_ADMIN;
-import static com.middleware.caas.filters.base.GlobalKey.USER_TOKEN;
 
 
 /**
@@ -168,8 +159,8 @@ public class UserServiceImpl extends AbstractUserService implements UserService 
         // 写入用户表
         insertUser(userDto);
         // 分配超级管理员角色
-        if (userDto.getIsAdmin() != null) {
-            bindAdmin(userDto);
+        if (userDto.getManager() != null) {
+            bindManager(userDto);
         }
     }
 
@@ -185,9 +176,9 @@ public class UserServiceImpl extends AbstractUserService implements UserService 
         beanUser.setEmail(userDto.getEmail());
         beanUser.setPhone(userDto.getPhone());
         beanUserMapper.update(beanUser, wrapper);
-        // 分配或删除超级管理员角色
-        if (userDto.getIsAdmin() != null) {
-            bindAdmin(userDto);
+        // 分配或删除管理员角色
+        if (userDto.getManager() != null) {
+            bindManager(userDto);
         }
     }
 
@@ -336,14 +327,37 @@ public class UserServiceImpl extends AbstractUserService implements UserService 
     /**
      * 绑定或解绑超级管理员
      */
-    public void bindAdmin(UserDto userDto) {
-        String username =
-            JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken()).getValue().getString(USERNAME);
-        if (ADMIN.equals(username)) {
-            if (userDto.getIsAdmin()) {
-                userRoleService.insert(null, null, userDto.getUserName(), NUM_ROLE_ADMIN);
+    public void bindManager(UserDto userDto) {
+        // 查询该用户是否存在管理类型角色
+        List<UserRole> userRoleList = userRoleService.get(userDto.getUserName()).stream()
+            .filter(
+                userRole -> StringUtils.isEmpty(userRole.getOrganId()) && StringUtils.isEmpty(userRole.getProjectId()))
+            .collect(Collectors.toList());
+        Integer managerRoleId = -1;
+        if (!CollectionUtils.isEmpty(userRoleList)) {
+            managerRoleId = userRoleList.get(0).getRoleId();
+        }
+        // 期望分配管理类型角色
+        if (userDto.getManager() != null) {
+            if (userDto.getManager().equals(NUM_ONE)) {
+                String username = JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken()).getValue()
+                    .getString(USERNAME);
+                if (ADMIN.equals(username)) {
+                    userRoleService.update(new UserRole().setUserName(userDto.getUserName()).setRoleId(NUM_ROLE_ADMIN));
+                }
             } else {
-                userRoleService.delete(userDto.getUserName(), null, null, NUM_ROLE_ADMIN);
+                userRoleService.update(new UserRole().setUserName(userDto.getUserName()).setRoleId(NUM_ROLE_ADMIN));
+            }
+            // 移除或者不期望分配管理类型角色
+        } else if (managerRoleId != -1) {
+            if (managerRoleId == NUM_ROLE_ADMIN) {
+                String username = JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken()).getValue()
+                    .getString(USERNAME);
+                if (ADMIN.equals(username)) {
+                    userRoleService.delete(userDto.getUserName(), null, null, NUM_ROLE_ADMIN);
+                }
+            } else {
+                userRoleService.delete(userDto.getUserName(), null, null, managerRoleId);
             }
         }
     }

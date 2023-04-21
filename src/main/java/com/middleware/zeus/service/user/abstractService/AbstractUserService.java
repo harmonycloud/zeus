@@ -143,15 +143,18 @@ public abstract class AbstractUserService {
                 JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken()).getValue().getString(USERNAME);
         UserDto userDto = getUserDto(username);
         Map<String, String> power = new HashMap<>();
-        // 判断用户是否为admin 如果不是 则根据组织id、项目id  获取该用户的角色
-        boolean flag = !userDto.getIsAdmin()
-            && userDto.getUserRoleList().stream().anyMatch(userRole -> userRole.getOrganId().equals(organId)
-                && StringUtils.isNotEmpty(userRole.getProjectId()) && userRole.getProjectId().equals(projectId));
-        if (flag) {
-            power.putAll(userDto
-                .getUserRoleList().stream().filter(userRole -> userRole.getOrganId().equals(organId)
-                    && StringUtils.isNotEmpty(userRole.getProjectId()) && userRole.getProjectId().equals(projectId))
-                .collect(Collectors.toList()).get(0).getPower());
+        // 判断用户是否为admin 如果不是 则根据组织id、项目id  获取该用户的角色对应的中间件权限
+        List<UserRole> userRoleList = new ArrayList<>();
+        if (!userDto.getIsAdmin()) {
+            userRoleList =
+                userDto.getUserRoleList().stream()
+                    .filter(userRole -> StringUtils.isNotEmpty(userRole.getOrganId())
+                        && userRole.getOrganId().equals(organId) && StringUtils.isNotEmpty(userRole.getProjectId())
+                        && userRole.getProjectId().equals(projectId))
+                    .collect(Collectors.toList());
+        }
+        if (!CollectionUtils.isEmpty(userRoleList)) {
+            power.putAll(userRoleList.get(0).getPower());
         }
 
         // 过滤获取拥有权限的中间件
