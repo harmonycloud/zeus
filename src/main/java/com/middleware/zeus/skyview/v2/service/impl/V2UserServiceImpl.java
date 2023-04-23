@@ -105,7 +105,7 @@ public class V2UserServiceImpl implements V2UserService {
                 userRoleList.add(userRole);
             }
             // 处理租户管理员应包含所有项目的项目管理员
-            userRoleList = solveOrganManager(userRoleList, organMap);
+            userRoleList.addAll(solveOrganManager(userRoleList, organMap));
 
             userDto.setUserRoleList(userRoleList);
         }

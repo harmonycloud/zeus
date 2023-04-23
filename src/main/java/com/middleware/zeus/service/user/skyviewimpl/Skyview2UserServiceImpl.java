@@ -4,7 +4,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.middleware.caas.common.model.user.RoleDto;
 import com.middleware.caas.common.model.user.UserRole;
+import com.middleware.zeus.bean.user.BeanRoleAuthority;
+import com.middleware.zeus.service.user.RoleAuthorityService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -39,6 +42,8 @@ public class Skyview2UserServiceImpl extends AbstractUserService implements User
     private RoleService roleService;
     @Autowired
     private V2UserService v2UserService;
+    @Autowired
+    private RoleAuthorityService roleAuthorityService;
 
     @Override
     public UserDto getUserDto(String userName, String projectId) {
@@ -55,7 +60,9 @@ public class Skyview2UserServiceImpl extends AbstractUserService implements User
 
     @Override
     public UserDto getUserDto(String userName) {
-        return v2UserService.get(userName);
+        UserDto userDto = v2UserService.get(userName);
+        setPower(userDto);
+        return userDto;
     }
 
     @Override
@@ -152,5 +159,18 @@ public class Skyview2UserServiceImpl extends AbstractUserService implements User
     @Override
     public Boolean checkAdmin(String username) {
         return null;
+    }
+
+    private void setPower(UserDto userDto) {
+        if (!CollectionUtils.isEmpty(userDto.getUserRoleList())) {
+            // 获取角色信息
+            Map<Integer, RoleDto> roleDtoMap =
+                roleService.list(null).stream().collect(Collectors.toMap(RoleDto::getId, r -> r));
+            userDto.setUserRoleList(userDto.getUserRoleList().stream().peek(userRole -> {
+                userRole.setRoleName(roleDtoMap.get(userRole.getRoleId()).getName());
+                userRole.setWeight(roleDtoMap.get(userRole.getRoleId()).getWeight());
+                userRole.setPower(roleDtoMap.get(userRole.getRoleId()).getPower());
+            }).collect(Collectors.toList()));
+        }
     }
 }
