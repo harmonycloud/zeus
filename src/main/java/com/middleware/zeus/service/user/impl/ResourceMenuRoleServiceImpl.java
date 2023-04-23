@@ -30,7 +30,7 @@ public class ResourceMenuRoleServiceImpl implements ResourceMenuRoleService {
 
     @Value("${system.user.admin.role-id:1}")
     private String adminRoleId;
-    @Value("${system.user.role.resource-menu:8,9,10,12,14,15,16}")
+    @Value("${system.user.role.resource-menu:3,4,8,9,10,12,14,15,16}")
     private String opsIds;
 
     @Autowired
@@ -43,7 +43,7 @@ public class ResourceMenuRoleServiceImpl implements ResourceMenuRoleService {
     @Override
     public void init(Integer roleId) {
         List<ResourceMenuDto> menuDtoList = resourceMenuService.list();
-        menuDtoList.forEach(menu -> add(roleId, menu.getId(), menu.getId() == 3 || menu.getId() == 4));
+        menuDtoList.forEach(menu -> add(roleId, menu.getId(), false));
     }
 
     @Override
