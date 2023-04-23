@@ -134,6 +134,8 @@ public class UserServiceImpl extends AbstractUserService implements UserService 
             UserDto userDto = new UserDto();
             BeanUtils.copyProperties(beanUser, userDto, "password");
             userDto.setUserRoleList(userRoleMap.getOrDefault(beanUser.getUserName(), new ArrayList<>()));
+            // 设置管理型角色信息
+            convertManagerInfo(userDto, userDto.getUserRoleList());
             return userDto;
         }).collect(Collectors.toList());
         // 过滤
@@ -373,18 +375,37 @@ public class UserServiceImpl extends AbstractUserService implements UserService 
         List<UserRole> userRoleList = userRoleService.get(userName);
         // 获取用户组织下角色
         userRoleList.addAll(organizationUserService.listByUsername(userName).stream()
-                .filter(organizationUser -> organizationUser.getRoleId() != null).map(organizationUser -> {
-                    UserRole userRole = new UserRole();
-                    userRole.setUserName(organizationUser.getUsername());
-                    userRole.setRoleName("组织管理员");
-                    userRole.setOrganId(organizationUser.getOrganId());
-                    userRole.setRoleId(organizationUser.getRoleId());
-                    userRole.setWeight(2);
-                    return userRole;
-                }).collect(Collectors.toList()));
+            .filter(organizationUser -> organizationUser.getRoleId() != null).map(organizationUser -> {
+                UserRole userRole = new UserRole();
+                userRole.setUserName(organizationUser.getUsername());
+                userRole.setRoleName("组织管理员");
+                userRole.setOrganId(organizationUser.getOrganId());
+                userRole.setRoleId(organizationUser.getRoleId());
+                userRole.setWeight(2);
+                return userRole;
+            }).collect(Collectors.toList()));
+        convertManagerInfo(userDto, userRoleList);
+    }
+
+    /**
+     * 设置用户的管理型角色信息
+     *
+     * @param userDto 鱼护对象
+     * @param userRoleList 用户角色信息列表
+     */
+    private void convertManagerInfo(UserDto userDto, List<UserRole> userRoleList){
         if (!CollectionUtils.isEmpty(userRoleList)) {
             userDto.setUserRoleList(userRoleList);
-            userDto.setIsAdmin(userRoleList.stream().anyMatch(userRole -> userRole.getRoleId() == 1));
+            // 获取管理型角色
+            userDto.setIsAdmin(false);
+            List<UserRole> managerList = userRoleList.stream().filter(
+                    userRole -> StringUtils.isEmpty(userRole.getOrganId()) && StringUtils.isEmpty(userRole.getProjectId()))
+                    .collect(Collectors.toList());
+            if (!CollectionUtils.isEmpty(managerList)) {
+                Integer roleId = managerList.get(0).getRoleId();
+                userDto.setManager(roleId);
+                userDto.setIsAdmin(roleId == 1);
+            }
         }
     }
 
