@@ -335,9 +335,9 @@ public class UserServiceImpl extends AbstractUserService implements UserService 
             .filter(
                 userRole -> StringUtils.isEmpty(userRole.getOrganId()) && StringUtils.isEmpty(userRole.getProjectId()))
             .collect(Collectors.toList());
-        Integer managerRoleId = -1;
+        Integer currentManagerRoleId = -1;
         if (!CollectionUtils.isEmpty(userRoleList)) {
-            managerRoleId = userRoleList.get(0).getRoleId();
+            currentManagerRoleId = userRoleList.get(0).getRoleId();
         }
         // 期望分配管理类型角色
         if (userDto.getManager() != null) {
@@ -348,18 +348,18 @@ public class UserServiceImpl extends AbstractUserService implements UserService 
                     userRoleService.update(new UserRole().setUserName(userDto.getUserName()).setRoleId(NUM_ROLE_ADMIN));
                 }
             } else {
-                userRoleService.update(new UserRole().setUserName(userDto.getUserName()).setRoleId(NUM_ROLE_ADMIN));
+                userRoleService.update(new UserRole().setUserName(userDto.getUserName()).setRoleId(userDto.getManager()));
             }
             // 移除或者不期望分配管理类型角色
-        } else if (managerRoleId != -1) {
-            if (managerRoleId == NUM_ROLE_ADMIN) {
+        } else if (currentManagerRoleId != -1) {
+            if (currentManagerRoleId == NUM_ROLE_ADMIN) {
                 String username = JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken()).getValue()
                     .getString(USERNAME);
                 if (ADMIN.equals(username)) {
                     userRoleService.delete(userDto.getUserName(), null, null, NUM_ROLE_ADMIN);
                 }
             } else {
-                userRoleService.delete(userDto.getUserName(), null, null, managerRoleId);
+                userRoleService.delete(userDto.getUserName(), null, null, currentManagerRoleId);
             }
         }
     }
