@@ -149,7 +149,7 @@ public class Skyview2UserServiceImpl extends AbstractUserService implements User
                 .filter(userRole -> StringUtils.isNoneEmpty(userRole.getOrganId(), userRole.getProjectId())
                     && userRole.getOrganId().equals(organId) && userRole.getProjectId().equals(projectId))
                 .collect(Collectors.toList());
-            if (CollectionUtils.isEmpty(userRoleList)) {
+            if (!CollectionUtils.isEmpty(userRoleList)) {
                 return userRoleList.get(0);
             }
         }

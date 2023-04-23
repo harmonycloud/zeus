@@ -32,6 +32,7 @@ import com.middleware.zeus.service.user.RoleAuthorityService;
 import com.middleware.zeus.service.user.UserRoleService;
 import com.middleware.zeus.service.user.UserService;
 import com.middleware.zeus.util.MathUtil;
+import com.middleware.zeus.util.RequestUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -1523,7 +1524,10 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     private List<MiddlewareBackupRecord> filterByProject(List<MiddlewareBackupRecord> records, String organId, String projectId) {
         // 查询用户在当前项目下所有可见的中间件类型
         String username = CurrentUserRepository.getUser().getUsername();
-
+        // 写入组织id
+        if (StringUtils.isEmpty(organId)){
+            organId = RequestUtil.getOrganId();
+        }
         // 根据分区过滤
         List<Namespace> namespaces = projectService.getNamespace(organId, projectId);
         if (!CollectionUtils.isEmpty(namespaces)) {
