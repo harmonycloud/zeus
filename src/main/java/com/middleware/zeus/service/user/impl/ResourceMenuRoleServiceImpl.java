@@ -100,7 +100,7 @@ public class ResourceMenuRoleServiceImpl implements ResourceMenuRoleService {
     @Override
     public void updateRoleResourceMenu(Integer roleId, List<ResourceMenuDto> resourceMenuDtoList) {
         for (ResourceMenuDto resourceMenuDto : resourceMenuDtoList){
-            this.update(roleId, resourceMenuDto.getId(), resourceMenuDto.getAvailable());
+            this.update(roleId, resourceMenuDto.getId(), resourceMenuDto.getOwn());
         }
     }
 }
