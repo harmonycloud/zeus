@@ -165,14 +165,14 @@ public class RoleServiceImpl implements RoleService {
     @Override
     public List<ResourceMenuDto> listMenuByRoleId(UserDto userDto, String organId, String projectId) {
         Set<BeanResourceMenuRole> set;
-        if (userDto.getIsAdmin() || (StringUtils.isEmpty(organId) && StringUtils.isEmpty(projectId))) {
+        if (userDto.getIsAdmin() || (StringUtils.isEmpty(organId) && StringUtils.isEmpty(projectId) && userDto.getManager() == null)) {
             set = new HashSet<>(resourceMenuRoleService.listAdminMenu());
         } else {
             set = new HashSet<>();
             // 处理管理类型的角色的菜单列表
             List<UserRole> managerUserRoleList = userDto.getUserRoleList().stream().filter(userRole -> StringUtils.isEmpty(userRole.getOrganId()) && StringUtils.isEmpty(userRole.getProjectId())).collect(Collectors.toList());
             if (!CollectionUtils.isEmpty(managerUserRoleList)){
-                set.addAll(resourceMenuRoleService.list(String.valueOf(managerUserRoleList.get(0).getRoleId())));
+
             }
             // 获取组织管理员menu
             if (StringUtils.isNotEmpty(organId)) {
