@@ -76,9 +76,17 @@ public interface RoleService {
     BeanRole getOrganManagerRoleId();
 
     /**
+     * 查询管理类角色menu列表
+     * @param roleId
+     *
+     * @return List<ResourceMenuDto>
+     */
+    List<ResourceMenuDto> roleMenu(Integer roleId);
+
+    /**
      * 查询管理类角色可分配menu列表
      *
-     * @return Integer
+     * @return List<ResourceMenuDto>
      */
     List<ResourceMenuDto> menu();
 

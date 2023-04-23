@@ -62,6 +62,15 @@ public class RoleController {
         return BaseResult.ok();
     }
 
+    @ApiOperation(value = "查询管理类角色menu列表", notes = "查询管理类角色menu列表")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "roleId", value = "角色id", paramType = "path", dataTypeClass = Integer.class)
+    })
+    @GetMapping("/{roleId}/menu")
+    public BaseResult roleMenu(@PathVariable("roleId") Integer roleId) {
+        return BaseResult.ok(roleService.roleMenu(roleId));
+    }
+
     @ApiOperation(value = "查询管理类角色可分配menu列表", notes = "查询管理类角色可分配menu列表")
     @ApiImplicitParams({
     })

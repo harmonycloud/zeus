@@ -260,6 +260,21 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
+    public List<ResourceMenuDto> roleMenu(Integer roleId) {
+        // 获取指定角色的菜单列表
+        List<BeanResourceMenuRole> resourceMenuRoleList = resourceMenuRoleService.list(String.valueOf(roleId));
+        List<ResourceMenuDto> resourceMenuDtoList = resourceMenuService.list(
+            resourceMenuRoleList.stream().map(BeanResourceMenuRole::getResourceMenuId).collect(Collectors.toList()));
+        // 获取管理类型菜单
+        List<String> managerMenuList = Arrays.asList(managerRoleResourceMenuId.split(","));
+        resourceMenuDtoList = resourceMenuDtoList.stream()
+            .filter(resourceMenuDto -> managerMenuList.stream()
+                .anyMatch(managerMenu -> managerMenu.equals(String.valueOf(resourceMenuDto.getId()))))
+            .collect(Collectors.toList());
+        return resourceMenuDtoList;
+    }
+
+    @Override
     public List<ResourceMenuDto> menu() {
         if (StringUtils.isNotEmpty(managerRoleResourceMenuId)) {
             // 获取管理形角色可选择menu菜单
