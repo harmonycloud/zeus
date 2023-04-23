@@ -1,11 +1,15 @@
 package com.middleware.zeus.integration.cluster;
 
+import com.middleware.caas.common.constants.PostgresqlConstant;
 import com.middleware.caas.common.enums.ErrorMessage;
 import com.middleware.caas.common.exception.BusinessException;
 import com.middleware.caas.common.model.CRDBasicInfo;
 import com.middleware.zeus.util.K8sClient;
-import io.fabric8.kubernetes.api.model.apiextensions.v1.CustomResourceDefinition;
-import io.fabric8.kubernetes.api.model.apiextensions.v1.CustomResourceDefinitionList;
+import com.middleware.zeus.util.YamlUtil;
+import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceColumnDefinition;
+import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinition;
+import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinitionList;
+import io.fabric8.kubernetes.api.model.apiextensions.CustomResourceDefinitionSpec;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -30,8 +34,7 @@ public class CustomResourceDefinitionWrapper {
     private static Map<String,String> namesMap = new HashMap<>();
 
     public List<CustomResourceDefinition> list(String clusterId) {
-        CustomResourceDefinitionList crdList = K8sClient.getClient(clusterId).apiextensions().v1().customResourceDefinitions().list();
-
+        CustomResourceDefinitionList crdList = K8sClient.getClient(clusterId).customResourceDefinitions().list();
         if (CollectionUtils.isEmpty(crdList.getItems())) {
             return new ArrayList<>();
         }
