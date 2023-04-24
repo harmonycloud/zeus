@@ -66,9 +66,15 @@ public class GrafanaComponentsServiceImpl extends AbstractBaseOperator implement
         JSONObject persistence = new JSONObject();
         persistence.put("storageClassName", "local-path");
 
+        JSONObject initChownData = new JSONObject();
+        JSONObject initChownDataImage = new JSONObject();
+        initChownDataImage.put("repository", repository + "/hc-busybox");
+        initChownData.put("image", initChownDataImage);
+
         jsonValues.put("image", image);
         jsonValues.put("sidecar", sidecar);
         jsonValues.put("persistence", persistence);
+        jsonValues.put("initChownData", initChownData);
 
         ClusterComponentsDto componentsDto = clusterComponentService.get(cluster.getId(), "grafana");
         if (componentsDto != null && "https".equals(componentsDto.getProtocol())) {
