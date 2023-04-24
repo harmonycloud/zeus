@@ -493,7 +493,6 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         JSONObject resources = new JSONObject();
         resources.put("requests", requests);
         resources.put("limits", limits);
-
         predixy.put("resources", resources);
         values.put("predixy", predixy);
     }
