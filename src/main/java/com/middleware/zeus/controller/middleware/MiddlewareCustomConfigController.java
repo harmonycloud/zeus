@@ -37,6 +37,7 @@ public class MiddlewareCustomConfigController {
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "order", value = "排序", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "role", value = "节点类型", paramType = "query", dataTypeClass = String.class)
     })
     @GetMapping
     @Authority(power = 1)
@@ -44,8 +45,9 @@ public class MiddlewareCustomConfigController {
                                                @PathVariable("namespace") String namespace,
                                                @PathVariable("middlewareName") String middlewareName,
                                                @RequestParam("type") String type,
-                                               @RequestParam(value = "order", required = false) String order) throws Exception {
-        return BaseResult.ok(middlewareCustomConfigService.listCustomConfig(clusterId, namespace, middlewareName, type, order));
+                                               @RequestParam(value = "order", required = false) String order,
+                                               @RequestParam(value = "role") String role) throws Exception {
+        return BaseResult.ok(middlewareCustomConfigService.listCustomConfig(clusterId, namespace, middlewareName, type, order, role));
     }
 
     @ApiOperation(value = "更新自定义配置", notes = "更新自定义配置")
