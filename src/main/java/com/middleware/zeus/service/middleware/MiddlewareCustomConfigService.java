@@ -84,4 +84,15 @@ public interface MiddlewareCustomConfigService  {
      * @param type 中间件类型
      */
     void topping(String clusterId, String namespace, String name, String configName, String type);
+
+    /**
+     * 获取服务自定义参数节点类型列表
+     *
+     * @param clusterId 集群
+     * @param namespace 分区
+     * @param middlewareName 服务名称
+     * @param type 中间件类型
+     * @return
+     */
+    List<String> getRoles(String clusterId, String namespace, String middlewareName, String type) throws Exception;
 }

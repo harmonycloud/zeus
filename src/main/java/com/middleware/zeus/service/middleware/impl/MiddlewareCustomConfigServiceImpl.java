@@ -309,6 +309,33 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         }
     }
 
+    @Override
+    public List<String> getRoles(String clusterId, String namespace, String middlewareName, String type) throws Exception {
+        Middleware middleware = new Middleware(clusterId, namespace, middlewareName, type);
+        MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
+        // 获取values
+        JSONObject values = helmChartService.getInstalledValues(middlewareName, namespace, cluster);
+        // 取出chartVersion
+        middleware.setChartVersion(values.getString("chart-version"));
+        QueryWrapper<BeanCustomConfig> wrapper = new QueryWrapper<BeanCustomConfig>()
+                .eq("chart_name", type).eq("chart_version", middleware.getChartVersion())
+                .select("distinct ifnull(role, 'master') as role").orderByAsc("role");
+        List<String> resultList = beanCustomConfigMapper.selectObjs(wrapper).stream().map(Object::toString).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(resultList)) {
+            HelmChartFile helmChart = helmChartService.getHelmChartFromMysql(type, middleware.getChartVersion());
+            resultList.addAll(updateConfig2MySQL(helmChart).stream().map(cc -> {
+                if (cc.getRole() == null) {
+                    return "master";
+                }
+                return cc.getRole();
+            }).distinct().collect(Collectors.toList()));
+        }
+        if (CollectionUtils.isEmpty(resultList)) {
+            throw new BusinessException(ErrorMessage.GET_CUSTOM_CONFIG_ROLE_FAILED);
+        }
+        return resultList;
+    }
+
     /**
      * 拉一个线程去更新是否已启用的状态
      */
