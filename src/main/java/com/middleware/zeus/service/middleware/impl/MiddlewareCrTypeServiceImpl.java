@@ -33,7 +33,7 @@ import static com.middleware.caas.common.constants.middleware.MiddlewareConstant
  */
 @Service
 @Slf4j
-public class MiddlewareCrTypeServiceImpl implements MiddlewareCrTypeService {
+public class MiddlewareCrTypeServiceImpl implements MiddlewareCrTypeService,ApplicationListener<ContextRefreshedEvent> {
 
     private static final Map<String, String> MIDDLEWARE_CR_TYPE = new HashMap<>();
 
@@ -43,6 +43,7 @@ public class MiddlewareCrTypeServiceImpl implements MiddlewareCrTypeService {
     private HelmChartService helmChartService;
     @Autowired
     private MiddlewareInfoService middlewareInfoService;
+
 
     @Override
     public void init() {
@@ -153,4 +154,8 @@ public class MiddlewareCrTypeServiceImpl implements MiddlewareCrTypeService {
     }
 
 
+    @Override
+    public void onApplicationEvent(ContextRefreshedEvent event) {
+        init();
+    }
 }
