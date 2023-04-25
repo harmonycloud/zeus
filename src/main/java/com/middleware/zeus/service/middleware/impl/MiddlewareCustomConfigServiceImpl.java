@@ -88,16 +88,22 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         QueryWrapper<BeanCustomConfig> wrapper = new QueryWrapper<BeanCustomConfig>()
             .eq("chart_name", middleware.getType()).eq("chart_version", middleware.getChartVersion());
         if ("master".equals(role)) {
+            // 旧版本role字段为null
             wrapper.and(i -> i.eq("role", "master").or().isNull("role"));
         } else {
             wrapper.eq("role", role);
         }
         List<BeanCustomConfig> beanCustomConfigList = beanCustomConfigMapper.selectList(wrapper);
         if (CollectionUtils.isEmpty(beanCustomConfigList)) {
-            HelmChartFile helmChart = helmChartService.getHelmChartFromMysql(type, middleware.getChartVersion());
-            beanCustomConfigList.addAll(updateConfig2MySQL(helmChart).stream().filter(cc -> {
-                return "master".equals(role) ? cc.getRole() == null || cc.getRole().equals(role) : cc.getRole().equals(role);
-            }).collect(Collectors.toList()));
+            QueryWrapper<BeanCustomConfig> ccWrapper = new QueryWrapper<BeanCustomConfig>()
+                    .eq("chart_name", middleware.getType()).eq("chart_version", middleware.getChartVersion());
+            // 若没有对应chart包的任意记录，则更新customconfig
+            if (CollectionUtils.isEmpty(beanCustomConfigMapper.selectList(ccWrapper))) {
+                HelmChartFile helmChart = helmChartService.getHelmChartFromMysql(type, middleware.getChartVersion());
+                beanCustomConfigList.addAll(updateConfig2MySQL(helmChart).stream().filter(cc -> {
+                    return "master".equals(role) ? cc.getRole() == null || cc.getRole().equals(role) : cc.getRole().equals(role);
+                }).collect(Collectors.toList()));
+            }
         }
         // 查询修改历史
         Map<String, List<BeanCustomConfigHistory>> beanCustomConfigHistoryListMap =
