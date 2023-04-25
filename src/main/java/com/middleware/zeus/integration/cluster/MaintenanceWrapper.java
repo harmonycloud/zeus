@@ -4,6 +4,7 @@ import static com.middleware.caas.common.constants.NameConstant.FOUR_ZERO_FOUR;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -39,6 +40,9 @@ public class MaintenanceWrapper {
     public List<Maintenance> listByLabels(String clusterId, String namespace, Map<String, String> labels) {
         MaintenanceList maintenanceList;
         try {
+            if (CollectionUtils.isEmpty(labels)){
+                labels = new HashMap<>();
+            }
             // init client
             NonNamespaceOperation<Maintenance, MaintenanceList, Resource<Maintenance>> maintenanceClient =
                 K8sClient.getClient(clusterId).resources(Maintenance.class, MaintenanceList.class);
@@ -47,10 +51,7 @@ public class MaintenanceWrapper {
                     ((MixedOperation<Maintenance, MaintenanceList, Resource<Maintenance>>)maintenanceClient)
                         .inNamespace(namespace);
             }
-            if (!CollectionUtils.isEmpty(labels)) {
-                maintenanceClient.withLabels(labels);
-            }
-            maintenanceList = maintenanceClient.list();
+            maintenanceList = maintenanceClient.withLabels(labels).list();
         } catch (Exception e) {
             if (StringUtils.isNotEmpty(e.getMessage()) && e.getMessage().contains(FOUR_ZERO_FOUR)) {
                 log.error("Maintenance crd未部署");

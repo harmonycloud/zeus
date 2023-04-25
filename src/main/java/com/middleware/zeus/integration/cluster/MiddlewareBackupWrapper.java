@@ -1,10 +1,7 @@
 package com.middleware.zeus.integration.cluster;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
@@ -72,6 +69,9 @@ public class MiddlewareBackupWrapper {
     public List<MiddlewareBackupCR> list(String clusterId, String namespace, Map<String, String> labels) {
         MiddlewareBackupList middlewareBackupList = null;
         try {
+            if (CollectionUtils.isEmpty(labels)){
+                labels = new HashMap<>();
+            }
             // init client
             NonNamespaceOperation<MiddlewareBackupCR, MiddlewareBackupList,
                 Resource<MiddlewareBackupCR>> middlewareBackupClient =
@@ -80,11 +80,8 @@ public class MiddlewareBackupWrapper {
                 middlewareBackupClient = ((MixedOperation<MiddlewareBackupCR, MiddlewareBackupList,
                     Resource<MiddlewareBackupCR>>)middlewareBackupClient).inNamespace(namespace);
             }
-            if (!CollectionUtils.isEmpty(labels)) {
-                middlewareBackupClient.withLabels(labels);
-            }
             // list
-            middlewareBackupList = middlewareBackupClient.list();
+            middlewareBackupList = middlewareBackupClient.withLabels(labels).list();
         } catch (Exception e) {
             log.error("查询MiddlewareBackupList出错了", e);
             return new ArrayList<>();

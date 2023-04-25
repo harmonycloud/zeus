@@ -1,6 +1,7 @@
 package com.middleware.zeus.integration.cluster;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -102,6 +103,9 @@ public class IngressRouteTCPWrapper {
     public IngressRouteTCPList list(String clusterId, String namespace, Map<String, String> labels) {
         IngressRouteTCPList ingressRouteTCPList;
         try {
+            if (CollectionUtils.isEmpty(labels)){
+                labels = new HashMap<>();
+            }
             // init client
             NonNamespaceOperation<IngressRouteTCPCR, IngressRouteTCPList,
                 Resource<IngressRouteTCPCR>> ingressRouteClient =
@@ -110,10 +114,7 @@ public class IngressRouteTCPWrapper {
                 ingressRouteClient = ((MixedOperation<IngressRouteTCPCR, IngressRouteTCPList,
                     Resource<IngressRouteTCPCR>>)ingressRouteClient).inNamespace(namespace);
             }
-            if (!CollectionUtils.isEmpty(labels)){
-                ingressRouteClient.withLabels(labels);
-            }
-            ingressRouteTCPList = ingressRouteClient.list();
+            ingressRouteTCPList = ingressRouteClient.withLabels(labels).list();
         } catch (Exception e) {
             log.error("查询MiddlewareRestoreList出错了", e);
             return null;

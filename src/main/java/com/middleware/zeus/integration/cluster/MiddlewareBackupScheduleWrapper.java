@@ -1,6 +1,7 @@
 package com.middleware.zeus.integration.cluster;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
@@ -101,6 +102,9 @@ public class MiddlewareBackupScheduleWrapper {
     public MiddlewareBackupScheduleList list(String clusterId, String namespace, Map<String, String> labels) {
         MiddlewareBackupScheduleList middlewareBackupScheduleList = null;
         try {
+            if (CollectionUtils.isEmpty(labels)){
+                labels = new HashMap<>();
+            }
             // init client
             NonNamespaceOperation<MiddlewareBackupScheduleCR, MiddlewareBackupScheduleList,
                 Resource<MiddlewareBackupScheduleCR>> backupScheduleClient = K8sClient.getClient(clusterId)
@@ -111,10 +115,8 @@ public class MiddlewareBackupScheduleWrapper {
                 backupScheduleClient = ((MixedOperation<MiddlewareBackupScheduleCR, MiddlewareBackupScheduleList,
                     Resource<MiddlewareBackupScheduleCR>>)backupScheduleClient).inNamespace(namespace);
             }
-            if (!CollectionUtils.isEmpty(labels)) {
-                backupScheduleClient.withLabels(labels);
-            }
-            middlewareBackupScheduleList = backupScheduleClient.list();
+            // list
+            middlewareBackupScheduleList = backupScheduleClient.withLabels(labels).list();
         } catch (Exception e) {
             log.error("查询MiddlewareBackupScheduleList出错了");
             return null;

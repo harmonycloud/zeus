@@ -5,6 +5,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.fabric8.kubernetes.client.dsl.FilterWatchListDeletable;
+import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
@@ -24,9 +26,10 @@ import io.fabric8.kubernetes.client.dsl.PodResource;
 public class PodWrapper {
 
     public List<Pod> list(String clusterId, String namespace) {
-        MixedOperation<Pod, PodList, PodResource> podClient = K8sClient.getClient(clusterId).pods();
+        // init client
+        NonNamespaceOperation<Pod, PodList, PodResource> podClient = K8sClient.getClient(clusterId).pods();
         if (StringUtils.isNotEmpty(namespace)) {
-            podClient.inNamespace(namespace);
+            podClient = ((MixedOperation<Pod, PodList, PodResource>)podClient).inNamespace(namespace);
         }
         PodList list = podClient.list();
         if (list == null || CollectionUtils.isEmpty(list.getItems())) {
@@ -36,14 +39,16 @@ public class PodWrapper {
     }
 
     public List<Pod> list(String clusterId, String namespace, Map<String, String> labels) {
-        MixedOperation<Pod, PodList, PodResource> podClient = K8sClient.getClient(clusterId).pods();
+        if (CollectionUtils.isEmpty(labels)){
+            labels = new HashMap<>();
+        }
+        // init client
+        NonNamespaceOperation<Pod, PodList, PodResource> podClient = K8sClient.getClient(clusterId).pods();
         if (StringUtils.isNotEmpty(namespace)) {
-            podClient.inNamespace(namespace);
+            podClient = ((MixedOperation<Pod, PodList, PodResource>)podClient).inNamespace(namespace);
         }
-        if (!CollectionUtils.isEmpty(labels)) {
-            podClient.withLabels(labels);
-        }
-        PodList list = podClient.list();
+
+        PodList list = podClient.withLabels(labels).list();
         if (list == null || CollectionUtils.isEmpty(list.getItems())) {
             return new ArrayList<>(0);
         }
@@ -51,14 +56,15 @@ public class PodWrapper {
     }
 
     public List<Pod> listByFields(String clusterId, String namespace, Map<String, String> fields) {
-        MixedOperation<Pod, PodList, PodResource> podClient = K8sClient.getClient(clusterId).pods();
+        if (CollectionUtils.isEmpty(fields)){
+            fields = new HashMap<>();
+        }
+        // init client
+        NonNamespaceOperation<Pod, PodList, PodResource> podClient = K8sClient.getClient(clusterId).pods();
         if (StringUtils.isNotEmpty(namespace)) {
-            podClient.inNamespace(namespace);
+            podClient = ((MixedOperation<Pod, PodList, PodResource>)podClient).inNamespace(namespace);
         }
-        if (!CollectionUtils.isEmpty(fields)) {
-            podClient.withFields(fields);
-        }
-        PodList list = K8sClient.getClient(clusterId).pods().inNamespace(namespace).withFields(fields).list();
+        PodList list = podClient.withFields(fields).list();
         if (list == null || CollectionUtils.isEmpty(list.getItems())) {
             return new ArrayList<>(0);
         }

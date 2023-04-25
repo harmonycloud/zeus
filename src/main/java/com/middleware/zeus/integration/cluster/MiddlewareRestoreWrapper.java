@@ -1,6 +1,7 @@
 package com.middleware.zeus.integration.cluster;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
@@ -62,6 +63,9 @@ public class MiddlewareRestoreWrapper {
     public MiddlewareRestoreList list(String clusterId, String namespace, Map<String, String> labels) {
         MiddlewareRestoreList middlewareRestoreList = null;
         try {
+            if (CollectionUtils.isEmpty(labels)){
+                labels = new HashMap<>();
+            }
             // init client
             NonNamespaceOperation<MiddlewareRestoreCR, MiddlewareRestoreList,
                 Resource<MiddlewareRestoreCR>> middlewareRestoreClient =
@@ -70,10 +74,7 @@ public class MiddlewareRestoreWrapper {
                 middlewareRestoreClient = ((MixedOperation<MiddlewareRestoreCR, MiddlewareRestoreList,
                     Resource<MiddlewareRestoreCR>>)middlewareRestoreClient).inNamespace(namespace);
             }
-            if (CollectionUtils.isEmpty(labels)) {
-                middlewareRestoreClient.withLabels(labels);
-            }
-            middlewareRestoreList = middlewareRestoreClient.list();
+            middlewareRestoreList = middlewareRestoreClient.withLabels(labels).list();
         } catch (Exception e) {
             log.error("查询MiddlewareRestoreList出错了", e);
             return null;

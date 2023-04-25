@@ -1,6 +1,7 @@
 package com.middleware.zeus.integration.cluster;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -31,6 +32,9 @@ public class MiddlewareWrapper {
 
     public List<MiddlewareCR> list(String clusterId, String namespace, Map<String, String> labels) {
         try {
+            if (CollectionUtils.isEmpty(labels)){
+                labels = new HashMap<>();
+            }
             // init client
             NonNamespaceOperation<MiddlewareCR, MiddlewareList, Resource<MiddlewareCR>> middlewareClient =
                     K8sClient.getClient(clusterId).resources(MiddlewareCR.class, MiddlewareList.class);
@@ -40,11 +44,8 @@ public class MiddlewareWrapper {
                     ((MixedOperation<MiddlewareCR, MiddlewareList, Resource<MiddlewareCR>>)middlewareClient)
                         .inNamespace(namespace);
             }
-            if (!CollectionUtils.isEmpty(labels)) {
-                middlewareClient.withLabels(labels);
-            }
             // 查询middlewareList
-            MiddlewareList middlewareList = middlewareClient.list();
+            MiddlewareList middlewareList = middlewareClient.withLabels(labels).list();
             if (middlewareList == null || CollectionUtils.isEmpty(middlewareList.getItems())) {
                 return new ArrayList<>(0);
             }

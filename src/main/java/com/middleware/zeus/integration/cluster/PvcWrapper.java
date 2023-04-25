@@ -6,6 +6,7 @@ import com.middleware.zeus.util.K8sClient;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaimList;
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
+import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
@@ -21,33 +22,34 @@ import java.util.Map;
  */
 @Component
 public class PvcWrapper {
-    
+
     public List<PersistentVolumeClaim> list(String clusterId, String namespace) {
         // init client
-        MixedOperation<PersistentVolumeClaim, PersistentVolumeClaimList, Resource<PersistentVolumeClaim>> client =
-            K8sClient.getClient(clusterId).persistentVolumeClaims();
+        NonNamespaceOperation<PersistentVolumeClaim, PersistentVolumeClaimList,
+            Resource<PersistentVolumeClaim>> pvcClient = K8sClient.getClient(clusterId).persistentVolumeClaims();
         if (StringUtils.isNotEmpty(namespace)) {
-            client.inNamespace(namespace);
+            pvcClient = ((MixedOperation<PersistentVolumeClaim, PersistentVolumeClaimList,
+                Resource<PersistentVolumeClaim>>)pvcClient).inNamespace(namespace);
         }
-        PersistentVolumeClaimList list = client.list();
+        PersistentVolumeClaimList list = pvcClient.list();
         if (list == null || CollectionUtils.isEmpty(list.getItems())) {
             return new ArrayList<>(0);
         }
         return list.getItems();
     }
 
-    public List<PersistentVolumeClaim> listWithFields(String clusterId, String namespace, Map<String, String> fields){
+    public List<PersistentVolumeClaim> listWithFields(String clusterId, String namespace, Map<String, String> fields) {
         PersistentVolumeClaimList list =
-                K8sClient.getClient(clusterId).persistentVolumeClaims().inNamespace(namespace).withFields(fields).list();
+            K8sClient.getClient(clusterId).persistentVolumeClaims().inNamespace(namespace).withFields(fields).list();
         if (list == null || CollectionUtils.isEmpty(list.getItems())) {
             return new ArrayList<>(0);
         }
         return list.getItems();
     }
 
-    public List<PersistentVolumeClaim> listWithLabels(String clusterId, String namespace, Map<String, String> labels){
+    public List<PersistentVolumeClaim> listWithLabels(String clusterId, String namespace, Map<String, String> labels) {
         PersistentVolumeClaimList list =
-                K8sClient.getClient(clusterId).persistentVolumeClaims().inNamespace(namespace).withLabels(labels).list();
+            K8sClient.getClient(clusterId).persistentVolumeClaims().inNamespace(namespace).withLabels(labels).list();
         if (list == null || CollectionUtils.isEmpty(list.getItems())) {
             return new ArrayList<>(0);
         }

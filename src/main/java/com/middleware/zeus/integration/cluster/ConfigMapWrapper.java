@@ -3,6 +3,7 @@ package com.middleware.zeus.integration.cluster;
 import java.util.List;
 import java.util.Map;
 
+import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
@@ -26,9 +27,11 @@ import lombok.extern.slf4j.Slf4j;
 public class ConfigMapWrapper {
 
     public List<ConfigMap> list(String clusterId, String namespace) {
-        MixedOperation<ConfigMap, ConfigMapList, Resource<ConfigMap>> configmapClient = K8sClient.getClient(clusterId).configMaps();
-        if(StringUtils.isNotEmpty(namespace)){
-            configmapClient.inNamespace(namespace);
+        NonNamespaceOperation<ConfigMap, ConfigMapList, Resource<ConfigMap>> configmapClient =
+            K8sClient.getClient(clusterId).configMaps();
+        if (StringUtils.isNotEmpty(namespace)) {
+            configmapClient =
+                ((MixedOperation<ConfigMap, ConfigMapList, Resource<ConfigMap>>)configmapClient).inNamespace(namespace);
         }
         ConfigMapList configMapList = configmapClient.list();
         if (CollectionUtils.isEmpty(configMapList.getItems())) {
