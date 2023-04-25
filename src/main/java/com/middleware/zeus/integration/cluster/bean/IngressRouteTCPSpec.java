@@ -1,5 +1,6 @@
 package com.middleware.zeus.integration.cluster.bean;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -12,6 +13,7 @@ import java.util.List;
  */
 @Data
 @Accessors(chain = true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class IngressRouteTCPSpec {
 
     private List<String> entryPoints;

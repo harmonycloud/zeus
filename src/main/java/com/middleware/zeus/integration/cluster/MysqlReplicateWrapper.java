@@ -1,97 +1,78 @@
 package com.middleware.zeus.integration.cluster;
 
-import com.alibaba.fastjson.JSONObject;
-import com.middleware.zeus.integration.cluster.bean.MysqlReplicateCR;
-import com.middleware.zeus.util.K8sClient;
-import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
-
 import java.io.IOException;
-import java.util.Map;
 
-import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.*;
+import org.springframework.stereotype.Component;
+
+import com.middleware.zeus.integration.cluster.bean.MysqlReplicateCR;
+import com.middleware.zeus.integration.cluster.bean.MysqlReplicateList;
+import com.middleware.zeus.util.K8sClient;
+
+import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
+import io.fabric8.kubernetes.client.dsl.Resource;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 疯转mysql复制的处理
+ * 
  * @author liyinlong
  * @date 2021/8/11 2:22 下午
  */
 @Slf4j
 @Component
 public class MysqlReplicateWrapper {
-    @Autowired
-    private K8sClient k8sClient;
-
-    /**
-     * MysqlReplicate的context
-     */
-    private static final CustomResourceDefinitionContext CONTEXT = new CustomResourceDefinitionContext.Builder()
-            .withGroup(MIDDLEWARE_MYSQL_GROUP)
-            .withVersion(MIDDLEWARE_INCLUDE_VERSION)
-            .withScope(NAMESPACED)
-            .withPlural(MYSQLREPLICATES)
-            .build();
 
     /**
      * 创建mysql复制
      */
-    public void create(String clusterId, MysqlReplicateCR mysqlReplicateCR) throws IOException {
-        K8sClient.getClient(clusterId).customResource(CONTEXT).create(mysqlReplicateCR.getMetadata().getNamespace(),
-                JSONObject.parseObject(JSONObject.toJSONString(mysqlReplicateCR)));
+    public void create(String clusterId, MysqlReplicateCR mysqlReplicateCr) throws IOException {
+        // init client
+        NonNamespaceOperation<MysqlReplicateCR, MysqlReplicateList, Resource<MysqlReplicateCR>> mysqlReplicateClient =
+            K8sClient.getClient(clusterId).resources(MysqlReplicateCR.class, MysqlReplicateList.class);
+        // create
+        mysqlReplicateClient.resource(mysqlReplicateCr).create();
     }
 
     /**
      * 替换mysql复制
      */
-    public void replace(String clusterId, MysqlReplicateCR mysqlReplicateCR) throws IOException {
-        K8sClient.getClient(clusterId).customResource(CONTEXT).createOrReplace(mysqlReplicateCR.getMetadata().getNamespace(),
-                JSONObject.parseObject(JSONObject.toJSONString(mysqlReplicateCR)));
+    public void replace(String clusterId, MysqlReplicateCR mysqlReplicateCr) throws IOException {
+        // init client
+        NonNamespaceOperation<MysqlReplicateCR, MysqlReplicateList, Resource<MysqlReplicateCR>> mysqlReplicateClient =
+            K8sClient.getClient(clusterId).resources(MysqlReplicateCR.class, MysqlReplicateList.class);
+        // update
+        mysqlReplicateClient.resource(mysqlReplicateCr).update();
     }
 
     /**
      * 删除mysql复制
      */
     public void delete(String clusterId, String namespace, String name) throws IOException {
-        K8sClient.getClient(clusterId).customResource(CONTEXT).delete(namespace, name);
+        // init client
+        NonNamespaceOperation<MysqlReplicateCR, MysqlReplicateList, Resource<MysqlReplicateCR>> mysqlReplicateClient =
+            K8sClient.getClient(clusterId).resources(MysqlReplicateCR.class, MysqlReplicateList.class)
+                .inNamespace(namespace);
+        // delete
+        mysqlReplicateClient.withName(name).delete();
     }
 
     /**
      * 查询mysql复制
      */
-    public MysqlReplicateCR getMysqlReplicate(String clusterId, String namespace, String name){
-        Map<String, Object> map = null;
+    public MysqlReplicateCR getMysqlReplicate(String clusterId, String namespace, String name) {
+        MysqlReplicateCR mysqlReplicateCR = null;
         try {
-            map = K8sClient.getClient(clusterId).customResource(CONTEXT).get(namespace, name);
+            // init client
+            NonNamespaceOperation<MysqlReplicateCR, MysqlReplicateList,
+                Resource<MysqlReplicateCR>> mysqlReplicateClient = K8sClient.getClient(clusterId)
+                    .resources(MysqlReplicateCR.class, MysqlReplicateList.class).inNamespace(namespace);
+            mysqlReplicateClient.withName(name);
+            mysqlReplicateCR = mysqlReplicateClient.withName(name).get();
         } catch (Exception e) {
             log.error("查询mysql复制关系出错了");
             return null;
         }
-        if (CollectionUtils.isEmpty(map)) {
-            return null;
-        }
-        return JSONObject.parseObject(JSONObject.toJSONString(map), MysqlReplicateCR.class);
-    }
-
-    public MysqlReplicateCR getMysqlReplicate(String namespace, String name){
-        Map<String, Object> map = null;
-        try {
-            map = k8sClient.getDefaultClient().customResource(CONTEXT).get(namespace, name);
-        } catch (Exception e) {
-            log.error("查询mysql复制关系出错了");
-            return null;
-        }
-        if (CollectionUtils.isEmpty(map)) {
-            return null;
-        }
-        return JSONObject.parseObject(JSONObject.toJSONString(map), MysqlReplicateCR.class);
-    }
-
-    public void updateMysqlReplicate(MysqlReplicateCR mr) throws IOException {
-        k8sClient.getDefaultClient().customResource(CONTEXT).createOrReplace(mr.getMetadata().getNamespace(),
-                JSONObject.parseObject(JSONObject.toJSONString(mr)));
+        return mysqlReplicateCR;
     }
 
 }

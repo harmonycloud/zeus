@@ -1,5 +1,6 @@
 package com.middleware.zeus.integration.cluster.bean;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import org.apache.commons.lang3.StringUtils;
@@ -9,6 +10,7 @@ import java.util.Map;
 
 @Data
 @Accessors(chain = true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class MiddlewareBackupScheduleSpec {
 
     /**

@@ -1,23 +1,19 @@
 package com.middleware.zeus.integration.cluster;
 
-import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.MYSQL_CLUSTER_GROUP;
-import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.MYSQL_CLUSTER_PLURAL;
-import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.MYSQL_CLUSTER_VERSION;
-import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.NAMESPACED;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.*;
 
 import java.io.IOException;
-import java.util.Map;
 
-import com.middleware.zeus.integration.cluster.bean.MysqlCluster;
-import com.middleware.zeus.util.K8sClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
 
-import com.alibaba.fastjson.JSONObject;
-import com.middleware.tool.collection.MapUtils;
+import com.middleware.zeus.integration.cluster.bean.MysqlCluster;
+import com.middleware.zeus.integration.cluster.bean.MysqlClusterList;
+import com.middleware.zeus.util.K8sClient;
 
-import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
+import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
+import io.fabric8.kubernetes.client.dsl.Resource;
+import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
 
 /**
  * @author dengyulong
@@ -25,42 +21,39 @@ import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
  */
 @Component
 public class MysqlClusterWrapper {
+
     @Autowired
     private K8sClient k8sClient;
 
     /**
      * crd的context
      */
-    private static final CustomResourceDefinitionContext CONTEXT = new CustomResourceDefinitionContext.Builder()
-            .withGroup(MYSQL_CLUSTER_GROUP)
-            .withVersion(MYSQL_CLUSTER_VERSION)
-            .withScope(NAMESPACED)
-            .withPlural(MYSQL_CLUSTER_PLURAL)
-            .build();
+    private static final ResourceDefinitionContext CONTEXT =
+        new ResourceDefinitionContext.Builder().withGroup(MYSQL_CLUSTER_GROUP).withVersion(MYSQL_CLUSTER_VERSION)
+            .withNamespaced(true).withPlural(MYSQL_CLUSTER_PLURAL).build();
 
     public MysqlCluster get(String clusterId, String namespace, String name) {
-        // 获取所有的集群资源
-        Map<String, Object> map = K8sClient.getClient(clusterId).customResource(CONTEXT).get(namespace, name);
-        if (CollectionUtils.isEmpty(map)) {
-            return null;
-        }
-        JSONObject resObj = JSONObject.parseObject(JSONObject.toJSONString(map));
-        return JSONObject.parseObject(JSONObject.toJSONString(resObj), MysqlCluster.class);
+        // init client
+        NonNamespaceOperation<MysqlCluster, MysqlClusterList, Resource<MysqlCluster>> mysqlClusterClient =
+            K8sClient.getClient(clusterId).resources(MysqlCluster.class, MysqlClusterList.class).inNamespace(namespace);
+        // get
+        return mysqlClusterClient.withName(name).get();
     }
 
     public void update(String clusterId, String namespace, MysqlCluster mysqlCluster) throws IOException {
-        // 获取所有的集群资源
-        K8sClient.getClient(clusterId).customResource(CONTEXT).createOrReplace(namespace,
-            MapUtils.objectToMap(mysqlCluster));
+        // init client
+        NonNamespaceOperation<MysqlCluster, MysqlClusterList, Resource<MysqlCluster>> mysqlClusterClient =
+            K8sClient.getClient(clusterId).resources(MysqlCluster.class, MysqlClusterList.class).inNamespace(namespace);
+        // update
+        mysqlClusterClient.resource(mysqlCluster).update();
     }
 
     public MysqlCluster get(String namespace, String name) {
-        Map<String, Object> map = k8sClient.getDefaultClient().customResource(CONTEXT).get(namespace, name);
-        if (CollectionUtils.isEmpty(map)) {
-            return null;
-        }
-        JSONObject resObj = JSONObject.parseObject(JSONObject.toJSONString(map));
-        return JSONObject.parseObject(JSONObject.toJSONString(resObj), MysqlCluster.class);
+        // init client
+        NonNamespaceOperation<MysqlCluster, MysqlClusterList, Resource<MysqlCluster>> mysqlClusterClient =
+            k8sClient.getDefaultClient().resources(MysqlCluster.class, MysqlClusterList.class).inNamespace(namespace);
+        // get
+        return mysqlClusterClient.withName(name).get();
     }
 
 }

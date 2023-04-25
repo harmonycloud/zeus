@@ -3,9 +3,7 @@ package com.middleware.zeus.integration.cluster;
 import java.util.List;
 import java.util.Map;
 
-import io.fabric8.kubernetes.api.model.ObjectMeta;
-import io.fabric8.kubernetes.client.KubernetesClientException;
-import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
@@ -13,6 +11,11 @@ import com.middleware.zeus.util.K8sClient;
 
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ConfigMapList;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.client.KubernetesClientException;
+import io.fabric8.kubernetes.client.dsl.MixedOperation;
+import io.fabric8.kubernetes.client.dsl.Resource;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author tangtx
@@ -23,7 +26,11 @@ import io.fabric8.kubernetes.api.model.ConfigMapList;
 public class ConfigMapWrapper {
 
     public List<ConfigMap> list(String clusterId, String namespace) {
-        ConfigMapList configMapList = K8sClient.getClient(clusterId).configMaps().inNamespace(namespace).list();
+        MixedOperation<ConfigMap, ConfigMapList, Resource<ConfigMap>> configmapClient = K8sClient.getClient(clusterId).configMaps();
+        if(StringUtils.isNotEmpty(namespace)){
+            configmapClient.inNamespace(namespace);
+        }
+        ConfigMapList configMapList = configmapClient.list();
         if (CollectionUtils.isEmpty(configMapList.getItems())) {
             return null;
         }
@@ -59,8 +66,8 @@ public class ConfigMapWrapper {
     }
 
     public boolean delete(String clusterId, String namespace, String name) {
-        boolean res = K8sClient.getClient(clusterId).configMaps().inNamespace(namespace).withName(name).delete();
-        return res;
+        K8sClient.getClient(clusterId).configMaps().inNamespace(namespace).withName(name).delete();
+        return true;
     }
 
     public ConfigMap get(String clusterId, String namespace, String name) {

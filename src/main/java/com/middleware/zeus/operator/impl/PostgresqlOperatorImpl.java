@@ -22,7 +22,7 @@ import com.middleware.caas.common.exception.BusinessException;
 import com.middleware.caas.common.model.ActiveAreaAnnotationDto;
 import com.middleware.tool.cmd.CmdExecUtil;
 import com.middleware.caas.common.model.middleware.*;
-import com.middleware.zeus.integration.cluster.Postgresql;
+import com.middleware.zeus.integration.cluster.bean.Postgresql;
 import com.middleware.zeus.integration.cluster.PostgresqlWrapper;
 import com.middleware.zeus.integration.cluster.ServiceWrapper;
 import com.middleware.zeus.service.k8s.K8sExecService;

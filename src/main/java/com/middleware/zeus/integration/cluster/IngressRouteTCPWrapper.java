@@ -1,25 +1,25 @@
 package com.middleware.zeus.integration.cluster;
 
-import com.alibaba.fastjson.JSONObject;
-import com.middleware.tool.collection.MapUtils;
-import com.middleware.zeus.integration.cluster.bean.*;
-import com.middleware.zeus.integration.cluster.bean.IngressRouteTCPCR;
-import com.middleware.zeus.integration.cluster.bean.IngressRouteTCPList;
-import com.middleware.zeus.util.K8sClient;
-import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
-
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.*;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
+
+import com.middleware.zeus.integration.cluster.bean.IngressRouteTCPCR;
+import com.middleware.zeus.integration.cluster.bean.IngressRouteTCPList;
+import com.middleware.zeus.util.K8sClient;
+
+import io.fabric8.kubernetes.client.dsl.MixedOperation;
+import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
+import io.fabric8.kubernetes.client.dsl.Resource;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @description
- * @author  liyinlong
+ * @author liyinlong
  * @since 2022/8/26 3:04 下午
  */
 @Slf4j
@@ -27,24 +27,18 @@ import static com.middleware.caas.common.constants.middleware.MiddlewareConstant
 public class IngressRouteTCPWrapper {
 
     /**
-     * IngressRouteTCP的context
-     */
-    private static final CustomResourceDefinitionContext CONTEXT = new CustomResourceDefinitionContext.Builder()
-            .withGroup("traefik.containo.us")
-            .withVersion("v1alpha1")
-            .withScope(NAMESPACED)
-            .withPlural("ingressroutetcps")
-            .build();
-
-    /**
      * 创建
+     * 
      * @param clusterId
      * @param ingressRouteTCPCR
      */
     public void create(String clusterId, IngressRouteTCPCR ingressRouteTCPCR) {
         try {
-            K8sClient.getClient(clusterId).customResource(CONTEXT).createOrReplace(ingressRouteTCPCR.getMetadata().getNamespace(),
-                    JSONObject.parseObject(JSONObject.toJSONString(ingressRouteTCPCR)));
+            // init client
+            NonNamespaceOperation<IngressRouteTCPCR, IngressRouteTCPList, Resource<IngressRouteTCPCR>> ingressRouteClient =
+                    K8sClient.getClient(clusterId).resources(IngressRouteTCPCR.class, IngressRouteTCPList.class);
+            // create
+            ingressRouteClient.resource(ingressRouteTCPCR).create();
         } catch (Exception e) {
             log.error("创建IngressRouteTCP出错了", e);
         }
@@ -67,55 +61,64 @@ public class IngressRouteTCPWrapper {
 
     /**
      * 删除
+     * 
      * @param clusterId
      * @param namespace
      * @param name
      * @throws IOException
      */
     public void delete(String clusterId, String namespace, String name) {
-        try {
-            K8sClient.getClient(clusterId).customResource(CONTEXT).delete(namespace, name);
-        } catch (IOException e) {
-            log.error("删除ingressroutetcp错误", name);
-        }
+        // init client
+        NonNamespaceOperation<IngressRouteTCPCR, IngressRouteTCPList, Resource<IngressRouteTCPCR>> ingressRouteClient =
+                K8sClient.getClient(clusterId).resources(IngressRouteTCPCR.class, IngressRouteTCPList.class).inNamespace(namespace);
+        // delete
+        ingressRouteClient.withName(name).delete();
     }
 
     /**
      * 更新
+     * 
      * @param clusterId
      * @param namespace
      * @param ingressRouteTCPCR
      * @throws IOException
      */
     public void update(String clusterId, String namespace, IngressRouteTCPCR ingressRouteTCPCR) throws IOException {
-        // 获取所有的集群资源
-        K8sClient.getClient(clusterId).customResource(CONTEXT).createOrReplace(namespace,
-                MapUtils.objectToMap(ingressRouteTCPCR));
+        // init client
+        NonNamespaceOperation<IngressRouteTCPCR, IngressRouteTCPList, Resource<IngressRouteTCPCR>> ingressRouteClient =
+                K8sClient.getClient(clusterId).resources(IngressRouteTCPCR.class, IngressRouteTCPList.class).inNamespace(namespace);
+        // update
+        ingressRouteClient.resource(ingressRouteTCPCR).update();
     }
 
     /**
      * 查询列表
+     * 
      * @param clusterId
      * @param namespace
      * @param labels
      * @return
      */
     public IngressRouteTCPList list(String clusterId, String namespace, Map<String, String> labels) {
-        Map<String, Object> map = null;
+        IngressRouteTCPList ingressRouteTCPList;
         try {
-            if (namespace == null) {
-                map = K8sClient.getClient(clusterId).customResource(CONTEXT).list();
-            } else {
-                map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(namespace, labels);
+            // init client
+            NonNamespaceOperation<IngressRouteTCPCR, IngressRouteTCPList,
+                Resource<IngressRouteTCPCR>> ingressRouteClient =
+                    K8sClient.getClient(clusterId).resources(IngressRouteTCPCR.class, IngressRouteTCPList.class);
+            if (StringUtils.isNotEmpty(namespace)) {
+                ingressRouteClient = ((MixedOperation<IngressRouteTCPCR, IngressRouteTCPList,
+                    Resource<IngressRouteTCPCR>>)ingressRouteClient).inNamespace(namespace);
             }
+            if (!CollectionUtils.isEmpty(labels)){
+                ingressRouteClient.withLabels(labels);
+            }
+            ingressRouteTCPList = ingressRouteClient.list();
         } catch (Exception e) {
             log.error("查询MiddlewareRestoreList出错了", e);
             return null;
         }
-        if (CollectionUtils.isEmpty(map)) {
-            return null;
-        }
-        return JSONObject.parseObject(JSONObject.toJSONString(map), IngressRouteTCPList.class);
+        return ingressRouteTCPList;
     }
 
 }

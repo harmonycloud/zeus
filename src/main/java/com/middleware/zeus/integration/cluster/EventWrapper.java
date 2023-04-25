@@ -1,10 +1,10 @@
 package com.middleware.zeus.integration.cluster;
 
 import com.middleware.zeus.util.K8sClient;
+import io.fabric8.kubernetes.api.model.events.v1.Event;
+import io.fabric8.kubernetes.api.model.events.v1.EventList;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import org.springframework.stereotype.Component;
-import io.fabric8.kubernetes.api.model.Event;
-import io.fabric8.kubernetes.api.model.EventList;
 import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
@@ -20,7 +20,7 @@ public class EventWrapper {
 
     public List<Event> list(String clusterId, String namespace) {
         KubernetesClient client = K8sClient.getClient(clusterId);
-        EventList list = client.events().inNamespace(namespace).list();
+        EventList list = client.events().v1().events().list();
         if (list == null || CollectionUtils.isEmpty(list.getItems())) {
             return new ArrayList<>(0);
         }
@@ -28,7 +28,7 @@ public class EventWrapper {
     }
 
     public List<Event> listByFields(String clusterId, Map<String, String> fields){
-        EventList list = K8sClient.getClient(clusterId).v1().events().withFields(fields).list();
+        EventList list = K8sClient.getClient(clusterId).events().v1().events().withFields(fields).list();
         if (list == null || CollectionUtils.isEmpty(list.getItems())) {
             return new ArrayList<>(0);
         }

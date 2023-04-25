@@ -7,7 +7,7 @@ import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
 import com.middleware.zeus.service.k8s.EventService;
 import com.middleware.zeus.service.k8s.MiddlewareCRService;
 import com.middleware.tool.date.DateUtils;
-import io.fabric8.kubernetes.api.model.Event;
+import io.fabric8.kubernetes.api.model.events.v1.Event;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -57,11 +57,12 @@ public class EventServiceImpl implements EventService {
             if (StringUtils.isNotBlank(eventType) && !eventType.equals(e.getType())) {
                 return false;
             }
-            if (StringUtils.isNotBlank(kind) && !kind.equals(e.getInvolvedObject().getKind())) {
+
+            if (StringUtils.isNotBlank(kind) && !kind.equals(e.getRegarding().getKind())) {
                 return false;
             }
             // 过滤中间件信息
-            return nameSet.contains(e.getInvolvedObject().getName());
+            return nameSet.contains(e.getRegarding().getName());
         }).map(this::convertEventDetail).sorted((e1, e2) -> {
             if (e1.getLastTimestamp().equals(e2.getLastTimestamp())) {
                 return 0;
@@ -83,7 +84,7 @@ public class EventServiceImpl implements EventService {
         convertTime(event, eventDetail);
 
         ObjectReference objectReference = new ObjectReference();
-        BeanUtils.copyProperties(event.getInvolvedObject(), objectReference);
+        BeanUtils.copyProperties(event.getRegarding(), objectReference);
         eventDetail.setInvolvedObject(objectReference);
         return eventDetail;
     }
@@ -97,13 +98,13 @@ public class EventServiceImpl implements EventService {
             }
             eventDetail.setEventTime(DateUtils.parseUTCDate(event.getEventTime().getTime()));
         }
-        if (StringUtils.isNotBlank(event.getFirstTimestamp())) {
-            eventDetail.setFirstTimestamp(DateUtils.parseUTCDate(event.getFirstTimestamp()));
+        if (StringUtils.isNotBlank(event.getDeprecatedFirstTimestamp())) {
+            eventDetail.setFirstTimestamp(DateUtils.parseUTCDate(event.getDeprecatedFirstTimestamp()));
         } else {
             eventDetail.setFirstTimestamp(eventDetail.getEventTime());
         }
-        if (StringUtils.isNotBlank(event.getLastTimestamp())) {
-            eventDetail.setLastTimestamp(DateUtils.parseUTCDate(event.getLastTimestamp()));
+        if (StringUtils.isNotBlank(event.getDeprecatedLastTimestamp())) {
+            eventDetail.setLastTimestamp(DateUtils.parseUTCDate(event.getDeprecatedLastTimestamp()));
         } else {
             eventDetail.setLastTimestamp(eventDetail.getEventTime());
         }

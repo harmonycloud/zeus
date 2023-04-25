@@ -1,10 +1,12 @@
 package com.middleware.zeus.integration.cluster.bean;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
 @Data
 @Accessors(chain = true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class MysqlReplicateSpec {
 
     private boolean enable;

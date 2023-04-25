@@ -8,7 +8,6 @@ import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.middleware.tool.date.DateUtils;
 import com.middleware.zeus.bean.BeanMiddlewareCluster;
 import com.middleware.zeus.dao.BeanMiddlewareClusterMapper;
-import com.middleware.zeus.integration.cluster.ClusterWrapper;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareCluster;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareClusterInfo;
 import com.middleware.zeus.service.k8s.MiddlewareClusterService;
@@ -39,8 +38,6 @@ public class MiddlewareClusterServiceImpl implements MiddlewareClusterService {
 
     @Autowired
     private BeanMiddlewareClusterMapper middlewareClusterMapper;
-    @Autowired
-    private ClusterWrapper clusterWrapper;
     @Autowired
     private ImageRepositoryService imageRepositoryService;
 

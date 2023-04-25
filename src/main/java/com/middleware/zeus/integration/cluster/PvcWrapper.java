@@ -5,6 +5,8 @@ import com.middleware.caas.common.exception.BusinessException;
 import com.middleware.zeus.util.K8sClient;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaimList;
+import io.fabric8.kubernetes.client.dsl.MixedOperation;
+import io.fabric8.kubernetes.client.dsl.Resource;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
@@ -19,14 +21,15 @@ import java.util.Map;
  */
 @Component
 public class PvcWrapper {
-
-    public void deleteByLabels(String clusterId, String namespace, String labels) {
-        K8sClient.getClient(clusterId).persistentVolumeClaims().inNamespace(namespace).withLabel(labels).delete();
-    }
     
     public List<PersistentVolumeClaim> list(String clusterId, String namespace) {
-        PersistentVolumeClaimList list =
-            K8sClient.getClient(clusterId).persistentVolumeClaims().inNamespace(namespace).list();
+        // init client
+        MixedOperation<PersistentVolumeClaim, PersistentVolumeClaimList, Resource<PersistentVolumeClaim>> client =
+            K8sClient.getClient(clusterId).persistentVolumeClaims();
+        if (StringUtils.isNotEmpty(namespace)) {
+            client.inNamespace(namespace);
+        }
+        PersistentVolumeClaimList list = client.list();
         if (list == null || CollectionUtils.isEmpty(list.getItems())) {
             return new ArrayList<>(0);
         }

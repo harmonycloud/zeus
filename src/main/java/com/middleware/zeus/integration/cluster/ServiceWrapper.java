@@ -79,8 +79,8 @@ public class ServiceWrapper {
     }
 
     public boolean delete(String clusterId, String namespace, String name) {
-        boolean res = K8sClient.getClient(clusterId).services().inNamespace(namespace).withName(name).delete();
-        return res;
+        K8sClient.getClient(clusterId).services().inNamespace(namespace).withName(name).delete();
+        return true;
     }
 
     public Service get(String clusterId, String namespace, String name) {

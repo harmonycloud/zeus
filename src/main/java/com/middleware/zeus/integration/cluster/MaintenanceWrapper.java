@@ -1,27 +1,25 @@
 package com.middleware.zeus.integration.cluster;
 
-import static com.middleware.caas.common.constants.NameConstant.*;
-import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.*;
+import static com.middleware.caas.common.constants.NameConstant.FOUR_ZERO_FOUR;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.middleware.tool.collection.MapUtils;
-import com.middleware.zeus.integration.cluster.bean.MaintenanceList;
-import com.middleware.zeus.util.K8sClient;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
-import com.alibaba.fastjson.JSONObject;
 import com.middleware.zeus.integration.cluster.bean.Maintenance;
+import com.middleware.zeus.integration.cluster.bean.MaintenanceList;
+import com.middleware.zeus.util.K8sClient;
 
-import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
+import io.fabric8.kubernetes.client.dsl.MixedOperation;
+import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
+import io.fabric8.kubernetes.client.dsl.Resource;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author xutianhong
@@ -31,13 +29,6 @@ import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 @Slf4j
 public class MaintenanceWrapper {
 
-    private static final CustomResourceDefinitionContext CONTEXT = new CustomResourceDefinitionContext.Builder()
-            .withGroup(MAINTENANCE_MIDDLEWARE_HC_CN)
-            .withVersion(V1_ALPHA1)
-            .withScope(NAMESPACED)
-            .withPlural(MAINTENANCES)
-            .build();
-
     /**
      * 根据labels查询运维组件
      *
@@ -46,29 +37,39 @@ public class MaintenanceWrapper {
      * @param labels
      */
     public List<Maintenance> listByLabels(String clusterId, String namespace, Map<String, String> labels) {
-        Map<String, Object> map = null;
+        MaintenanceList maintenanceList;
         try {
-            map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(namespace, labels);
-        } catch (Exception e){
+            // init client
+            NonNamespaceOperation<Maintenance, MaintenanceList, Resource<Maintenance>> maintenanceClient =
+                K8sClient.getClient(clusterId).resources(Maintenance.class, MaintenanceList.class);
+            if (StringUtils.isNotEmpty(namespace)) {
+                maintenanceClient =
+                    ((MixedOperation<Maintenance, MaintenanceList, Resource<Maintenance>>)maintenanceClient)
+                        .inNamespace(namespace);
+            }
+            if (!CollectionUtils.isEmpty(labels)) {
+                maintenanceClient.withLabels(labels);
+            }
+            maintenanceList = maintenanceClient.list();
+        } catch (Exception e) {
             if (StringUtils.isNotEmpty(e.getMessage()) && e.getMessage().contains(FOUR_ZERO_FOUR)) {
                 log.error("Maintenance crd未部署");
             } else {
                 throw e;
             }
-        }
-        if (CollectionUtils.isEmpty(map)){
             return null;
         }
-        MaintenanceList maintenanceList = JSONObject.parseObject(JSONObject.toJSONString(map), MaintenanceList.class);
-        if (CollectionUtils.isEmpty(maintenanceList.getItems())){
+        if (CollectionUtils.isEmpty(maintenanceList.getItems())) {
             return new ArrayList<>();
         }
         return maintenanceList.getItems();
     }
 
-    public List<Maintenance> listByLabels(String clusterId, String namespace, Map<String, String> labels, String action){
+    public List<Maintenance> listByLabels(String clusterId, String namespace, Map<String, String> labels,
+        String action) {
         List<Maintenance> maintenanceList = listByLabels(clusterId, namespace, labels);
-        return maintenanceList = maintenanceList.stream().filter(mt -> mt.getSpec().getAction().equals(action)).collect(Collectors.toList());
+        return maintenanceList.stream().filter(mt -> mt.getSpec().getAction().equals(action))
+            .collect(Collectors.toList());
     }
 
     /**
@@ -79,35 +80,48 @@ public class MaintenanceWrapper {
      * @throws IOException
      */
     public void create(String clusterId, Maintenance maintenance) throws IOException {
-        K8sClient.getClient(clusterId).customResource(CONTEXT).createOrReplace(maintenance.getMetadata().getNamespace(),
-            JSONObject.parseObject(JSONObject.toJSONString(maintenance)));
+        // init client
+        NonNamespaceOperation<Maintenance, MaintenanceList, Resource<Maintenance>> maintenanceClient =
+            K8sClient.getClient(clusterId).resources(Maintenance.class, MaintenanceList.class);
+        // create
+        maintenanceClient.resource(maintenance).create();
     }
 
     public List<Maintenance> list(String clusterId, String namespace) {
         try {
-            Map<String, Object> map;
-            if ("*".equals(namespace)) {
-                map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(null);
-            } else {
-                map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(namespace);
+            // init client
+            NonNamespaceOperation<Maintenance, MaintenanceList, Resource<Maintenance>> maintenanceClient =
+                K8sClient.getClient(clusterId).resources(Maintenance.class, MaintenanceList.class);
+            if (StringUtils.isNotEmpty(namespace)) {
+                maintenanceClient =
+                    ((MixedOperation<Maintenance, MaintenanceList, Resource<Maintenance>>)maintenanceClient)
+                        .inNamespace(namespace);
             }
-            MaintenanceList maintenanceList = JSONObject.parseObject(JSONObject.toJSONString(map), MaintenanceList.class);
-            if (maintenanceList == null || CollectionUtils.isEmpty(maintenanceList.getItems())){
+            MaintenanceList maintenanceList = maintenanceClient.list();
+            if (maintenanceList == null || CollectionUtils.isEmpty(maintenanceList.getItems())) {
                 return new ArrayList<>();
             }
             return maintenanceList.getItems();
-        } catch (Exception e){
+        } catch (Exception e) {
             log.error("查询Maintenance失败", e);
         }
         return new ArrayList<>();
     }
 
     public void delete(String clusterId, String namespace, String name) throws IOException {
-        K8sClient.getClient(clusterId).customResource(CONTEXT).delete(namespace, name);
+        // init client
+        NonNamespaceOperation<Maintenance, MaintenanceList, Resource<Maintenance>> maintenanceClient =
+            K8sClient.getClient(clusterId).resources(Maintenance.class, MaintenanceList.class).inNamespace(namespace);
+        // delete
+        maintenanceClient.withName(name).delete();
     }
 
-    public void update(String clusterId, String namespace,Maintenance mt) throws IOException {
-        K8sClient.getClient(clusterId).customResource(CONTEXT).createOrReplace(namespace, MapUtils.objectToMap(mt));
+    public void update(String clusterId, String namespace, Maintenance mt) throws IOException {
+        // init client
+        NonNamespaceOperation<Maintenance, MaintenanceList, Resource<Maintenance>> maintenanceClient =
+            K8sClient.getClient(clusterId).resources(Maintenance.class, MaintenanceList.class).inNamespace(namespace);
+        // delete
+        maintenanceClient.resource(mt).update();
     }
 
 }

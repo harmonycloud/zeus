@@ -8,6 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.middleware.zeus.service.k8s.ClusterCertService;
 import com.middleware.zeus.service.k8s.ClusterService;
 import com.middleware.zeus.service.k8s.MiddlewareClusterService;
+import io.fabric8.kubernetes.client.KubernetesClientBuilder;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -131,7 +132,7 @@ public class K8sClient {
             KubernetesClient client;
             if (StringUtils.isNotEmpty(c.getCert().getCertificateAuthorityData())) {
                 // 使用证书构建client
-                client = new DefaultKubernetesClient(new ConfigBuilder()
+                client = new KubernetesClientBuilder().withConfig(new ConfigBuilder()
                     .withMasterUrl(c.getAddress())
                     .withTrustCerts(true)
                     .withCaCertData(c.getCert().getCertificateAuthorityData())
@@ -139,11 +140,14 @@ public class K8sClient {
                     .withClientKeyData(c.getCert().getClientKeyData())
                     // 需将 Namespace 初始化为 null
                     .withNamespace(null)
-                    .build());
+                    .build()).build();
             } else {
                 // 使用token构建client，会解析成证书，所以优先使用证书
-                client = new DefaultKubernetesClient(new ConfigBuilder().withMasterUrl(c.getAddress())
-                    .withTrustCerts(true).withOauthToken(c.getAccessToken()).build());
+                client = new KubernetesClientBuilder().withConfig(new ConfigBuilder()
+                        .withMasterUrl(c.getAddress())
+                        .withTrustCerts(true)
+                        .withOauthToken(c.getAccessToken())
+                        .build()).build();
             }
             K8S_CLIENT_MAP.put(c.getId(), client);
 

@@ -1127,7 +1127,7 @@ public class IngressServiceImpl implements IngressService {
         servicePort.setPort(Integer.parseInt(serviceDTO.getServicePort()));
 
         IntOrString intOrString = new IntOrString();
-        intOrString.setIntVal(Integer.parseInt(serviceDTO.getTargetPort()));
+        intOrString.setValue(Integer.parseInt(serviceDTO.getTargetPort()));
         servicePort.setTargetPort(intOrString);
 
         return servicePort;
@@ -1513,7 +1513,7 @@ public class IngressServiceImpl implements IngressService {
 
                         IngressBackend ingressBackend = new IngressBackend();
                         IntOrString servicePort = new IntOrString();
-                        servicePort.setIntVal(Integer.parseInt(ingressHttpPath.getServicePort()));
+                        servicePort.setValue(Integer.parseInt(ingressHttpPath.getServicePort()));
                         ingressBackend.setServicePort(servicePort);
                         ingressBackend.setServiceName(ingressHttpPath.getServiceName());
                         httpIngressPath.setBackend(ingressBackend);

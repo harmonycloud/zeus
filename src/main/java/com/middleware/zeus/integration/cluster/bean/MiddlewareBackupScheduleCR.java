@@ -1,28 +1,25 @@
 package com.middleware.zeus.integration.cluster.bean;
 
+import io.fabric8.kubernetes.api.model.Namespaced;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.client.CustomResource;
+import io.fabric8.kubernetes.model.annotation.Group;
+import io.fabric8.kubernetes.model.annotation.Plural;
+import io.fabric8.kubernetes.model.annotation.Version;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
-import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.CR_API_VERSION;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.*;
 
 /**
  * 中间件备份crd
  * @author  liyinlong
  * @since 2021/9/13 4:33 下午
  */
-@Data
 @Accessors(chain = true)
-public class MiddlewareBackupScheduleCR {
-
-    private String apiVersion = CR_API_VERSION;
-
-    private String kind = "MiddlewareBackupSchedule";
-
-    private ObjectMeta metadata;
-
-    private MiddlewareBackupScheduleSpec spec;
-
-    private MiddlewareBackupScheduleStatus status;
+@Group(CR_GROUP)
+@Version(V1)
+@Plural(MIDDLEWAREBACKUPSCHEDULES)
+public class MiddlewareBackupScheduleCR extends CustomResource<MiddlewareBackupScheduleSpec, MiddlewareBackupScheduleStatus> implements Namespaced {
 
 }

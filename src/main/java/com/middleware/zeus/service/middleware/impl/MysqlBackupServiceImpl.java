@@ -188,10 +188,11 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
         labels.put("type", backupDTO.getType());
         metaData.setLabels(labels);
         metaData.setNamespace(backupDTO.getNamespace());
-        metaData.setClusterName(backupDTO.getMiddlewareName());
 
-        MysqlScheduleBackupCR mysqlScheduleBackupCR =
-                new MysqlScheduleBackupCR().setKind("MysqlBackupSchedule").setSpec(spec).setMetadata(metaData);
+        MysqlScheduleBackupCR mysqlScheduleBackupCR = new MysqlScheduleBackupCR();
+        mysqlScheduleBackupCR.setKind("MysqlBackupSchedule");
+        mysqlScheduleBackupCR.setSpec(spec);
+        mysqlScheduleBackupCR.setMetadata(metaData);
         mysqlScheduleBackupService.create(backupDTO.getClusterId(), mysqlScheduleBackupCR);
         saveBackupName(backupDTO.getClusterId(), backupDTO.getTaskName(), backupId, "schedule", backupDTO.getBackupPositionId());
     }
@@ -218,8 +219,11 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
         labels.put("type", backupDTO.getType());
         metaData.setLabels(labels);
         metaData.setNamespace(backupDTO.getNamespace());
-        metaData.setClusterName(backupDTO.getMiddlewareName());
-        BackupCR backupCR = new BackupCR().setKind("MysqlBackup").setSpec(spec).setMetadata(metaData);
+
+        BackupCR backupCR = new BackupCR();
+        backupCR.setKind("MysqlBackup");
+        backupCR.setSpec(spec);
+        backupCR.setMetadata(metaData);
         backupService.create(backupDTO.getClusterId(), backupCR);
         saveBackupName(backupDTO.getClusterId(), backupDTO.getTaskName(), backupId, "normal", backupDTO.getBackupPositionId());
     }

@@ -18,7 +18,7 @@ import com.middleware.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.middleware.caas.common.model.*;
 import com.middleware.tool.collection.JsonUtils;
 import com.middleware.tool.numeric.ResourceCalculationUtil;
-import com.middleware.zeus.integration.cluster.RedisCluster;
+import com.middleware.zeus.integration.cluster.bean.RedisCluster;
 import com.middleware.zeus.integration.cluster.RedisClusterWrapper;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
 import com.middleware.zeus.service.k8s.IngressComponentService;

@@ -1,31 +1,22 @@
 package com.middleware.zeus.integration.cluster.bean;
 
+import io.fabric8.kubernetes.api.model.Namespaced;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.client.CustomResource;
+import io.fabric8.kubernetes.model.annotation.Group;
+import io.fabric8.kubernetes.model.annotation.Plural;
+import io.fabric8.kubernetes.model.annotation.Version;
 import lombok.Data;
 
-import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.CR_API_VERSION;
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.*;
 
 /**
  * @author liyinlong
  * @since 2021/9/15 5:04 下午
  */
-@Data
-public class MiddlewareRestoreCR {
+@Group(CR_GROUP)
+@Version(V1)
+@Plural(MIDDLEWARERESTORES)
+public class MiddlewareRestoreCR extends CustomResource<MiddlewareRestoreSpec, MiddlewareRestoreStatus> implements Namespaced {
 
-    private String apiVersion = CR_API_VERSION;
-
-    private String kind = "MiddlewareRestore";
-
-    private ObjectMeta metadata;
-
-    private MiddlewareRestoreSpec spec;
-
-    private MiddlewareRestoreStatus status;
-
-    public MiddlewareRestoreCR() {
-    }
-
-    public MiddlewareRestoreCR(String backupName, String middlewareName) {
-        this.spec = spec;
-    }
 }

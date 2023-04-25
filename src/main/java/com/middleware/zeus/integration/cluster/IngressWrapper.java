@@ -71,8 +71,8 @@ public class IngressWrapper {
     }
 
     public boolean delete(String clusterId, String namespace, String name) {
-        boolean res = K8sClient.getClient(clusterId).extensions().ingresses().inNamespace(namespace).withName(name).delete();
-        return res;
+        K8sClient.getClient(clusterId).extensions().ingresses().inNamespace(namespace).withName(name).delete();
+        return true;
     }
 
     public Ingress get(String clusterId, String namespace, String name) {

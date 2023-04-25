@@ -15,14 +15,7 @@ import com.middleware.zeus.integration.cluster.ServiceAccountWrapper;
 import com.middleware.zeus.service.k8s.ClusterCertService;
 import com.middleware.tool.file.FileUtil;
 import com.middleware.zeus.util.YamlUtil;
-import io.fabric8.kubernetes.api.model.AuthInfo;
-import io.fabric8.kubernetes.api.model.Cluster;
-import io.fabric8.kubernetes.api.model.Config;
-import io.fabric8.kubernetes.api.model.Context;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
-import io.fabric8.kubernetes.api.model.ObjectReference;
-import io.fabric8.kubernetes.api.model.Secret;
-import io.fabric8.kubernetes.api.model.ServiceAccount;
+import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.rbac.ClusterRoleBinding;
 import io.fabric8.kubernetes.api.model.rbac.RoleRef;
 import io.fabric8.kubernetes.api.model.rbac.Subject;
@@ -191,16 +184,16 @@ public class ClusterCertServiceImpl implements ClusterCertService {
             if (config == null) {
                 throw new BusinessException(DictEnum.CERTIFICATE, ErrorMessage.CERTIFICATE_AUTH_FAILED);
             }
-            Context currentContext = KubeConfigUtils.getCurrentContext(config);
+            NamedContext currentContext = KubeConfigUtils.getCurrentContext(config);
             if (currentContext == null) {
                 throw new BusinessException(DictEnum.CERTIFICATE, ErrorMessage.CERTIFICATE_AUTH_FAILED);
             }
-            Cluster c = KubeConfigUtils.getCluster(config, currentContext);
+            Cluster c = KubeConfigUtils.getCluster(config, currentContext.getContext());
             if (c == null || StringUtils.isEmpty(c.getCertificateAuthorityData())
                 && StringUtils.isEmpty(c.getCertificateAuthority())) {
                 throw new BusinessException(DictEnum.CERTIFICATE, ErrorMessage.CERTIFICATE_AUTH_FAILED);
             }
-            AuthInfo user = KubeConfigUtils.getUserAuthInfo(config, currentContext);
+            AuthInfo user = KubeConfigUtils.getUserAuthInfo(config, currentContext.getContext());
             if (user == null
                 || StringUtils.isEmpty(user.getClientCertificateData())
                     && StringUtils.isEmpty(user.getClientCertificate())

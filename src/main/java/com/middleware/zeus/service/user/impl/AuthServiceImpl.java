@@ -89,7 +89,7 @@ public class AuthServiceImpl extends AbstractAuthService implements AuthService 
         }
 
         // 查看平台灾备切换状态
-        checkDisasterRecovery(isAdmin);
+        //checkDisasterRecovery(isAdmin);
 
         JSONObject userInfo = convertUserInfo(userDto);
         String token = generateToken(userInfo);

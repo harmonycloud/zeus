@@ -2,26 +2,25 @@ package com.middleware.zeus.integration.cluster.bean.prometheus;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import io.fabric8.kubernetes.api.model.Namespaced;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.client.CustomResource;
+import io.fabric8.kubernetes.model.annotation.Group;
+import io.fabric8.kubernetes.model.annotation.Plural;
+import io.fabric8.kubernetes.model.annotation.Version;
 import lombok.Data;
 import lombok.experimental.Accessors;
+
+import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.*;
 
 /**
  * @author xutianhong
  * @Date 2021/4/27 10:24 上午
  */
-@Data
 @Accessors(chain = true)
-@JsonIgnoreProperties(ignoreUnknown = true)
-@JsonInclude(value=JsonInclude.Include.NON_NULL)
-public class PrometheusRule {
-
-    private String apiVersion = "monitoring.coreos.com/v1";
-
-    private String kind;
-
-    private ObjectMeta metadata;
-
-    private PrometheusRuleSpec spec;
+@Group(MONITORING_CORS_COM)
+@Version(MIDDLEWARE_CLUSTER_VERSION)
+@Plural(PROMETHEUS_RULE)
+public class PrometheusRule extends CustomResource<PrometheusRuleSpec, Void> implements Namespaced {
 
 }

@@ -1,5 +1,6 @@
 package com.middleware.zeus.integration.cluster.bean;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 
 import java.util.List;
@@ -9,6 +10,7 @@ import java.util.List;
  * @since 2021/9/15 5:09 下午
  */
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class MiddlewareRestoreStatus {
 
     private String creationTimestamp;

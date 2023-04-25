@@ -1,13 +1,18 @@
 package com.middleware.zeus.integration.cluster;
 
-import com.middleware.zeus.util.K8sClient;
-import io.fabric8.kubernetes.api.model.Secret;
-import io.fabric8.kubernetes.api.model.SecretList;
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.dtflys.forest.utils.StringUtils;
+import com.middleware.zeus.util.K8sClient;
+
+import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.api.model.SecretList;
+import io.fabric8.kubernetes.client.dsl.MixedOperation;
+import io.fabric8.kubernetes.client.dsl.Resource;
 
 /**
  * @author dengyulong
@@ -25,7 +30,11 @@ public class SecretWrapper {
     }
 
     public List<Secret> list(String clusterId, String namespace) {
-        SecretList list = K8sClient.getClient(clusterId).secrets().inNamespace(namespace).list();
+        MixedOperation<Secret, SecretList, Resource<Secret>> secretClient = K8sClient.getClient(clusterId).secrets();
+        if (StringUtils.isNotEmpty(namespace)) {
+            secretClient.inNamespace(namespace);
+        }
+        SecretList list = secretClient.list();
         if (list == null || CollectionUtils.isEmpty(list.getItems())) {
             return new ArrayList<>(0);
         }
@@ -37,7 +46,8 @@ public class SecretWrapper {
     }
 
     public Secret get(String clusterId, String namespace, String labelKey, String labelValue) {
-        SecretList list = K8sClient.getClient(clusterId).secrets().inNamespace(namespace).withLabel(labelKey, labelValue).list();
+        SecretList list =
+            K8sClient.getClient(clusterId).secrets().inNamespace(namespace).withLabel(labelKey, labelValue).list();
         if (!CollectionUtils.isEmpty(list.getItems())) {
             return list.getItems().get(0);
         }
@@ -45,9 +55,15 @@ public class SecretWrapper {
     }
 
     public List<Secret> list(String clusterId, String namespace, String labelKey) {
-        SecretList list = K8sClient.getClient(clusterId).secrets().inNamespace(namespace).withLabel(labelKey).list();
+        MixedOperation<Secret, SecretList, Resource<Secret>> secretClient = K8sClient.getClient(clusterId).secrets();
+        if (StringUtils.isNotEmpty(namespace)) {
+            secretClient.inNamespace(namespace);
+        }
+        if (StringUtils.isNotEmpty(labelKey)) {
+            secretClient.withLabel(labelKey);
+        }
+        SecretList list = secretClient.list();
         return list.getItems();
     }
-
 
 }

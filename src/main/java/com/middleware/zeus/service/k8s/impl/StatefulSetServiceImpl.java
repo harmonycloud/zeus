@@ -21,9 +21,4 @@ public class StatefulSetServiceImpl implements StatefulSetService {
     @Autowired
     private StatefulSetWrapper statefulSetWrapper;
 
-    @Override
-    public List<LinkedHashMap> get(String clusterId, String namespace, String name) {
-        return statefulSetWrapper.get(clusterId, namespace, name);
-    }
-
 }

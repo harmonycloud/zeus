@@ -1,23 +1,25 @@
 package com.middleware.zeus.integration.cluster;
 
-import com.alibaba.fastjson.JSONObject;
-import com.middleware.zeus.integration.cluster.bean.*;
-import com.middleware.zeus.integration.cluster.bean.MiddlewareRestoreCR;
-import com.middleware.zeus.integration.cluster.bean.MiddlewareRestoreList;
-import com.middleware.zeus.util.K8sClient;
-import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Component;
-import org.springframework.util.CollectionUtils;
-
 import java.io.IOException;
 import java.util.Map;
 
-import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.*;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Component;
+import org.springframework.util.CollectionUtils;
+
+import com.middleware.zeus.integration.cluster.bean.MiddlewareRestoreCR;
+import com.middleware.zeus.integration.cluster.bean.MiddlewareRestoreList;
+import com.middleware.zeus.util.K8sClient;
+
+import io.fabric8.kubernetes.client.dsl.MixedOperation;
+import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
+import io.fabric8.kubernetes.client.dsl.Resource;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 中间件恢复
- * @author  liyinlong
+ * 
+ * @author liyinlong
  * @since 2021/9/15 5:16 下午
  */
 @Slf4j
@@ -25,48 +27,60 @@ import static com.middleware.caas.common.constants.middleware.MiddlewareConstant
 public class MiddlewareRestoreWrapper {
 
     /**
-     * MiddlewareRestore的context
-     */
-    private static final CustomResourceDefinitionContext CONTEXT = new CustomResourceDefinitionContext.Builder()
-            .withGroup(CR_GROUP)
-            .withVersion(V1)
-            .withScope(NAMESPACED)
-            .withPlural(MIDDLEWARERESTORES)
-            .build();
-
-    /**
      * 创建恢复
+     * 
      * @param clusterId
-     * @param middlewareBackupCRD
+     * @param middlewareRestoreCr
      * @throws IOException
      */
-    public void create(String clusterId, MiddlewareRestoreCR middlewareBackupCRD) throws IOException {
-        K8sClient.getClient(clusterId).customResource(CONTEXT).create(middlewareBackupCRD.getMetadata().getNamespace(),
-                JSONObject.parseObject(JSONObject.toJSONString(middlewareBackupCRD)));
+    public void create(String clusterId, MiddlewareRestoreCR middlewareRestoreCr) throws IOException {
+        // init client
+        NonNamespaceOperation<MiddlewareRestoreCR, MiddlewareRestoreList,
+            Resource<MiddlewareRestoreCR>> middlewareRestoreClient =
+                K8sClient.getClient(clusterId).resources(MiddlewareRestoreCR.class, MiddlewareRestoreList.class);
+        // create
+        middlewareRestoreClient.resource(middlewareRestoreCr).create();
     }
 
     /**
      * 删除
+     * 
      * @param clusterId
      * @param namespace
      * @param name
      * @throws IOException
      */
     public void delete(String clusterId, String namespace, String name) throws IOException {
-        K8sClient.getClient(clusterId).customResource(CONTEXT).delete(namespace, name);
+        // init client
+        NonNamespaceOperation<MiddlewareRestoreCR, MiddlewareRestoreList,
+            Resource<MiddlewareRestoreCR>> middlewareRestoreClient = K8sClient.getClient(clusterId)
+                .resources(MiddlewareRestoreCR.class, MiddlewareRestoreList.class).inNamespace(namespace);
+        // delete
+        middlewareRestoreClient.withName(name).delete();
     }
 
-    public MiddlewareRestoreList list(String clusterId, String namespace, Map<String,String> labels){
-        Map<String, Object> map = null;
+    public MiddlewareRestoreList list(String clusterId, String namespace, Map<String, String> labels) {
+        MiddlewareRestoreList middlewareRestoreList = null;
         try {
-            map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(namespace, labels);
+            // init client
+            NonNamespaceOperation<MiddlewareRestoreCR, MiddlewareRestoreList,
+                Resource<MiddlewareRestoreCR>> middlewareRestoreClient =
+                    K8sClient.getClient(clusterId).resources(MiddlewareRestoreCR.class, MiddlewareRestoreList.class);
+            if (StringUtils.isNotEmpty(namespace)) {
+                middlewareRestoreClient = ((MixedOperation<MiddlewareRestoreCR, MiddlewareRestoreList,
+                    Resource<MiddlewareRestoreCR>>)middlewareRestoreClient).inNamespace(namespace);
+            }
+            if (CollectionUtils.isEmpty(labels)) {
+                middlewareRestoreClient.withLabels(labels);
+            }
+            middlewareRestoreList = middlewareRestoreClient.list();
         } catch (Exception e) {
             log.error("查询MiddlewareRestoreList出错了", e);
             return null;
         }
-        if (CollectionUtils.isEmpty(map)) {
+        if (CollectionUtils.isEmpty(middlewareRestoreList.getItems())) {
             return null;
         }
-        return JSONObject.parseObject(JSONObject.toJSONString(map), MiddlewareRestoreList.class);
+        return middlewareRestoreList;
     }
 }

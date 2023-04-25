@@ -1,21 +1,13 @@
 package com.middleware.zeus.integration.cluster;
 
-import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_CLUSTER_GROUP;
-import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_CLUSTER_VERSION;
-import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_PLURAL;
-import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.NAMESPACED;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
-import com.alibaba.fastjson.JSONObject;
 import com.middleware.caas.common.enums.DictEnum;
 import com.middleware.caas.common.enums.ErrorMessage;
 import com.middleware.caas.common.exception.BusinessException;
@@ -24,40 +16,35 @@ import com.middleware.zeus.integration.cluster.bean.MiddlewareList;
 import com.middleware.zeus.util.K8sClient;
 
 import io.fabric8.kubernetes.client.KubernetesClientException;
-import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
+import io.fabric8.kubernetes.client.dsl.MixedOperation;
+import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
+import io.fabric8.kubernetes.client.dsl.Resource;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author tangtx
- * @date 2021/03/26 11:00 AM
- * middleware cr
+ * @date 2021/03/26 11:00 AM middleware cr
  */
 @Component
 @Slf4j
 public class MiddlewareWrapper {
-    @Autowired
-    private K8sClient k8sClient;
-
-    /**
-     * crd的context
-     */
-    private static final CustomResourceDefinitionContext CONTEXT = new CustomResourceDefinitionContext.Builder()
-            .withGroup(MIDDLEWARE_CLUSTER_GROUP)
-            .withVersion(MIDDLEWARE_CLUSTER_VERSION)
-            .withScope(NAMESPACED)
-            .withPlural(MIDDLEWARE_PLURAL)
-            .build();
 
     public List<MiddlewareCR> list(String clusterId, String namespace, Map<String, String> labels) {
-        if (StringUtils.isBlank(namespace)) {
-            namespace = null;
-        }
-        if (CollectionUtils.isEmpty(labels)) {
-            labels = null;
-        }
-        // 获取所有的集群资源
         try {
-            Map<String, Object> map = K8sClient.getClient(clusterId).customResource(CONTEXT).list(namespace, labels);
-            MiddlewareList middlewareList = JSONObject.parseObject(JSONObject.toJSONString(map), MiddlewareList.class);
+            // init client
+            NonNamespaceOperation<MiddlewareCR, MiddlewareList, Resource<MiddlewareCR>> middlewareClient =
+                    K8sClient.getClient(clusterId).resources(MiddlewareCR.class, MiddlewareList.class);
+            // 条件判断
+            if (StringUtils.isNotEmpty(namespace)) {
+                middlewareClient =
+                    ((MixedOperation<MiddlewareCR, MiddlewareList, Resource<MiddlewareCR>>)middlewareClient)
+                        .inNamespace(namespace);
+            }
+            if (!CollectionUtils.isEmpty(labels)) {
+                middlewareClient.withLabels(labels);
+            }
+            // 查询middlewareList
+            MiddlewareList middlewareList = middlewareClient.list();
             if (middlewareList == null || CollectionUtils.isEmpty(middlewareList.getItems())) {
                 return new ArrayList<>(0);
             }
@@ -73,20 +60,16 @@ public class MiddlewareWrapper {
 
     public MiddlewareCR get(String clusterId, String namespace, String name) {
         try {
-            Map<String, Object> map = K8sClient.getClient(clusterId).customResource(CONTEXT).get(namespace, name);
-            return JSONObject.parseObject(JSONObject.toJSONString(map), MiddlewareCR.class);
-        } catch (KubernetesClientException e) {
-            if (e.getCode() == 404) {
-                throw new BusinessException(DictEnum.MIDDLEWARE, name, ErrorMessage.NOT_EXIST);
+            // init client
+            NonNamespaceOperation<MiddlewareCR, MiddlewareList, Resource<MiddlewareCR>> middlewareClient =
+                    K8sClient.getClient(clusterId).resources(MiddlewareCR.class, MiddlewareList.class);
+            // 条件判断
+            if (StringUtils.isNotEmpty(namespace)) {
+                middlewareClient =
+                        ((MixedOperation<MiddlewareCR, MiddlewareList, Resource<MiddlewareCR>>)middlewareClient)
+                                .inNamespace(namespace);
             }
-            throw e;
-        }
-    }
-
-    public MiddlewareCR get(String namespace,String name) {
-        try {
-            Map<String, Object> map = k8sClient.getDefaultClient().customResource(CONTEXT).get(namespace, name);
-            return JSONObject.parseObject(JSONObject.toJSONString(map), MiddlewareCR.class);
+            return middlewareClient.withName(name).get();
         } catch (KubernetesClientException e) {
             if (e.getCode() == 404) {
                 throw new BusinessException(DictEnum.MIDDLEWARE, name, ErrorMessage.NOT_EXIST);
@@ -98,7 +81,10 @@ public class MiddlewareWrapper {
     public boolean checkIfExist(String clusterId, String namespace, String name) {
         boolean exist;
         try {
-            Map<String, Object> map = K8sClient.getClient(clusterId).customResource(CONTEXT).get(namespace, name);
+            // init client
+            NonNamespaceOperation<MiddlewareCR, MiddlewareList, Resource<MiddlewareCR>> middlewareClient =
+                    K8sClient.getClient(clusterId).resources(MiddlewareCR.class, MiddlewareList.class).inNamespace(namespace);
+            middlewareClient.withName(name).get();
             exist = true;
         } catch (KubernetesClientException e) {
             exist = false;

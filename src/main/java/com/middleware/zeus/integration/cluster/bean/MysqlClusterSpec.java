@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import com.alibaba.fastjson.annotation.JSONField;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.fabric8.kubernetes.api.model.Affinity;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import io.fabric8.kubernetes.api.model.apps.StatefulSetUpdateStrategy;
@@ -16,6 +17,7 @@ import lombok.experimental.Accessors;
  */
 @Accessors(chain = true)
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class MysqlClusterSpec {
 
     /**

@@ -21,6 +21,7 @@ import com.middleware.zeus.service.k8s.ClusterService;
 import com.middleware.zeus.service.registry.HelmChartService;
 import com.middleware.zeus.service.system.PlatformService;
 import com.middleware.zeus.service.system.SystemConfigService;
+import com.middleware.zeus.util.K8sClient;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -158,9 +159,9 @@ public class PlatformServiceImpl implements PlatformService {
         try{
             // 关闭数据同步
             MysqlReplicateCR mr =
-                    mysqlReplicateWrapper.getMysqlReplicate(zeusNamespace, NameConstant.ZEUS_MYSQL_REPLICATE);
+                    mysqlReplicateWrapper.getMysqlReplicate(K8sClient.DEFAULT_CLIENT, zeusNamespace, NameConstant.ZEUS_MYSQL_REPLICATE);
             mr.getSpec().setEnable(false);
-            mysqlReplicateWrapper.updateMysqlReplicate(mr);
+            mysqlReplicateWrapper.replace(K8sClient.DEFAULT_CLIENT, mr);
             // 切换mysql 模式为一主一从
             JSONObject newValues = new JSONObject();
             newValues.putAll(values);
@@ -260,7 +261,7 @@ public class PlatformServiceImpl implements PlatformService {
 
         log.info("获取同步器状态");
         MysqlReplicateCR mr =
-                mysqlReplicateWrapper.getMysqlReplicate(zeusNamespace, NameConstant.ZEUS_MYSQL_REPLICATE);
+                mysqlReplicateWrapper.getMysqlReplicate(K8sClient.DEFAULT_CLIENT, zeusNamespace, NameConstant.ZEUS_MYSQL_REPLICATE);
         if (mr == null || mr.getStatus() == null || mr.getStatus().getPhase() == null){
             return res;
         }

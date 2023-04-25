@@ -1,5 +1,6 @@
-package com.middleware.zeus.integration.cluster;
+package com.middleware.zeus.integration.cluster.bean;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -9,6 +10,7 @@ import lombok.experimental.Accessors;
  */
 @Accessors(chain = true)
 @Data
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class RedisClusterSpec {
 
     private Object deployment;

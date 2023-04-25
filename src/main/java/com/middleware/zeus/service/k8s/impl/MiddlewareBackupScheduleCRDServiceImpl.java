@@ -47,7 +47,7 @@ public class MiddlewareBackupScheduleCRDServiceImpl implements MiddlewareBackupS
 
     @Override
     public MiddlewareBackupScheduleList list(String clusterId, String namespace) {
-        return middlewareBackupScheduleWrapper.list(clusterId, namespace);
+        return middlewareBackupScheduleWrapper.list(clusterId, namespace, null);
     }
 
     @Override

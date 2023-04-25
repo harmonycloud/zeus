@@ -1,6 +1,7 @@
 package com.middleware.zeus.integration.cluster.bean;
 
 import com.alibaba.fastjson.JSONObject;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
@@ -11,6 +12,7 @@ import java.util.List;
  */
 @Data
 @Accessors(chain = true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class MiddlewareBackupScheduleStatus {
 
     private String creationTimestamp;

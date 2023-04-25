@@ -7,5 +7,4 @@ import java.util.List;
 
 public interface StatefulSetService {
 
-    List<LinkedHashMap> get(String clusterId, String namespace, String name);
 }
