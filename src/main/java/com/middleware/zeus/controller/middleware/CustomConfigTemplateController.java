@@ -66,17 +66,6 @@ public class CustomConfigTemplateController {
         return BaseResult.ok(configTemplateService.get(type, uid, chartVersion));
     }
 
-    @ApiOperation(value = "获取初始化模板", notes = "获取初始化模板")
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "chartVersion", value = "中间件版本", paramType = "query", dataTypeClass = String.class),
-    })
-    @GetMapping("/init")
-    @Authority(power = 1)
-    public BaseResult<List<CustomConfig>> get(@PathVariable("type") String type,
-                                              @RequestParam("chartVersion") String chartVersion) {
-        return BaseResult.ok(configTemplateService.get(type, chartVersion));
-    }
 
     @ApiOperation(value = "更新自定义配置模板", notes = "更新自定义配置模板")
     @ApiImplicitParams({

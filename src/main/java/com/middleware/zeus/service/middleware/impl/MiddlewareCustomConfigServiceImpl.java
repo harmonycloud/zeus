@@ -86,13 +86,7 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         middleware.setChartVersion(values.getString("chart-version"));
         // 获取数据库数据
         QueryWrapper<BeanCustomConfig> wrapper = new QueryWrapper<BeanCustomConfig>()
-            .eq("chart_name", middleware.getType()).eq("chart_version", middleware.getChartVersion());
-        if ("master".equals(role)) {
-            // 旧版本role字段为null
-            wrapper.and(i -> i.eq("role", "master").or().isNull("role"));
-        } else {
-            wrapper.eq("role", role);
-        }
+            .eq("chart_name", middleware.getType()).eq("chart_version", middleware.getChartVersion()).eq("role",role);
         List<BeanCustomConfig> beanCustomConfigList = beanCustomConfigMapper.selectList(wrapper);
         if (CollectionUtils.isEmpty(beanCustomConfigList)) {
             QueryWrapper<BeanCustomConfig> ccWrapper = new QueryWrapper<BeanCustomConfig>()
@@ -100,9 +94,7 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
             // 若没有对应chart包的任意记录，则更新customconfig
             if (CollectionUtils.isEmpty(beanCustomConfigMapper.selectList(ccWrapper))) {
                 HelmChartFile helmChart = helmChartService.getHelmChartFromMysql(type, middleware.getChartVersion());
-                beanCustomConfigList.addAll(updateConfig2MySQL(helmChart).stream().filter(cc -> {
-                    return "master".equals(role) ? cc.getRole() == null || cc.getRole().equals(role) : cc.getRole().equals(role);
-                }).collect(Collectors.toList()));
+                beanCustomConfigList.addAll(updateConfig2MySQL(helmChart).stream().filter(cc -> cc.getRole().equals(role)).collect(Collectors.toList()));
             }
         }
         // 查询修改历史
@@ -130,7 +122,7 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
                 customConfig.setParamType("multiSelect");
             }
             if (beanMiddlewareParamTopList.stream()
-                .anyMatch(beanMiddlewareParamTop -> beanMiddlewareParamTop.getParam().equals(customConfig.getName()))) {
+                .anyMatch(beanMiddlewareParamTop -> beanMiddlewareParamTop.getParam().equals(customConfig.getName()) && beanMiddlewareParamTop.getRole().equals(role))) {
                 customConfig.setTopping(true);
             }
             customConfigList.add(customConfig);
@@ -293,9 +285,9 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
     }
 
     @Override
-    public void topping(String clusterId, String namespace, String name, String configName, String type) {
+    public void topping(String clusterId, String namespace, String name, String configName, String type, String role) {
         QueryWrapper<BeanMiddlewareParamTop> wrapper = new QueryWrapper<BeanMiddlewareParamTop>()
-            .eq("cluster_id", clusterId).eq("namespace", namespace).eq("name", name).eq("param", configName);
+            .eq("cluster_id", clusterId).eq("namespace", namespace).eq("name", name).eq("param", configName).eq("role", role);
         List<BeanMiddlewareParamTop> exist = beanMiddlewareParamTopMapper.selectList(wrapper);
         if (CollectionUtils.isEmpty(exist)) {
             BeanMiddlewareParamTop beanMiddlewareParamTop = new BeanMiddlewareParamTop();
@@ -303,6 +295,7 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
             beanMiddlewareParamTop.setNamespace(namespace);
             beanMiddlewareParamTop.setName(name);
             beanMiddlewareParamTop.setParam(configName);
+            beanMiddlewareParamTop.setRole(role);
             beanMiddlewareParamTopMapper.insert(beanMiddlewareParamTop);
         } else {
             beanMiddlewareParamTopMapper.delete(wrapper);
@@ -319,16 +312,11 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         middleware.setChartVersion(values.getString("chart-version"));
         QueryWrapper<BeanCustomConfig> wrapper = new QueryWrapper<BeanCustomConfig>()
                 .eq("chart_name", type).eq("chart_version", middleware.getChartVersion())
-                .select("distinct ifnull(role, 'master') as role").orderByAsc("role");
+                .select("distinct role").orderByAsc("role");
         List<String> resultList = beanCustomConfigMapper.selectObjs(wrapper).stream().map(Object::toString).collect(Collectors.toList());
         if (CollectionUtils.isEmpty(resultList)) {
             HelmChartFile helmChart = helmChartService.getHelmChartFromMysql(type, middleware.getChartVersion());
-            resultList.addAll(updateConfig2MySQL(helmChart).stream().map(cc -> {
-                if (cc.getRole() == null) {
-                    return "master";
-                }
-                return cc.getRole();
-            }).distinct().collect(Collectors.toList()));
+            resultList.addAll(updateConfig2MySQL(helmChart).stream().map(BeanCustomConfig::getRole).distinct().collect(Collectors.toList()));
         }
         if (CollectionUtils.isEmpty(resultList)) {
             throw new BusinessException(ErrorMessage.GET_CUSTOM_CONFIG_ROLE_FAILED);

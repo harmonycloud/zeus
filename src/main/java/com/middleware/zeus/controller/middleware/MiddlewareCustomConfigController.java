@@ -107,8 +107,9 @@ public class MiddlewareCustomConfigController {
                               @PathVariable("namespace") String namespace,
                               @PathVariable("middlewareName") String middlewareName,
                               @PathVariable("configName") String configName,
-                              @RequestParam("type") String type) {
-        middlewareCustomConfigService.topping(clusterId, namespace, middlewareName, configName, type);
+                              @RequestParam("type") String type,
+                              @RequestParam("role") String role) {
+        middlewareCustomConfigService.topping(clusterId, namespace, middlewareName, configName, type, role);
         return BaseResult.ok();
     }
 
