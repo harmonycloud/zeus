@@ -219,10 +219,57 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
 
     @Override
     public List<BeanCustomConfig> updateConfig2MySQL(HelmChartFile helmChartFile) throws Exception {
-        QueryWrapper<BeanCustomConfig> wrapper = new QueryWrapper<BeanCustomConfig>()
-            .eq("chart_name", helmChartFile.getChartName()).eq("chart_version", helmChartFile.getChartVersion());
-        List<BeanCustomConfig> beanCustomConfigList = beanCustomConfigMapper.selectList(wrapper);
-        return updateConfig2MySQL(helmChartFile, !CollectionUtils.isEmpty(beanCustomConfigList));
+        List<BeanCustomConfig> resultList = new ArrayList<>();
+        try {
+            QueryWrapper<BeanCustomConfig> wrapper = new QueryWrapper<BeanCustomConfig>()
+                    .eq("chart_name", helmChartFile.getChartName()).eq("chart_version", helmChartFile.getChartVersion());
+            // 清除旧数据
+            beanCustomConfigMapper.delete(wrapper);
+            JSONObject data;
+            Yaml yaml = new Yaml();
+            for (String key : helmChartFile.getYamlFileMap().keySet()) {
+                if ("parameters.yaml".equals(key)) {
+                    data = yaml.loadAs(helmChartFile.getYamlFileMap().get(key), JSONObject.class);
+                    resultList.addAll(updateConfig2MySQL(data, "master", helmChartFile.getChartName(), helmChartFile.getChartVersion()));
+                } else if ("parameters-proxysql.yaml".equals(key)) {
+                    data = yaml.loadAs(helmChartFile.getYamlFileMap().get(key), JSONObject.class);
+                    resultList.addAll(updateConfig2MySQL(data, "proxy", helmChartFile.getChartName(), helmChartFile.getChartVersion()));
+                }
+            }
+        } catch (Exception e) {
+            throw new CaasRuntimeException(ErrorMessage.MIDDLEWARE_UPDATE_MYSQL_CONFIG_FAILED);
+        }
+        return resultList;
+    }
+
+    public List<BeanCustomConfig> updateConfig2MySQL(JSONObject data, String role, String chartName, String chartVersion) {
+        // 转换为对象
+        CustomConfigParameters parameters =
+                JSONObject.parseObject(JSONObject.toJSONString(data), CustomConfigParameters.class);
+        List<BeanCustomConfig> beanCustomConfigList = new ArrayList<>();
+        parameters.getParameters().forEach(map -> {
+            for (String key : map.keySet()) {
+                Map<String, String> param = map.get(key).stream()
+                        .collect(Collectors.toMap(CustomConfigParameter::getName, CustomConfigParameter::getValue));
+                // 封装数据库对象
+                BeanCustomConfig beanCustomConfig = new BeanCustomConfig();
+                beanCustomConfig.setName(key);
+                beanCustomConfig.setDefaultValue(param.get("default"));
+                beanCustomConfig.setRestart("y".equals(param.get("isReboot")));
+                beanCustomConfig.setRanges(param.get("range"));
+                beanCustomConfig.setDescription(param.get("describe"));
+                beanCustomConfig.setChartName(chartName);
+                beanCustomConfig.setChartVersion(chartVersion);
+                beanCustomConfig.setRole(role);
+                if (param.containsKey("pattern")) {
+                    beanCustomConfig.setPattern(param.get("pattern"));
+                }
+                // 存入数据库
+                beanCustomConfigMapper.insert(beanCustomConfig);
+                beanCustomConfigList.add(beanCustomConfig);
+            }
+        });
+        return beanCustomConfigList;
     }
 
     @Override
