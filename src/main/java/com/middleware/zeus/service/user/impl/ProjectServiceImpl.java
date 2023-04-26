@@ -707,7 +707,7 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
     public List<Namespace> addOtherInfo(List<Namespace> namespaces, String clusterId) {
         try {
             log.info("添加分区其他信息");
-            List<Namespace> nsList = namespaceService.list(clusterId, false, null);
+            List<Namespace> nsList = namespaceService.list(clusterId, true, null);
             Map<String, Namespace> nsMap = new HashMap<>();
             nsList.forEach(ns -> {
                 nsMap.put(ns.getName(), ns);
