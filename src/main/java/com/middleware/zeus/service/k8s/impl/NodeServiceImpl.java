@@ -143,15 +143,17 @@ public class NodeServiceImpl implements NodeService {
             if (no.getMetadata() != null && !CollectionUtils.isEmpty(no.getMetadata().getLabels())) {
                 Map<String, String> labels = no.getMetadata().getLabels();
                 StringBuilder sb = new StringBuilder();
-                for (String key : labels.keySet()) {
-                    if (key.startsWith("node-role.kubernetes.io/")) {
-                        sb.append(key.split("/")[1]).append(",");
-                    }
+                if ("true".equals(labels.get("system"))) {
+                    sb.append("master,");
                 }
-                if (sb.length() > 0) {
-                    sb.deleteCharAt(sb.length() - 1);
+                if (labels.containsKey("node-role.kubernetes.io/slave")) {
+                    sb.append("slave,");
                 }
-                node.setRole(sb.length() == 0 ? null : sb.toString());
+                if (sb.length() == 0) {
+                    sb.append("work,");
+                }
+                sb.deleteCharAt(sb.length() - 1);
+                node.setRole(sb.toString());
             }
             // taint
             if (!CollectionUtils.isEmpty(no.getSpec().getTaints())) {
@@ -189,11 +191,9 @@ public class NodeServiceImpl implements NodeService {
     public List<Node> simpleConvertToDto(List<io.fabric8.kubernetes.api.model.Node> nodes) {
         return nodes.stream().filter(node -> {
             // 过滤非work节点
-            if (node.getMetadata() != null && node.getMetadata().getLabels() != null
-                && node.getMetadata().getLabels().containsKey(LabelConstant.WORK_NODE_LABEL_KEY)) {
-                return true;
-            }
-            return false;
+            return node.getMetadata() == null || node.getMetadata().getLabels() == null
+                    || (!node.getMetadata().getLabels().containsKey("node-role.kubernetes.io/slave")
+                    && !"true".equals(node.getMetadata().getLabels().get("system")));
         }).map(node -> {
             String nodeName = node.getMetadata().getName();
             String IP = node.getStatus().getAddresses().stream().filter(
