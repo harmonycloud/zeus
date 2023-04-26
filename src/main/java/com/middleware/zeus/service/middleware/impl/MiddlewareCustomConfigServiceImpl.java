@@ -103,9 +103,9 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
                 .collect(Collectors.groupingBy(BeanCustomConfigHistory::getItem));
         orderByUpdateTime(beanCustomConfigHistoryListMap);
         //查询置顶参数
-        QueryWrapper<BeanMiddlewareParamTop> wrapper1 = new QueryWrapper<BeanMiddlewareParamTop>()
-            .eq("cluster_id", clusterId).eq("namespace", namespace).eq("name", middlewareName);
-        List<BeanMiddlewareParamTop> beanMiddlewareParamTopList = beanMiddlewareParamTopMapper.selectList(wrapper1);
+//        QueryWrapper<BeanMiddlewareParamTop> wrapper1 = new QueryWrapper<BeanMiddlewareParamTop>()
+//            .eq("cluster_id", clusterId).eq("namespace", namespace).eq("name", middlewareName);
+//        List<BeanMiddlewareParamTop> beanMiddlewareParamTopList = beanMiddlewareParamTopMapper.selectList(wrapper1);
         // 封装customConfigList
         List<CustomConfig> customConfigList = new ArrayList<>();
         beanCustomConfigList.forEach(beanCustomConfig -> {
@@ -121,10 +121,10 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
             if ("sql_mode".equals(beanCustomConfig.getName())) {
                 customConfig.setParamType("multiSelect");
             }
-            if (beanMiddlewareParamTopList.stream()
-                .anyMatch(beanMiddlewareParamTop -> beanMiddlewareParamTop.getParam().equals(customConfig.getName()) && beanMiddlewareParamTop.getRole().equals(role))) {
-                customConfig.setTopping(true);
-            }
+//            if (beanMiddlewareParamTopList.stream()
+//                .anyMatch(beanMiddlewareParamTop -> beanMiddlewareParamTop.getParam().equals(customConfig.getName()) && beanMiddlewareParamTop.getRole().equals(role))) {
+//                customConfig.setTopping(true);
+//            }
             customConfigList.add(customConfig);
         });
         customConfigList.sort((o1, o2) -> o1.getTopping() == null && o2.getTopping() == null ? 0 : o1.getTopping() == null ? 1 : o2.getTopping() == null ? -1 : 0);
@@ -284,23 +284,23 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         customConfigHistoryService.delete(clusterId, namespace, name);
     }
 
-    @Override
-    public void topping(String clusterId, String namespace, String name, String configName, String type, String role) {
-        QueryWrapper<BeanMiddlewareParamTop> wrapper = new QueryWrapper<BeanMiddlewareParamTop>()
-            .eq("cluster_id", clusterId).eq("namespace", namespace).eq("name", name).eq("param", configName).eq("role", role);
-        List<BeanMiddlewareParamTop> exist = beanMiddlewareParamTopMapper.selectList(wrapper);
-        if (CollectionUtils.isEmpty(exist)) {
-            BeanMiddlewareParamTop beanMiddlewareParamTop = new BeanMiddlewareParamTop();
-            beanMiddlewareParamTop.setClusterId(clusterId);
-            beanMiddlewareParamTop.setNamespace(namespace);
-            beanMiddlewareParamTop.setName(name);
-            beanMiddlewareParamTop.setParam(configName);
-            beanMiddlewareParamTop.setRole(role);
-            beanMiddlewareParamTopMapper.insert(beanMiddlewareParamTop);
-        } else {
-            beanMiddlewareParamTopMapper.delete(wrapper);
-        }
-    }
+//    @Override
+//    public void topping(String clusterId, String namespace, String name, String configName, String type, String role) {
+//        QueryWrapper<BeanMiddlewareParamTop> wrapper = new QueryWrapper<BeanMiddlewareParamTop>()
+//            .eq("cluster_id", clusterId).eq("namespace", namespace).eq("name", name).eq("param", configName).eq("role", role);
+//        List<BeanMiddlewareParamTop> exist = beanMiddlewareParamTopMapper.selectList(wrapper);
+//        if (CollectionUtils.isEmpty(exist)) {
+//            BeanMiddlewareParamTop beanMiddlewareParamTop = new BeanMiddlewareParamTop();
+//            beanMiddlewareParamTop.setClusterId(clusterId);
+//            beanMiddlewareParamTop.setNamespace(namespace);
+//            beanMiddlewareParamTop.setName(name);
+//            beanMiddlewareParamTop.setParam(configName);
+//            beanMiddlewareParamTop.setRole(role);
+//            beanMiddlewareParamTopMapper.insert(beanMiddlewareParamTop);
+//        } else {
+//            beanMiddlewareParamTopMapper.delete(wrapper);
+//        }
+//    }
 
     @Override
     public List<String> getRoles(String clusterId, String namespace, String middlewareName, String type) throws Exception {

@@ -74,17 +74,17 @@ public interface MiddlewareCustomConfigService  {
      */
     void deleteHistory(String clusterId, String namespace, String name);
 
-    /**
-     * 置顶参数
-     *
-     * @param clusterId 集群
-     * @param namespace 分区
-     * @param name  名称
-     * @param configName 参数名称
-     * @param type 中间件类型
-     * @param role 节点类型
-     */
-    void topping(String clusterId, String namespace, String name, String configName, String type, String role);
+//    /**
+//     * 置顶参数
+//     *
+//     * @param clusterId 集群
+//     * @param namespace 分区
+//     * @param name  名称
+//     * @param configName 参数名称
+//     * @param type 中间件类型
+//     * @param role 节点类型
+//     */
+//    void topping(String clusterId, String namespace, String name, String configName, String type, String role);
 
     /**
      * 获取服务自定义参数节点类型列表
