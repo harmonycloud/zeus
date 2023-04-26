@@ -235,7 +235,7 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
             for (String key : helmChartFile.getYamlFileMap().keySet()) {
                 if ("parameters.yaml".equals(key)) {
                     data = yaml.loadAs(helmChartFile.getYamlFileMap().get(key), JSONObject.class);
-                    resultList.addAll(updateConfig2MySQL(data, "master", helmChartFile.getChartName(), helmChartFile.getChartVersion()));
+                    resultList.addAll(updateConfig2MySQL(data, "major", helmChartFile.getChartName(), helmChartFile.getChartVersion()));
                 } else if ("parameters-proxysql.yaml".equals(key)) {
                     data = yaml.loadAs(helmChartFile.getYamlFileMap().get(key), JSONObject.class);
                     resultList.addAll(updateConfig2MySQL(data, "proxy", helmChartFile.getChartName(), helmChartFile.getChartVersion()));
