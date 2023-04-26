@@ -648,7 +648,7 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
         if (StringUtils.isEmpty(clusterId)) {
             return namespaces;
         }
-        return setAvailableDomainStatus(namespaces, clusterId);
+        return addOtherInfo(namespaces, clusterId);
     }
 
     /**
@@ -698,21 +698,27 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
     }
 
     /**
-     * 设置双活分区状态
+     * 设置分区其他信息
      *
      * @param namespaces
      * @param clusterId
      * @return
      */
-    public List<Namespace> setAvailableDomainStatus(List<Namespace> namespaces, String clusterId) {
+    public List<Namespace> addOtherInfo(List<Namespace> namespaces, String clusterId) {
         try {
             List<Namespace> nsList = namespaceService.list(clusterId, false, null);
-            Map<String, Boolean> nsMap = new HashMap<>();
+            Map<String, Namespace> nsMap = new HashMap<>();
             nsList.forEach(ns -> {
-                nsMap.put(ns.getName(), ns.isAvailableDomain());
+                nsMap.put(ns.getName(), ns);
             });
             namespaces.forEach(ns -> {
-                ns.setAvailableDomain(nsMap.get(ns.getName()));
+                Namespace namespace = nsMap.get(ns.getName());
+                if (namespace != null) {
+                    // 设置分区可用区状态
+                    ns.setAvailableDomain(namespace.isAvailableDomain());
+                    // 设置uid
+                    ns.setContainerUIDRange(namespace.getContainerUIDRange());
+                }
             });
             return namespaces;
         } catch (Exception e) {
