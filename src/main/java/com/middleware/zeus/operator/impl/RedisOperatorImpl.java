@@ -165,6 +165,7 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         JSONObject redis = values.getJSONObject(REDIS);
         replaceCommonResources(redisQuota, redis.getJSONObject(RESOURCES));
         replaceCommonStorages(redisQuota, values);
+        super.setSecurityContext(middleware, redis);
         if (SENTINEL.equals(middleware.getMode())) {
             JSONObject sentinel = values.getJSONObject(SENTINEL);
             MiddlewareQuota sentinelQuota = middleware.getQuota().get(SENTINEL);
@@ -179,7 +180,6 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
             if (middleware.getReadWriteProxy() != null && middleware.getReadWriteProxy().getEnabled()) {
                 num = num / 2;
             }
-            super.setSecurityContext(middleware, redis);
             redis.put(REPLICAS, num);
             values.put(TYPE, SENTINEL);
         } else {
