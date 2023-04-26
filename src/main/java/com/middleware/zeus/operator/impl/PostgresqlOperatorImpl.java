@@ -156,6 +156,8 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         }
         // 添加双活配置
         checkAndSetActiveActive(values, middleware);
+        // 设置uid
+        super.setSecurityContext(middleware, values);
     }
 
     @Override
@@ -167,6 +169,7 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         convertRegistry(middleware, values);
         convertCustomVolumesByHelmChart(middleware, values);
         convertPostgresqlParamByHelmChart(middleware, values);
+        super.convertSecurityContext(middleware, values);
 
         middleware.setIsAllLvmStorage(true);
         middleware.setVersion(values.getString("pgsqlVersion"));

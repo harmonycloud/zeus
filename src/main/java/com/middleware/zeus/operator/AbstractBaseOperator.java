@@ -6,6 +6,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.middleware.caas.common.constants.ActiveAreaConstant;
 import com.middleware.caas.common.constants.CommonConstant;
+import com.middleware.caas.common.constants.ContainerConstant;
 import com.middleware.caas.common.constants.MysqlConstant;
 import com.middleware.caas.common.enums.ComponentsEnum;
 import com.middleware.caas.common.enums.DictEnum;
@@ -954,6 +955,31 @@ public abstract class AbstractBaseOperator {
     }
 
     /**
+     * 设置容器安全上下文信息，例如uid、gid
+     * @param middleware
+     * @param target
+     * @return
+     */
+    public void setSecurityContext(Middleware middleware, JSONObject target){
+        JSONObject securityContext = new JSONObject();
+        // 设置uid
+        if(middleware.getContainerUID() != null){
+            securityContext.put(ContainerConstant.UID, middleware.getContainerUID());
+        }
+        target.put(ContainerConstant.SECURITY_CONTEXT, securityContext);
+    }
+
+    public void convertSecurityContext(Middleware middleware, JSONObject values) {
+        if (!values.containsKey(ContainerConstant.SECURITY_CONTEXT)) {
+            return;
+        }
+        JSONObject securityContext = values.getJSONObject(ContainerConstant.SECURITY_CONTEXT);
+        if (securityContext.containsKey(ContainerConstant.UID)) {
+            middleware.setContainerUID(securityContext.getLong(ContainerConstant.UID));
+        }
+    }
+
+    /**
      * 处理动态表单
      */
     protected void replaceDynamicValues(Middleware middleware, JSONObject values) {
@@ -1005,7 +1031,6 @@ public abstract class AbstractBaseOperator {
      * 处理通用的资源配额
      */
     protected void replaceCommonResources(MiddlewareQuota quota, JSONObject resources) {
-
         // 设置limit的resources
         setLimitResources(quota);
 
