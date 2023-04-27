@@ -1,7 +1,7 @@
 package com.middleware.zeus.operator.impl;
 
 import static com.middleware.caas.common.constants.CmdConstant.*;
-import static com.middleware.caas.common.constants.CommonConstant.NUM_ZERO;
+import static com.middleware.caas.common.constants.CommonConstant.*;
 import static com.middleware.caas.common.constants.NameConstant.RESOURCES;
 import static com.middleware.caas.common.constants.NameConstant.RUNNING;
 import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.ARGS;
@@ -9,10 +9,7 @@ import static com.middleware.caas.common.constants.middleware.MiddlewareConstant
 import static com.middleware.caas.common.enums.DictEnum.ROLE;
 
 import java.text.MessageFormat;
-import java.util.Base64;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import cn.hutool.core.collection.CollectionUtil;
@@ -22,6 +19,7 @@ import com.middleware.caas.common.exception.BusinessException;
 import com.middleware.caas.common.model.ActiveAreaAnnotationDto;
 import com.middleware.tool.cmd.CmdExecUtil;
 import com.middleware.caas.common.model.middleware.*;
+import com.middleware.zeus.bean.BeanSystemConfig;
 import com.middleware.zeus.integration.cluster.bean.Postgresql;
 import com.middleware.zeus.integration.cluster.PostgresqlWrapper;
 import com.middleware.zeus.integration.cluster.ServiceWrapper;
@@ -34,6 +32,7 @@ import com.middleware.zeus.integration.cluster.bean.MiddlewareBackupSpec;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
 import com.middleware.zeus.operator.api.PostgresqlOperator;
 import com.middleware.zeus.operator.miiddleware.AbstractPostgresqlOperator;
+import com.middleware.zeus.service.system.SystemConfigService;
 import com.middleware.zeus.util.ChartVersionUtil;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServicePort;
@@ -59,16 +58,12 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
 
     @Autowired
     public ServiceWrapper serviceWrapper;
-
     @Autowired
     private MiddlewareBackupCRService middlewareBackupCRService;
-
     @Autowired
     private K8sExecService k8sExecService;
-
     @Autowired
     private PodService podService;
-
     @Autowired
     private PostgresqlWrapper postgresqlWrapper;
 
@@ -212,15 +207,11 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
     @Override
     public SwitchInfo getAutoSwitch(Middleware middleware) {
         MiddlewareClusterDTO cluster = clusterService.findById(middleware.getClusterId());
-        return new SwitchInfo().setIsAuto(getAutoSwitch(middleware, cluster));
-    }
-
-    public Boolean getAutoSwitch(Middleware middleware, MiddlewareClusterDTO cluster) {
         // 获取pod列表
         List<PodInfo> podInfos = podService.listMiddlewarePods(cluster.getId(), middleware.getNamespace(),
-            middleware.getName(), MiddlewareTypeEnum.POSTGRESQL.getType());
+                middleware.getName(), MiddlewareTypeEnum.POSTGRESQL.getType());
         List<PodInfo> runningPods = podInfos.stream().filter(podInfo -> RUNNING.equalsIgnoreCase(podInfo.getStatus()))
-            .collect(Collectors.toList());
+                .collect(Collectors.toList());
         if (CollectionUtil.isEmpty(runningPods)) {
             throw new BusinessException(ErrorMessage.GET_AUTOSWITCH_FAILED);
         }
@@ -244,22 +235,33 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         }
         // pod执行命令
         String execCommand = MessageFormat.format(POSTGRESQL_AUTO_SWITCH_STATUS, runningPods.get(0).getPodName(),
-            middleware.getNamespace(), cluster.getAddress(), cluster.getAccessToken(), patroniName, patroniPort);
-        List<String> resList;
+                middleware.getNamespace(), cluster.getAddress(), cluster.getAccessToken(), patroniName, patroniPort);
+        List<String> resList = new ArrayList<>();
         try {
             resList = CmdExecUtil.runCmd(execCommand);
         } catch (Exception e) {
             log.error("查询自动切换失败", e);
-            throw new BusinessException(ErrorMessage.GET_AUTOSWITCH_FAILED);
         }
+
+        SwitchInfo switchInfo = new SwitchInfo();
         // 查看pause
-        StringBuilder sb = new StringBuilder();
-        resList.forEach(sb::append);
-        JSONObject resJSON = JSONObject.parseObject(sb.toString());
-        if (resJSON == null) {
-            throw new BusinessException(ErrorMessage.GET_AUTOSWITCH_FAILED);
+        if (!CollectionUtils.isEmpty(resList)){
+            StringBuilder sb = new StringBuilder();
+            resList.forEach(sb::append);
+            JSONObject res = JSONObject.parseObject(sb.toString());
+            if(res != null && res.containsKey(PAUSE)){
+                switchInfo.setStatus(true);
+                switchInfo.setIsAuto(!res.getBoolean("pause"));
+                systemConfigService.saveConfig(middleware.toStringKey(), String.valueOf(switchInfo.getIsAuto()));
+            }
         }
-        return resJSON.getBoolean("pause") == null || !resJSON.getBoolean("pause");
+        // 处理无法获取到自动切换状态的异常状态
+        if (switchInfo.getStatus() == null && switchInfo.getIsAuto() == null) {
+            BeanSystemConfig config = systemConfigService.getConfig(middleware.toStringKey());
+            switchInfo.setStatus(false);
+            switchInfo.setIsAuto(config == null || Boolean.parseBoolean(config.getConfigValue()));
+        }
+        return switchInfo;
     }
 
 
@@ -474,6 +476,6 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
             throw new BusinessException(ErrorMessage.ERROR_PG_POD_NUm);
         }
     }
-
+    
 }
 

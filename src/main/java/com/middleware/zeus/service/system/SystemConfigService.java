@@ -47,4 +47,11 @@ public interface SystemConfigService {
      */
     BeanSystemConfig getConfigForUpdate(String name);
 
+    /**
+     * 删除配置
+     * @param name 配置名称
+     *
+     */
+    void delete(String name);
+
 }

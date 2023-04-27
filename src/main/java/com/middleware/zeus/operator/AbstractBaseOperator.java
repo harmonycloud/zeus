@@ -45,6 +45,7 @@ import com.middleware.zeus.service.middleware.impl.MiddlewareAlertsServiceImpl;
 import com.middleware.zeus.service.middleware.impl.MiddlewareBackupServiceImpl;
 import com.middleware.zeus.service.registry.HelmChartService;
 import com.middleware.zeus.service.system.LicenseService;
+import com.middleware.zeus.service.system.SystemConfigService;
 import com.middleware.zeus.service.user.RoleAuthorityService;
 import com.middleware.zeus.util.K8sConvert;
 import com.middleware.zeus.util.MathUtil;
@@ -145,6 +146,8 @@ public abstract class AbstractBaseOperator {
     private BeanAlertRecordMapper alertRecordMapper;
     @Autowired
     private ImageRepositoryService imageRepositoryService;
+    @Autowired
+    protected SystemConfigService systemConfigService;
 
     /**
      * 是否支持该中间件
@@ -281,6 +284,8 @@ public abstract class AbstractBaseOperator {
         maintenanceService.delete(middleware.getClusterId(), middleware.getNamespace(), middleware.getName());
         // 删除备份相关
         middlewareBackupService.deleteMiddlewareBackupInfo(middleware.getClusterId(), middleware.getNamespace(), middleware.getType(), middleware.getName());
+        // 删除缓存数据
+        systemConfigService.delete(middleware.toStringKey());
         removeSql(middleware);
         // 设置values.yaml为null
         cacheMiddlewareService.updateValuesToNull(middleware);

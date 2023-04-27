@@ -76,4 +76,10 @@ public class SystemConfigServiceImpl implements SystemConfigService {
             return null;
         }
     }
+
+    @Override
+    public void delete(String name) {
+        QueryWrapper<BeanSystemConfig> wrapper = new QueryWrapper<BeanSystemConfig>().eq("config_name", name);
+        beanSystemConfigMapper.delete(wrapper);
+    }
 }
