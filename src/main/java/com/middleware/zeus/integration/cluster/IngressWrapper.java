@@ -4,8 +4,8 @@ import com.middleware.caas.common.enums.DictEnum;
 import com.middleware.caas.common.enums.ErrorMessage;
 import com.middleware.caas.common.exception.BusinessException;
 import com.middleware.zeus.util.K8sClient;
-import io.fabric8.kubernetes.api.model.extensions.Ingress;
-import io.fabric8.kubernetes.api.model.extensions.IngressList;
+import io.fabric8.kubernetes.api.model.networking.v1.Ingress;
+import io.fabric8.kubernetes.api.model.networking.v1.IngressList;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
@@ -34,17 +34,17 @@ public class IngressWrapper {
         IngressList ingressList;
         if (StringUtils.isEmpty(namespace)){
             if (StringUtils.isEmpty(labelKey)) {
-                ingressList = K8sClient.getClient(clusterId).extensions().ingresses().inAnyNamespace().list();
+                ingressList = K8sClient.getClient(clusterId).network().v1().ingresses().inAnyNamespace().list();
             } else {
-                ingressList = K8sClient.getClient(clusterId).extensions().ingresses().inAnyNamespace().withLabel(labelKey).list();
+                ingressList = K8sClient.getClient(clusterId).network().v1().ingresses().inAnyNamespace().withLabel(labelKey).list();
             }
         }else if (StringUtils.isEmpty(labelKey)) {
-            ingressList = K8sClient.getClient(clusterId).extensions().ingresses().inNamespace(namespace).list();
+            ingressList = K8sClient.getClient(clusterId).network().v1().ingresses().inNamespace(namespace).list();
         } else if (StringUtils.isEmpty(labelValue)) {
-            ingressList = K8sClient.getClient(clusterId).extensions().ingresses().inNamespace(namespace)
+            ingressList = K8sClient.getClient(clusterId).network().v1().ingresses().inNamespace(namespace)
                 .withLabel(labelKey).list();
         } else {
-            ingressList = K8sClient.getClient(clusterId).extensions().ingresses().inNamespace(namespace)
+            ingressList = K8sClient.getClient(clusterId).network().v1().ingresses().inNamespace(namespace)
                 .withLabel(labelKey, labelValue).list();
         }
 
@@ -56,7 +56,7 @@ public class IngressWrapper {
 
     public Ingress create(String clusterId, String namespace, Ingress ingress) {
         try {
-            return K8sClient.getClient(clusterId).extensions().ingresses().inNamespace(namespace).createOrReplace(ingress);
+            return K8sClient.getClient(clusterId).network().v1().ingresses().inNamespace(namespace).resource(ingress).create();
         } catch (KubernetesClientException e) {
             if (e.getCode() == 409) {
                 throw new BusinessException(DictEnum.INGRESS, ingress.getMetadata().getName(), ErrorMessage.EXIST);
@@ -66,17 +66,17 @@ public class IngressWrapper {
     }
 
     public Ingress update(String clusterId, String namespace, Ingress ingress) {
-        Ingress res = K8sClient.getClient(clusterId).extensions().ingresses().inNamespace(namespace).createOrReplace(ingress);
+        Ingress res = K8sClient.getClient(clusterId).network().v1().ingresses().inNamespace(namespace).resource(ingress).update();
         return res;
     }
 
     public boolean delete(String clusterId, String namespace, String name) {
-        K8sClient.getClient(clusterId).extensions().ingresses().inNamespace(namespace).withName(name).delete();
+        K8sClient.getClient(clusterId).network().v1().ingresses().inNamespace(namespace).withName(name).delete();
         return true;
     }
 
     public Ingress get(String clusterId, String namespace, String name) {
-        Ingress res = K8sClient.getClient(clusterId).extensions().ingresses().inNamespace(namespace).withName(name).get();
+        Ingress res = K8sClient.getClient(clusterId).network().v1().ingresses().inNamespace(namespace).withName(name).get();
         return res;
     }
 

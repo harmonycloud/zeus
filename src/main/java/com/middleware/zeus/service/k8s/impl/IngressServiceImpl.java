@@ -31,7 +31,7 @@ import com.middleware.zeus.util.MiddlewareServicePurposeUtil;
 import com.middleware.caas.common.model.middleware.Namespace;
 import com.middleware.zeus.service.k8s.*;
 import io.fabric8.kubernetes.api.model.*;
-import io.fabric8.kubernetes.api.model.extensions.*;
+import io.fabric8.kubernetes.api.model.networking.v1.*;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -508,8 +508,8 @@ public class IngressServiceImpl implements IngressService {
                     new IngressRuleDTO().setIngressName(ingress.getMetadata().getName()).setDomain(rule.getHost());
             HTTPIngressPath httpPath = rule.getHttp().getPaths().get(0);
             dto.setIngressHttpPaths(Collections.singletonList(
-                    new IngressHttpPath().setPath(httpPath.getPath()).setServiceName(httpPath.getBackend().getServiceName())
-                            .setServicePort(httpPath.getBackend().getServicePort().toString())));
+                    new IngressHttpPath().setPath(httpPath.getPath()).setServiceName(httpPath.getBackend().getService().getName())
+                            .setServicePort(httpPath.getBackend().getService().getPort().getNumber().toString())));
             resList.add(dto);
         });
         return resList;
@@ -1510,12 +1510,14 @@ public class IngressServiceImpl implements IngressService {
                         }
                         HTTPIngressPath httpIngressPath = new HTTPIngressPath();
                         httpIngressPath.setPath(ingressHttpPath.getPath());
+                        
+                        IngressServiceBackend ingressServiceBackend = new IngressServiceBackend();
+                        ingressServiceBackend.setName(ingressHttpPath.getServiceName());
+                        ingressServiceBackend
+                            .setPort(new ServiceBackendPort(null, Integer.parseInt(ingressHttpPath.getServicePort())));
 
                         IngressBackend ingressBackend = new IngressBackend();
-                        IntOrString servicePort = new IntOrString();
-                        servicePort.setValue(Integer.parseInt(ingressHttpPath.getServicePort()));
-                        ingressBackend.setServicePort(servicePort);
-                        ingressBackend.setServiceName(ingressHttpPath.getServiceName());
+                        ingressBackend.setService(ingressServiceBackend);
                         httpIngressPath.setBackend(ingressBackend);
                         paths.add(httpIngressPath);
                     }
@@ -1662,8 +1664,8 @@ public class IngressServiceImpl implements IngressService {
                         }
                         IngressHttpPath ingressHttpPath = new IngressHttpPath();
                         ingressHttpPath.setPath(httpIngressPath.getPath());
-                        ingressHttpPath.setServiceName(ingressBackend.getServiceName());
-                        ingressHttpPath.setServicePort(ingressBackend.getServicePort().getIntVal() + "");
+                        ingressHttpPath.setServiceName(ingressBackend.getService().getName());
+                        ingressHttpPath.setServicePort(ingressBackend.getService().getPort().getNumber().toString());
                         ingressHttpPaths.add(ingressHttpPath);
                     }
                     if (!CollectionUtils.isEmpty(ingressHttpPaths)) {
