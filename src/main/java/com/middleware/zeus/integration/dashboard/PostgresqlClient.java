@@ -463,4 +463,19 @@ public interface PostgresqlClient {
                           @Var("username") String username,
                           @Var("enable") Boolean enable);
 
+    /**
+     * 手动切换
+     */
+    @Post(url = "/postgresql/{path}/port/{port}/patroni/failover")
+    JSONObject manualSwitch(@Var("path") String path,
+                            @Var("port") Integer port,
+                            @Body("candidate") String candidate);
+
+    /**
+     * 查询pg集群信息
+     */
+    @Get(url = "/postgresql/{path}/port/{port}/patroni/cluster")
+    JSONObject patroniCluster(@Var("path") String path,
+                              @Var("port") Integer port);
+
 }

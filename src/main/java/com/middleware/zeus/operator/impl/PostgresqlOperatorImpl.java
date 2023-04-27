@@ -13,6 +13,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import cn.hutool.core.collection.CollectionUtil;
+import com.alibaba.fastjson.JSONArray;
 import com.middleware.caas.common.enums.DictEnum;
 import com.middleware.caas.common.enums.ErrorMessage;
 import com.middleware.caas.common.exception.BusinessException;
@@ -23,6 +24,7 @@ import com.middleware.zeus.bean.BeanSystemConfig;
 import com.middleware.zeus.integration.cluster.bean.Postgresql;
 import com.middleware.zeus.integration.cluster.PostgresqlWrapper;
 import com.middleware.zeus.integration.cluster.ServiceWrapper;
+import com.middleware.zeus.integration.dashboard.PostgresqlClientWrapper;
 import com.middleware.zeus.service.k8s.K8sExecService;
 import com.middleware.zeus.service.k8s.MiddlewareBackupCRService;
 import com.middleware.zeus.service.k8s.PodService;
@@ -66,6 +68,8 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
     private PodService podService;
     @Autowired
     private PostgresqlWrapper postgresqlWrapper;
+    @Autowired
+    private PostgresqlClientWrapper postgresqlClientWrapper;
 
     @Value("${system.gracefulRestartParam:middleware.maintenance.lock:graceful-restart,middleware.maintenance.step:0}")
     private String gracefulRestartParam;
@@ -332,31 +336,33 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
             throw new BusinessException(DictEnum.SERVICE, patroniName, ErrorMessage.NOT_EXIST);
         }
         // 获取获取patroniService端口
-        String patroniPort = null;
+        Integer patroniPort = null;
         if (patroniService.getSpec() == null || CollectionUtils.isEmpty(patroniService.getSpec().getPorts())) {
             throw new BusinessException(DictEnum.SERVICE, patroniName, ErrorMessage.INVALID_PARAMETER);
         }
         for (ServicePort port : patroniService.getSpec().getPorts()) {
             if ("patroni".equals(port.getName())) {
-                patroniPort = Integer.toString(port.getPort());
+                patroniPort = port.getPort();
             }
         }
-        // 获取执行pod
-        List<PodInfo> podInfos = podService.listMiddlewarePods(cluster.getId(), middleware.getNamespace(),
-            middleware.getName(), MiddlewareTypeEnum.POSTGRESQL.getType());
-        List<PodInfo> runningPods = podInfos.stream().filter(
-            podInfo -> RUNNING.equalsIgnoreCase(podInfo.getStatus()) && SYNC_SLAVE.equalsIgnoreCase(podInfo.getRole()))
-            .collect(Collectors.toList());
-        if (CollectionUtil.isEmpty(runningPods)) {
-            throw new BusinessException(ROLE, SYNC_SLAVE, ErrorMessage.NOT_EXIST_OR_NOT_RUNNING);
+        // 确认cluster信息
+        String podName = null;
+        JSONArray dataArray = postgresqlClientWrapper.cluster(patroniName, patroniPort);
+        for (int i = 0; i < dataArray.size(); ++i){
+            String role = dataArray.getJSONObject(i).getString("role");
+            if(StringUtils.isNotEmpty(role) && "sync_standby".equals(role)){
+                podName = dataArray.getJSONObject(i).getString("name");
+            }
         }
-        String newMasterName = runningPods.get(0).getPodName();
-        String execCommand = MessageFormat.format(POSTGRESQL_HAND_SWITCH, newMasterName, middleware.getNamespace(),
-            cluster.getAddress(), cluster.getAccessToken(), patroniName, patroniPort, newMasterName);
+        if (StringUtils.isEmpty(podName)){
+            throw new BusinessException(ErrorMessage.POSTGRESQL_SYNC_POD_NOT_EXIST);
+        }
+        String execCommand = MessageFormat.format(POSTGRESQL_HAND_SWITCH, podName, middleware.getNamespace(),
+            cluster.getAddress(), cluster.getAccessToken(), patroniName, patroniPort, podName);
         List<String> results = CmdExecUtil.runCmd(execCommand);
         // 判断结果
         parseHandSwitchResult(results);
-        return new SwitchInfo().setNewMasterName(newMasterName);
+        return new SwitchInfo().setNewMasterName(podName);
     }
 
     @Override

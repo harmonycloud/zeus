@@ -43,7 +43,7 @@ public class MiddlewareApiInterceptor implements Interceptor {
         HttpServletResponse servletResponse =
             ((ServletRequestAttributes)Objects.requireNonNull(RequestContextHolder.getRequestAttributes()))
                 .getResponse();
-        if (servletResponse != null) {
+        if (servletResponse != null && StringUtils.isNotEmpty(mwToken)) {
             servletResponse.setHeader("mwToken", mwToken);
         }
     }
