@@ -42,10 +42,11 @@ public interface MiddlewareCustomConfigService  {
      * @param namespace      命名空间
      * @param middlewareName 中间件名称
      * @param type 中间件类型
+     * @param role 节点类型
      * @return List<CustomConfigHistoryDTO>
      */
     List<CustomConfigHistoryDTO> getCustomConfigHistory(String clusterId, String namespace, String middlewareName,
-                                                        String type, String item, String startTime, String endTime);
+                                                        String type, String item, String startTime, String endTime, String role);
 
     /**
      * 上传helm包时，同步更新config

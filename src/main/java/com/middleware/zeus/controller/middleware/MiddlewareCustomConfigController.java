@@ -79,6 +79,7 @@ public class MiddlewareCustomConfigController {
             @ApiImplicitParam(name = "item", value = "配置名称",required = false, paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "startTime", value = "开始时间", required = false, paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "endTime", value = "结束时间", required = false, paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "role", value = "节点类型", required = false, paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping("/history")
     @Authority(power = 1)
@@ -88,9 +89,10 @@ public class MiddlewareCustomConfigController {
                                                                @RequestParam("type") String type,
                                                                @RequestParam(value = "item", required = false) String item,
                                                                @RequestParam(value = "startTime", required = false) String startTime,
-                                                               @RequestParam(value = "endTime", required = false) String endTime) {
+                                                               @RequestParam(value = "endTime", required = false) String endTime,
+                                                               @RequestParam(value = "role", required = false) String role) {
         return BaseResult.ok(middlewareCustomConfigService.getCustomConfigHistory(clusterId, namespace,
-                middlewareName, type, item, startTime, endTime));
+                middlewareName, type, item, startTime, endTime, role));
     }
 
 //    @ApiOperation(value = "置顶指定参数", notes = "置顶指定参数")

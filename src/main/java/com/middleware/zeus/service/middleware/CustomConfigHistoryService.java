@@ -27,9 +27,10 @@ public interface CustomConfigHistoryService {
      * @param clusterId      集群id
      * @param namespace      命名空间
      * @param name 中间件名称
+     * @param role 节点类型
      * @return List<BeanCustomConfigHistory>
      */
-    List<BeanCustomConfigHistory> get(String clusterId, String namespace, String name);
+    List<BeanCustomConfigHistory> get(String clusterId, String namespace, String name, String role);
 
     /**
      * 删除修改历史

@@ -81,4 +81,10 @@ public class BeanCustomConfigHistory implements Serializable {
     @TableField("date")
     private Date date;
 
+    /**
+     * 节点类型
+     */
+    @TableField("role")
+    private String role;
+
 }
