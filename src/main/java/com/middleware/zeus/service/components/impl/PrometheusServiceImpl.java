@@ -60,8 +60,6 @@ public class PrometheusServiceImpl extends AbstractBaseOperator implements Prome
                 ",image.kubeStateMetrics.repository=" + repository + "/kube-state-metrics" +
                 ",image.nodeExporter.repository=" + repository + "/node-exporter" +
                 ",image.grafana.repository=" + repository + "/grafana" +
-                ",image.dashboard.repository=" + repository + "/k8s-sidecar" +
-                ",image.busybox.repository=" + repository + "/grafana" +
                 ",storage.storageClass=" + "local-path";
        if (SIMPLE.equals(clusterComponentsDto.getType())) {
            setValues = setValues + ",replicas.prometheus=1";

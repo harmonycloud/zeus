@@ -34,6 +34,8 @@ spec:
     matchLabels:
       prometheus: k8s
       role: alert-rules
+  secrets:
+  - etcd-certs
   securityContext:
     fsGroup: 2000
     runAsNonRoot: true
