@@ -39,6 +39,7 @@ public class CustomConfigHistoryServiceImpl implements CustomConfigHistoryServic
             beanCustomConfigHistory.setDate(now);
             beanCustomConfigHistory.setRestart(customConfig.getRestart());
             beanCustomConfigHistory.setStatus(false);
+            beanCustomConfigHistory.setRole(customConfig.getRole());
             // 当前值不存在，选择默认值
             if (oldData.containsKey(customConfig.getName())) {
                 beanCustomConfigHistory.setLast(oldData.get(customConfig.getName()));
@@ -50,9 +51,12 @@ public class CustomConfigHistoryServiceImpl implements CustomConfigHistoryServic
     }
 
     @Override
-    public List<BeanCustomConfigHistory> get(String clusterId, String namespace, String name) {
+    public List<BeanCustomConfigHistory> get(String clusterId, String namespace, String name, String role) {
         QueryWrapper<BeanCustomConfigHistory> wrapper = new QueryWrapper<BeanCustomConfigHistory>()
                 .eq("cluster_id", clusterId).eq("namespace", namespace).eq("name", name);
+        if (role != null) {
+            wrapper.eq("role", role);
+        }
         return beanCustomConfigHistoryMapper.selectList(wrapper);
     }
 
