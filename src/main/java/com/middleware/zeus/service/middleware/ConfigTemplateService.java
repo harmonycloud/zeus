@@ -33,7 +33,7 @@ public interface ConfigTemplateService {
      * @param uid       模板id
      * @return CustomConfigTemplateDTO
      */
-    CustomConfigTemplateDTO get(String type, String uid, String chartVersion);
+    CustomConfigTemplateDTO getTemp(String type, String uid, String chartVersion);
 
     /**
      * 获取初始化模板
@@ -42,7 +42,7 @@ public interface ConfigTemplateService {
      * @param chartVersion    中间件版本
      * @return CustomConfigTemplateDTO
      */
-    List<CustomConfig> get(String type, String chartVersion);
+    List<CustomConfig> getCustomConfig(String type, String chartVersion, String role);
 
     /**
      * 更新模板

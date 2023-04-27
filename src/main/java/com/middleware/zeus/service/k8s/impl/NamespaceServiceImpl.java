@@ -1,14 +1,11 @@
 package com.middleware.zeus.service.k8s.impl;
 
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.middleware.caas.common.constants.NamespaceConstant;
-import com.middleware.caas.common.model.QuotaBase;
-import com.middleware.caas.common.model.ResourceQuotaDo;
-import com.middleware.caas.common.model.StorageDto;
-import com.middleware.caas.common.model.StorageQuota;
+import com.middleware.caas.common.model.*;
 import com.middleware.caas.common.model.middleware.StorageClassInfo;
 import com.middleware.caas.common.model.user.ProjectNamespaceDo;
-import com.middleware.zeus.annotation.Skyview;
 import com.middleware.zeus.bean.user.BeanProjectNamespace;
 import com.middleware.zeus.dao.user.BeanProjectNamespaceMapper;
 import com.middleware.zeus.service.k8s.StorageService;
@@ -31,7 +28,6 @@ import com.middleware.zeus.integration.cluster.NamespaceWrapper;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -155,6 +151,10 @@ public class NamespaceServiceImpl implements NamespaceService {
         if (StringUtils.isNotEmpty(namespace.getAliasName())) {
             annotations.put("alias_name", namespace.getAliasName());
         }
+        // set ns uid range
+        if (namespace.getContainerUIDRange() != null) {
+            putContainerIdentityRange(namespace, annotations);
+        }
         save(namespace.getClusterId(), namespace.getName(), label, annotations);
         // 创建资源配额
         //resourceQuotaService.create(namespace.getClusterId(), namespace.getName(), namespace.getQuotas());
@@ -212,6 +212,10 @@ public class NamespaceServiceImpl implements NamespaceService {
         // 修改资源配额
         if (namespace.getQuotas() != null) {
             resourceQuotaService.update(clusterId, name, namespace.getQuotas());
+        }
+        // 修改分区uid
+        if(namespace.getContainerUIDRange() != null){
+            putContainerIdentityRange(namespace, ns.getMetadata().getAnnotations());
         }
         namespaceWrapper.save(clusterId, ns);
         // 修改数据表 project_namespace 中分区中文名
@@ -344,6 +348,8 @@ public class NamespaceServiceImpl implements NamespaceService {
         if (StringUtils.isBlank(namespace.getAliasName())) {
             namespace.setAliasName(namespace.getName());
         }
+        // 设置ns uid
+        this.setContainerIdentityRange(ns, namespace);
         this.setAvailableDomain(clusterId, namespace.getName(), ns, namespace);
         return namespace;
     }
@@ -377,6 +383,32 @@ public class NamespaceServiceImpl implements NamespaceService {
             }
         }
         return namespaces;
+    }
+
+    /**
+     * 设置分区uid范围
+     * @param namespace
+     * @param annotations
+     */
+    private void putContainerIdentityRange(Namespace namespace, Map<String, String> annotations) {
+        ContainerIdentityRange containerUIDRange = namespace.getContainerUIDRange();
+        if (containerUIDRange == null) {
+            return;
+        }
+        JSONObject containerIdentityRange = new JSONObject();
+        containerIdentityRange.put(NamespaceConstant.KEY_CONTAINER_UID_RANGE, containerUIDRange);
+        annotations.put(NamespaceConstant.KEY_CONTAINER_IDENTITY_RANGE, containerIdentityRange.toString());
+    }
+
+    private void setContainerIdentityRange(io.fabric8.kubernetes.api.model.Namespace ns, Namespace namespace) {
+        if (ns.getMetadata() != null && ns.getMetadata().getAnnotations() != null) {
+            String containerIdentityRange = ns.getMetadata().getAnnotations().get(NamespaceConstant.KEY_CONTAINER_IDENTITY_RANGE);
+            JSONObject rangeObj = JSONObject.parseObject(containerIdentityRange);
+            if (rangeObj != null) {
+                String uidRange = rangeObj.getString(NamespaceConstant.KEY_CONTAINER_UID_RANGE);
+                namespace.setContainerUIDRange(JSONObject.parseObject(uidRange, ContainerIdentityRange.class));
+            }
+        }
     }
 
     /**

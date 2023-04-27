@@ -50,6 +50,10 @@ public class BeanMiddlewareParamTop implements Serializable {
     @TableField("param")
     private String param;
 
+    /**
+     * 节点类型
+     */
+    private String role;
 
 
 

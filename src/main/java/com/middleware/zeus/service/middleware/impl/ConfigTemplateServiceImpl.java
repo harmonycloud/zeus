@@ -41,6 +41,9 @@ public class ConfigTemplateServiceImpl implements ConfigTemplateService {
 
     @Override
     public void create(CustomConfigTemplateDTO customConfigTemplateDTO) {
+        if (customConfigTemplateDTO.getRole() == null) {
+            throw new BusinessException(ErrorMessage.CUSTOM_CONFIG_ROLE_CAN_NOT_BE_NULL);
+        }
         checkExist(customConfigTemplateDTO);
         // 封装数据
         BeanCustomConfigTemplate beanCustomConfigTemplate = convert(customConfigTemplateDTO);
@@ -63,9 +66,9 @@ public class ConfigTemplateServiceImpl implements ConfigTemplateService {
     }
 
     @Override
-    public List<CustomConfig> get(String type, String chartVersion) {
+    public List<CustomConfig> getCustomConfig(String type, String chartVersion, String role) {
         QueryWrapper<BeanCustomConfig> wrapper =
-                new QueryWrapper<BeanCustomConfig>().eq("chart_name", type).eq("chart_version", chartVersion);
+                new QueryWrapper<BeanCustomConfig>().eq("chart_name", type).eq("chart_version", chartVersion).eq("role", role);
         List<BeanCustomConfig> beanCustomConfigList = beanCustomConfigMapper.selectList(wrapper);
         return beanCustomConfigList.stream().map(beanCustomConfig -> {
             CustomConfig customConfig = new CustomConfig();
@@ -79,13 +82,13 @@ public class ConfigTemplateServiceImpl implements ConfigTemplateService {
     }
 
     @Override
-    public CustomConfigTemplateDTO get(String type, String uid, String chartVersion) {
+    public CustomConfigTemplateDTO getTemp(String type, String uid, String chartVersion) {
         // 获取模板
         QueryWrapper<BeanCustomConfigTemplate> wrapper =
             new QueryWrapper<BeanCustomConfigTemplate>().eq("uid", uid).eq("type", type);
         BeanCustomConfigTemplate template = beanCustomConfigTemplateMapper.selectOne(wrapper);
         // 获取所有参数
-        List<CustomConfig> customConfigList = this.get(type, chartVersion);
+        List<CustomConfig> customConfigList = this.getCustomConfig(type, chartVersion, template.getRole());
         Map<String, CustomConfig> customConfigMap =
             customConfigList.stream().collect(Collectors.toMap(CustomConfig::getName, customConfig -> customConfig));
         // 封装数据
@@ -104,6 +107,9 @@ public class ConfigTemplateServiceImpl implements ConfigTemplateService {
 
     @Override
     public void update(CustomConfigTemplateDTO customConfigTemplateDTO) {
+        if (customConfigTemplateDTO.getRole() == null) {
+            throw new BusinessException(ErrorMessage.CUSTOM_CONFIG_ROLE_CAN_NOT_BE_NULL);
+        }
         checkExist(customConfigTemplateDTO);
         // 封装数据
         BeanCustomConfigTemplate beanCustomConfigTemplate = convert(customConfigTemplateDTO);
@@ -137,6 +143,7 @@ public class ConfigTemplateServiceImpl implements ConfigTemplateService {
         beanCustomConfigTemplate.setUid(UUIDUtils.get16UUID());
         beanCustomConfigTemplate.setConfig(sb.toString());
         beanCustomConfigTemplate.setCreateTime(new Date());
+        beanCustomConfigTemplate.setRole(customConfigTemplateDTO.getRole());
         return beanCustomConfigTemplate;
     }
 

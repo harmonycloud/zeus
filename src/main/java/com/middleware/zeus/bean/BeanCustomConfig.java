@@ -65,5 +65,10 @@ public class BeanCustomConfig implements Serializable {
      */
     @TableField("description")
     private String description;
+    /**
+     * 节点类型
+     */
+    @TableField("role")
+    private String role;
 
 }

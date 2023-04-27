@@ -63,4 +63,10 @@ public class BeanCustomConfigTemplate implements Serializable {
     @TableField("create_time")
     private Date createTime;
 
+    /**
+     * 节点类型
+     */
+    @TableField("role")
+    private String role;
+
 }

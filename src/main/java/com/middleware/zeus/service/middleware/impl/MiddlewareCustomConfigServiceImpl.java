@@ -74,7 +74,7 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
     private MiddlewareService middlewareService;
 
     @Override
-    public List<CustomConfig> listCustomConfig(String clusterId, String namespace, String middlewareName, String type, String order)
+    public List<CustomConfig> listCustomConfig(String clusterId, String namespace, String middlewareName, String type, String order, String role)
         throws Exception {
         Middleware middleware = new Middleware(clusterId, namespace, middlewareName, type);
         MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
@@ -86,21 +86,17 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         middleware.setChartVersion(values.getString("chart-version"));
         // 获取数据库数据
         QueryWrapper<BeanCustomConfig> wrapper = new QueryWrapper<BeanCustomConfig>()
-            .eq("chart_name", middleware.getType()).eq("chart_version", middleware.getChartVersion());
+            .eq("chart_name", middleware.getType()).eq("chart_version", middleware.getChartVersion()).eq("role",role);
         List<BeanCustomConfig> beanCustomConfigList = beanCustomConfigMapper.selectList(wrapper);
-        if (CollectionUtils.isEmpty(beanCustomConfigList)) {
-            HelmChartFile helmChart = helmChartService.getHelmChartFromMysql(type, middleware.getChartVersion());
-            beanCustomConfigList.addAll(updateConfig2MySQL(helmChart, false));
-        }
         // 查询修改历史
         Map<String, List<BeanCustomConfigHistory>> beanCustomConfigHistoryListMap =
             customConfigHistoryService.get(clusterId, namespace, middlewareName).stream()
                 .collect(Collectors.groupingBy(BeanCustomConfigHistory::getItem));
         orderByUpdateTime(beanCustomConfigHistoryListMap);
         //查询置顶参数
-        QueryWrapper<BeanMiddlewareParamTop> wrapper1 = new QueryWrapper<BeanMiddlewareParamTop>()
-            .eq("cluster_id", clusterId).eq("namespace", namespace).eq("name", middlewareName);
-        List<BeanMiddlewareParamTop> beanMiddlewareParamTopList = beanMiddlewareParamTopMapper.selectList(wrapper1);
+//        QueryWrapper<BeanMiddlewareParamTop> wrapper1 = new QueryWrapper<BeanMiddlewareParamTop>()
+//            .eq("cluster_id", clusterId).eq("namespace", namespace).eq("name", middlewareName);
+//        List<BeanMiddlewareParamTop> beanMiddlewareParamTopList = beanMiddlewareParamTopMapper.selectList(wrapper1);
         // 封装customConfigList
         List<CustomConfig> customConfigList = new ArrayList<>();
         beanCustomConfigList.forEach(beanCustomConfig -> {
@@ -116,10 +112,10 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
             if ("sql_mode".equals(beanCustomConfig.getName())) {
                 customConfig.setParamType("multiSelect");
             }
-            if (beanMiddlewareParamTopList.stream()
-                .anyMatch(beanMiddlewareParamTop -> beanMiddlewareParamTop.getParam().equals(customConfig.getName()))) {
-                customConfig.setTopping(true);
-            }
+//            if (beanMiddlewareParamTopList.stream()
+//                .anyMatch(beanMiddlewareParamTop -> beanMiddlewareParamTop.getParam().equals(customConfig.getName()) && beanMiddlewareParamTop.getRole().equals(role))) {
+//                customConfig.setTopping(true);
+//            }
             customConfigList.add(customConfig);
         });
         customConfigList.sort((o1, o2) -> o1.getTopping() == null && o2.getTopping() == null ? 0 : o1.getTopping() == null ? 1 : o2.getTopping() == null ? -1 : 0);
@@ -219,81 +215,104 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
 
     @Override
     public List<BeanCustomConfig> updateConfig2MySQL(HelmChartFile helmChartFile) throws Exception {
-        QueryWrapper<BeanCustomConfig> wrapper = new QueryWrapper<BeanCustomConfig>()
-            .eq("chart_name", helmChartFile.getChartName()).eq("chart_version", helmChartFile.getChartVersion());
-        List<BeanCustomConfig> beanCustomConfigList = beanCustomConfigMapper.selectList(wrapper);
-        return updateConfig2MySQL(helmChartFile, !CollectionUtils.isEmpty(beanCustomConfigList));
-    }
-
-    @Override
-    public List<BeanCustomConfig> updateConfig2MySQL(HelmChartFile helmChartFile, Boolean update) throws Exception {
+        List<BeanCustomConfig> resultList = new ArrayList<>();
         try {
-            JSONObject data = new JSONObject();
+            QueryWrapper<BeanCustomConfig> wrapper = new QueryWrapper<BeanCustomConfig>()
+                    .eq("chart_name", helmChartFile.getChartName()).eq("chart_version", helmChartFile.getChartVersion());
+            // 清除旧数据
+            beanCustomConfigMapper.delete(wrapper);
+            JSONObject data;
+            Yaml yaml = new Yaml();
             for (String key : helmChartFile.getYamlFileMap().keySet()) {
                 if ("parameters.yaml".equals(key)) {
-                    Yaml yaml = new Yaml();
                     data = yaml.loadAs(helmChartFile.getYamlFileMap().get(key), JSONObject.class);
+                    resultList.addAll(updateConfig2MySQL(data, "major", helmChartFile.getChartName(), helmChartFile.getChartVersion()));
+                } else if ("parameters-proxysql.yaml".equals(key)) {
+                    data = yaml.loadAs(helmChartFile.getYamlFileMap().get(key), JSONObject.class);
+                    resultList.addAll(updateConfig2MySQL(data, "proxy", helmChartFile.getChartName(), helmChartFile.getChartVersion()));
                 }
             }
-            // 转换为对象
-            CustomConfigParameters parameters =
-                JSONObject.parseObject(JSONObject.toJSONString(data), CustomConfigParameters.class);
-            List<BeanCustomConfig> beanCustomConfigList = new ArrayList<>();
-            parameters.getParameters().forEach(map -> {
-                for (String key : map.keySet()) {
-                    Map<String, String> param = map.get(key).stream()
-                        .collect(Collectors.toMap(CustomConfigParameter::getName, CustomConfigParameter::getValue));
-                    // 封装数据库对象
-                    BeanCustomConfig beanCustomConfig = new BeanCustomConfig();
-                    beanCustomConfig.setName(key);
-                    beanCustomConfig.setDefaultValue(param.get("default"));
-                    beanCustomConfig.setRestart("y".equals(param.get("isReboot")));
-                    beanCustomConfig.setRanges(param.get("range"));
-                    beanCustomConfig.setDescription(param.get("describe"));
-                    beanCustomConfig.setChartName(helmChartFile.getChartName());
-                    beanCustomConfig.setChartVersion(helmChartFile.getChartVersion());
-                    if (param.containsKey("pattern")) {
-                        beanCustomConfig.setPattern(param.get("pattern"));
-                    }
-                    if (update) {
-                        QueryWrapper<BeanCustomConfig> wrapper =
-                            new QueryWrapper<BeanCustomConfig>().eq("chart_name", beanCustomConfig.getChartName())
-                                .eq("chart_version", beanCustomConfig.getChartVersion())
-                                .eq("name", beanCustomConfig.getName());
-                        beanCustomConfigMapper.update(beanCustomConfig, wrapper);
-                    } else {
-                        beanCustomConfigMapper.insert(beanCustomConfig);
-                    }
-                    beanCustomConfigList.add(beanCustomConfig);
-                }
-            });
-            return beanCustomConfigList;
-            // 存入数据库
         } catch (Exception e) {
             throw new CaasRuntimeException(ErrorMessage.MIDDLEWARE_UPDATE_MYSQL_CONFIG_FAILED);
         }
+        return resultList;
     }
+
+    @Override
+    public List<BeanCustomConfig> updateConfig2MySQL(JSONObject data, String role, String chartName, String chartVersion) {
+        // 转换为对象
+        CustomConfigParameters parameters =
+                JSONObject.parseObject(JSONObject.toJSONString(data), CustomConfigParameters.class);
+        List<BeanCustomConfig> beanCustomConfigList = new ArrayList<>();
+        parameters.getParameters().forEach(map -> {
+            for (String key : map.keySet()) {
+                Map<String, String> param = map.get(key).stream()
+                        .collect(Collectors.toMap(CustomConfigParameter::getName, CustomConfigParameter::getValue));
+                // 封装数据库对象
+                BeanCustomConfig beanCustomConfig = new BeanCustomConfig();
+                beanCustomConfig.setName(key);
+                beanCustomConfig.setDefaultValue(param.get("default"));
+                beanCustomConfig.setRestart("y".equals(param.get("isReboot")));
+                beanCustomConfig.setRanges(param.get("range"));
+                beanCustomConfig.setDescription(param.get("describe"));
+                beanCustomConfig.setChartName(chartName);
+                beanCustomConfig.setChartVersion(chartVersion);
+                beanCustomConfig.setRole(role);
+                if (param.containsKey("pattern")) {
+                    beanCustomConfig.setPattern(param.get("pattern"));
+                }
+                // 存入数据库
+                beanCustomConfigMapper.insert(beanCustomConfig);
+                beanCustomConfigList.add(beanCustomConfig);
+            }
+        });
+        return beanCustomConfigList;
+    }
+
 
     @Override
     public void deleteHistory(String clusterId, String namespace, String name) {
         customConfigHistoryService.delete(clusterId, namespace, name);
     }
 
+//    @Override
+//    public void topping(String clusterId, String namespace, String name, String configName, String type, String role) {
+//        QueryWrapper<BeanMiddlewareParamTop> wrapper = new QueryWrapper<BeanMiddlewareParamTop>()
+//            .eq("cluster_id", clusterId).eq("namespace", namespace).eq("name", name).eq("param", configName).eq("role", role);
+//        List<BeanMiddlewareParamTop> exist = beanMiddlewareParamTopMapper.selectList(wrapper);
+//        if (CollectionUtils.isEmpty(exist)) {
+//            BeanMiddlewareParamTop beanMiddlewareParamTop = new BeanMiddlewareParamTop();
+//            beanMiddlewareParamTop.setClusterId(clusterId);
+//            beanMiddlewareParamTop.setNamespace(namespace);
+//            beanMiddlewareParamTop.setName(name);
+//            beanMiddlewareParamTop.setParam(configName);
+//            beanMiddlewareParamTop.setRole(role);
+//            beanMiddlewareParamTopMapper.insert(beanMiddlewareParamTop);
+//        } else {
+//            beanMiddlewareParamTopMapper.delete(wrapper);
+//        }
+//    }
+
     @Override
-    public void topping(String clusterId, String namespace, String name, String configName, String type) {
-        QueryWrapper<BeanMiddlewareParamTop> wrapper = new QueryWrapper<BeanMiddlewareParamTop>()
-            .eq("cluster_id", clusterId).eq("namespace", namespace).eq("name", name).eq("param", configName);
-        List<BeanMiddlewareParamTop> exist = beanMiddlewareParamTopMapper.selectList(wrapper);
-        if (CollectionUtils.isEmpty(exist)) {
-            BeanMiddlewareParamTop beanMiddlewareParamTop = new BeanMiddlewareParamTop();
-            beanMiddlewareParamTop.setClusterId(clusterId);
-            beanMiddlewareParamTop.setNamespace(namespace);
-            beanMiddlewareParamTop.setName(name);
-            beanMiddlewareParamTop.setParam(configName);
-            beanMiddlewareParamTopMapper.insert(beanMiddlewareParamTop);
-        } else {
-            beanMiddlewareParamTopMapper.delete(wrapper);
+    public List<String> getRoles(String clusterId, String namespace, String middlewareName, String type) throws Exception {
+        Middleware middleware = new Middleware(clusterId, namespace, middlewareName, type);
+        MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
+        // 获取values
+        JSONObject values = helmChartService.getInstalledValues(middlewareName, namespace, cluster);
+        // 取出chartVersion
+        middleware.setChartVersion(values.getString("chart-version"));
+        QueryWrapper<BeanCustomConfig> wrapper = new QueryWrapper<BeanCustomConfig>()
+                .eq("chart_name", type).eq("chart_version", middleware.getChartVersion())
+                .select("distinct role").orderByAsc("role");
+        List<String> resultList = beanCustomConfigMapper.selectObjs(wrapper).stream().map(Object::toString).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(resultList)) {
+            HelmChartFile helmChart = helmChartService.getHelmChartFromMysql(type, middleware.getChartVersion());
+            resultList.addAll(updateConfig2MySQL(helmChart).stream().map(BeanCustomConfig::getRole).distinct().collect(Collectors.toList()));
         }
+        if (CollectionUtils.isEmpty(resultList)) {
+            throw new BusinessException(ErrorMessage.GET_CUSTOM_CONFIG_ROLE_FAILED);
+        }
+        return resultList;
     }
 
     /**

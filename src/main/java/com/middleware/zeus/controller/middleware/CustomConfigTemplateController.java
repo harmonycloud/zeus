@@ -2,7 +2,6 @@ package com.middleware.zeus.controller.middleware;
 
 import java.util.List;
 
-import com.middleware.caas.common.model.middleware.CustomConfig;
 import com.middleware.zeus.annotation.Authority;
 import com.middleware.zeus.service.middleware.ConfigTemplateService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,7 +43,7 @@ public class CustomConfigTemplateController {
 
     @ApiOperation(value = "获取自定义配置模板列表", notes = "获取自定义配置模板列表")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "path", dataTypeClass = String.class)
+            @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "path", dataTypeClass = String.class),
     })
     @GetMapping
     @Authority(power = 1)
@@ -63,20 +62,9 @@ public class CustomConfigTemplateController {
     public BaseResult<CustomConfigTemplateDTO> get(@PathVariable("type") String type,
                                                    @PathVariable("uid") String uid,
                                                    @RequestParam("chartVersion") String chartVersion) {
-        return BaseResult.ok(configTemplateService.get(type, uid, chartVersion));
+        return BaseResult.ok(configTemplateService.getTemp(type, uid, chartVersion));
     }
 
-    @ApiOperation(value = "获取初始化模板", notes = "获取初始化模板")
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "chartVersion", value = "中间件版本", paramType = "query", dataTypeClass = String.class),
-    })
-    @GetMapping("/init")
-    @Authority(power = 1)
-    public BaseResult<List<CustomConfig>> get(@PathVariable("type") String type,
-                                              @RequestParam("chartVersion") String chartVersion) {
-        return BaseResult.ok(configTemplateService.get(type, chartVersion));
-    }
 
     @ApiOperation(value = "更新自定义配置模板", notes = "更新自定义配置模板")
     @ApiImplicitParams({

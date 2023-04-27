@@ -10,6 +10,7 @@ import static com.middleware.caas.common.constants.middleware.MiddlewareConstant
 import cn.hutool.core.collection.CollectionUtil;
 import com.alibaba.fastjson.JSONArray;
 import com.middleware.caas.common.constants.ActiveAreaConstant;
+import com.middleware.caas.common.constants.ContainerConstant;
 import com.middleware.caas.common.enums.DictEnum;
 import com.middleware.caas.common.enums.ErrorMessage;
 import com.middleware.caas.common.enums.Protocol;
@@ -164,6 +165,7 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         JSONObject redis = values.getJSONObject(REDIS);
         replaceCommonResources(redisQuota, redis.getJSONObject(RESOURCES));
         replaceCommonStorages(redisQuota, values);
+        super.setSecurityContext(middleware, redis);
         if (SENTINEL.equals(middleware.getMode())) {
             JSONObject sentinel = values.getJSONObject(SENTINEL);
             MiddlewareQuota sentinelQuota = middleware.getQuota().get(SENTINEL);
@@ -171,6 +173,7 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
                 replaceCommonResources(sentinelQuota, sentinel.getJSONObject(RESOURCES));
                 if (sentinelQuota.getNum() != null) {
                     sentinel.put(REPLICAS, sentinelQuota.getNum());
+                    super.setSecurityContext(middleware, sentinel);
                 }
             }
             Integer num = redisQuota.getNum();
@@ -238,7 +241,6 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         convertCustomVolumesByHelmChart(middleware, values);
         convertRedisParamByHelmChart(middleware,values);
 
-
         // 处理redis特有参数
         if (values != null) {
             if (checkUserAuthority(MiddlewareTypeEnum.REDIS.getType())){
@@ -275,10 +277,11 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
             }
         }
 
-
         // 设置存储类型
         List<MiddlewareQuota> storageClasses = getMiddlewareStorageClasses(cluster.getId(), middleware, values);
         middleware.setStorageResource(storageClasses);
+        // 设置uid
+        convertSecurityContext(middleware, values);
         return middleware;
     }
 
@@ -315,6 +318,16 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         redisParam.setSentinelPort(sentinelPort);
         redisParam.setPredixyPort(predixyPort);
         middleware.setRedisParam(redisParam);
+    }
+
+    public void convertSecurityContext(Middleware middleware, JSONObject values) {
+        JSONObject redis = values.getJSONObject("redis");
+        if (redis != null && redis.containsKey(ContainerConstant.SECURITY_CONTEXT)) {
+            JSONObject securityContext = redis.getJSONObject(ContainerConstant.SECURITY_CONTEXT);
+            if (securityContext.containsKey(ContainerConstant.UID)) {
+                middleware.setContainerUID(securityContext.getLong(ContainerConstant.UID));
+            }
+        }
     }
 
     @Override
@@ -494,6 +507,7 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         resources.put("requests", requests);
         resources.put("limits", limits);
         predixy.put("resources", resources);
+        super.setSecurityContext(middleware, predixy);
         values.put("predixy", predixy);
     }
 
