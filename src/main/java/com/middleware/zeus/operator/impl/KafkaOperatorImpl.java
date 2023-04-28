@@ -7,6 +7,7 @@ import com.middleware.zeus.annotation.Operator;
 import com.middleware.zeus.operator.api.KafkaOperator;
 import com.middleware.zeus.operator.miiddleware.AbstractKafkaOperator;
 import com.middleware.caas.common.model.middleware.*;
+import com.middleware.zeus.util.VersionUtil;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.ObjectUtils;
@@ -39,7 +40,11 @@ public class KafkaOperatorImpl extends AbstractKafkaOperator implements KafkaOpe
         replaceCommonStorages(quota, values);
         values.put("replicas", quota.getNum());
         // 设置版本
-        values.put("version", Double.parseDouble(middleware.getVersion()));
+        if (VersionUtil.countDots(middleware.getVersion()) > 1) {
+            values.put("version", middleware.getVersion());
+        } else {
+            values.put("version", Double.parseDouble(middleware.getVersion()));
+        }
         // 设置zookeeper信息
         JSONObject zookeeper = new JSONObject();
         KafkaDTO kafkaDTO = middleware.getKafkaDTO();
