@@ -19,7 +19,6 @@ import static com.middleware.caas.common.constants.middleware.MiddlewareConstant
  * @since 2021/9/13 4:31 下午
  */
 @AllArgsConstructor
-@NoArgsConstructor
 @Accessors(chain = true)
 @Group(MIDDLEWARE_MYSQL_GROUP)
 @Version(MIDDLEWARE_INCLUDE_VERSION)

@@ -16,7 +16,6 @@ import lombok.experimental.Accessors;
  * @since 2023/3/17 5:16 下午
  */
 @AllArgsConstructor
-@NoArgsConstructor
 @Accessors(chain = true)
 @Group(PostgresqlConstant.POSTGRESQL_GROUP)
 @Version(PostgresqlConstant.POSTGRESQL_VERSION)

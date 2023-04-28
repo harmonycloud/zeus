@@ -17,7 +17,6 @@ import static com.middleware.caas.common.constants.middleware.MiddlewareConstant
  * @since 2021/9/15 5:04 下午
  */
 @AllArgsConstructor
-@NoArgsConstructor
 @Group(CR_GROUP)
 @Version(V1)
 @Plural(MIDDLEWARERESTORES)
