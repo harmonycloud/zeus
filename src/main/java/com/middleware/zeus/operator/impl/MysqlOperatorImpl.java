@@ -946,4 +946,15 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
             log.error("触发mysql优雅重启失败", e);
         }
     }
+
+    public String getCustomConfigRole(String podType) {
+        switch (podType.toLowerCase()) {
+            case "master" :
+                return "major";
+            case "proxy" :
+                return "proxy";
+            default:
+                return null;
+        }
+    }
 }

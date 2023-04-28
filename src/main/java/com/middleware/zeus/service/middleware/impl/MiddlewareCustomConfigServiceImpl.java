@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 
 import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareInfo;
+import com.middleware.zeus.operator.BaseOperator;
 import com.middleware.zeus.service.k8s.*;
 import com.middleware.caas.common.model.middleware.*;
 import com.middleware.zeus.service.AbstractBaseService;
@@ -313,7 +314,26 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         if (CollectionUtils.isEmpty(resultList)) {
             throw new BusinessException(ErrorMessage.GET_CUSTOM_CONFIG_ROLE_FAILED);
         }
-        return resultList;
+        Set<String> roleSet = getMiddlewareCustomConfigRole(clusterId, namespace, middlewareName, type);
+        return resultList.stream().filter(roleSet::contains).collect(Collectors.toList());
+    }
+
+    public Set<String> getMiddlewareCustomConfigRole(String clusterId, String namespace, String name, String type) {
+        Middleware middleware = new Middleware(clusterId, namespace, name, type);
+        MiddlewareCR cr = middlewareCRService.getCR(clusterId, namespace, type, name);
+        BaseOperator operator = getOperator(BaseOperator.class, BaseOperator.class, middleware);
+        HashSet<String> resultSet = new HashSet<>();
+        if (cr.getStatus() != null && cr.getStatus().getInclude() != null
+                && cr.getStatus().getInclude().containsKey("pods")
+                && !CollectionUtils.isEmpty(cr.getStatus().getInclude().get("pods"))) {
+            cr.getStatus().getInclude().get("pods").forEach(pod -> {
+                String role = operator.getCustomConfigRole(pod.getType());
+                if (role != null) {
+                    resultSet.add(role);
+                }
+            });
+        }
+        return resultSet;
     }
 
     /**

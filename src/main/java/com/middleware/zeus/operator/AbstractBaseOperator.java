@@ -1513,4 +1513,10 @@ public abstract class AbstractBaseOperator {
         }
     }
 
+    public String getCustomConfigRole(String podType){
+        if ("master".equalsIgnoreCase(podType)) {
+            return "major";
+        } else return null;
+    }
+
 }

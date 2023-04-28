@@ -7,6 +7,7 @@ import io.fabric8.kubernetes.api.model.ConfigMap;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author dengyulong
@@ -183,5 +184,11 @@ public interface BaseOperator {
      * 服务重启
      */
     void reboot(String clusterId, String namespace, String name, String type);
+
+    /**
+     * 获取节点类型
+     * @return
+     */
+    String getCustomConfigRole(String podType);
 
 }
