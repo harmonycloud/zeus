@@ -1,7 +1,9 @@
 package com.middleware.zeus.integration.cluster.bean;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 import java.util.List;
@@ -11,6 +13,8 @@ import java.util.Map;
  * @author liyinlong
  * @since 2023/3/17 5:17 下午
  */
+@AllArgsConstructor
+@NoArgsConstructor
 @Accessors(chain = true)
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)

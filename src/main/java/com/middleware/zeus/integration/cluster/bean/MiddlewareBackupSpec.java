@@ -1,7 +1,9 @@
 package com.middleware.zeus.integration.cluster.bean;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 import org.apache.commons.lang3.StringUtils;
 
@@ -13,6 +15,8 @@ import java.util.Map;
  * @author  liyinlong
  * @since 2021/9/15 10:06 上午
  */
+@AllArgsConstructor
+@NoArgsConstructor
 @Data
 @Accessors(chain = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -38,16 +42,8 @@ public class MiddlewareBackupSpec {
      */
     private List<Map<String, Object>> customBackups;
 
-    public MiddlewareBackupSpec() {
-    }
-
-    public MiddlewareBackupSpec(MiddlewareBackupDestination backupDestination, String name, String type, List<Map<String, Object>> customBackups) {
-        this.backupDestination = backupDestination;
-        this.name = name;
-        this.type = type;
-        this.customBackups = customBackups;
-    }
-
+    @AllArgsConstructor
+    @NoArgsConstructor
     @Data
     public static class MiddlewareBackupDestination {
 
@@ -55,10 +51,8 @@ public class MiddlewareBackupSpec {
 
         private MiddlewareBackupParameters parameters;
 
-        public MiddlewareBackupDestination() {
-
-        }
-
+        @AllArgsConstructor
+        @NoArgsConstructor
         @Data
         public static class MiddlewareBackupParameters {
 
@@ -73,15 +67,6 @@ public class MiddlewareBackupSpec {
             private String userKey;
 
             private String backupPassword;
-
-            public MiddlewareBackupParameters(String bucket, String url, String bucketSubPath, String userId, String userKey, String backupPassword) {
-                this.bucket = bucket;
-                this.url = url;
-                this.bucketSubPath = bucketSubPath;
-                this.userId = userId;
-                this.userKey = userKey;
-                this.backupPassword = backupPassword;
-            }
 
         }
     }

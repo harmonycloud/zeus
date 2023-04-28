@@ -1,7 +1,9 @@
 package com.middleware.zeus.integration.cluster.bean;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 import java.util.List;
@@ -10,6 +12,8 @@ import java.util.Map;
 /**
  * 中间件备份记录状态
  */
+@AllArgsConstructor
+@NoArgsConstructor
 @Data
 @Accessors(chain = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -31,6 +35,8 @@ public class MiddlewareBackupStatus {
     /**
      * 备份记录
      */
+    @AllArgsConstructor
+    @NoArgsConstructor
     @Data
     public static class BackupInfo {
         private Boolean readyToUse;
@@ -41,15 +47,17 @@ public class MiddlewareBackupStatus {
 
         private int orderNum;
 
-        public BackupInfo() {
-        }
     }
 
+    @AllArgsConstructor
+    @NoArgsConstructor
     @Data
     public static class StorageProvider{
 
         private Parameters parameters;
 
+        @AllArgsConstructor
+        @NoArgsConstructor
         @Data
         public static class Parameters{
             private String bucket;
@@ -62,8 +70,6 @@ public class MiddlewareBackupStatus {
 
             private String userKey;
 
-            public Parameters() {
-            }
         }
     }
 }

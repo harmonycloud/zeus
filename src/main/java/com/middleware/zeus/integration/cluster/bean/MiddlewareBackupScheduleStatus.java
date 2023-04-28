@@ -2,7 +2,9 @@ package com.middleware.zeus.integration.cluster.bean;
 
 import com.alibaba.fastjson.JSONObject;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 import java.util.List;
@@ -10,6 +12,8 @@ import java.util.List;
 /**
  * 中间件备份状态
  */
+@AllArgsConstructor
+@NoArgsConstructor
 @Data
 @Accessors(chain = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -28,6 +32,8 @@ public class MiddlewareBackupScheduleStatus {
     /**
      * 备份记录
      */
+    @AllArgsConstructor
+    @NoArgsConstructor
     @Data
     public static class Record {
         private String creationTimestamp;

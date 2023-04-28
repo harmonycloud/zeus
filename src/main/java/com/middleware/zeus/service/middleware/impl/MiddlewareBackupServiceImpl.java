@@ -1119,7 +1119,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         } else {
             Map<String, String> labels = new HashMap<>();
             labels.put("middleware", getRealMiddlewareName(type, middlewareName));
-            resList.addAll(backupCRDService.list(clusterId, namespace, labels));
+            List<MiddlewareBackupCR> list = backupCRDService.list(clusterId, namespace, labels);
+//            resList.addAll();
+            System.out.println(list);
         }
         return resList;
     }

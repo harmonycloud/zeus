@@ -1,13 +1,17 @@
 package com.middleware.zeus.integration.cluster.bean;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.List;
 import java.util.Map;
 
+@AllArgsConstructor
+@NoArgsConstructor
 @Data
 @Accessors(chain = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -40,9 +44,6 @@ public class MiddlewareBackupScheduleSpec {
 
     private List<Map<String, List<Map<String, String>>>> customBackups;
 
-    public MiddlewareBackupScheduleSpec() {
-    }
-
     public MiddlewareBackupScheduleSpec(MiddlewareBackupScheduleDestination backupDestination, List<Map<String, List<Map<String, String>>>> customBackups, String name, String type, String pause, String cron, Integer limitRecord, Integer retentionTime) {
         this.backupDestination = backupDestination;
         this.customBackups = customBackups;
@@ -54,6 +55,8 @@ public class MiddlewareBackupScheduleSpec {
         }
     }
 
+    @AllArgsConstructor
+    @NoArgsConstructor
     @Data
     public static class MiddlewareBackupScheduleDestination {
 
@@ -61,10 +64,8 @@ public class MiddlewareBackupScheduleSpec {
 
         private MiddlewareBackupParameters parameters;
 
-        public MiddlewareBackupScheduleDestination() {
-
-        }
-
+        @AllArgsConstructor
+        @NoArgsConstructor
         @Data
         public static class MiddlewareBackupParameters {
 
@@ -80,18 +81,11 @@ public class MiddlewareBackupScheduleSpec {
 
             private String backupPassword;
 
-            public MiddlewareBackupParameters(String bucket, String url, String bucketSubPath, String userId, String userKey, String backupPassword) {
-                this.bucket = bucket;
-                this.url = url;
-                this.bucketSubPath = bucketSubPath;
-                this.userId = userId;
-                this.userKey = userKey;
-                this.backupPassword = backupPassword;
-            }
-
         }
     }
 
+    @AllArgsConstructor
+    @NoArgsConstructor
     @Data
     public static class Schedule {
 
@@ -110,14 +104,6 @@ public class MiddlewareBackupScheduleSpec {
          */
         private Integer retentionTime;
 
-        public Schedule() {
-        }
-
-        public Schedule(String cron, Integer limitRecord, Integer retentionTime) {
-            this.cron = cron;
-            this.limitRecord = limitRecord;
-            this.retentionTime = retentionTime;
-        }
     }
 
 }

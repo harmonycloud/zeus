@@ -7,12 +7,16 @@ import io.fabric8.kubernetes.client.CustomResource;
 import io.fabric8.kubernetes.model.annotation.Group;
 import io.fabric8.kubernetes.model.annotation.Plural;
 import io.fabric8.kubernetes.model.annotation.Version;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
  * @author liyinlong
  * @since 2023/3/17 5:16 下午
  */
+@AllArgsConstructor
+@NoArgsConstructor
 @Accessors(chain = true)
 @Group(PostgresqlConstant.POSTGRESQL_GROUP)
 @Version(PostgresqlConstant.POSTGRESQL_VERSION)

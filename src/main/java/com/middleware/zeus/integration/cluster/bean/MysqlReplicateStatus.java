@@ -1,7 +1,9 @@
 package com.middleware.zeus.integration.cluster.bean;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 import java.util.List;
@@ -11,6 +13,8 @@ import java.util.List;
  * @author liyinlong
  * @date 2021/8/11 2:43 下午
  */
+@AllArgsConstructor
+@NoArgsConstructor
 @Data
 @Accessors(chain = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -28,6 +32,8 @@ public class MysqlReplicateStatus {
 
     private List<PodStatus> slaves;
 
+    @AllArgsConstructor
+    @NoArgsConstructor
     @Data
     public static class PodStatus{
 
