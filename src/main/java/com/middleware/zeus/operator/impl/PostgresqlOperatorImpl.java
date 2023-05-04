@@ -213,9 +213,13 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
                 middleware.getName(), MiddlewareTypeEnum.POSTGRESQL.getType());
         List<PodInfo> runningPods = podInfos.stream().filter(podInfo -> RUNNING.equalsIgnoreCase(podInfo.getStatus()))
                 .collect(Collectors.toList());
+        // pod状态全异常，直接返回缓存数据
         if (CollectionUtil.isEmpty(runningPods)) {
-            throw new BusinessException(ErrorMessage.GET_AUTOSWITCH_FAILED);
+            BeanSystemConfig config = systemConfigService.getConfig(middleware.toStringKey());
+            return new SwitchInfo().setStatus(false)
+                .setIsAuto(config == null || Boolean.parseBoolean(config.getConfigValue()));
         }
+
         // 获取patroniService
         String patroniName = middleware.getName() + "-patroni";
         Service patroniService = serviceWrapper.get(middleware.getClusterId(), middleware.getNamespace(), patroniName);
@@ -250,9 +254,9 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
             StringBuilder sb = new StringBuilder();
             resList.forEach(sb::append);
             JSONObject res = JSONObject.parseObject(sb.toString());
-            if(res != null && res.containsKey(PAUSE)){
+            if (res != null) {
                 switchInfo.setStatus(true);
-                switchInfo.setIsAuto(!res.getBoolean("pause"));
+                switchInfo.setIsAuto(!res.containsKey(PAUSE) || !res.getBoolean("pause"));
                 systemConfigService.saveConfig(middleware.toStringKey(), String.valueOf(switchInfo.getIsAuto()));
             }
         }
