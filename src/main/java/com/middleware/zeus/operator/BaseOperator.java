@@ -183,12 +183,19 @@ public interface BaseOperator {
     /**
      * 服务重启
      */
-    void reboot(String clusterId, String namespace, String name, String type);
+    void reboot(String clusterId, String namespace, String name, String type, String podType);
 
     /**
      * 获取节点类型
      * @return
      */
     String getCustomConfigRole(String podType);
+
+    /**
+     * 获取pod类型
+     * @param customConfigRole
+     * @return
+     */
+    String getPodType(String customConfigRole);
 
 }

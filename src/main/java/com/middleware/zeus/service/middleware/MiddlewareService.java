@@ -159,8 +159,9 @@ public interface MiddlewareService {
      * @param namespace 命名空间
      * @param name      中间件名称
      * @param type      中间件类型
+     * @param podType   pod类型
      */
-    void reboot(String clusterId, String namespace, String name, String type);
+    void reboot(String clusterId, String namespace, String name, String type, String podType);
 
     /**
      * pvc扩缩容

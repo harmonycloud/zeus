@@ -666,7 +666,11 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
     }
 
     @Override
-    public void reboot(String clusterId, String namespace, String name, String type) {
+    public void reboot(String clusterId, String namespace, String name, String type, String podType) {
+        if (!podType.equalsIgnoreCase("Master")) {
+            super.reboot(clusterId, namespace, name, type, podType);
+            return;
+        }
         RedisCluster rediscluster = redisClusterWrapper.get(clusterId, namespace, name);
         Map<String, String> annotations = rediscluster.getMetadata().getAnnotations();
         String[] params = gracefulRestartParam.split(",");
@@ -677,15 +681,4 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         redisClusterWrapper.update(clusterId, namespace, rediscluster);
     }
 
-
-    public String getCustomConfigRole(String podType) {
-        switch (podType.toLowerCase()) {
-            case "master" :
-                return "major";
-            case "proxy" :
-                return "proxy";
-            default:
-                return null;
-        }
-    }
 }

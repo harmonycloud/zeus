@@ -39,7 +39,7 @@ public class CustomConfigHistoryServiceImpl implements CustomConfigHistoryServic
             beanCustomConfigHistory.setDate(now);
             beanCustomConfigHistory.setRestart(customConfig.getRestart());
             beanCustomConfigHistory.setStatus(false);
-            beanCustomConfigHistory.setRole(customConfig.getRole());
+            beanCustomConfigHistory.setRole(middlewareCustomConfig.getRole());
             // 当前值不存在，选择默认值
             if (oldData.containsKey(customConfig.getName())) {
                 beanCustomConfigHistory.setLast(oldData.get(customConfig.getName()));

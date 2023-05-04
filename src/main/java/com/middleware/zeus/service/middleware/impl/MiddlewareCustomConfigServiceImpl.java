@@ -83,7 +83,8 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         // 获取values
         JSONObject values = helmChartService.getInstalledValues(middlewareName, namespace, cluster);
         // 获取configs
-        Map<String, String> data = getConfigFromValues(middleware, values);
+        String podType = getOperator(BaseOperator.class, BaseOperator.class, middleware).getPodType(role);
+        Map<String, String> data = getConfigFromValues(middleware, values, podType);
         // 取出chartVersion
         middleware.setChartVersion(values.getString("chart-version"));
         // 获取数据库数据
@@ -92,7 +93,6 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         List<BeanCustomConfig> beanCustomConfigList = beanCustomConfigMapper.selectList(wrapper);
         // 查询修改历史
         Map<String, List<BeanCustomConfigHistory>> beanCustomConfigHistoryListMap =
-                // todo 节点类型
             customConfigHistoryService.get(clusterId, namespace, middlewareName, role).stream()
                 .collect(Collectors.groupingBy(BeanCustomConfigHistory::getItem));
         orderByUpdateTime(beanCustomConfigHistoryListMap);
@@ -131,14 +131,16 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         MiddlewareClusterDTO cluster = clusterService.findById(config.getClusterId());
         Middleware middleware =
             new Middleware(config.getClusterId(), config.getNamespace(), config.getName(), config.getType());
+        // 获取节点类型
+        String podType = getOperator(BaseOperator.class, BaseOperator.class, middleware).getPodType(config.getRole());
         // 获取values
         JSONObject values = helmChartService.getInstalledValues(config.getName(), config.getNamespace(), cluster);
         // 获取configs
-        Map<String, String> data = getConfigFromValues(middleware, values);
+        Map<String, String> data = getConfigFromValues(middleware, values, podType);
         if (CollectionUtils.isEmpty(data)) {
             // 从parameter.yaml文件创建一份
             QueryWrapper<BeanCustomConfig> wrapper = new QueryWrapper<BeanCustomConfig>()
-                .eq("chart_name", middleware.getType()).eq("chart_version", values.getString("chart-version"));
+                .eq("chart_name", middleware.getType()).eq("chart_version", values.getString("chart-version")).eq("role", config.getRole());
             List<BeanCustomConfig> beanCustomConfigList = beanCustomConfigMapper.selectList(wrapper);
             beanCustomConfigList.forEach(c -> data.put(c.getName(), c.getDefaultValue()));
         }
@@ -159,17 +161,17 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         }
         // mysql和redis手动执行参数设置
         if ((config.getType().equals(MiddlewareTypeEnum.MYSQL.getType())
-            || config.getType().equals(MiddlewareTypeEnum.REDIS.getType()))) {
+            || config.getType().equals(MiddlewareTypeEnum.REDIS.getType())) && config.getRole().equalsIgnoreCase("major")) {
             doUpdateCustomConfig(config, cluster, config.getType());
         }
 
-        updateValues(middleware, data, cluster, values);
+        updateValues(middleware, data, cluster, values, podType);
         // 添加修改历史
         customConfigHistoryService.insert(config.getName(), oldDate, config);
         // 重启服务
         if (config.getReboot() != null && config.getReboot()
             && !config.getType().equals(MiddlewareTypeEnum.POSTGRESQL.getType())) {
-            middlewareService.reboot(config.getClusterId(), config.getNamespace(), config.getName(), config.getType());
+            middlewareService.reboot(config.getClusterId(), config.getNamespace(), config.getName(), config.getType(), podType);
         }
     }
 
@@ -356,14 +358,15 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
             podInfoList.addAll(podService.listMiddlewarePods(clusterId, namespace, middlewareName, type));
         }
         // 状态处理
+        Middleware middleware = new Middleware(clusterId, namespace, middlewareName, type);
+
         beanCustomConfigHistoryList.forEach(customConfigHistoryDTO -> {
+            String podType = getOperator(BaseOperator.class, BaseOperator.class, middleware).getPodType(customConfigHistoryDTO.getRole());
             boolean status = true;
             // 处理需重启的参数，根据pod重启时间判断
             if (customConfigHistoryDTO.getRestart()) {
                 for (PodInfo podInfo : podInfoList) {
-                    if (StringUtils.isNotEmpty(podInfo.getRole())
-                            // todo 节点类型判断
-                        && (podInfo.getRole().equals(SENTINEL) || podInfo.getRole().equals(PROXY))) {
+                    if (StringUtils.isNotEmpty(podInfo.getRole()) || !podInfo.getRole().equals(podType)) {
                         continue;
                     }
                     Date date = DateUtils.addInteger(
@@ -398,13 +401,18 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         return true;
     }
 
-    public Map<String, String> getConfigFromValues(Middleware middleware, JSONObject values) {
+    public Map<String, String> getConfigFromValues(Middleware middleware, JSONObject values, String podType) {
         Map<String, String> data = new HashMap<>();
-        if (values.containsKey("args")) {
-            JSONObject args = values.getJSONObject("args");
-            for (String key : args.keySet()) {
-                data.put(key, args.getString(key));
-            }
+        JSONObject args;
+        if (podType.equalsIgnoreCase("Master") && values.containsKey("args")) {
+            args = values.getJSONObject("args");
+        } else if (values.containsKey(podType) && values.getJSONObject(podType).containsKey("args")) {
+            args = values.getJSONObject(podType).getJSONObject("args");
+        } else {
+            return data;
+        }
+        for (String key : args.keySet()) {
+            data.put(key, args.getString(key));
         }
         return data;
     }
@@ -413,9 +421,17 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
      * 更新values.yaml
      */
     public void updateValues(Middleware middleware, Map<String, String> dataMap, MiddlewareClusterDTO cluster,
-        JSONObject values) {
+        JSONObject values, String podType) {
         JSONObject newValues = JSONObject.parseObject(values.toJSONString());
-        JSONObject args = newValues.getJSONObject("args");
+        JSONObject args;
+        if (podType.equalsIgnoreCase("Master")) {
+            args = newValues.getJSONObject("args");
+        } else if (!newValues.containsKey(podType)) {
+            args = new JSONObject();
+            newValues.put(podType, args);
+        } else {
+            args = newValues.getJSONObject(podType).getJSONObject("args");
+        }
         if (args == null) {
             args = new JSONObject();
         }
@@ -425,7 +441,11 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
             }
             args.put(key, dataMap.get(key));
         }
-        newValues.put("args", args);
+        if (podType.equalsIgnoreCase("Master")) {
+            newValues.put("args", args);
+        } else {
+            newValues.getJSONObject(podType).put("args", args);
+        }
         helmChartService.upgrade(middleware, values, newValues, cluster);
     }
 
