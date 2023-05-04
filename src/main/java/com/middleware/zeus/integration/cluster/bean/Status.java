@@ -23,13 +23,13 @@ public class Status {
 
     @Accessors(chain = true)
     @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class Condition {
         private String lastTransitionTime;
         private String mode;
         private String name;
         private String nodeName;
-        @JSONField(name = "podIP")
-        private String podIp;
+        private String podIP;
         private boolean status;
         private String type;
     }

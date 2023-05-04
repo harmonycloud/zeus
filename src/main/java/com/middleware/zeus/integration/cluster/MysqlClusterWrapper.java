@@ -25,13 +25,6 @@ public class MysqlClusterWrapper {
     @Autowired
     private K8sClient k8sClient;
 
-    /**
-     * crd的context
-     */
-    private static final ResourceDefinitionContext CONTEXT =
-        new ResourceDefinitionContext.Builder().withGroup(MYSQL_CLUSTER_GROUP).withVersion(MYSQL_CLUSTER_VERSION)
-            .withNamespaced(true).withPlural(MYSQL_CLUSTER_PLURAL).build();
-
     public MysqlCluster get(String clusterId, String namespace, String name) {
         // init client
         NonNamespaceOperation<MysqlCluster, MysqlClusterList, Resource<MysqlCluster>> mysqlClusterClient =
