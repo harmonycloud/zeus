@@ -1416,7 +1416,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         backupIdRecordMap.forEach((backupId, records) -> {
             MiddlewareBackupRecord record = records.get(0);
             MiddlewareBackupRecordGroup recordGroup = new MiddlewareBackupRecordGroup();
-            recordGroup.setMiddlewareBackupRecords(records);
             recordGroup.setBackupMode(record.getBackupMode());
             recordGroup.setClusterId(clusterId);
             recordGroup.setNamespace(record.getNamespace());
@@ -1425,6 +1424,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             recordGroup.setPhrase(getTaskPhrase(records));
             recordGroup.setTaskType(getTaskType(records));
             recordGroup.setBackupId(record.getBackupId());
+            recordGroup.setBackupAddresses(getBackupAddresses(records));
             BeanMiddlewareBackupName backupName = backupNameService.getByBackupId(record.getBackupId());
             if (backupName != null) {
                 recordGroup.setTaskName(backupName.getBackupName());
@@ -1434,6 +1434,15 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             recordGroups.add(recordGroup);
         });
         return recordGroups;
+    }
+
+    /**
+     * 获取备份位置地址数组
+     * @param records
+     * @return
+     */
+    private List<String> getBackupAddresses(List<MiddlewareBackupRecord> records) {
+        return records.stream().map(MiddlewareBackupRecord::getPosition).collect(Collectors.toList());
     }
 
     /**
