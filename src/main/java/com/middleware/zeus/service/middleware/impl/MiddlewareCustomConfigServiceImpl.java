@@ -366,7 +366,7 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
             // 处理需重启的参数，根据pod重启时间判断
             if (customConfigHistoryDTO.getRestart()) {
                 for (PodInfo podInfo : podInfoList) {
-                    if (StringUtils.isNotEmpty(podInfo.getRole()) || !podInfo.getRole().equals(podType)) {
+                    if (StringUtils.isEmpty(podInfo.getRole()) || !podInfo.getRole().equals(podType)) {
                         continue;
                     }
                     Date date = DateUtils.addInteger(
