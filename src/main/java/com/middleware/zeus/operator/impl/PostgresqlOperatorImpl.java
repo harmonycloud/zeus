@@ -348,7 +348,7 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         }
         // 确认cluster信息
         String podName = null;
-        JSONArray dataArray = postgresqlClientWrapper.cluster(patroniName, patroniPort);
+        JSONArray dataArray = postgresqlClientWrapper.cluster(middleware.getNamespace(), patroniName, patroniPort);
         for (int i = 0; i < dataArray.size(); ++i){
             String role = dataArray.getJSONObject(i).getString("role");
             if(StringUtils.isNotEmpty(role) && "sync_standby".equals(role)){
@@ -359,7 +359,7 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
             throw new BusinessException(ErrorMessage.POSTGRESQL_SYNC_POD_NOT_EXIST);
         }
         String execCommand = MessageFormat.format(POSTGRESQL_HAND_SWITCH, podName, middleware.getNamespace(),
-            cluster.getAddress(), cluster.getAccessToken(), patroniName, patroniPort, podName);
+            cluster.getAddress(), cluster.getAccessToken(), patroniName, String.valueOf(patroniPort), podName);
         List<String> results = CmdExecUtil.runCmd(execCommand);
         // 判断结果
         parseHandSwitchResult(results);

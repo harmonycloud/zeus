@@ -10,6 +10,8 @@ import com.middleware.caas.common.exception.BusinessException;
 
 import lombok.extern.slf4j.Slf4j;
 
+import static com.middleware.caas.common.constants.CommonConstant.DOT;
+
 /**
  * @author xutianhong
  * @Date 2023/4/27 8:04 下午
@@ -26,8 +28,8 @@ public class PostgresqlClientWrapper {
         postgresqlClient.manualSwitch(svcName, port, candidate);
     }
 
-    public JSONArray cluster(String svcName, Integer port){
-        JSONObject res = postgresqlClient.patroniCluster(svcName, port);
+    public JSONArray cluster(String namespace, String svcName, Integer port){
+        JSONObject res = postgresqlClient.patroniCluster(svcName + DOT + namespace, port);
         if (res.containsKey("data")){
             try {
                 return JSONObject.parseObject(res.getString("data")).getJSONArray("members");
