@@ -8,7 +8,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
-import com.middleware.zeus.integration.cluster.bean.MiddlewareBackupScheduleCR;
+import com.middleware.zeus.integration.cluster.bean.MiddlewareBackupSchedule;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareBackupScheduleList;
 import com.middleware.zeus.util.K8sClient;
 
@@ -33,11 +33,11 @@ public class MiddlewareBackupScheduleWrapper {
      * @param backupScheduleCr
      * @throws IOException
      */
-    public void create(String clusterId, MiddlewareBackupScheduleCR backupScheduleCr) throws IOException {
+    public void create(String clusterId, MiddlewareBackupSchedule backupScheduleCr) throws IOException {
         // init client
-        NonNamespaceOperation<MiddlewareBackupScheduleCR, MiddlewareBackupScheduleList,
-            Resource<MiddlewareBackupScheduleCR>> backupScheduleClient = K8sClient.getClient(clusterId)
-                .resources(MiddlewareBackupScheduleCR.class, MiddlewareBackupScheduleList.class);
+        NonNamespaceOperation<MiddlewareBackupSchedule, MiddlewareBackupScheduleList,
+            Resource<MiddlewareBackupSchedule>> backupScheduleClient = K8sClient.getClient(clusterId)
+                .resources(MiddlewareBackupSchedule.class, MiddlewareBackupScheduleList.class);
         // create
         backupScheduleClient.resource(backupScheduleCr).create();
     }
@@ -49,11 +49,11 @@ public class MiddlewareBackupScheduleWrapper {
      * @param backupScheduleCr
      * @throws IOException
      */
-    public void update(String clusterId, MiddlewareBackupScheduleCR backupScheduleCr) throws IOException {
+    public void update(String clusterId, MiddlewareBackupSchedule backupScheduleCr) throws IOException {
         // init client
-        NonNamespaceOperation<MiddlewareBackupScheduleCR, MiddlewareBackupScheduleList,
-            Resource<MiddlewareBackupScheduleCR>> backupScheduleClient = K8sClient.getClient(clusterId)
-                .resources(MiddlewareBackupScheduleCR.class, MiddlewareBackupScheduleList.class);
+        NonNamespaceOperation<MiddlewareBackupSchedule, MiddlewareBackupScheduleList,
+            Resource<MiddlewareBackupSchedule>> backupScheduleClient = K8sClient.getClient(clusterId)
+                .resources(MiddlewareBackupSchedule.class, MiddlewareBackupScheduleList.class);
         // create
         backupScheduleClient.resource(backupScheduleCr).update();
     }
@@ -68,9 +68,9 @@ public class MiddlewareBackupScheduleWrapper {
      */
     public void delete(String clusterId, String namespace, String name) throws IOException {
         // init client
-        NonNamespaceOperation<MiddlewareBackupScheduleCR, MiddlewareBackupScheduleList,
-            Resource<MiddlewareBackupScheduleCR>> backupScheduleClient = K8sClient.getClient(clusterId)
-                .resources(MiddlewareBackupScheduleCR.class, MiddlewareBackupScheduleList.class).inNamespace(namespace);
+        NonNamespaceOperation<MiddlewareBackupSchedule, MiddlewareBackupScheduleList,
+            Resource<MiddlewareBackupSchedule>> backupScheduleClient = K8sClient.getClient(clusterId)
+                .resources(MiddlewareBackupSchedule.class, MiddlewareBackupScheduleList.class).inNamespace(namespace);
         // create
         backupScheduleClient.withName(name).delete();
     }
@@ -83,20 +83,20 @@ public class MiddlewareBackupScheduleWrapper {
      * @param name
      * @return
      */
-    public MiddlewareBackupScheduleCR get(String clusterId, String namespace, String name) {
-        MiddlewareBackupScheduleCR middlewareBackupScheduleCR = null;
+    public MiddlewareBackupSchedule get(String clusterId, String namespace, String name) {
+        MiddlewareBackupSchedule middlewareBackupSchedule = null;
         try {
             // init client
-            NonNamespaceOperation<MiddlewareBackupScheduleCR, MiddlewareBackupScheduleList,
-                Resource<MiddlewareBackupScheduleCR>> backupScheduleClient = K8sClient.getClient(clusterId)
-                    .resources(MiddlewareBackupScheduleCR.class, MiddlewareBackupScheduleList.class)
+            NonNamespaceOperation<MiddlewareBackupSchedule, MiddlewareBackupScheduleList,
+                Resource<MiddlewareBackupSchedule>> backupScheduleClient = K8sClient.getClient(clusterId)
+                    .resources(MiddlewareBackupSchedule.class, MiddlewareBackupScheduleList.class)
                     .inNamespace(namespace);
-            middlewareBackupScheduleCR = backupScheduleClient.withName(name).get();
+            middlewareBackupSchedule = backupScheduleClient.withName(name).get();
         } catch (Exception e) {
             log.error("查询MiddlewareBackupSchedule出错了", e);
             return null;
         }
-        return middlewareBackupScheduleCR;
+        return middlewareBackupSchedule;
     }
 
     public MiddlewareBackupScheduleList list(String clusterId, String namespace, Map<String, String> labels) {
@@ -106,14 +106,14 @@ public class MiddlewareBackupScheduleWrapper {
                 labels = new HashMap<>();
             }
             // init client
-            NonNamespaceOperation<MiddlewareBackupScheduleCR, MiddlewareBackupScheduleList,
-                Resource<MiddlewareBackupScheduleCR>> backupScheduleClient = K8sClient.getClient(clusterId)
-                    .resources(MiddlewareBackupScheduleCR.class, MiddlewareBackupScheduleList.class)
+            NonNamespaceOperation<MiddlewareBackupSchedule, MiddlewareBackupScheduleList,
+                Resource<MiddlewareBackupSchedule>> backupScheduleClient = K8sClient.getClient(clusterId)
+                    .resources(MiddlewareBackupSchedule.class, MiddlewareBackupScheduleList.class)
                     .inNamespace(namespace);
             // 条件判断
             if (StringUtils.isNotEmpty(namespace)) {
-                backupScheduleClient = ((MixedOperation<MiddlewareBackupScheduleCR, MiddlewareBackupScheduleList,
-                    Resource<MiddlewareBackupScheduleCR>>)backupScheduleClient).inNamespace(namespace);
+                backupScheduleClient = ((MixedOperation<MiddlewareBackupSchedule, MiddlewareBackupScheduleList,
+                    Resource<MiddlewareBackupSchedule>>)backupScheduleClient).inNamespace(namespace);
             }
             // list
             middlewareBackupScheduleList = backupScheduleClient.withLabels(labels).list();

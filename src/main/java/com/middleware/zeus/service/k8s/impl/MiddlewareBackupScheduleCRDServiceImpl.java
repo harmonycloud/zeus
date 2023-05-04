@@ -1,7 +1,7 @@
 package com.middleware.zeus.service.k8s.impl;
 
 import com.middleware.zeus.integration.cluster.MiddlewareBackupScheduleWrapper;
-import com.middleware.zeus.integration.cluster.bean.MiddlewareBackupScheduleCR;
+import com.middleware.zeus.integration.cluster.bean.MiddlewareBackupSchedule;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareBackupScheduleList;
 import com.middleware.zeus.service.k8s.MiddlewareBackupScheduleCRDService;
 import lombok.extern.slf4j.Slf4j;
@@ -26,17 +26,17 @@ public class MiddlewareBackupScheduleCRDServiceImpl implements MiddlewareBackupS
     private MiddlewareBackupScheduleWrapper middlewareBackupScheduleWrapper;
 
     @Override
-    public void create(String clusterId, MiddlewareBackupScheduleCR middlewareBackupScheduleCR) throws IOException {
-        middlewareBackupScheduleWrapper.create(clusterId, middlewareBackupScheduleCR);
+    public void create(String clusterId, MiddlewareBackupSchedule middlewareBackupSchedule) throws IOException {
+        middlewareBackupScheduleWrapper.create(clusterId, middlewareBackupSchedule);
     }
 
     @Override
-    public void update(String clusterId, MiddlewareBackupScheduleCR middlewareBackupScheduleCR) throws IOException {
-        middlewareBackupScheduleWrapper.update(clusterId, middlewareBackupScheduleCR);
+    public void update(String clusterId, MiddlewareBackupSchedule middlewareBackupSchedule) throws IOException {
+        middlewareBackupScheduleWrapper.update(clusterId, middlewareBackupSchedule);
     }
 
     @Override
-    public MiddlewareBackupScheduleCR get(String clusterId, String namespace, String backupName) {
+    public MiddlewareBackupSchedule get(String clusterId, String namespace, String backupName) {
         return middlewareBackupScheduleWrapper.get(clusterId, namespace, backupName);
     }
 
@@ -51,8 +51,8 @@ public class MiddlewareBackupScheduleCRDServiceImpl implements MiddlewareBackupS
     }
 
     @Override
-    public List<MiddlewareBackupScheduleCR> listByLabels(String clusterId, String namespace,
-        Map<String, String> labels) {
+    public List<MiddlewareBackupSchedule> listByLabels(String clusterId, String namespace,
+                                                       Map<String, String> labels) {
         MiddlewareBackupScheduleList middlewareBackupScheduleList =
             middlewareBackupScheduleWrapper.list(clusterId, namespace, labels);
         if (middlewareBackupScheduleList != null && !CollectionUtils.isEmpty(middlewareBackupScheduleList.getItems())) {

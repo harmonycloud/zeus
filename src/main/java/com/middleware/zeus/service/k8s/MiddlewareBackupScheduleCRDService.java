@@ -1,6 +1,6 @@
 package com.middleware.zeus.service.k8s;
 
-import com.middleware.zeus.integration.cluster.bean.MiddlewareBackupScheduleCR;
+import com.middleware.zeus.integration.cluster.bean.MiddlewareBackupSchedule;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareBackupScheduleList;
 
 import java.io.IOException;
@@ -17,18 +17,18 @@ public interface MiddlewareBackupScheduleCRDService {
     /**
      * 创建备份
      * @param clusterId
-     * @param middlewareBackupScheduleCR
+     * @param middlewareBackupSchedule
      * @throws IOException
      */
-    void create(String clusterId, MiddlewareBackupScheduleCR middlewareBackupScheduleCR)  throws IOException;
+    void create(String clusterId, MiddlewareBackupSchedule middlewareBackupSchedule)  throws IOException;
 
     /**
      * 更新备份
      * @param clusterId
-     * @param middlewareBackupScheduleCR
+     * @param middlewareBackupSchedule
      * @throws IOException
      */
-    void update(String clusterId, MiddlewareBackupScheduleCR middlewareBackupScheduleCR)  throws IOException;
+    void update(String clusterId, MiddlewareBackupSchedule middlewareBackupSchedule)  throws IOException;
 
     /**
      * 查询备份
@@ -37,7 +37,7 @@ public interface MiddlewareBackupScheduleCRDService {
      * @param backupName
      * @return
      */
-    MiddlewareBackupScheduleCR get(String clusterId, String namespace, String backupName);
+    MiddlewareBackupSchedule get(String clusterId, String namespace, String backupName);
 
     /**
      * 删除定时备份
@@ -64,5 +64,5 @@ public interface MiddlewareBackupScheduleCRDService {
      * @param labels    标签
      * @return MiddlewareBackupScheduleList
      */
-    List<MiddlewareBackupScheduleCR> listByLabels(String clusterId, String namespace, Map<String, String> labels);
+    List<MiddlewareBackupSchedule> listByLabels(String clusterId, String namespace, Map<String, String> labels);
 }

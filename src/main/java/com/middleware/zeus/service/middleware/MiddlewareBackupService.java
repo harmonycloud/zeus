@@ -6,7 +6,7 @@ import com.middleware.caas.common.model.MiddlewareIncBackupDto;
 import com.middleware.caas.common.model.MiddlewareTaskDTO;
 import com.middleware.caas.common.model.middleware.MiddlewareBackupRecord;
 import com.middleware.caas.common.model.middleware.MiddlewareBackupRecordGroup;
-import com.middleware.zeus.integration.cluster.bean.MiddlewareBackupScheduleCR;
+import com.middleware.zeus.integration.cluster.bean.MiddlewareBackupSchedule;
 import com.middleware.zeus.integration.cluster.bean.Minio;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 
@@ -37,7 +37,7 @@ public interface MiddlewareBackupService {
      * 创建增量备份
      *
      */
-    void createIncBackup(String clusterId, String namespace, String backupName, String time, MiddlewareBackupScheduleCR scheduleCR);
+    void createIncBackup(String clusterId, String namespace, String backupName, String time, MiddlewareBackupSchedule scheduleCR);
 
     /**
      * 更新备份规则

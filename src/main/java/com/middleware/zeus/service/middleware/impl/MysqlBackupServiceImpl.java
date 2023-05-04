@@ -12,7 +12,6 @@ import com.middleware.caas.common.model.middleware.*;
 import com.middleware.zeus.bean.BeanMiddlewareBackupName;
 import com.middleware.zeus.dao.BeanMiddlewareBackupNameMapper;
 import com.middleware.zeus.integration.cluster.bean.*;
-import com.middleware.zeus.integration.cluster.bean.*;
 import com.middleware.zeus.service.k8s.MiddlewareCRService;
 import com.middleware.zeus.service.middleware.BackupPositionService;
 import com.middleware.zeus.service.middleware.BackupService;
@@ -136,7 +135,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public void createIncBackup(String clusterId, String namespace, String backupName, String time, MiddlewareBackupScheduleCR scheduleCR) {
+    public void createIncBackup(String clusterId, String namespace, String backupName, String time, MiddlewareBackupSchedule scheduleCR) {
 
     }
 

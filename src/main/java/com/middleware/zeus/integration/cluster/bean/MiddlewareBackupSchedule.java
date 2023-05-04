@@ -23,6 +23,6 @@ import static com.middleware.caas.common.constants.middleware.MiddlewareConstant
 @Group(CR_GROUP)
 @Version(V1)
 @Plural(MIDDLEWAREBACKUPSCHEDULES)
-public class MiddlewareBackupScheduleCR extends CustomResource<MiddlewareBackupScheduleSpec, MiddlewareBackupScheduleStatus> implements Namespaced {
+public class MiddlewareBackupSchedule extends CustomResource<MiddlewareBackupScheduleSpec, MiddlewareBackupScheduleStatus> implements Namespaced {
 
 }

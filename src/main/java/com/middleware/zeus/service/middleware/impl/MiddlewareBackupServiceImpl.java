@@ -123,7 +123,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     public MiddlewareBackupRecord getBackup(String clusterId, String namespace, String backupName, String backupMode) {
         MiddlewareBackupRecord record = new MiddlewareBackupRecord();
         if (BackupMode.PERIOD.getMode().equals(backupMode)) {
-            MiddlewareBackupScheduleCR scheduleCR = backupScheduleCRDService.get(clusterId, namespace, backupName);
+            MiddlewareBackupSchedule scheduleCR = backupScheduleCRDService.get(clusterId, namespace, backupName);
             convertBackupScheduleToRecord(scheduleCR, record);
         } else {
             MiddlewareBackup backupCR = backupCRDService.get(clusterId, namespace, backupName);
@@ -174,7 +174,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Override
     public void createIncBackup(String clusterId, String namespace, String backupName, String time) {
         // 校验备份周期和保留时间
-        MiddlewareBackupScheduleCR baks = backupScheduleCRDService.get(clusterId, namespace, backupName);
+        MiddlewareBackupSchedule baks = backupScheduleCRDService.get(clusterId, namespace, backupName);
         if (baks == null || baks.getSpec() == null || baks.getSpec().getSchedule() == null) {
             throw new BusinessException(ErrorMessage.FIND_BACKUP_SCHEDULE_CRON_FAILED);
         }
@@ -187,7 +187,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public void createIncBackup(String clusterId, String namespace, String backupName, String time, MiddlewareBackupScheduleCR scheduleCR) {
+    public void createIncBackup(String clusterId, String namespace, String backupName, String time, MiddlewareBackupSchedule scheduleCR) {
         MiddlewareIncBackup incBackup = new MiddlewareIncBackup();
         incBackup.setClusterId(clusterId);
         incBackup.setNamespace(namespace);
@@ -216,9 +216,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         if (backupDTO.getMysqlBackup() != null && backupDTO.getMysqlBackup()) {
             mysqlAdapterService.updateBackupSchedule(backupDTO);
         } else {
-            MiddlewareBackupScheduleCR middlewareBackupScheduleCR = backupScheduleCRDService
+            MiddlewareBackupSchedule middlewareBackupSchedule = backupScheduleCRDService
                 .get(backupDTO.getClusterId(), backupDTO.getNamespace(), backupDTO.getBackupName());
-            MiddlewareBackupScheduleSpec spec = middlewareBackupScheduleCR.getSpec();
+            MiddlewareBackupScheduleSpec spec = middlewareBackupSchedule.getSpec();
             // 更新cron表达式
             if (StringUtils.isNotEmpty(backupDTO.getCron())) {
                 spec.getSchedule().setCron(CronUtils.parseCron(backupDTO.getCron(), -8 + timezone));
@@ -226,17 +226,17 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             // 更新备份保留时间
             if (backupDTO.getRetentionTime() != null && StringUtils.isNotEmpty(backupDTO.getDateUnit())) {
                 spec.getSchedule().setRetentionTime(calRetentionTime(backupDTO));
-                middlewareBackupScheduleCR.getMetadata().getLabels().put("unit", backupDTO.getDateUnit());
+                middlewareBackupSchedule.getMetadata().getLabels().put("unit", backupDTO.getDateUnit());
             }
             try {
-                backupScheduleCRDService.update(backupDTO.getClusterId(), middlewareBackupScheduleCR);
+                backupScheduleCRDService.update(backupDTO.getClusterId(), middlewareBackupSchedule);
             } catch (IOException e) {
                 log.error("中间件{}备份设置更新失败", backupDTO.getMiddlewareName());
                 throw new BusinessException(ErrorMessage.MIDDLEWARE_BACKUP_UPDATE_FAILED);
             }
             // 增量备份更新
             if (backupDTO.getIncrement() != null && backupDTO.getIncrement()) {
-                MiddlewareBackupScheduleCR incBackupScheduleCr = backupScheduleCRDService.get(backupDTO.getClusterId(),
+                MiddlewareBackupSchedule incBackupScheduleCr = backupScheduleCRDService.get(backupDTO.getClusterId(),
                     backupDTO.getNamespace(), backupDTO.getBackupName() + "-" + INCR);
                 if (incBackupScheduleCr == null) {
                     throw new BusinessException(ErrorMessage.BACKUP_FILE_NOT_EXIST);
@@ -289,7 +289,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Override
     public void createBackupSchedule(MiddlewareBackupDTO backupDTO, Minio minio, ObjectMeta objectMeta) {
         checkBackupScheduleExist(backupDTO);
-        MiddlewareBackupScheduleCR crd = new MiddlewareBackupScheduleCR();
+        MiddlewareBackupSchedule crd = new MiddlewareBackupSchedule();
         ObjectMeta meta = getMiddlewareBackupMeta(backupDTO, objectMeta);
         crd.setMetadata(meta);
         // 将minio账号密码转换为base64
@@ -383,7 +383,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         String backupName = middlewareIncBackup.getBackupName();
         String time = middlewareIncBackup.getTime();
         Map<String, String> annotations = middlewareIncBackup.getAnnotations();
-        MiddlewareBackupScheduleCR cr = backupScheduleCRDService.get(clusterId, namespace, backupName);
+        MiddlewareBackupSchedule cr = backupScheduleCRDService.get(clusterId, namespace, backupName);
         objectMeta.setName(backupName + "-" + INCR);
         objectMeta.setNamespace(namespace);
         // 获取annotations
@@ -656,9 +656,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     public void deleteMiddlewareBackupInfo(String clusterId, String namespace, String type, String middlewareName) {
         Map<String, String> labels = getBackupLabel(middlewareName, type);
         // 删除定时备份
-        List<MiddlewareBackupScheduleCR> middlewareBackupScheduleCRList =
+        List<MiddlewareBackupSchedule> middlewareBackupScheduleList =
             backupScheduleCRDService.listByLabels(clusterId, namespace, labels);
-        middlewareBackupScheduleCRList.forEach(item -> {
+        middlewareBackupScheduleList.forEach(item -> {
             try {
                 backupScheduleCRDService.delete(clusterId, namespace, item.getMetadata().getName());
             } catch (IOException e) {
@@ -703,8 +703,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
         // 封装数据
         List<MiddlewareBackupRecord> recordList = new ArrayList<>();
-        Map<String, MiddlewareBackupScheduleCR> incBackup = new HashMap<>();
-        for (MiddlewareBackupScheduleCR schedule : scheduleList.getItems()) {
+        Map<String, MiddlewareBackupSchedule> incBackup = new HashMap<>();
+        for (MiddlewareBackupSchedule schedule : scheduleList.getItems()) {
             // 处理增量备份数据
             if (isIncBackup(schedule)){
                 incBackup.put(schedule.getMetadata().getName(), schedule);
@@ -719,7 +719,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         recordList.forEach(record -> {
             if (incBackup.containsKey(record.getBackupName() + "-" + INCR)) {
                 record.setIncrement(true);
-                MiddlewareBackupScheduleCR incSchedule = incBackup.get(record.getBackupName() + "-" + INCR);
+                MiddlewareBackupSchedule incSchedule = incBackup.get(record.getBackupName() + "-" + INCR);
                 record.setTime(CronUtils.convertCronToTime(incSchedule.getSpec().getSchedule().getCron()));
                 Date backupTime = checkTimeExist(incSchedule);
                 if (backupTime != null) {
@@ -852,7 +852,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public MiddlewareIncBackupDto getIncBackupInfo(String clusterId, String namespace, String backupName) {
-        MiddlewareBackupScheduleCR cr = backupScheduleCRDService.get(clusterId, namespace, backupName + "-incr");
+        MiddlewareBackupSchedule cr = backupScheduleCRDService.get(clusterId, namespace, backupName + "-incr");
         MiddlewareIncBackupDto middlewareIncBackupDto = new MiddlewareIncBackupDto();
         middlewareIncBackupDto.setBackupName(backupName + "-incr");
         if (cr == null) {
@@ -889,7 +889,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             .collect(Collectors.toList());
         // 获取backupId
         String backupId = null;
-        MiddlewareBackupScheduleCR cr = backupScheduleCRDService.get(clusterId, namespace, backupName);
+        MiddlewareBackupSchedule cr = backupScheduleCRDService.get(clusterId, namespace, backupName);
         if (cr != null && !CollectionUtils.isEmpty(cr.getMetadata().getLabels()) && cr.getMetadata().getLabels().containsKey(BACKUP_ID)){
             backupId = cr.getMetadata().getLabels().get(BACKUP_ID);
         }
@@ -956,9 +956,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Override
     public List<MiddlewareBackupRecord> listBackupTask(String clusterId, String namespace, Map<String, String> labels) {
         List<MiddlewareBackupRecord> records = new ArrayList<>();
-        List<MiddlewareBackupScheduleCR> scheduleCRS = backupScheduleCRDService.listByLabels(clusterId, namespace, labels);
+        List<MiddlewareBackupSchedule> scheduleCRS = backupScheduleCRDService.listByLabels(clusterId, namespace, labels);
         if (!CollectionUtils.isEmpty(scheduleCRS)) {
-            for (MiddlewareBackupScheduleCR scheduleCR : scheduleCRS) {
+            for (MiddlewareBackupSchedule scheduleCR : scheduleCRS) {
                 MiddlewareBackupRecord record = new MiddlewareBackupRecord();
                 convertBackupScheduleToRecord(scheduleCR, record);
                 records.add(record);
@@ -1142,9 +1142,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     /**
      * 校验是否为增量备份
      */
-    public boolean isIncBackup(MiddlewareBackupScheduleCR middlewareBackupScheduleCR){
+    public boolean isIncBackup(MiddlewareBackupSchedule middlewareBackupSchedule){
         AtomicBoolean isIncBackup = new AtomicBoolean(false);
-        middlewareBackupScheduleCR.getSpec().getCustomBackups().forEach(cus -> {
+        middlewareBackupSchedule.getSpec().getCustomBackups().forEach(cus -> {
             if (cus.containsKey(ENV)){
                 cus.get(ENV).forEach(env -> {
                     if (env.containsKey(VALUE) && env.get(VALUE).equals(BACKUP_INC)){
@@ -1159,7 +1159,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     /**
      * 对象封装: MiddlewareBackupScheduleCR -> MiddlewareBackupRecord
      */
-    public void convertBackupScheduleToRecord(MiddlewareBackupScheduleCR schedule, MiddlewareBackupRecord backupRecord){
+    public void convertBackupScheduleToRecord(MiddlewareBackupSchedule schedule, MiddlewareBackupRecord backupRecord){
         if (schedule == null) {
             throw new BusinessException(ErrorMessage.BACKUP_NOT_EXISTS);
         }
@@ -1296,7 +1296,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     /**
      * 获取增量备份备份时间
      */
-    public Date checkTimeExist(MiddlewareBackupScheduleCR schedule){
+    public Date checkTimeExist(MiddlewareBackupSchedule schedule){
         String type = middlewareCrTypeService.findTypeByCrType(schedule.getSpec().getType());
         if (schedule.getStatus() != null && schedule.getStatus().getStorageProvider() != null && schedule.getStatus().getStorageProvider().containsKey(type)){
             JSONObject time = schedule.getStatus().getStorageProvider().getJSONObject(type);
@@ -1384,7 +1384,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     public boolean checkBackupScheduleExist(String clusterId, String namespace, String middlewareName, String backupId) {
         MiddlewareBackupScheduleList list = backupScheduleCRDService.list(clusterId, namespace);
         if (list != null && !CollectionUtils.isEmpty(list.getItems())) {
-            List<MiddlewareBackupScheduleCR> items = list.getItems();
+            List<MiddlewareBackupSchedule> items = list.getItems();
             if (StringUtils.isNotEmpty(backupId)) {
                 items = items.stream().filter(cr ->
                         !cr.getMetadata().getLabels().getOrDefault("backupId", backupId).equals(backupId)).collect(Collectors.toList());
