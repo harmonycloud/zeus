@@ -178,7 +178,7 @@ public class MiddlewareBackupController {
         return BaseResult.ok();
     }
 
-    @ApiOperation(value = "查询备份任务对应的备份记录", notes = "查询备份任务对应的备份记录")
+    @ApiOperation(value = "查询备份任务对应的全量记录", notes = "查询备份任务对应的全量记录")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
