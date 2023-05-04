@@ -2,6 +2,7 @@ package com.middleware.zeus.service.k8s;
 
 import io.fabric8.kubernetes.api.model.ConfigMap;
 
+import java.util.List;
 import java.util.Map;
 
 
@@ -61,5 +62,14 @@ public interface ConfigMapService {
      * @return
      */
     void update(String clusterId, String namespace, ConfigMap configMap);
+
+    /**
+     * 获取配置文件列表
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param labels 标签
+     * @return
+     */
+    List<ConfigMap> list(String clusterId, String namespace, Map<String,String> labels);
 
 }

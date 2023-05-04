@@ -220,4 +220,9 @@ public class ClusterController {
         cluster.setCert(null);
     }
 
+    @GetMapping("{clusterId}/monitor")
+    public BaseResult getClusterMonitors(@PathVariable("clusterId") String clusterId) {
+        return BaseResult.ok(clusterService.getClusterMonitors(clusterId));
+    }
+
 }

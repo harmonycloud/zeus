@@ -1,5 +1,6 @@
 package com.middleware.zeus.integration.cluster;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -34,6 +35,23 @@ public class ConfigMapWrapper {
                 ((MixedOperation<ConfigMap, ConfigMapList, Resource<ConfigMap>>)configmapClient).inNamespace(namespace);
         }
         ConfigMapList configMapList = configmapClient.list();
+        if (CollectionUtils.isEmpty(configMapList.getItems())) {
+            return null;
+        }
+        return configMapList.getItems();
+    }
+
+    public List<ConfigMap> list(String clusterId, String namespace, Map<String, String> labels) {
+        if (CollectionUtils.isEmpty(labels)) {
+            labels = new HashMap<>();
+        }
+        NonNamespaceOperation<ConfigMap, ConfigMapList, Resource<ConfigMap>> configmapClient =
+                K8sClient.getClient(clusterId).configMaps();
+        if (StringUtils.isNotEmpty(namespace)) {
+            configmapClient =
+                    ((MixedOperation<ConfigMap, ConfigMapList, Resource<ConfigMap>>)configmapClient).inNamespace(namespace);
+        }
+        ConfigMapList configMapList = configmapClient.withLabels(labels).list();
         if (CollectionUtils.isEmpty(configMapList.getItems())) {
             return null;
         }
