@@ -359,8 +359,9 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         }
         // 状态处理
         Middleware middleware = new Middleware(clusterId, namespace, middlewareName, type);
-        String podType = getOperator(BaseOperator.class, BaseOperator.class, middleware).getPodType(customConfigRole);
+
         beanCustomConfigHistoryList.forEach(customConfigHistoryDTO -> {
+            String podType = getOperator(BaseOperator.class, BaseOperator.class, middleware).getPodType(customConfigHistoryDTO.getRole());
             boolean status = true;
             // 处理需重启的参数，根据pod重启时间判断
             if (customConfigHistoryDTO.getRestart()) {
