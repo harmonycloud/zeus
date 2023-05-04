@@ -6,6 +6,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.middleware.tool.collection.MapUtils;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareInfo;
 import com.middleware.zeus.operator.BaseOperator;
@@ -223,15 +224,14 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
                     .eq("chart_name", helmChartFile.getChartName()).eq("chart_version", helmChartFile.getChartVersion());
             // 清除旧数据
             beanCustomConfigMapper.delete(wrapper);
-            JSONObject data;
             Yaml yaml = new Yaml();
-            for (String key : helmChartFile.getYamlFileMap().keySet()) {
-                if ("parameters.yaml".equals(key)) {
-                    data = yaml.loadAs(helmChartFile.getYamlFileMap().get(key), JSONObject.class);
-                    resultList.addAll(updateConfig2MySQL(data, "major", helmChartFile.getChartName(), helmChartFile.getChartVersion()));
-                } else if ("parameters-proxysql.yaml".equals(key)) {
-                    data = yaml.loadAs(helmChartFile.getYamlFileMap().get(key), JSONObject.class);
-                    resultList.addAll(updateConfig2MySQL(data, "proxy", helmChartFile.getChartName(), helmChartFile.getChartVersion()));
+            String parameters = helmChartFile.getYamlFileMap().get("parameters");
+            if (StringUtils.isNotBlank(parameters)) {
+                Map<String, Object> paramMap = MapUtils.stringToHashMap(parameters);
+                for (String key: paramMap.keySet()) {
+                    JSONObject data = yaml.loadAs((String) paramMap.get(key), JSONObject.class);
+                    resultList.addAll(updateConfig2MySQL(data, key, helmChartFile.getChartName(),
+                        helmChartFile.getChartVersion()));
                 }
             }
         } catch (Exception e) {
