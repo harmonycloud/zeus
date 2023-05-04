@@ -275,7 +275,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         operator.update(middleware, cluster);
         // reboot
         if (rebootCheck(middleware)) {
-            reboot(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), middleware.getType());
+            reboot(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), middleware.getType(), "Master");
         }
     }
 
@@ -352,11 +352,11 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     }
 
     @Override
-    public void reboot(String clusterId, String namespace, String name, String type) {
+    public void reboot(String clusterId, String namespace, String name, String type, String podType) {
         Middleware middleware =
                 new Middleware().setClusterId(clusterId).setNamespace(namespace).setType(type).setName(name);
         BaseOperator operator = getOperator(BaseOperator.class, BaseOperator.class, middleware);
-        operator.reboot(clusterId, namespace, name, type);
+        operator.reboot(clusterId, namespace, name, type, podType);
     }
 
     @Override

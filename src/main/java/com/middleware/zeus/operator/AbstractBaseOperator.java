@@ -1501,12 +1501,16 @@ public abstract class AbstractBaseOperator {
         return storageList;
     }
 
-    public void reboot(String clusterId, String namespace, String name, String type) {
+    public void reboot(String clusterId, String namespace, String name, String type, String podType) {
         try {
             MiddlewareCR mw = middlewareCRService.getCR(clusterId, namespace, type, name);
             List<MiddlewareInfo> pods = mw.getStatus().getInclude().get(PODS);
             if(!CollectionUtils.isEmpty(pods)){
-                pods.forEach(pod -> podService.restart(clusterId, namespace, name, type, pod.getName()));
+                pods.forEach(pod -> {
+                    if (pod.getType().equalsIgnoreCase(podType)){
+                        podService.restart(clusterId, namespace, name, type, pod.getName());
+                    }
+                });
             }
         } catch (Exception e){
             throw new BusinessException(ErrorMessage.MIDDLEWARE_REBOOT_FAILED);
@@ -1514,9 +1518,21 @@ public abstract class AbstractBaseOperator {
     }
 
     public String getCustomConfigRole(String podType){
-        if ("master".equalsIgnoreCase(podType)) {
-            return "major";
-        } else return null;
+        switch (podType.toLowerCase()) {
+            case "master":
+                return "major";
+            default:
+                return podType;
+        }
+    }
+
+    public String getPodType(String customConfigRole){
+        switch (customConfigRole.toLowerCase()) {
+            case "major":
+                return "Master";
+            default:
+                return customConfigRole;
+        }
     }
 
 }

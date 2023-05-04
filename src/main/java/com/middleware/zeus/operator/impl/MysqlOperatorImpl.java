@@ -927,11 +927,11 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     }
 
     @Override
-    public void reboot(String clusterId, String namespace, String name, String type) {
+    public void reboot(String clusterId, String namespace, String name, String type, String podType) {
         MysqlCluster mysqlCluster = mysqlClusterWrapper.get(clusterId, namespace, name);
         Integer replicas = mysqlCluster.getSpec().getReplicas();
-        if (replicas == 1) {
-            super.reboot(clusterId, namespace, name, type);
+        if (replicas == 1 || !podType.equalsIgnoreCase("Master")) {
+            super.reboot(clusterId, namespace, name, type, podType);
             return;
         }
         Map<String, String> annotations = mysqlCluster.getMetadata().getAnnotations();
@@ -947,14 +947,4 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         }
     }
 
-    public String getCustomConfigRole(String podType) {
-        switch (podType.toLowerCase()) {
-            case "master" :
-                return "major";
-            case "proxy" :
-                return "proxy";
-            default:
-                return null;
-        }
-    }
 }
