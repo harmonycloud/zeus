@@ -1,8 +1,7 @@
 package com.middleware.zeus.service.k8s.impl;
 
 import com.middleware.zeus.integration.cluster.MiddlewareBackupWrapper;
-import com.middleware.zeus.integration.cluster.bean.MiddlewareBackupCR;
-import com.middleware.zeus.integration.cluster.bean.MiddlewareBackupList;
+import com.middleware.zeus.integration.cluster.bean.MiddlewareBackup;
 import com.middleware.zeus.service.k8s.MiddlewareBackupCRService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,8 +22,8 @@ public class MiddlewareBackupCRServiceImpl implements MiddlewareBackupCRService 
     private MiddlewareBackupWrapper middlewareBackupWrapper;
 
     @Override
-    public void create(String clusterId, MiddlewareBackupCR middlewareBackupCR) throws IOException {
-        middlewareBackupWrapper.create(clusterId, middlewareBackupCR);
+    public void create(String clusterId, MiddlewareBackup middlewareBackup) throws IOException {
+        middlewareBackupWrapper.create(clusterId, middlewareBackup);
     }
 
     @Override
@@ -33,17 +32,17 @@ public class MiddlewareBackupCRServiceImpl implements MiddlewareBackupCRService 
     }
 
     @Override
-    public List<MiddlewareBackupCR> list(String clusterId, String namespace, Map<String, String> labels) {
+    public List<MiddlewareBackup> list(String clusterId, String namespace, Map<String, String> labels) {
         return middlewareBackupWrapper.list(clusterId, namespace, labels);
     }
 
     @Override
-    public List<MiddlewareBackupCR> list(String clusterId, String namespace) {
+    public List<MiddlewareBackup> list(String clusterId, String namespace) {
         return middlewareBackupWrapper.list(clusterId, namespace, null);
     }
 
     @Override
-    public MiddlewareBackupCR get(String clusterId, String namespace, String name) {
+    public MiddlewareBackup get(String clusterId, String namespace, String name) {
         return middlewareBackupWrapper.get(clusterId, namespace, name);
     }
 }

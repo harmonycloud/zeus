@@ -19,13 +19,10 @@ import com.middleware.zeus.bean.*;
 import com.middleware.caas.common.enums.*;
 import com.middleware.caas.common.model.*;
 import com.middleware.caas.common.model.middleware.*;
-import com.middleware.zeus.bean.*;
-import com.middleware.zeus.bean.user.BeanUserRole;
+import com.middleware.zeus.integration.cluster.bean.MiddlewareBackup;
 import com.middleware.zeus.service.k8s.*;
 import com.middleware.zeus.service.middleware.*;
 import com.middleware.zeus.integration.cluster.bean.*;
-import com.middleware.zeus.service.k8s.*;
-import com.middleware.zeus.service.middleware.*;
 import com.middleware.zeus.service.registry.HelmChartService;
 import com.middleware.zeus.service.user.ProjectService;
 import com.middleware.zeus.service.user.RoleAuthorityService;
@@ -43,9 +40,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.middleware.caas.common.enums.middleware.MiddlewareTypeEnum;
 import com.middleware.caas.common.exception.BusinessException;
 import com.middleware.tool.uuid.UUIDUtils;
-import com.middleware.zeus.annotation.MiddlewareBackup;
 import com.middleware.zeus.dao.BeanMiddlewareBackupNameMapper;
-import com.middleware.zeus.integration.cluster.bean.*;
 import com.middleware.zeus.util.CronUtils;
 
 import io.fabric8.kubernetes.api.model.ObjectMeta;
@@ -58,7 +53,7 @@ import lombok.extern.slf4j.Slf4j;
  * @since 2021/9/15 3:22 下午
  */
 @Slf4j
-@MiddlewareBackup
+@com.middleware.zeus.annotation.MiddlewareBackup
 @Service
 public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
@@ -111,9 +106,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                                                    String type) {
         List<MiddlewareBackupRecord> recordList = new ArrayList<>();
         // 查询通用备份列表
-        List<MiddlewareBackupCR> backupRecordList = getBackupRecordList(clusterId, namespace, middlewareName, type);
+        List<MiddlewareBackup> backupRecordList = getBackupRecordList(clusterId, namespace, middlewareName, type);
         if (!CollectionUtils.isEmpty(backupRecordList)) {
-            for (MiddlewareBackupCR item : backupRecordList) {
+            for (MiddlewareBackup item : backupRecordList) {
                 MiddlewareBackupRecord backupRecord = new MiddlewareBackupRecord();
                 convertBackupToRecord(item, backupRecord);
                 recordList.add(backupRecord);
@@ -131,7 +126,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             MiddlewareBackupScheduleCR scheduleCR = backupScheduleCRDService.get(clusterId, namespace, backupName);
             convertBackupScheduleToRecord(scheduleCR, record);
         } else {
-            MiddlewareBackupCR backupCR = backupCRDService.get(clusterId, namespace, backupName);
+            MiddlewareBackup backupCR = backupCRDService.get(clusterId, namespace, backupName);
             convertBackupToRecord(backupCR, record);
         }
         return record;
@@ -343,9 +338,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
      */
     @Override
     public void createNormalBackup(MiddlewareBackupDTO backupDTO, Minio minio, ObjectMeta objectMeta) {
-        MiddlewareBackupCR middlewareBackupCR = new MiddlewareBackupCR();
+        MiddlewareBackup middlewareBackup = new MiddlewareBackup();
         ObjectMeta meta = getMiddlewareBackupMeta(backupDTO, objectMeta);
-        middlewareBackupCR.setMetadata(meta);
+        middlewareBackup.setMetadata(meta);
         // 将minio账号密码转换为base64
         String base64AccessKeyId =
             Base64.getEncoder().encodeToString(minio.getAccessKeyId().getBytes(StandardCharsets.UTF_8));
@@ -368,9 +363,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         }
         MiddlewareBackupSpec spec =
             new MiddlewareBackupSpec(destination, backupDTO.getMiddlewareName(), backupDTO.getCrdType(), customBackups);
-        middlewareBackupCR.setSpec(spec);
+        middlewareBackup.setSpec(spec);
         try {
-            backupCRDService.create(backupDTO.getClusterId(), middlewareBackupCR);
+            backupCRDService.create(backupDTO.getClusterId(), middlewareBackup);
         } catch (IOException e) {
             log.error("立即备份失败", e);
         }
@@ -671,7 +666,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             }
         });
         // 删除立即备份
-        List<MiddlewareBackupCR> backupCRList = backupCRDService.list(clusterId, namespace, labels);
+        List<MiddlewareBackup> backupCRList = backupCRDService.list(clusterId, namespace, labels);
         if (!CollectionUtils.isEmpty(backupCRList)) {
             backupCRList.forEach(item -> {
                 try {
@@ -969,9 +964,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 records.add(record);
             }
         }
-        List<MiddlewareBackupCR> backupCRList = backupCRDService.list(clusterId, namespace, labels);
+        List<MiddlewareBackup> backupCRList = backupCRDService.list(clusterId, namespace, labels);
         if (!CollectionUtils.isEmpty(backupCRList)) {
-            for (MiddlewareBackupCR backupCR : backupCRList) {
+            for (MiddlewareBackup backupCR : backupCRList) {
                 MiddlewareBackupRecord record = new MiddlewareBackupRecord();
                 convertBackupToRecord(backupCR, record);
                 records.add(record);
@@ -1110,9 +1105,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     /**
      * 查询备份记录(立即备份)
      */
-    private List<MiddlewareBackupCR> getBackupRecordList(String clusterId, String namespace, String middlewareName,
-        String type) {
-        List<MiddlewareBackupCR> resList = new ArrayList<>();
+    private List<MiddlewareBackup> getBackupRecordList(String clusterId, String namespace, String middlewareName,
+                                                       String type) {
+        List<MiddlewareBackup> resList = new ArrayList<>();
         // 查询所有即时备份创建的备份记录
         if (StringUtils.isEmpty(middlewareName) && StringUtils.isEmpty(type)) {
             resList.addAll(backupCRDService.list(clusterId, namespace));
@@ -1241,7 +1236,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     /**
      * 对象封装: MiddlewareBackupCR -> MiddlewareBackupRecord
      */
-    public void convertBackupToRecord(MiddlewareBackupCR backup, MiddlewareBackupRecord backupRecord) {
+    public void convertBackupToRecord(MiddlewareBackup backup, MiddlewareBackupRecord backupRecord) {
         if (backup == null) {
             throw new BusinessException(ErrorMessage.BACKUP_NOT_EXISTS);
         }

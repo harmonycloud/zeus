@@ -1,6 +1,6 @@
 package com.middleware.zeus.service.k8s;
 
-import com.middleware.zeus.integration.cluster.bean.MiddlewareBackupCR;
+import com.middleware.zeus.integration.cluster.bean.MiddlewareBackup;
 
 import java.io.IOException;
 import java.util.List;
@@ -16,10 +16,10 @@ public interface MiddlewareBackupCRService {
     /**
      * 创建备份
      * @param clusterId
-     * @param middlewareBackupCR
+     * @param middlewareBackup
      * @throws IOException
      */
-    void create(String clusterId, MiddlewareBackupCR middlewareBackupCR)  throws IOException;
+    void create(String clusterId, MiddlewareBackup middlewareBackup)  throws IOException;
 
     /**
      * 删除备份记录
@@ -37,7 +37,7 @@ public interface MiddlewareBackupCRService {
      * @param labels
      * @return
      */
-    List<MiddlewareBackupCR> list(String clusterId, String namespace, Map<String,String> labels);
+    List<MiddlewareBackup> list(String clusterId, String namespace, Map<String,String> labels);
 
     /**
      * 查询备份列表
@@ -45,7 +45,7 @@ public interface MiddlewareBackupCRService {
      * @param namespace
      * @return
      */
-    List<MiddlewareBackupCR> list(String clusterId, String namespace);
+    List<MiddlewareBackup> list(String clusterId, String namespace);
 
     /**
      * 根据备份名称查询备份
@@ -54,5 +54,5 @@ public interface MiddlewareBackupCRService {
      * @param name
      * @return
      */
-    MiddlewareBackupCR get(String clusterId, String namespace, String name);
+    MiddlewareBackup get(String clusterId, String namespace, String name);
 }

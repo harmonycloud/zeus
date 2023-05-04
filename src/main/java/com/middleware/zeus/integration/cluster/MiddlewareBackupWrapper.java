@@ -3,12 +3,11 @@ package com.middleware.zeus.integration.cluster;
 import java.io.IOException;
 import java.util.*;
 
-import io.fabric8.kubernetes.client.dsl.FilterWatchListDeletable;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
-import com.middleware.zeus.integration.cluster.bean.MiddlewareBackupCR;
+import com.middleware.zeus.integration.cluster.bean.MiddlewareBackup;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareBackupList;
 import com.middleware.zeus.util.K8sClient;
 
@@ -30,16 +29,16 @@ public class MiddlewareBackupWrapper {
      * 创建备份(立即备份)
      * 
      * @param clusterId
-     * @param middlewareBackupCR
+     * @param middlewareBackup
      * @throws IOException
      */
-    public void create(String clusterId, MiddlewareBackupCR middlewareBackupCR) throws IOException {
+    public void create(String clusterId, MiddlewareBackup middlewareBackup) throws IOException {
         // init client
-        NonNamespaceOperation<MiddlewareBackupCR, MiddlewareBackupList,
-            Resource<MiddlewareBackupCR>> middlewareBackupClient =
-                K8sClient.getClient(clusterId).resources(MiddlewareBackupCR.class, MiddlewareBackupList.class);
+        NonNamespaceOperation<MiddlewareBackup, MiddlewareBackupList,
+            Resource<MiddlewareBackup>> middlewareBackupClient =
+                K8sClient.getClient(clusterId).resources(MiddlewareBackup.class, MiddlewareBackupList.class);
         // create
-        middlewareBackupClient.resource(middlewareBackupCR).create();
+        middlewareBackupClient.resource(middlewareBackup).create();
     }
 
     /**
@@ -52,9 +51,9 @@ public class MiddlewareBackupWrapper {
      */
     public void delete(String clusterId, String namespace, String name) {
         // init client
-        NonNamespaceOperation<MiddlewareBackupCR, MiddlewareBackupList,
-            Resource<MiddlewareBackupCR>> middlewareBackupClient = K8sClient.getClient(clusterId)
-                .resources(MiddlewareBackupCR.class, MiddlewareBackupList.class).inNamespace(namespace);
+        NonNamespaceOperation<MiddlewareBackup, MiddlewareBackupList,
+            Resource<MiddlewareBackup>> middlewareBackupClient = K8sClient.getClient(clusterId)
+                .resources(MiddlewareBackup.class, MiddlewareBackupList.class).inNamespace(namespace);
         // delete
         middlewareBackupClient.withName(name).delete();
     }
@@ -67,19 +66,19 @@ public class MiddlewareBackupWrapper {
      * @param labels
      * @return
      */
-    public List<MiddlewareBackupCR> list(String clusterId, String namespace, Map<String, String> labels) {
+    public List<MiddlewareBackup> list(String clusterId, String namespace, Map<String, String> labels) {
         MiddlewareBackupList middlewareBackupList = null;
         try {
             if (CollectionUtils.isEmpty(labels)){
                 labels = new HashMap<>();
             }
             // init client
-            NonNamespaceOperation<MiddlewareBackupCR, MiddlewareBackupList,
-                Resource<MiddlewareBackupCR>> middlewareBackupClient =
-                    K8sClient.getClient(clusterId).resources(MiddlewareBackupCR.class, MiddlewareBackupList.class);
+            NonNamespaceOperation<MiddlewareBackup, MiddlewareBackupList,
+                Resource<MiddlewareBackup>> middlewareBackupClient =
+                    K8sClient.getClient(clusterId).resources(MiddlewareBackup.class, MiddlewareBackupList.class);
             if (StringUtils.isNotEmpty(namespace)) {
-                middlewareBackupClient = ((MixedOperation<MiddlewareBackupCR, MiddlewareBackupList,
-                    Resource<MiddlewareBackupCR>>)middlewareBackupClient).inNamespace(namespace);
+                middlewareBackupClient = ((MixedOperation<MiddlewareBackup, MiddlewareBackupList,
+                    Resource<MiddlewareBackup>>)middlewareBackupClient).inNamespace(namespace);
             }
             // list
             middlewareBackupList = middlewareBackupClient.withLabels(labels).list();
@@ -93,18 +92,18 @@ public class MiddlewareBackupWrapper {
         return Collections.emptyList();
     }
 
-    public MiddlewareBackupCR get(String clusterId, String namespace, String name) {
-        MiddlewareBackupCR middlewareBackupCR = null;
+    public MiddlewareBackup get(String clusterId, String namespace, String name) {
+        MiddlewareBackup middlewareBackup = null;
         try {
             // init client
-            NonNamespaceOperation<MiddlewareBackupCR, MiddlewareBackupList,
-                Resource<MiddlewareBackupCR>> middlewareBackupClient = K8sClient.getClient(clusterId)
-                    .resources(MiddlewareBackupCR.class, MiddlewareBackupList.class).inNamespace(namespace);
-            middlewareBackupCR = middlewareBackupClient.withName(name).get();
+            NonNamespaceOperation<MiddlewareBackup, MiddlewareBackupList,
+                Resource<MiddlewareBackup>> middlewareBackupClient = K8sClient.getClient(clusterId)
+                    .resources(MiddlewareBackup.class, MiddlewareBackupList.class).inNamespace(namespace);
+            middlewareBackup = middlewareBackupClient.withName(name).get();
         } catch (Exception e) {
             log.error("查询middlewareBackup出错了", e);
         }
-        return middlewareBackupCR;
+        return middlewareBackup;
     }
 
 }

@@ -5,8 +5,6 @@ import static com.middleware.caas.common.constants.CommonConstant.*;
 import static com.middleware.caas.common.constants.NameConstant.RESOURCES;
 import static com.middleware.caas.common.constants.NameConstant.RUNNING;
 import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.ARGS;
-import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.SYNC_SLAVE;
-import static com.middleware.caas.common.enums.DictEnum.ROLE;
 
 import java.text.MessageFormat;
 import java.util.*;
@@ -29,12 +27,11 @@ import com.middleware.zeus.service.k8s.K8sExecService;
 import com.middleware.zeus.service.k8s.MiddlewareBackupCRService;
 import com.middleware.zeus.service.k8s.PodService;
 import com.middleware.zeus.annotation.Operator;
-import com.middleware.zeus.integration.cluster.bean.MiddlewareBackupCR;
+import com.middleware.zeus.integration.cluster.bean.MiddlewareBackup;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareBackupSpec;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
 import com.middleware.zeus.operator.api.PostgresqlOperator;
 import com.middleware.zeus.operator.miiddleware.AbstractPostgresqlOperator;
-import com.middleware.zeus.service.system.SystemConfigService;
 import com.middleware.zeus.util.ChartVersionUtil;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServicePort;
@@ -134,12 +131,12 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         // 备份恢复
         if (StringUtils.isNotEmpty(middleware.getBackupFileName())){
             try {
-                MiddlewareBackupCR middlewareBackupCR = middlewareBackupCRService.get(cluster.getId(), middleware.getNamespace(), middleware.getBackupFileName());
-                Map<String, Object> res = middlewareBackupCR.getStatus().getBackupResults().get(0);
-                MiddlewareBackupSpec.MiddlewareBackupDestination.MiddlewareBackupParameters mp = middlewareBackupCR.getSpec().getBackupDestination().getParameters();
+                MiddlewareBackup middlewareBackup = middlewareBackupCRService.get(cluster.getId(), middleware.getNamespace(), middleware.getBackupFileName());
+                Map<String, Object> res = middlewareBackup.getStatus().getBackupResults().get(0);
+                MiddlewareBackupSpec.MiddlewareBackupDestination.MiddlewareBackupParameters mp = middlewareBackup.getSpec().getBackupDestination().getParameters();
 
                 JSONObject clone = new JSONObject();
-                clone.put("cluster", middlewareBackupCR.getSpec().getName());
+                clone.put("cluster", middlewareBackup.getSpec().getName());
                 clone.put("timestamp", res.get("backupTimestamp"));
                 clone.put("s3_wal_path", res.get("repository"));
                 clone.put("s3_endpoint", mp.getUrl());
