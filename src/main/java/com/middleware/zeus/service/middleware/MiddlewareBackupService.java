@@ -202,7 +202,7 @@ public interface MiddlewareBackupService {
     MiddlewareIncBackupDto getIncBackupInfo(String clusterId, String namespace, String backupName);
 
     /**
-     * 查询备份记录列表
+     * 查询全量备份记录
      * @param clusterId
      * @param namespace
      * @param middlewareName
@@ -212,6 +212,19 @@ public interface MiddlewareBackupService {
      * @return
      */
     List<MiddlewareBackupRecord> backupRecords(String clusterId, String namespace, String middlewareName, String type, String backupId, String backupMode);
+
+    /**
+     * 查询增量备份记录
+     * @param clusterId
+     * @param namespace
+     * @param middlewareName
+     * @param type
+     * @param backupId
+     * @param backupMode
+     * @return
+     */
+    List<MiddlewareBackupRecord> backupIncrRecords(String clusterId, String namespace, String middlewareName, String type, String backupId, String backupMode);
+
 
     /**
      * 删除备份任务

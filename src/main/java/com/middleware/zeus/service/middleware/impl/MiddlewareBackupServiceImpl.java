@@ -890,24 +890,22 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Override
     public List<MiddlewareBackupRecord> backupRecords(String clusterId, String namespace, String middlewareName, String type,
                                                       String backupId, String backupMode) {
-        // 获取所有备份记录,包含单次备份、周期备份定时创建的、增量备份定时创建的
+        // 获取所有备份记录：包含单次备份、周期备份定时创建的、增量备份定时创建的
         List<MiddlewareBackupRecord> recordList = listBackup(clusterId, namespace, null, null);
         if ("single".equals(backupMode)) {
             recordList = recordList.stream().filter(record -> backupId.equals(record.getBackupId())).collect(Collectors.toList());
         } else {
-            // TODO 查询周期备份记录
+            // 查询周期备份记录：先查询周期备份任务名字列表，然后根据备份记录的owner过滤周期备份任务定时创建的备份记录
+            Set<String> backupScheduleNames = listMiddlewareBackupScheduleNames(clusterId, namespace, backupId);
+            recordList = recordList.stream().filter(record -> StringUtils.isNotEmpty(record.getOwner()) &&
+                    backupScheduleNames.contains(record.getOwner())).collect(Collectors.toList());
+        }
+        return sortAndSetAliasName(recordList);
+    }
 
-        }
-        // 根据时间降序
-        recordList.sort((o1, o2) -> o1.getBackupTime() == null ? -1
-                : o2.getBackupTime() == null ? -1 : o1.getBackupTime().compareTo(o2.getBackupTime()));
-        // 设置备份记录名称
-        for (int i = 0; i < recordList.size(); i++) {
-            MiddlewareBackupRecord bak = recordList.get(i);
-            String[] bakNameSplit = bak.getBackupName().split("-");
-            bak.setRecordName(bak.getTaskName() + "-" + bakNameSplit[bakNameSplit.length - 1]);
-        }
-        return recordList;
+    @Override
+    public List<MiddlewareBackupRecord> backupIncrRecords(String clusterId, String namespace, String middlewareName, String type, String backupId, String backupMode) {
+        return null;
     }
 
     @Override
@@ -950,12 +948,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         middlewareBackupNameMapper.insert(backupName);
     }
 
-    public void deleteBackupName(String clusterId, String backupId) {
-        QueryWrapper<BeanMiddlewareBackupName> wrapper = new QueryWrapper<>();
-        wrapper.eq("cluster_id", clusterId).eq("backup_id", backupId);
-        middlewareBackupNameMapper.delete(wrapper);
-    }
-
     @Override
     public List<MiddlewareBackupRecord> listBackupTask(String clusterId, String namespace, Map<String, String> labels) {
         List<MiddlewareBackupRecord> records = new ArrayList<>();
@@ -981,6 +973,41 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Override
     public boolean checkSchedule(String clusterId, String namespace, String type, String middlewareName) {
         return checkBackupScheduleExist(clusterId, namespace, middlewareName, null);
+    }
+
+    public void deleteBackupName(String clusterId, String backupId) {
+        QueryWrapper<BeanMiddlewareBackupName> wrapper = new QueryWrapper<>();
+        wrapper.eq("cluster_id", clusterId).eq("backup_id", backupId);
+        middlewareBackupNameMapper.delete(wrapper);
+    }
+
+    // 排序并设置记录别名
+    private List<MiddlewareBackupRecord> sortAndSetAliasName(List<MiddlewareBackupRecord> recordList) {
+        // 根据时间降序
+        recordList.sort((o1, o2) -> o1.getBackupTime() == null ? -1
+                : o2.getBackupTime() == null ? -1 : o1.getBackupTime().compareTo(o2.getBackupTime()));
+        // 设置备份记录名称
+        for (int i = 0; i < recordList.size(); i++) {
+            MiddlewareBackupRecord bak = recordList.get(i);
+            String[] bakNameSplit = bak.getBackupName().split("-");
+            bak.setRecordName(bak.getTaskName() + "-" + bakNameSplit[bakNameSplit.length - 1]);
+        }
+        return recordList;
+    }
+
+    /**
+     * 根据备份任务id查询周期备份任务名字列表
+     * @param clusterId
+     * @param namespace
+     * @param backupId
+     * @return
+     */
+    private Set<String> listMiddlewareBackupScheduleNames(String clusterId, String namespace, String backupId) {
+        Map<String, String> labels = new HashMap<>();
+        labels.put("backupId", backupId);
+        List<MiddlewareBackupSchedule> schedules = backupScheduleCRDService.listByLabels(clusterId, namespace, labels);
+        return schedules.stream().map(middlewareBackupSchedule ->
+                middlewareBackupSchedule.getMetadata().getName()).collect(Collectors.toSet());
     }
 
     /**
