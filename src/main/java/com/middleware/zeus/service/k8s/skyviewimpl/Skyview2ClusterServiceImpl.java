@@ -1,7 +1,9 @@
 package com.middleware.zeus.service.k8s.skyviewimpl;
 
 import java.util.List;
+import java.util.Map;
 
+import com.middleware.caas.common.model.middleware.MonitorDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -75,6 +77,11 @@ public class Skyview2ClusterServiceImpl extends AbstractClusterService implement
     public boolean checkIfExists(String clusterId) {
         List<MiddlewareClusterDTO> clusterList = baseListCluster();
         return clusterList.stream().anyMatch(cluster -> cluster.getId().equals(clusterId));
+    }
+
+    @Override
+    public Map<String, MonitorDto> getClusterMonitors(String clusterId) {
+        return null;
     }
 
     @Override

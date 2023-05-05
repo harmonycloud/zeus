@@ -246,4 +246,10 @@ public interface ClusterService {
      */
     Map<String, String> getClusterAliasName();
 
+    /**
+     * 查询集群信息相关grafana面板
+     * @param clusterId
+     * @return
+     */
+    Map<String, MonitorDto> getClusterMonitors(String clusterId);
 }

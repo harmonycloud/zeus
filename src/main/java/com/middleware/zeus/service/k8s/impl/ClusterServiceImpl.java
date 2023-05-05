@@ -10,6 +10,9 @@ import java.text.MessageFormat;
 import java.util.*;
 
 import com.middleware.caas.common.constants.DateStyle;
+import com.middleware.caas.common.model.ClusterComponentsDto;
+import com.middleware.caas.common.model.middleware.*;
+import io.fabric8.kubernetes.api.model.ConfigMap;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -29,10 +32,6 @@ import com.middleware.caas.common.exception.BusinessException;
 import com.middleware.caas.common.exception.CaasRuntimeException;
 import com.middleware.caas.common.model.ClusterCert;
 import com.middleware.caas.common.model.ClusterDTO;
-import com.middleware.caas.common.model.middleware.ImageRepositoryDTO;
-import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.middleware.caas.common.model.middleware.Namespace;
-import com.middleware.caas.common.model.middleware.Registry;
 import com.middleware.caas.common.model.registry.HelmChartFile;
 import com.middleware.caas.common.util.ThreadPoolExecutorFactory;
 import com.middleware.tool.date.DateUtils;
@@ -98,6 +97,10 @@ public class ClusterServiceImpl extends AbstractClusterService implements Cluste
     private BeanMiddlewareClusterMapper middlewareClusterMapper;
     @Autowired
     private BackupServerService backupServerService;
+    @Autowired
+    private ConfigMapService configMapService;
+    @Autowired
+    private GrafanaService grafanaService;
 
     @Value("${k8s.component.middleware:/usr/local/zeus-pv/middleware}")
     private String middlewarePath;
@@ -454,6 +457,53 @@ public class ClusterServiceImpl extends AbstractClusterService implements Cluste
         wrapper.eq("cluster_id", clusterId);
         List<BeanMiddlewareCluster> clusters = middlewareClusterMapper.selectList(wrapper);
         return !CollectionUtils.isEmpty(clusters);
+    }
+
+    @Override
+    public Map<String, MonitorDto> getClusterMonitors(String clusterId) {
+        //获取组件信息
+        ClusterComponentsDto grafana = clusterComponentService.get(clusterId, "grafana");
+        if (grafana == null) {
+            throw new BusinessException(ErrorMessage.CLUSTER_MONITOR_INFO_NOT_FOUND);
+        }
+        MiddlewareClusterMonitorInfo monitorInfo = new MiddlewareClusterMonitorInfo();
+        BeanUtils.copyProperties(grafana,monitorInfo);
+        if (monitorInfo == null
+                || StringUtils.isAnyEmpty(monitorInfo.getProtocol(), monitorInfo.getHost(), monitorInfo.getPort())) {
+            throw new BusinessException(ErrorMessage.CLUSTER_MONITOR_INFO_NOT_FOUND);
+        }
+        // 生成token
+        if (StringUtils.isEmpty(monitorInfo.getToken()) && StringUtils.isNotEmpty(monitorInfo.getUsername())
+                && StringUtils.isNotEmpty(monitorInfo.getPassword())) {
+            grafanaService.setToken(monitorInfo);
+        }
+
+        // 获取面板configmap
+        HashMap<String, String> labels = new HashMap<>();
+        labels.put("grafana_dashboard", "1");
+        List<ConfigMap> monitorList = configMapService.list(clusterId, "monitoring", labels);
+        HashMap<String, MonitorDto> monitorMap = new HashMap<>();
+        monitorList.forEach(cm -> {
+            if (CollectionUtils.isEmpty(cm.getData())) {
+                return;
+            }
+            String uid = null;
+            String title = null;
+            for (String value: cm.getData().values()) {
+                JSONObject dashboardJSONConfig = JSONObject.parseObject(value);
+                if (dashboardJSONConfig.containsKey("uid") && dashboardJSONConfig.containsKey("title")) {
+                    uid = dashboardJSONConfig.getString("uid");
+                    title = dashboardJSONConfig.getString("title");
+                }
+            }
+            if (StringUtils.isBlank(uid) || StringUtils.isBlank(title)) {
+                return;
+            }
+            String url = monitorInfo.getAddress() + "/d/" + uid;
+            MonitorDto monitorDto = new MonitorDto().setAuthorization("Bearer " + monitorInfo.getToken()).setUrl(url);
+            monitorMap.put(title, monitorDto);
+        });
+        return monitorMap;
     }
 
     private void createMiddlewareCrd(MiddlewareClusterDTO middlewareClusterDTO) {

@@ -6,6 +6,8 @@ import io.fabric8.kubernetes.api.model.ConfigMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -42,4 +44,10 @@ public class ConfigMapServiceImpl implements ConfigMapService {
     public void update(String clusterId, String namespace, ConfigMap configMap) {
         configMapWrapper.update(clusterId, namespace, configMap);
     }
+
+    @Override
+    public List<ConfigMap> list(String clusterId, String namespace, Map<String, String> labels) {
+        return configMapWrapper.list(clusterId, namespace, labels);
+    }
+
 }
