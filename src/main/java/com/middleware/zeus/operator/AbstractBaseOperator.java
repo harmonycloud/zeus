@@ -971,6 +971,10 @@ public abstract class AbstractBaseOperator {
         if(middleware.getContainerUID() != null){
             securityContext.put(ContainerConstant.UID, middleware.getContainerUID());
         }
+        // 设置gid
+        if(middleware.getContainerGID() != null){
+            securityContext.put(ContainerConstant.GID, middleware.getContainerGID());
+        }
         target.put(ContainerConstant.SECURITY_CONTEXT, securityContext);
     }
 
@@ -981,6 +985,9 @@ public abstract class AbstractBaseOperator {
         JSONObject securityContext = values.getJSONObject(ContainerConstant.SECURITY_CONTEXT);
         if (securityContext.containsKey(ContainerConstant.UID)) {
             middleware.setContainerUID(securityContext.getLong(ContainerConstant.UID));
+        }
+        if (securityContext.containsKey(ContainerConstant.GID)) {
+            middleware.setContainerGID(securityContext.getLong(ContainerConstant.GID));
         }
     }
 

@@ -386,18 +386,25 @@ public class NamespaceServiceImpl implements NamespaceService {
     }
 
     /**
-     * 设置分区uid范围
+     * 设置分区uid、gid范围
      * @param namespace
      * @param annotations
      */
     private void putContainerIdentityRange(Namespace namespace, Map<String, String> annotations) {
-        ContainerIdentityRange containerUIDRange = namespace.getContainerUIDRange();
-        if (containerUIDRange == null) {
-            return;
-        }
         JSONObject containerIdentityRange = new JSONObject();
-        containerIdentityRange.put(NamespaceConstant.KEY_CONTAINER_UID_RANGE, containerUIDRange);
-        annotations.put(NamespaceConstant.KEY_CONTAINER_IDENTITY_RANGE, containerIdentityRange.toString());
+        // 添加uid范围
+        ContainerIdentityRange containerUIDRange = namespace.getContainerUIDRange();
+        if (containerUIDRange != null) {
+            containerIdentityRange.put(NamespaceConstant.KEY_CONTAINER_UID_RANGE, containerUIDRange);
+        }
+        // 添加gid范围
+        ContainerIdentityRange containerGIDRange = namespace.getContainerGIDRange();
+        if (containerGIDRange != null) {
+            containerIdentityRange.put(NamespaceConstant.KEY_CONTAINER_GID_RANGE, containerUIDRange);
+        }
+        if (containerIdentityRange.keySet().size() != 0) {
+            annotations.put(NamespaceConstant.KEY_CONTAINER_IDENTITY_RANGE, containerIdentityRange.toString());
+        }
     }
 
     private void setContainerIdentityRange(io.fabric8.kubernetes.api.model.Namespace ns, Namespace namespace) {
