@@ -121,11 +121,11 @@ public interface MiddlewareBackupService {
      * 查询备份任务详情
      * @param clusterId
      * @param namespace
-     * @param backupName 备份任务名称
+     * @param backupId 备份任务id
      * @param backupMode 备份任务类型 period:周期备份 single:单次备份
      * @return
      */
-    MiddlewareBackupRecord getBackup(String clusterId, String namespace,String backupName,String backupMode);
+    List<MiddlewareBackupRecord> getBackup(String clusterId, String namespace, String backupId, String backupMode);
 
     /**
      * 创建恢复

@@ -12,7 +12,6 @@ import java.util.stream.Collectors;
 
 import com.alibaba.fastjson.JSONObject;
 import com.middleware.caas.common.constants.ActiveAreaConstant;
-import com.middleware.caas.common.constants.BackupConstant;
 import com.middleware.caas.common.model.user.UserRole;
 import com.middleware.caas.filters.user.CurrentUserRepository;
 import com.middleware.tool.date.DateUtils;
@@ -31,6 +30,7 @@ import com.middleware.zeus.service.user.UserRoleService;
 import com.middleware.zeus.service.user.UserService;
 import com.middleware.zeus.util.MathUtil;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.hssf.record.BackupRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -121,16 +121,14 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public MiddlewareBackupRecord getBackup(String clusterId, String namespace, String backupName, String backupMode) {
-        MiddlewareBackupRecord record = new MiddlewareBackupRecord();
+    public List<MiddlewareBackupRecord> getBackup(String clusterId, String namespace, String backupId, String backupMode) {
         if (BackupMode.PERIOD.getMode().equals(backupMode)) {
-            MiddlewareBackupSchedule scheduleCR = backupScheduleCRDService.get(clusterId, namespace, backupName);
-            convertBackupScheduleToRecord(scheduleCR, record);
+            List<MiddlewareBackupSchedule> scheduleCRList = listMiddlewareBackupSchedule(clusterId, namespace, backupId);
+            return convertBackupSchedulesToRecords(scheduleCRList);
         } else {
-            MiddlewareBackup backupCR = backupCRDService.get(clusterId, namespace, backupName);
-            convertBackupToRecord(clusterId, backupCR, record);
+            List<MiddlewareBackup> backupCRList = listMiddlewareBackup(clusterId, namespace, backupId);
+            return convertBackupsToRecords(clusterId, backupCRList);
         }
-        return record;
     }
 
     @Override
@@ -1016,11 +1014,34 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
      * @return
      */
     private Set<String> listMiddlewareBackupScheduleNames(String clusterId, String namespace, String backupId) {
+        return this.listMiddlewareBackupSchedule(clusterId, namespace, backupId).stream().map(middlewareBackupSchedule ->
+                middlewareBackupSchedule.getMetadata().getName()).collect(Collectors.toSet());
+    }
+
+    /**
+     * 根据备份任务id查询周期备份任务列表
+     * @param clusterId
+     * @param namespace
+     * @param backupId
+     * @return
+     */
+    private List<MiddlewareBackupSchedule> listMiddlewareBackupSchedule(String clusterId, String namespace, String backupId) {
         Map<String, String> labels = new HashMap<>();
         labels.put("backupId", backupId);
-        List<MiddlewareBackupSchedule> schedules = backupScheduleCRDService.listByLabels(clusterId, namespace, labels);
-        return schedules.stream().map(middlewareBackupSchedule ->
-                middlewareBackupSchedule.getMetadata().getName()).collect(Collectors.toSet());
+        return backupScheduleCRDService.listByLabels(clusterId, namespace, labels);
+    }
+
+    /**
+     * 根据备份任务id查询周期备份任务列表
+     * @param clusterId
+     * @param namespace
+     * @param backupId
+     * @return
+     */
+    private List<MiddlewareBackup> listMiddlewareBackup(String clusterId, String namespace, String backupId) {
+        Map<String, String> labels = new HashMap<>();
+        labels.put("backupId", backupId);
+        return backupCRDService.list(clusterId, namespace, labels);
     }
 
     /**
@@ -1203,6 +1224,21 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     /**
+     * 对象封装 List<MiddlewareBackupSchedule> -> List<MiddlewareBackupRecord>
+     * @param schedules
+     * @return
+     */
+    public List<MiddlewareBackupRecord> convertBackupSchedulesToRecords(List<MiddlewareBackupSchedule> schedules) {
+        List<MiddlewareBackupRecord> records = new ArrayList<>();
+        schedules.forEach(backupSchedule -> {
+            MiddlewareBackupRecord record = new MiddlewareBackupRecord();
+            convertBackupScheduleToRecord(backupSchedule, record);
+            records.add(record);
+        });
+        return records;
+    }
+
+    /**
      * 对象封装: MiddlewareBackupScheduleCR -> MiddlewareBackupRecord
      */
     public void convertBackupScheduleToRecord(MiddlewareBackupSchedule schedule, MiddlewareBackupRecord backupRecord) {
@@ -1277,6 +1313,22 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         } else {
             backupRecord.setBackupMode("single");
         }
+    }
+
+    /**
+     * 对象封装 List<MiddlewareBackup> -> List<MiddlewareBackupRecord>
+     * @param clusterId
+     * @param backups
+     * @return
+     */
+    private List<MiddlewareBackupRecord> convertBackupsToRecords(String clusterId, List<MiddlewareBackup> backups) {
+        List<MiddlewareBackupRecord> records = new ArrayList<>();
+        backups.forEach(backup -> {
+            MiddlewareBackupRecord record = new MiddlewareBackupRecord();
+            convertBackupToRecord(clusterId, backup, record);
+            records.add(record);
+        });
+        return records;
     }
 
     /**

@@ -66,7 +66,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public MiddlewareBackupRecord getBackup(String clusterId, String namespace, String backupName, String backupMode) {
+    public List<MiddlewareBackupRecord> getBackup(String clusterId, String namespace, String backupName, String backupMode) {
         return null;
     }
 

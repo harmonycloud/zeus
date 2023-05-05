@@ -4,6 +4,7 @@ import com.middleware.caas.common.base.BaseResult;
 import com.middleware.caas.common.model.MiddlewareBackupDTO;
 import com.middleware.caas.common.model.MiddlewareIncBackupDto;
 import com.middleware.caas.common.model.MiddlewareTaskDTO;
+import com.middleware.caas.common.model.middleware.MiddlewareBackupRecord;
 import com.middleware.caas.common.model.middleware.MiddlewareBackupRecordGroup;
 import com.middleware.caas.common.util.ThreadPoolExecutorFactory;
 import com.middleware.zeus.annotation.Authority;
@@ -104,14 +105,14 @@ public class MiddlewareBackupController {
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "backupName", value = "备份任务名称", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "backupMode", value = "备份任务类型", paramType = "query", dataTypeClass = String.class)
+            @ApiImplicitParam(name = "backupId", value = "备份任务id", paramType = "query", dataTypeClass = String.class)
     })
     @GetMapping("/detail")
-    public BaseResult<List<MiddlewareBackupRecordGroup>> get(@PathVariable("clusterId") String clusterId,
-                                                             @PathVariable("namespace") String namespace,
-                                                             @RequestParam("backupName") String backupName,
-                                                             @RequestParam("backupMode") String backupMode) {
-        return BaseResult.ok(middlewareBackupService.getBackup(clusterId, namespace, backupName, backupMode));
+    public BaseResult<List<MiddlewareBackupRecord>> get(@PathVariable("clusterId") String clusterId,
+                                                  @PathVariable("namespace") String namespace,
+                                                  @RequestParam("backupName") String backupName,
+                                                  @RequestParam("backupId") String backupId) {
+        return BaseResult.ok(middlewareBackupService.getBackup(clusterId, namespace, backupName, backupId));
     }
 
     @ApiOperation(value = "检查中间件是否已创建周期备份", notes = "检查中间件是否已创建周期备份")
