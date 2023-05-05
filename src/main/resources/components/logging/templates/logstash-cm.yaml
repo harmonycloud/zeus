@@ -14,6 +14,70 @@ data:
       mutate {
         remove_field => ["tags","beat","@version","prospector","input","host","topic"]
       }
+      # 提取并替换日志时间
+      # 替换es @timestamp
+      if [index] == "middlewarelogstash"{
+        if [k8s_container_name] == "mysql" {
+          grok {
+            # 提取时间
+            match => {"message" => "(?<LogTime>(%{YEAR}-%{MONTHNUM}-%{MONTHDAY})T(%{HOUR}:%{MINUTE}:%{SECOND}))"}
+          }
+
+          date {
+            # 匹配并替换时间
+            match => ["LogTime","YYYY-MM-dd'T'HH:mm:ss", "ISO8601"]
+            target => "@timestamp"
+          }
+        }
+        if [k8s_container_name] == "postgres" {
+          grok {
+            match => {"message" => "(?<LogTime>(%{YEAR}-%{MONTHNUM}-%{MONTHDAY})%{SPACE}(%{TIME}))"}
+          }
+
+          date {
+            match => [ "LogTime", "YYYY-MM-dd HH:mm:ss.SSS"]
+            target => "@timestamp"
+          }
+        }
+        if [k8s_container_name] == "redis-cluster" {
+          grok {
+            match => {"message" => "(?<LogTime>(%{MONTHDAY}%{SPACE}%{MONTH}%{SPACE}%{YEAR})%{SPACE}(%{TIME}))"}
+          }
+
+          date {
+            match => [ "LogTime", "dd MMM YYYY HH:mm:ss.SSS"]
+            target => "@timestamp"
+          }
+        }
+      }
+      else if [index] == "middlewarestdout" {
+        if [k8s_container_name] == "postgres" {
+          grok {
+            match => {"message" => "(?<LogTime>(%{YEAR}-%{MONTHNUM}-%{MONTHDAY})%{SPACE}(%{TIME}))"}
+          }
+
+          date {
+            match => [ "LogTime", "YYYY-MM-dd HH:mm:ss,SSS"]
+            target => "@timestamp"
+          }
+        }
+      }
+      else if [index] == "mysqlslow" {
+        json {
+          source => "message"
+        }
+        grok {
+          match => [ "message", "^#\s+User@Host:\s+%{USER:user}\[[^\]]+\]\s+@\s+(?:(?<clienthost>\S*) )?\[(?:%{IP:clientip})?\]\s+Id:\s+%{NUMBER:id}\n# Query_time: %{NUMBER:query_time}\s+Lock_time: %{NUMBER:lock_time}\s+Rows_sent: %{NUMBER:rows_sent}\s+Rows_examined: %{NUMBER:rows_examined}\nSET\s+timestamp=%{NUMBER:timestamp_mysql};\n(?<query>[\s\S]*)" ]
+        }
+        date {
+          match => ["timestamp_mysql","UNIX"]
+          target => "@timestamp"
+        }
+        mutate {
+          remove_field => "@version"
+          remove_field => "message"
+        }
+      }
       # for nginx log
       if [index] == "nginxlog" {
         dissect {
