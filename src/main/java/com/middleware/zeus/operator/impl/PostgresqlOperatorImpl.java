@@ -159,11 +159,11 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
     @Override
     public Middleware convertByHelmChart(Middleware middleware, MiddlewareClusterDTO cluster) {
         JSONObject values = helmChartService.getInstalledValues(middleware, cluster);
-        convertCommonByHelmChart(middleware, values);
-        convertResourcesByHelmChart(middleware, middleware.getType(), values.getJSONObject(RESOURCES));
-        convertStoragesByHelmChart(middleware, middleware.getType(), values);
-        convertRegistry(middleware, values);
-        convertCustomVolumesByHelmChart(middleware, values);
+        super.convertCommonByHelmChart(middleware, values);
+        super.convertResourcesByHelmChart(middleware, middleware.getType(), values.getJSONObject(RESOURCES));
+        super.convertStoragesByHelmChart(middleware, middleware.getType(), values);
+        super.convertRegistry(middleware, values);
+        super.convertCustomVolumesByHelmChart(middleware, values);
         convertPostgresqlParamByHelmChart(middleware, values);
         super.convertSecurityContext(middleware, values);
 
