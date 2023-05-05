@@ -95,15 +95,13 @@ public class V2UserServiceImpl implements V2UserService {
                 CaasRole caasRole = CaasRole.findByName(project.getString("roleName"));
                 if (caasRole != null){
                     if (caasRole.getId() == 5){
-                        userDto.setRoleId(roleService.getOrganManagerRoleId().getId());
+                        userRole.setRoleId(roleService.getOrganManagerRoleId().getId());
                         organMap.put(organId, userRole.getOrganName());
                     }else {
-                        userDto.setRoleId(caasRole.getId());
+                        userRole.setRoleId(caasRole.getId());
                     }
                     userRole.setRoleName(caasRole.getRoleName());
                 }
-                userRole.setRoleId(project.getInteger("roleId"));
-                userRole.setRoleName(project.getString("roleNickName"));
                 userRoleList.add(userRole);
             }
             // 处理租户管理员应包含所有项目的项目管理员
@@ -119,7 +117,7 @@ public class V2UserServiceImpl implements V2UserService {
     public List<UserRole> solveOrganManager(List<UserRole> userRoleList, Map<String, String> organMap, String username){
         // 过滤掉额外的已是租户管理员的租户下的项目信息
         userRoleList = userRoleList.stream().filter(
-            userRole -> (StringUtils.isNotEmpty(userRole.getOrganId()) && StringUtils.isEmpty(userRole.getProjectId()))
+            userRole -> (StringUtils.isEmpty(userRole.getOrganId()) || StringUtils.isEmpty(userRole.getProjectId()))
                 || (StringUtils.isNoneEmpty(userRole.getOrganId(), userRole.getProjectId())
                     && organMap.keySet().stream().noneMatch(organId -> organId.equals(userRole.getOrganId()))))
             .collect(Collectors.toList());
