@@ -908,7 +908,7 @@ data:
               "expr": "sum (rate (container_cpu_usage_seconds_total{image!=\"\",name=~\"^k8s_.*\",pod=~\"^$Pod$\"}[1m])) by (pod)",
               "interval": "10s",
               "intervalFactor": 1,
-              "legendFormat": "{{ pod }}",
+              "legendFormat": "{{`{{ pod }}`}}",
               "metric": "container_cpu",
               "refId": "A",
               "step": 10
@@ -1034,7 +1034,7 @@ data:
               "hide": false,
               "interval": "10s",
               "intervalFactor": 1,
-              "legendFormat": "{{ id }}",
+              "legendFormat": "{{`{{ id }}`}}",
               "metric": "container_cpu",
               "refId": "A",
               "step": 10
@@ -1159,7 +1159,7 @@ data:
               "expr": "sum (container_memory_working_set_bytes{image!=\"\",name=~\"^k8s_.*\",pod=~\"^$Pod$\"}) by (pod)",
               "interval": "10s",
               "intervalFactor": 1,
-              "legendFormat": "{{ pod }}",
+              "legendFormat": "{{`{{ pod }}`}}",
               "metric": "container_memory_usage:sort_desc",
               "refId": "A",
               "step": 10
@@ -1283,7 +1283,7 @@ data:
               "expr": "sum (container_memory_working_set_bytes{id!=\"/\",pod=~\"^$Pod$\"}) by (id)",
               "interval": "10s",
               "intervalFactor": 1,
-              "legendFormat": "{{ id }}",
+              "legendFormat": "{{`{{ id }}`}}",
               "metric": "container_memory_usage:sort_desc",
               "refId": "A",
               "step": 10
@@ -1407,7 +1407,7 @@ data:
               "expr": "sum (rate (container_network_receive_bytes_total{image!=\"\",name=~\"^k8s_.*\",pod=~\"^$Pod$\"}[1m])) by (pod)",
               "interval": "10s",
               "intervalFactor": 1,
-              "legendFormat": "-> {{ pod }}",
+              "legendFormat": "-> {{`{{ pod }}`}}",
               "metric": "network",
               "refId": "A",
               "step": 10
@@ -1416,7 +1416,7 @@ data:
               "expr": "- sum (rate (container_network_transmit_bytes_total{image!=\"\",name=~\"^k8s_.*\",pod=~\"^$Pod$\"}[1m])) by (pod)",
               "interval": "10s",
               "intervalFactor": 1,
-              "legendFormat": "<- {{ pod }}",
+              "legendFormat": "<- {{`{{ pod }}`}}",
               "metric": "network",
               "refId": "B",
               "step": 10
@@ -1540,7 +1540,7 @@ data:
               "expr": "sum (rate (container_network_receive_bytes_total{id!=\"/\",pod=~\"^$Pod$\"}[1m])) by (id)",
               "interval": "10s",
               "intervalFactor": 1,
-              "legendFormat": "-> {{ id }}",
+              "legendFormat": "-> {{`{{ id }}`}}",
               "metric": "network",
               "refId": "A",
               "step": 10
@@ -1549,7 +1549,7 @@ data:
               "expr": "- sum (rate (container_network_transmit_bytes_total{id!=\"/\",pod=~\"^$Pod$\"}[1m])) by (id)",
               "interval": "10s",
               "intervalFactor": 1,
-              "legendFormat": "<- {{ id }}",
+              "legendFormat": "<- {{`{{ id }}`}}",
               "metric": "network",
               "refId": "B",
               "step": 10
