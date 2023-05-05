@@ -1639,7 +1639,7 @@ data:
             "hide": 0,
             "includeAll": true,
             "label": "节点",
-            "multi": true,
+            "multi": false,
             "name": "node",
             "options": [ ],
             "query": "label_values(node_exporter_build_info{name=~'$name'}, kubernetes_pod_node_name)",
