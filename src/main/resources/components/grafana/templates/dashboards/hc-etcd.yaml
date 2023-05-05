@@ -8,6 +8,7 @@ metadata:
   labels:
     {{- if $.Values.sidecar.dashboards.label }}
     {{ $.Values.sidecar.dashboards.label }}: "1"
+    zeus_dashboard: "kubernetes"
     {{- end }}
     app: {{ template "grafana.namespace" . }}-grafana
 data:

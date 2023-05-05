@@ -480,7 +480,7 @@ public class ClusterServiceImpl extends AbstractClusterService implements Cluste
 
         // 获取面板configmap
         HashMap<String, String> labels = new HashMap<>();
-        labels.put("grafana_dashboard", "1");
+        labels.put("zeus_dashboard", "kubernetes");
         List<ConfigMap> monitorList = configMapService.list(clusterId, "monitoring", labels);
         HashMap<String, MonitorDto> monitorMap = new HashMap<>();
         monitorList.forEach(cm -> {
