@@ -403,6 +403,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             objectMeta.setLabels(backupLabel);
         }
         backupLabel.put("middleware", cr.getSpec().getType() + "-" + cr.getSpec().getName());
+        backupLabel.put("owner", backupName);
 
         cr.setMetadata(objectMeta);
         cr.setStatus(null);
@@ -905,7 +906,19 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public List<MiddlewareBackupRecord> backupIncrRecords(String clusterId, String namespace, String middlewareName, String type, String backupId, String backupMode) {
-        return null;
+        Set<String> backupScheduleNames = listMiddlewareBackupScheduleNames(clusterId, namespace, backupId);
+        Set<String> incrScheduleNames = new HashSet<>();
+        backupScheduleNames.forEach(scheduleName -> {
+            String incrScheduleName = scheduleName + "-incr";
+            MiddlewareBackupSchedule incrSchedule = backupScheduleCRDService.get(clusterId, namespace, incrScheduleName);
+            if (incrSchedule != null) {
+                incrScheduleNames.add(incrSchedule.getMetadata().getName());
+            }
+        });
+        List<MiddlewareBackupRecord> recordList = listBackup(clusterId, namespace, null, null);
+        recordList = recordList.stream().filter(record -> StringUtils.isNotEmpty(record.getOwner()) &&
+                incrScheduleNames.contains(record.getOwner())).collect(Collectors.toList());
+        return sortAndSetAliasName(recordList);
     }
 
     @Override
