@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -31,6 +32,8 @@ import java.util.stream.Collectors;
 @Slf4j
 public class V2UserServiceImpl implements V2UserService {
 
+    private static Map<String, List<ProjectDto>> ORGAN_PROJECT_MAP = new HashMap<>();
+
     @Autowired
     private V2UserServiceClient v2UserServiceClient;
     @Autowired
@@ -42,14 +45,18 @@ public class V2UserServiceImpl implements V2UserService {
     public UserDto get(String username) {
         CaasResult<JSONArray> res = v2UserServiceClient.getUser(username);
         JSONObject user = res.getData().getJSONObject(0);
-        return convertUser(user);
+        UserDto userDto = convertUser(user);
+        ORGAN_PROJECT_MAP.clear();
+        return userDto;
     }
 
     @Override
     public List<UserDto> list() {
         CaasResult<JSONArray> res = v2UserServiceClient.listUser(null);
-        return res.getData().stream().map(user -> convertUser(JSONObject.parseObject(JSONObject.toJSONString(user))))
-            .collect(Collectors.toList());
+        List<UserDto> userDtoList = res.getData().stream().map(user -> convertUser(JSONObject.parseObject(JSONObject.toJSONString(user))))
+                .collect(Collectors.toList());
+        ORGAN_PROJECT_MAP.clear();
+        return userDtoList;
     }
 
 
@@ -61,13 +68,8 @@ public class V2UserServiceImpl implements V2UserService {
         userDto.setEmail(user.getString("email"));
         userDto.setPhone(user.getString("phone"));
 
-        try {
-            String createTime = user.getString("createTime");
-            Date date = new SimpleDateFormat(DateType.EEE_MMM_DD_HH_MM_SS_ZZZ_YYYY.getValue(), java.util.Locale.ENGLISH).parse(createTime);
-            userDto.setCreateTime(date);
-        } catch (Exception e){
-            log.error("转换失败", e);
-        }
+        String createTime = user.getString("createTime");
+        userDto.setCreateTime(convertCreateTime(createTime));
 
         userDto.setIsAdmin(user.getBoolean("admin"));
 
@@ -105,25 +107,36 @@ public class V2UserServiceImpl implements V2UserService {
                 userRoleList.add(userRole);
             }
             // 处理租户管理员应包含所有项目的项目管理员
-            userRoleList.addAll(solveOrganManager(userRoleList, organMap));
+            if(!CollectionUtils.isEmpty(organMap)){
+                userRoleList = solveOrganManager(userRoleList, organMap, userDto.getUserName());
+            }
 
             userDto.setUserRoleList(userRoleList);
         }
         return userDto;
     }
 
-    public List<UserRole> solveOrganManager(List<UserRole> userRoleList, Map<String, String> organMap){
+    public List<UserRole> solveOrganManager(List<UserRole> userRoleList, Map<String, String> organMap, String username){
         // 过滤掉额外的已是租户管理员的租户下的项目信息
-        userRoleList = userRoleList.stream()
-            .filter(userRole -> StringUtils.isNoneEmpty(userRole.getOrganId(), userRole.getProjectId())
-                && organMap.keySet().stream().anyMatch(organId -> organId.equals(userRole.getOrganId())))
+        userRoleList = userRoleList.stream().filter(
+            userRole -> (StringUtils.isNotEmpty(userRole.getOrganId()) && StringUtils.isEmpty(userRole.getProjectId()))
+                || (StringUtils.isNoneEmpty(userRole.getOrganId(), userRole.getProjectId())
+                    && organMap.keySet().stream().noneMatch(organId -> organId.equals(userRole.getOrganId()))))
             .collect(Collectors.toList());
 
         // 查询租户下的所有项目
         for (String organId : organMap.keySet()){
-            List<ProjectDto> projectDtoList = v2ProjectService.list(organId);
+            List<ProjectDto> projectDtoList;
+            // 通过缓存数据获取租户下的项目信息
+            if (ORGAN_PROJECT_MAP.containsKey(organId)){
+                projectDtoList = ORGAN_PROJECT_MAP.get(organId);
+            } else {
+                projectDtoList = v2ProjectService.list(organId);
+                ORGAN_PROJECT_MAP.put(organId, projectDtoList);
+            }
             for (ProjectDto projectDto : projectDtoList){
                 UserRole userRole = new UserRole();
+                userRole.setUserName(username);
                 userRole.setProjectId(projectDto.getProjectId());
                 userRole.setProjectName(projectDto.getName());
                 userRole.setRoleId(CaasRole.PM.getId());
@@ -134,5 +147,22 @@ public class V2UserServiceImpl implements V2UserService {
             }
         }
         return userRoleList;
+    }
+
+
+    public Date convertCreateTime(String createTime) {
+        Date date = null;
+        try {
+            date = new SimpleDateFormat(DateType.EEE_MMM_DD_HH_MM_SS_ZZZ_YYYY.getValue(), java.util.Locale.ENGLISH)
+                .parse(createTime);
+        } catch (Exception ignored) {
+        }
+        if (date == null) {
+            try {
+                date = new SimpleDateFormat(DateType.YYYY_MM_DD_T_HH_MM_SS.getValue()).parse(createTime);
+            } catch (Exception ignored) {
+            }
+        }
+        return date;
     }
 }
