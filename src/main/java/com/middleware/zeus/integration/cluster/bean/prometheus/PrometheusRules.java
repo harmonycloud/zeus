@@ -1,10 +1,12 @@
 package com.middleware.zeus.integration.cluster.bean.prometheus;
 
-import com.alibaba.fastjson.annotation.JSONField;
+import java.util.Map;
+
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.Data;
 import lombok.experimental.Accessors;
-
-import java.util.Map;
 
 /**
  * @author xutianhong
@@ -12,13 +14,14 @@ import java.util.Map;
  */
 @Data
 @Accessors(chain = true)
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class PrometheusRules {
 
     private String alert;
 
     private String expr;
 
-    @JSONField(name = "for")
+    @JsonProperty(value = "for")
     private String time;
 
     private Map<String, String> annotations;
