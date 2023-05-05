@@ -183,17 +183,36 @@ public class MiddlewareBackupController {
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "backupName", value = "备份名称", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "backupId", value = "备份任务id", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "backupMode", value = "备份类型(single:单次，period:周期)", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping("/record")
     @Authority(power = 1)
     public BaseResult listTaskRecord(@PathVariable("clusterId") String clusterId,
-                                    @PathVariable("namespace") String namespace,
-                                    @RequestParam(value = "type", required = false) String type,
-                                    @RequestParam(value = "backupName", required = false) String backupName) {
-        return BaseResult.ok(middlewareBackupService.backupRecords(clusterId, namespace, backupName, type));
+                                     @PathVariable("namespace") String namespace,
+                                     @RequestParam("middlewareName") String middlewareName,
+                                     @RequestParam("type") String type,
+                                     @RequestParam("backupId") String backupId,
+                                     @RequestParam("backupMode") String backupMode) {
+        return BaseResult.ok(middlewareBackupService.backupRecords(clusterId, namespace, middlewareName, type, backupId, backupMode));
     }
 
+    @ApiOperation(value = "查询备份任务对应的增量记录", notes = "查询备份任务对应的增量记录")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "backupName", value = "备份名称", paramType = "query", dataTypeClass = String.class),
+    })
+    @GetMapping("/incrRecord")
+    @Authority(power = 1)
+    public BaseResult listIncrRecord(@PathVariable("clusterId") String clusterId,
+                                     @PathVariable("namespace") String namespace,
+                                     @RequestParam(value = "type", required = false) String type,
+                                     @RequestParam(value = "backupName", required = false) String backupName) {
+        return BaseResult.ok();
+    }
 
     @ApiOperation(value = "创建备份恢复", notes = "创建备份恢复")
     @ApiImplicitParams({
