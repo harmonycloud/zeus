@@ -38,7 +38,7 @@ data:
       "panels": [
         {
           "collapsed": false,
-          "datasource": "${DS_PROMETHEUS}",
+          "datasource": "$datasource",
           "gridPos": {
             "h": 1,
             "w": 24,
@@ -173,7 +173,7 @@ data:
         },
         {
           "collapsed": false,
-          "datasource": "${DS_PROMETHEUS}",
+          "datasource": "$datasource",
           "gridPos": {
             "h": 1,
             "w": 24,
@@ -833,7 +833,7 @@ data:
         },
         {
           "collapsed": false,
-          "datasource": "${DS_PROMETHEUS}",
+          "datasource": "$datasource",
           "gridPos": {
             "h": 1,
             "w": 24,
@@ -958,7 +958,7 @@ data:
         },
         {
           "collapsed": false,
-          "datasource": "${DS_PROMETHEUS}",
+          "datasource": "$datasource",
           "gridPos": {
             "h": 1,
             "w": 24,
@@ -1084,7 +1084,7 @@ data:
         },
         {
           "collapsed": false,
-          "datasource": "${DS_PROMETHEUS}",
+          "datasource": "$datasource",
           "gridPos": {
             "h": 1,
             "w": 24,
@@ -1209,7 +1209,7 @@ data:
         },
         {
           "collapsed": false,
-          "datasource": "${DS_PROMETHEUS}",
+          "datasource": "$datasource",
           "gridPos": {
             "h": 1,
             "w": 24,
@@ -1333,7 +1333,7 @@ data:
         },
         {
           "collapsed": false,
-          "datasource": "${DS_PROMETHEUS}",
+          "datasource": "$datasource",
           "gridPos": {
             "h": 1,
             "w": 24,
@@ -1466,7 +1466,7 @@ data:
         },
         {
           "collapsed": false,
-          "datasource": "${DS_PROMETHEUS}",
+          "datasource": "$datasource",
           "gridPos": {
             "h": 1,
             "w": 24,
@@ -1687,10 +1687,10 @@ data:
               "text": "",
               "value": ""
             },
-            "datasource": "${DS_PROMETHEUS}",
+            "datasource": "$datasource",
             "definition": "",
             "error": {
-              "message": "Datasource named ${DS_PROMETHEUS} was not found"
+              "message": "Datasource named $datasource was not found"
             },
             "hide": 2,
             "includeAll": false,
@@ -1716,10 +1716,10 @@ data:
               "text": "",
               "value": ""
             },
-            "datasource": "${DS_PROMETHEUS}",
+            "datasource": "$datasource",
             "definition": "",
             "error": {
-              "message": "Datasource named ${DS_PROMETHEUS} was not found"
+              "message": "Datasource named $datasource was not found"
             },
             "hide": 2,
             "includeAll": false,
@@ -1745,10 +1745,10 @@ data:
               "text": "",
               "value": ""
             },
-            "datasource": "${DS_PROMETHEUS}",
+            "datasource": "$datasource",
             "definition": "",
             "error": {
-              "message": "Datasource named ${DS_PROMETHEUS} was not found"
+              "message": "Datasource named $datasource was not found"
             },
             "hide": 2,
             "includeAll": false,
