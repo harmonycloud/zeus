@@ -413,7 +413,13 @@ public class NamespaceServiceImpl implements NamespaceService {
             JSONObject rangeObj = JSONObject.parseObject(containerIdentityRange);
             if (rangeObj != null) {
                 String uidRange = rangeObj.getString(NamespaceConstant.KEY_CONTAINER_UID_RANGE);
-                namespace.setContainerUIDRange(JSONObject.parseObject(uidRange, ContainerIdentityRange.class));
+                if (StringUtils.isNotEmpty(uidRange)) {
+                    namespace.setContainerUIDRange(JSONObject.parseObject(uidRange, ContainerIdentityRange.class));
+                }
+                String gidRange = rangeObj.getString(NamespaceConstant.KEY_CONTAINER_GID_RANGE);
+                if (StringUtils.isNotEmpty(gidRange)) {
+                    namespace.setContainerGIDRange(JSONObject.parseObject(gidRange, ContainerIdentityRange.class));
+                }
             }
         }
     }

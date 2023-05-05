@@ -719,6 +719,8 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
                     ns.setAvailableDomain(namespace.isAvailableDomain());
                     // 设置uid
                     ns.setContainerUIDRange(namespace.getContainerUIDRange());
+                    // 设置gid
+                    ns.setContainerGIDRange(namespace.getContainerGIDRange());
                 }
             });
             return namespaces;
