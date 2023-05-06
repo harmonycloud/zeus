@@ -238,6 +238,13 @@ public interface MiddlewareBackupService {
      */
     List<MiddlewareBackupRestore> backupRestores(String clusterId, String namespace, String backupId);
 
+    /**
+     * 删除恢复记录
+     * @param clusterId
+     * @param namespace
+     * @param restoreName
+     */
+    void deleteRestoreRecord(String clusterId, String namespace, String restoreName);
 
     /**
      * 删除备份任务
