@@ -131,6 +131,7 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
         convertCommonByHelmChart(middleware, values);
         convertRegistry(middleware, values);
         convertEsParamByHelmChart(middleware, values);
+        super.convertCustomVolumesByHelmChart(middleware, values);
 
         // 处理es特有参数
         if (values != null) {

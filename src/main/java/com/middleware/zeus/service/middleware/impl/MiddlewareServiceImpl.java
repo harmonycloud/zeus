@@ -190,7 +190,8 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         checkBaseParam(clusterId, namespace, name, type);
         Middleware middleware =
                 new Middleware().setClusterId(clusterId).setNamespace(namespace).setType(type).setName(name);
-        return getOperator(BaseOperator.class, BaseOperator.class, middleware).detail(middleware);
+        Middleware detail = getOperator(BaseOperator.class, BaseOperator.class, middleware).detail(middleware);
+        return detail;
     }
 
     @Override
