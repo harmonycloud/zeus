@@ -7,6 +7,7 @@ import com.middleware.caas.common.model.MiddlewareTaskDTO;
 import com.middleware.caas.common.model.middleware.MiddlewareBackupRecord;
 import com.middleware.caas.common.model.middleware.MiddlewareBackupRecordGroup;
 import com.middleware.caas.common.model.middleware.MiddlewareBackupRestore;
+import com.middleware.caas.common.model.middleware.MiddlewareRestoreDto;
 import com.middleware.caas.common.util.ThreadPoolExecutorFactory;
 import com.middleware.zeus.annotation.Authority;
 import com.middleware.zeus.service.middleware.MiddlewareBackupService;
@@ -191,7 +192,7 @@ public class MiddlewareBackupController {
     })
     @GetMapping("/record")
     @Authority(power = 1)
-    public BaseResult listTaskRecord(@PathVariable("clusterId") String clusterId,
+    public BaseResult<List<MiddlewareBackupRecord>> listTaskRecord(@PathVariable("clusterId") String clusterId,
                                      @PathVariable("namespace") String namespace,
                                      @RequestParam("middlewareName") String middlewareName,
                                      @RequestParam("type") String type,
@@ -211,7 +212,7 @@ public class MiddlewareBackupController {
     })
     @GetMapping("/incrRecord")
     @Authority(power = 1)
-    public BaseResult listIncrRecord(@PathVariable("clusterId") String clusterId,
+    public BaseResult<List<MiddlewareBackupRecord>> listIncrRecord(@PathVariable("clusterId") String clusterId,
                                      @PathVariable("namespace") String namespace,
                                      @RequestParam("middlewareName") String middlewareName,
                                      @RequestParam("type") String type,
@@ -238,24 +239,16 @@ public class MiddlewareBackupController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "type", value = "服务类型", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "middlewareName", value = "服务名称", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "backupName", value = "备份记录名称", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "backupId", value = "备份任务id", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "activeArea", value = "可用去", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "type", value = "服务类型", paramType = "query", dataTypeClass = MiddlewareRestoreDto.class),
     })
     @PostMapping("/restore")
     @Authority(power = 2)
     public BaseResult createRestore(@PathVariable("clusterId") String clusterId,
                                     @PathVariable("namespace") String namespace,
-                                    @RequestParam("type") String type,
-                                    @RequestParam("middlewareName") String middlewareName,
-                                    @RequestParam("backupName") String backupName,
-                                    @RequestParam(value = "restoreTime", required = false) String restoreTime,
-                                    @RequestParam("backupId") String backupId,
-                                    @RequestParam("activeArea") String activeArea) {
-        ThreadPoolExecutorFactory.executor.execute(() -> middlewareBackupService.createRestore(clusterId, namespace,
-                middlewareName, type, backupName, restoreTime, backupId, activeArea));
+                                    @RequestBody MiddlewareRestoreDto restoreDto) {
+        restoreDto.setClusterId(clusterId);
+        restoreDto.setNamespace(namespace);
+        ThreadPoolExecutorFactory.executor.execute(() -> middlewareBackupService.createRestore(restoreDto));
         return BaseResult.ok();
     }
 

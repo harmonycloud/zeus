@@ -7,6 +7,7 @@ import com.middleware.caas.common.model.MiddlewareTaskDTO;
 import com.middleware.caas.common.model.middleware.MiddlewareBackupRecord;
 import com.middleware.caas.common.model.middleware.MiddlewareBackupRecordGroup;
 import com.middleware.caas.common.model.middleware.MiddlewareBackupRestore;
+import com.middleware.caas.common.model.middleware.MiddlewareRestoreDto;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareBackupSchedule;
 import com.middleware.zeus.integration.cluster.bean.Minio;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
@@ -131,17 +132,9 @@ public interface MiddlewareBackupService {
     /**
      * 创建恢复
      *
-     * @param clusterId      集群id
-     * @param namespace      分区
-     * @param middlewareName 服务名称
-     * @param type           服务类型
-     * @param backupName     备份记录名称
-     * @param restoreTime    恢复时间
-     * @param backupId
-     * @param activeArea
      * @return
      */
-    void createRestore(String clusterId, String namespace, String middlewareName, String type, String backupName, String restoreTime, String backupId, String activeArea);
+    void createRestore(MiddlewareRestoreDto restoreDto);
 
     /**
      * 删除中间件备份相关信息，包括定时备份、立即备份、备份恢复

@@ -607,7 +607,16 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public void createRestore(String clusterId, String namespace, String middlewareName, String type, String backupName, String restoreTime, String backupId, String activeArea) {
+    public void createRestore(MiddlewareRestoreDto restoreDto) {
+        String clusterId = restoreDto.getClusterId();
+        String namespace = restoreDto.getNamespace();
+        String type = restoreDto.getType();
+        String middlewareName = restoreDto.getMiddlewareName();
+        String backupName = restoreDto.getBackupName();
+        String sourceName = restoreDto.getSourceName();
+        String backupId = restoreDto.getBackupId();
+        String activeArea = restoreDto.getActiveArea();
+        String restoreTime = restoreDto.getRestoreTime();
         // 等待中间件状态正常
         if (!waitingMiddleware(clusterId, namespace, middlewareName, type)) {
             return;
@@ -620,6 +629,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         Map<String, String> backupLabel = getBackupLabel(middlewareName, type);
         backupLabel.put("backupId", backupId);
         backupLabel.put("activeArea", activeArea);
+        backupLabel.put("sourceName", sourceName);
         meta.setLabels(backupLabel);
         crd.setMetadata(meta);
 
