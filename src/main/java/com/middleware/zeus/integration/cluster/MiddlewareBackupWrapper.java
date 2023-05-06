@@ -3,6 +3,8 @@ package com.middleware.zeus.integration.cluster;
 import java.io.IOException;
 import java.util.*;
 
+import io.fabric8.kubernetes.api.model.DeletionPropagation;
+import io.fabric8.kubernetes.client.dsl.internal.OperationContext;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
@@ -50,12 +52,20 @@ public class MiddlewareBackupWrapper {
      * @throws IOException
      */
     public void delete(String clusterId, String namespace, String name) {
+        delete(clusterId, namespace, name, false);
+    }
+
+    public void delete(String clusterId, String namespace, String name, Boolean forceDelete) {
         // init client
         NonNamespaceOperation<MiddlewareBackup, MiddlewareBackupList,
-            Resource<MiddlewareBackup>> middlewareBackupClient = K8sClient.getClient(clusterId)
+                Resource<MiddlewareBackup>> middlewareBackupClient = K8sClient.getClient(clusterId)
                 .resources(MiddlewareBackup.class, MiddlewareBackupList.class).inNamespace(namespace);
         // delete
-        middlewareBackupClient.withName(name).delete();
+        if (forceDelete) {
+            middlewareBackupClient.withName(name).delete();
+        } else {
+            middlewareBackupClient.withPropagationPolicy(DeletionPropagation.FOREGROUND).withGracePeriod(0).delete();
+        }
     }
 
     /**

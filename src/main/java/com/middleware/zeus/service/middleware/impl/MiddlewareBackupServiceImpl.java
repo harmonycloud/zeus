@@ -263,12 +263,12 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public void deleteRecord(String clusterId, String namespace, String type, String backupName) {
+    public void deleteRecord(String clusterId, String namespace, String type, String backupName, Boolean forceDelete) {
         try {
-            backupCRDService.delete(clusterId, namespace, backupName);
+            backupCRDService.delete(clusterId, namespace, backupName, forceDelete);
         } catch (Exception e) {
             if (MiddlewareTypeEnum.MYSQL.getType().equals(type)) {
-                mysqlAdapterService.deleteRecord(clusterId, namespace, type, backupName);
+                mysqlAdapterService.deleteRecord(clusterId, namespace, type, backupName, forceDelete);
                 log.info("mysql备份删除成功");
             } else {
                 log.error("删除备份记录失败");
@@ -960,7 +960,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             if ("period".equals(taskDTO.getBackupMode())) {
                 deleteSchedule(clusterId, namespace, type, backupName);
             } else {
-                deleteRecord(clusterId, namespace, type, backupName);
+                deleteRecord(clusterId, namespace, type, backupName, false);
             }
         });
         if (StringUtils.isNotEmpty(backupId)) {
@@ -969,9 +969,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public void deleteBackUpRecord(String clusterId, String namespace, String type, String backupName, String backupId) {
+    public void deleteBackUpRecord(String clusterId, String namespace, String type, String backupName, String backupId, Boolean forceDelete) {
         // 删除备份cr
-        deleteRecord(clusterId, namespace, type, backupName);
+        deleteRecord(clusterId, namespace, type, backupName, forceDelete);
         // 删除对应数据库记录
         if (StringUtils.isNotEmpty(backupId)) {
             deleteBackupName(clusterId, backupId);

@@ -8,7 +8,6 @@ import com.middleware.caas.common.model.middleware.MiddlewareBackupRecord;
 import com.middleware.caas.common.model.middleware.MiddlewareBackupRecordGroup;
 import com.middleware.caas.common.model.middleware.MiddlewareBackupRestore;
 import com.middleware.caas.common.model.middleware.MiddlewareRestoreDto;
-import com.middleware.caas.common.util.ThreadPoolExecutorFactory;
 import com.middleware.zeus.annotation.Authority;
 import com.middleware.zeus.service.middleware.MiddlewareBackupService;
 import io.swagger.annotations.Api;
@@ -169,6 +168,7 @@ public class MiddlewareBackupController {
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "backupName", value = "备份名称", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "backupId", value = "备份任务ID", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "forceDelete", value = "是否强制删除", paramType = "query", dataTypeClass = String.class),
     })
     @DeleteMapping("/record")
     @Authority(power = 1)
@@ -176,8 +176,9 @@ public class MiddlewareBackupController {
                              @PathVariable("namespace") String namespace,
                              @RequestParam("type") String type,
                              @RequestParam("backupName") String backupName,
-                             @RequestParam(value = "backupId", required = false) String backupId) {
-        middlewareBackupService.deleteBackUpRecord(clusterId, namespace, type, backupName, backupId);
+                             @RequestParam(value = "backupId", required = false) String backupId,
+                             @RequestParam(value = "forceDelete", required = false, defaultValue = "false") Boolean forceDelete) {
+        middlewareBackupService.deleteBackUpRecord(clusterId, namespace, type, backupName, backupId, forceDelete);
         return BaseResult.ok();
     }
 

@@ -31,6 +31,16 @@ public interface MiddlewareBackupCRService {
     void delete(String clusterId, String namespace,String name)  throws IOException;
 
     /**
+     * 强制删除
+     * @param clusterId
+     * @param namespace
+     * @param name
+     * @param forceDelete
+     * @throws IOException
+     */
+    void delete(String clusterId, String namespace, String name, Boolean forceDelete)  throws IOException;
+
+    /**
      * 查询备份列表
      * @param clusterId
      * @param namespace

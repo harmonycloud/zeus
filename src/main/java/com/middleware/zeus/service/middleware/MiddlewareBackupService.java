@@ -100,13 +100,13 @@ public interface MiddlewareBackupService {
 
     /**
      * 删除备份记录
-     *
-     * @param clusterId      集群id
+     *  @param clusterId      集群id
      * @param namespace      分区
      * @param type           中间件类型
      * @param backupName     备份记录名称
+     * @param forceDelete
      */
-    void deleteRecord(String clusterId, String namespace, String type, String backupName);
+    void deleteRecord(String clusterId, String namespace, String type, String backupName, Boolean forceDelete);
 
     /**
      * 查询备份任务列表
@@ -252,8 +252,9 @@ public interface MiddlewareBackupService {
      * @param type
      * @param backupName
      * @param backupId
+     * @param forceDelete
      */
-    void deleteBackUpRecord(String clusterId, String namespace, String type, String backupName, String backupId);
+    void deleteBackUpRecord(String clusterId, String namespace, String type, String backupName, String backupId, Boolean forceDelete);
 
     /**
      * 创建备份任务名称映射信息

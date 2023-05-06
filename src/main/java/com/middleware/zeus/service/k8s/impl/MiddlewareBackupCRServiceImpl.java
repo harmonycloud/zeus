@@ -32,6 +32,11 @@ public class MiddlewareBackupCRServiceImpl implements MiddlewareBackupCRService 
     }
 
     @Override
+    public void delete(String clusterId, String namespace, String name, Boolean forceDelete) throws IOException {
+        middlewareBackupWrapper.delete(clusterId, namespace, name, forceDelete);
+    }
+
+    @Override
     public List<MiddlewareBackup> list(String clusterId, String namespace, Map<String, String> labels) {
         return middlewareBackupWrapper.list(clusterId, namespace, labels);
     }

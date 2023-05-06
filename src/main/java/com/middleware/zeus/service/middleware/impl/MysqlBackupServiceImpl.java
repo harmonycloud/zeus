@@ -155,7 +155,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public void deleteRecord(String clusterId, String namespace, String type, String backupName) {
+    public void deleteRecord(String clusterId, String namespace, String type, String backupName, Boolean forceDelete) {
         try {
             backupService.delete(clusterId, namespace, backupName);
             // minioWrapper.removeObject(getMinio(chineseName), backupName);
@@ -245,7 +245,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
                 return;
             }
             try {
-                deleteRecord(clusterId, namespace, type, backup.getName());
+                deleteRecord(clusterId, namespace, type, backup.getName(), false);
             } catch (Exception e) {
                 log.error("集群：{}，命名空间：{}，mysql中间件：{}，删除mysql备份异常", e);
             }
@@ -328,7 +328,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public void deleteBackUpRecord(String clusterId, String namespace, String type, String crName, String backupId) {
+    public void deleteBackUpRecord(String clusterId, String namespace, String type, String crName, String backupId, Boolean forceDelete) {
 
     }
 
