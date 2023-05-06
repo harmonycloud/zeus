@@ -70,6 +70,11 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
         return null;
     }
 
+    @Override
+    public void createRestore(MiddlewareRestoreDto restoreDto) {
+
+    }
+
     private List<MiddlewareBackupRecord> convertMysqlBackupDto(List<Backup> backupList, String clusterId) {
         List<MiddlewareBackupRecord> list = new ArrayList<>();
         for (Backup backup : backupList) {
@@ -230,10 +235,6 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
     @Override
     public void createIncBackupSchedule(MiddlewareIncBackup middlewareIncBackup, ObjectMeta objectMeta) {
 
-    }
-
-    @Override
-    public void createRestore(String clusterId, String namespace, String middlewareName, String type, String backupName, String restoreTime, String backupId, String activeArea) {
     }
 
     @Override
