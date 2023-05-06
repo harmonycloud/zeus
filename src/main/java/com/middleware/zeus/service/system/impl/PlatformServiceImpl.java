@@ -65,7 +65,7 @@ public class PlatformServiceImpl implements PlatformService {
     @Autowired
     private MysqlClusterWrapper mysqlClusterWrapper;
 
-/*    @PostConstruct
+    @PostConstruct
     public void init(){
         try {
             JSONObject values = helmChartService.getZeusMysqlInstallValues();
@@ -77,7 +77,7 @@ public class PlatformServiceImpl implements PlatformService {
         } catch (Exception e){
             log.error("初始化平台灾备可访问失败");
         }
-    }*/
+    }
 
 
     @Override
