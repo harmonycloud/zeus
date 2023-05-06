@@ -233,7 +233,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public void createRestore(String clusterId, String namespace, String middlewareName, String type, String backupName, String restoreTime) {
+    public void createRestore(String clusterId, String namespace, String middlewareName, String type, String backupName, String restoreTime, String backupId, String activeArea) {
     }
 
     @Override
@@ -308,6 +308,11 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public List<MiddlewareBackupRecord> backupIncrRecords(String clusterId, String namespace, String middlewareName, String type, String backupId, String backupMode) {
+        return null;
+    }
+
+    @Override
+    public List<MiddlewareBackupRestore> backupRestores(String clusterId, String namespace, String backupId) {
         return null;
     }
 

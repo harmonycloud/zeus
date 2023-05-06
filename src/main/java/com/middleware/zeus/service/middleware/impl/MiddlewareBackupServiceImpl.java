@@ -30,7 +30,6 @@ import com.middleware.zeus.service.user.UserRoleService;
 import com.middleware.zeus.service.user.UserService;
 import com.middleware.zeus.util.MathUtil;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.poi.hssf.record.BackupRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -608,7 +607,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public void createRestore(String clusterId, String namespace, String middlewareName, String type, String backupName, String restoreTime) {
+    public void createRestore(String clusterId, String namespace, String middlewareName, String type, String backupName, String restoreTime, String backupId, String activeArea) {
         // 等待中间件状态正常
         if (!waitingMiddleware(clusterId, namespace, middlewareName, type)) {
             return;
@@ -619,6 +618,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         meta.setName(middlewareName + "-restore");
         // 设置对应label
         Map<String, String> backupLabel = getBackupLabel(middlewareName, type);
+        backupLabel.put("backupId", backupId);
+        backupLabel.put("activeArea", activeArea);
         meta.setLabels(backupLabel);
         crd.setMetadata(meta);
 
@@ -917,6 +918,14 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         recordList = recordList.stream().filter(record -> StringUtils.isNotEmpty(record.getOwner()) &&
                 incrScheduleNames.contains(record.getOwner())).collect(Collectors.toList());
         return sortAndSetAliasName(recordList);
+    }
+
+    @Override
+    public List<MiddlewareBackupRestore> backupRestores(String clusterId, String namespace, String backupId) {
+        Map<String,String> labels = new HashMap<>();
+        labels.put("backupId", backupId);
+        MiddlewareRestoreList restoreList = restoreCRDService.list(clusterId, null, labels);
+        return null;
     }
 
     @Override
@@ -1390,7 +1399,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         backupRecord.setOwner(labels.get(OWNER));
         BeanActiveArea activeArea = activeAreaService.get(clusterId, labels.get("activeArea"));
         if (activeArea != null) {
-            backupRecord.setActiveArea(activeArea.getAliasName());
+            backupRecord.setActiveArea(labels.get("activeArea"));
+            backupRecord.setAreaAliasName(activeArea.getAliasName());
         }
     }
 
