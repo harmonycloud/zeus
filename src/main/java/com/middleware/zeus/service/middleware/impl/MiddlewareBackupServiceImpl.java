@@ -617,10 +617,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         String backupId = restoreDto.getBackupId();
         String activeArea = restoreDto.getActiveArea();
         String restoreTime = restoreDto.getRestoreTime();
-        // 等待中间件状态正常
-        if (!waitingMiddleware(clusterId, namespace, middlewareName, type)) {
-            return;
-        }
+
         MiddlewareRestoreCR crd = new MiddlewareRestoreCR();
         ObjectMeta meta = new ObjectMeta();
         meta.setNamespace(namespace);

@@ -248,7 +248,7 @@ public class MiddlewareBackupController {
                                     @RequestBody MiddlewareRestoreDto restoreDto) {
         restoreDto.setClusterId(clusterId);
         restoreDto.setNamespace(namespace);
-        ThreadPoolExecutorFactory.executor.execute(() -> middlewareBackupService.createRestore(restoreDto));
+        middlewareBackupService.createRestore(restoreDto);
         return BaseResult.ok();
     }
 
