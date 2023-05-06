@@ -220,7 +220,7 @@ public class MiddlewareBackupController {
         return BaseResult.ok(middlewareBackupService.backupIncrRecords(clusterId, namespace, middlewareName, type, backupId, backupMode));
     }
 
-    @ApiOperation(value = "查询备份任务对应的恢复记录", notes = "查询备份任务对应的恢复记录")
+    @ApiOperation(value = "查询备份任务对应的克隆记录", notes = "查询备份任务对应的克隆记录")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),

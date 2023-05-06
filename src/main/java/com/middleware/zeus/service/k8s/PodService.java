@@ -107,6 +107,15 @@ public interface PodService {
      */
     List<PodInfo> listMiddlewarePods(String clusterId, String namespace, String middlewareName, String type);
 
+    /**
+     * 查询中间件所有pod，并添加可用区信息
+     * @param clusterId
+     * @param namespace
+     * @param middlewareName
+     * @param type
+     * @return
+     */
+    List<PodInfo> listMiddlewarePodsWithArea(String clusterId, String namespace, String middlewareName, String type);
 
     /**
      * 查询pod yaml

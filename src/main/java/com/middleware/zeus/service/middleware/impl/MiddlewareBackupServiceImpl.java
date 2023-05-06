@@ -922,10 +922,14 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public List<MiddlewareBackupRestore> backupRestores(String clusterId, String namespace, String backupId) {
-        Map<String,String> labels = new HashMap<>();
+        Map<String, String> labels = new HashMap<>();
         labels.put("backupId", backupId);
-        MiddlewareRestoreList restoreList = restoreCRDService.list(clusterId, null, labels);
-        return null;
+        MiddlewareRestoreList restoreList = restoreCRDService.list(clusterId, namespace, labels);
+        List<MiddlewareRestoreCR> restores = restoreList.getItems();
+        if (!CollectionUtils.isEmpty(restores)) {
+            return convertMiddlewareRestore(restores, clusterId);
+        }
+        return Collections.emptyList();
     }
 
     @Override
@@ -1161,6 +1165,33 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 record.setPosition(beanBackupServer.getName() + " - " + backupPosition.getName() + record.getPosition());
             }
         }
+    }
+
+    /**
+     * 转换克隆记录 List<MiddlewareRestoreCR> restoreCRList ->List<MiddlewareBackupRestore>
+     * @param restoreCRList
+     * @param clusterId
+     * @return
+     */
+    private List<MiddlewareBackupRestore> convertMiddlewareRestore(List<MiddlewareRestoreCR> restoreCRList, String clusterId) {
+        return restoreCRList.stream().map(restoreCR -> {
+            MiddlewareBackupRestore backupRestore = new MiddlewareBackupRestore();
+            backupRestore.setRestoreName(restoreCR.getMetadata().getName());
+            backupRestore.setNamespace(restoreCR.getMetadata().getNamespace());
+            MiddlewareRestoreStatus restoreCRStatus = restoreCR.getStatus();
+            if (restoreCRStatus != null) {
+                backupRestore.setPhrase(restoreCR.getStatus().getPhase());
+                backupRestore.setReason(restoreCR.getStatus().getReason());
+                // 获取并设置克隆时间
+                Date creationTime = DateUtils.parseUTCDate(restoreCR.getMetadata().getCreationTimestamp());
+                backupRestore.setCreationTime(creationTime);
+                // 获取并设置克隆记录所在可用区
+                Map<String, String> labels = restoreCR.getMetadata().getLabels();
+                String activeArea = labels.get("activeArea");
+                backupRestore.setActiveArea(activeAreaService.getAreaAliasName(clusterId, activeArea));
+            }
+            return backupRestore;
+        }).collect(Collectors.toList());
     }
 
     /**

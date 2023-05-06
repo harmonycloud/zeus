@@ -324,6 +324,15 @@ public class ActiveAreaServiceImpl implements ActiveAreaService {
     }
 
     @Override
+    public String getAreaAliasName(String clusterId, String areaName) {
+        BeanActiveArea beanActiveArea = get(clusterId, areaName);
+        if (beanActiveArea != null) {
+            return beanActiveArea.getAliasName();
+        }
+        return "";
+    }
+
+    @Override
     public void delete(String clusterId) {
         QueryWrapper<BeanActiveArea> queryWrapper  = new QueryWrapper<>();
         queryWrapper.eq("cluster_id", clusterId);

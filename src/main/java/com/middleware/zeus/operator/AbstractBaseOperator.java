@@ -1403,7 +1403,7 @@ public abstract class AbstractBaseOperator {
      * @return
      */
     public ActiveAreaAnnotationDto getActiveAreaAnnotation(String clusterId, String namespace, String type, String middlewareName) {
-        List<PodInfo> podInfoList = podService.listMiddlewarePods(clusterId, namespace, middlewareName, type);
+        List<PodInfo> podInfoList = podService.listMiddlewarePodsWithArea(clusterId, namespace, middlewareName, type);
         List<String> zoneAPodList = new ArrayList<>();
         List<String> zoneBPodList = new ArrayList<>();
         for (PodInfo podInfo : podInfoList) {

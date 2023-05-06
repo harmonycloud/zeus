@@ -630,6 +630,13 @@ public class PodServiceImpl implements PodService {
         return listMiddlewarePods(middlewareCR, clusterId, namespace, middlewareName, type);
     }
 
+    @Override
+    public List<PodInfo> listMiddlewarePodsWithArea(String clusterId, String namespace, String middlewareName, String type) {
+        List<PodInfo> podInfos = this.listMiddlewarePods(clusterId, namespace, middlewareName, type);
+        setPodArea(clusterId, podInfos);
+        return podInfos;
+    }
+
     public List<PodInfo> listMiddlewarePods(MiddlewareCR mw, String clusterId, String namespace, String middlewareName, String type) {
         List<MiddlewareInfo> pods = mw.getStatus().getInclude().get(PODS);
         List<PodInfo> podInfoList = new ArrayList<>();
@@ -644,6 +651,8 @@ public class PodServiceImpl implements PodService {
                 podInfoList.add(pi);
             }
         }
+        // 设置pod所在可用区
+        setPodArea(clusterId, podInfoList);
         return podInfoList;
     }
 }

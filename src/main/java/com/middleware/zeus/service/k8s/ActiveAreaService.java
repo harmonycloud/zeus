@@ -89,6 +89,14 @@ public interface ActiveAreaService {
     BeanActiveArea get(String clusterId, String areaName);
 
     /**
+     * 获取可用区域别名
+     * @param clusterId
+     * @param areaName 可用区英文名
+     * @return
+     */
+    String getAreaAliasName(String clusterId, String areaName);
+
+    /**
      * 删除可用区初始化信息
      * @param clusterId
      */
