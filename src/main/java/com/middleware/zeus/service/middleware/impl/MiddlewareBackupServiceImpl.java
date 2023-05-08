@@ -1450,6 +1450,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             backupRecord.setActiveArea(labels.get("activeArea"));
             backupRecord.setAreaAliasName(activeArea.getAliasName());
         }
+
+        // 转换备份所占存储大小
+
     }
 
 
