@@ -1046,11 +1046,11 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         recordList.sort((o1, o2) -> o1.getBackupTime() == null ? -1
                 : o2.getBackupTime() == null ? -1 : o1.getBackupTime().compareTo(o2.getBackupTime()));
         // TODO 设置备份记录名称
-//        for (int i = 0; i < recordList.size(); i++) {
-//            MiddlewareBackupRecord bak = recordList.get(i);
-//            String[] bakNameSplit = bak.getBackupName().split("-");
-//            bak.setRecordName(bak.getTaskName() + "-" + bakNameSplit[bakNameSplit.length - 1]);
-//        }
+        for (int i = 0; i < recordList.size(); i++) {
+            MiddlewareBackupRecord bak = recordList.get(i);
+            String[] bakNameSplit = bak.getBackupName().split("-");
+            bak.setRecordName(bak.getTaskName() + "-" + bakNameSplit[bakNameSplit.length - 1]);
+        }
         return recordList;
     }
 
