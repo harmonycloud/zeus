@@ -108,12 +108,11 @@ public class MiddlewareBackupScheduleWrapper {
             // init client
             NonNamespaceOperation<MiddlewareBackupSchedule, MiddlewareBackupScheduleList,
                 Resource<MiddlewareBackupSchedule>> backupScheduleClient = K8sClient.getClient(clusterId)
-                    .resources(MiddlewareBackupSchedule.class, MiddlewareBackupScheduleList.class)
-                    .inNamespace(namespace);
+                    .resources(MiddlewareBackupSchedule.class, MiddlewareBackupScheduleList.class);
             // 条件判断
-            if (StringUtils.isNotEmpty(namespace)) {
+            if (StringUtils.isNotEmpty(namespace) && !"*".equals(namespace)) {
                 backupScheduleClient = ((MixedOperation<MiddlewareBackupSchedule, MiddlewareBackupScheduleList,
-                    Resource<MiddlewareBackupSchedule>>)backupScheduleClient).inNamespace(namespace);
+                        Resource<MiddlewareBackupSchedule>>) backupScheduleClient).inNamespace(namespace);
             }
             // list
             middlewareBackupScheduleList = backupScheduleClient.withLabels(labels).list();

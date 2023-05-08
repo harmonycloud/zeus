@@ -86,7 +86,7 @@ public class MiddlewareBackupWrapper {
             NonNamespaceOperation<MiddlewareBackup, MiddlewareBackupList,
                 Resource<MiddlewareBackup>> middlewareBackupClient =
                     K8sClient.getClient(clusterId).resources(MiddlewareBackup.class, MiddlewareBackupList.class);
-            if (StringUtils.isNotEmpty(namespace)) {
+            if (StringUtils.isNotEmpty(namespace) && !"*".equals(namespace)) {
                 middlewareBackupClient = ((MixedOperation<MiddlewareBackup, MiddlewareBackupList,
                     Resource<MiddlewareBackup>>)middlewareBackupClient).inNamespace(namespace);
             }

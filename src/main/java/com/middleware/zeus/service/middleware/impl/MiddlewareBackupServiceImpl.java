@@ -104,6 +104,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Autowired
     private UserService userService;
 
+    // <可用区英文名,可用区别名>
+    private static Map<String,String> activeAreaMap = new HashMap<>();
+
     @Override
     public List<MiddlewareBackupRecord> listBackup(String clusterId, String namespace, String middlewareName,
                                                    String type) {
@@ -1450,16 +1453,18 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 backupRecord.setSize(changeCompressedSizeUnit(compressedSize));
             }
         }
+
         backupRecord.setSourceType(middlewareCrTypeService.findTypeByCrType(backup.getSpec().getType()));
         backupRecord.setAddressId(labels.get("addressId"));
         backupRecord.setSourceName(backup.getSpec().getName());
         backupRecord.setBackupMode("single");
         backupRecord.setSchedule(false);
         backupRecord.setOwner(labels.get(OWNER));
-        BeanActiveArea activeArea = activeAreaService.get(clusterId, labels.get("activeArea"));
-        if (activeArea != null) {
-            backupRecord.setActiveArea(labels.get("activeArea"));
-            backupRecord.setAreaAliasName(activeArea.getAliasName());
+        // 设置备份任务可用区别名
+        if (labels.containsKey("activeArea")) {
+            String activeArea = labels.get("activeArea");
+            backupRecord.setActiveArea(activeArea);
+            backupRecord.setAreaAliasName(getActiveAreaAliasName(clusterId, activeArea));
         }
 
         // 转换备份所占存储大小
@@ -1477,6 +1482,23 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         return size.doubleValue() + MemoryUnitEnum.BYTE.name;
     }
 
+    /**
+     * 获取可用区别名
+     * @param clusterId
+     * @param activeArea 可用区英文名
+     * @return  可用区别名
+     */
+    private String getActiveAreaAliasName(String clusterId, String activeArea){
+        String activeAreaAliasName = activeAreaMap.get(activeArea);
+        if(StringUtils.isEmpty(activeArea)){
+            BeanActiveArea beanActiveArea = activeAreaService.get(clusterId, activeArea);
+            if (beanActiveArea != null) {
+                activeAreaMap.put(activeArea, beanActiveArea.getAliasName());
+            }
+            return beanActiveArea.getAliasName();
+        }
+        return activeAreaAliasName;
+    }
 
     /**
      * 获取增量备份备份时间
