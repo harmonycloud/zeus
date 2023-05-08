@@ -106,14 +106,14 @@ public class MiddlewareBackupController {
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "backupName", value = "备份任务名称", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "backupId", value = "备份任务id", paramType = "query", dataTypeClass = String.class)
+            @ApiImplicitParam(name = "backupMode", value = "任务类型（single：单次备份，period：周期备份）", paramType = "query", dataTypeClass = String.class)
     })
     @GetMapping("/detail")
     public BaseResult<List<MiddlewareBackupRecord>> get(@PathVariable("clusterId") String clusterId,
                                                         @PathVariable("namespace") String namespace,
                                                         @RequestParam("backupId") String backupId,
-                                                        @RequestParam("backupName") String backupName) {
-        return BaseResult.ok(middlewareBackupService.getBackup(clusterId, namespace, backupId, backupName));
+                                                        @RequestParam("backupMode") String backupMode) {
+        return BaseResult.ok(middlewareBackupService.getBackup(clusterId, namespace, backupId, backupMode));
     }
 
     @ApiOperation(value = "检查中间件是否已创建周期备份", notes = "检查中间件是否已创建周期备份")
