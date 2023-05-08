@@ -133,9 +133,6 @@ public class UserServiceImpl extends AbstractUserService implements UserService 
         List<UserDto> userDtoList = beanUserList.stream().map(beanUser -> {
             UserDto userDto = new UserDto();
             BeanUtils.copyProperties(beanUser, userDto, "password");
-            userDto.setUserRoleList(userRoleMap.getOrDefault(beanUser.getUserName(), new ArrayList<>()));
-            // 设置管理型角色信息
-            convertManagerInfo(userDto, userDto.getUserRoleList());
             return userDto;
         }).collect(Collectors.toList());
         // 过滤

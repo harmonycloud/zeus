@@ -290,31 +290,21 @@ public class OrganizationServiceImpl extends AbstractOrganizationService impleme
 
     @Override
     public List<UserDto> listOrganUser(String organId, Boolean allocatable) {
-        List<BeanOrganizationUser> userList = organizationUserService.list(organId);
+        Map<String, BeanOrganizationUser> userMap = organizationUserService.list(organId).stream().collect(Collectors.toMap(BeanOrganizationUser::getUsername, u -> u));
         List<UserDto> userDtoList = userService.list(null);
+        Map<String, UserRole> organizationUserRoleMap = organizationUserService.listUserRole(organId).stream().collect(Collectors.toMap(UserRole::getUserName, ur -> ur));
+        Map<String, UserRole> adminMap = userRoleService.findByRoleId(1).stream().collect(Collectors.toMap(UserRole::getUserName, ur -> ur));
         return userDtoList.stream().filter(userDto -> {
             if (allocatable) {
-                return userList.stream().noneMatch(user -> userDto.getUserName().equals(user.getUsername()))
-                    && userDto.getUserRoleList().stream().noneMatch(userRole -> userRole.getRoleId() == 1);
+                return !userMap.containsKey(userDto.getUserName()) && !adminMap.containsKey(userDto.getUserName());
             } else {
-                return userList.stream().anyMatch(user -> userDto.getUserName().equals(user.getUsername()));
-            }
-        }).peek(userDto -> {
-            boolean flag = !CollectionUtils.isEmpty(userDto.getUserRoleList()) && StringUtils.isNotEmpty(organId)
-                && userDto.getUserRoleList().stream().anyMatch(userRole -> StringUtils.isNotEmpty(userRole.getOrganId())
-                    && userRole.getOrganId().equals(organId) && StringUtils.isEmpty(userRole.getProjectId()));
-            if (flag) {
-                List<UserRole> userRoleList = userDto
-                    .getUserRoleList().stream().filter(ur -> StringUtils.isNotEmpty(ur.getOrganId())
-                        && ur.getOrganId().equals(organId) && StringUtils.isEmpty(ur.getProjectId()))
-                    .collect(Collectors.toList());
-                if (!CollectionUtils.isEmpty(userRoleList)) {
-                    UserRole userRole = userRoleList.get(0);
-                    userDto.setRoleId(userRole.getRoleId());
-                    userDto.setRoleName(userRole.getRoleName());
+                UserRole userRole = organizationUserRoleMap.get(userDto.getUserName());
+                if (userRole == null) {
+                    userDto.setRoleName("普通用户");
+                } else {
+                    userDto.setRoleId(userRole.getRoleId()).setRoleName(userRole.getRoleName());
                 }
-            } else {
-                userDto.setRoleName("普通用户");
+                return userMap.containsKey(userDto.getUserName());
             }
         }).collect(Collectors.toList());
     }

@@ -238,33 +238,17 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
         checkExist(organId, projectId);
         // 修改判断该用户是否可分配的逻辑
         List<UserDto> userDtoList = organizationService.listOrganUser(organId, false);
-        if (allocatable) {
-            // 获取可分配的
-            userDtoList = userDtoList.stream()
-                .filter(
-                    userDto -> CollectionUtils.isEmpty(userDto.getUserRoleList()) || userDto.getUserRoleList().stream()
-                        .noneMatch(userRole -> StringUtils.isNotEmpty(userRole.getProjectId())
-                            && userRole.getProjectId().equals(projectId))
-                        && userDto.getUserRoleList().stream().noneMatch(userRole -> userRole.getRoleId() == 1))
-                .collect(Collectors.toList());
-        } else {
-            // 获取已分配的
-            userDtoList = userDtoList.stream()
-                .filter(userDto -> !CollectionUtils.isEmpty(userDto.getUserRoleList()) && userDto.getUserRoleList()
-                    .stream().anyMatch(userRole -> StringUtils.isNotEmpty(userRole.getProjectId())
-                        && userRole.getProjectId().equals(projectId)))
-                .collect(Collectors.toList());
-        }
-        return userDtoList.stream().peek(userDto -> {
-            if (!CollectionUtils.isEmpty(userDto.getUserRoleList())) {
-                List<UserRole> userRoleList = userDto.getUserRoleList().stream()
-                    .filter(userRole -> StringUtils.isNotEmpty(userRole.getProjectId())
-                        && userRole.getProjectId().equals(projectId))
-                    .collect(Collectors.toList());
-                if (!CollectionUtils.isEmpty(userRoleList)) {
-                    userDto.setRoleId(userRoleList.get(0).getRoleId()).setRoleName(userRoleList.get(0).getRoleName());
+        Map<String, UserRole> userRoleMap = userRoleService.list(organId, projectId).stream().collect(Collectors.toMap(UserRole::getUserName, ur -> ur));
+        Map<String, UserRole> adminMap = userRoleService.findByRoleId(1).stream().collect(Collectors.toMap(UserRole::getUserName, ur -> ur));
+        return userDtoList.stream().filter(userDto -> {
+            if (allocatable) {
+                return !userRoleMap.containsKey(userDto.getUserName()) && !adminMap.containsKey(userDto.getUserName());
+            } else {
+                UserRole userRole = userRoleMap.get(userDto.getUserName());
+                if (userRole != null) {
+                    userDto.setRoleName(userRole.getRoleName()).setRoleId(userRole.getRoleId());
                 }
-                userDto.setUserRoleList(null);
+                return userRole != null;
             }
         }).collect(Collectors.toList());
     }
