@@ -5,6 +5,7 @@ import static com.middleware.caas.common.constants.CommonConstant.INCR;
 import static com.middleware.caas.common.constants.NameConstant.*;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -15,6 +16,8 @@ import com.middleware.caas.common.constants.ActiveAreaConstant;
 import com.middleware.caas.common.model.user.UserRole;
 import com.middleware.caas.filters.user.CurrentUserRepository;
 import com.middleware.tool.date.DateUtils;
+import com.middleware.tool.numeric.MemoryUnitEnum;
+import com.middleware.tool.numeric.ResourceCalculationUtil;
 import com.middleware.zeus.bean.*;
 import com.middleware.caas.common.enums.*;
 import com.middleware.caas.common.model.*;
@@ -1439,6 +1442,14 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         } else {
             backupRecord.setPhrase("Unknown");
         }
+        // 获取备份存储大小
+        if (backup.getStatus().getStorageProvider() != null) {
+            JSONObject storageProvider = backup.getStatus().getStorageProvider();
+            String compressedSize = storageProvider.getString("compressedSize");
+            if (compressedSize != null) {
+                backupRecord.setSize(changeCompressedSizeUnit(compressedSize));
+            }
+        }
         backupRecord.setSourceType(middlewareCrTypeService.findTypeByCrType(backup.getSpec().getType()));
         backupRecord.setAddressId(labels.get("addressId"));
         backupRecord.setSourceName(backup.getSpec().getName());
@@ -1453,6 +1464,17 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
         // 转换备份所占存储大小
 
+    }
+
+    private String changeCompressedSizeUnit(String compressedSize) {
+        List<MemoryUnitEnum> units = Arrays.asList(MemoryUnitEnum.TI, MemoryUnitEnum.GI, MemoryUnitEnum.MI, MemoryUnitEnum.KI);
+        BigDecimal size = MemoryUnitEnum.toByte(compressedSize);
+        for (MemoryUnitEnum u: units) {
+            if (size.divide(u.toByte).compareTo(new BigDecimal("1")) >= 0) {
+                return ResourceCalculationUtil.getResourceValue(compressedSize, DISK, u.unit) + u.name;
+            }
+        }
+        return size.doubleValue() + MemoryUnitEnum.BYTE.name;
     }
 
 
