@@ -164,7 +164,7 @@ public abstract class AbstractProjectService {
         // 查询用户角色项目权限
         String username =
                 JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken()).getValue().getString(USERNAME);
-        UserDto userDto = userService.getUserDto(username);
+        UserDto userDto = userService.getUserDto(username, true);
         Map<String, String> power = new HashMap<>();
         if (!userDto.getIsAdmin()
             && userDto.getUserRoleList().stream().anyMatch(userRole -> userRole.getProjectId().equals(projectId))) {
@@ -216,7 +216,7 @@ public abstract class AbstractProjectService {
 
         String username = CurrentUserRepository.getUser().getUsername();
         // 查询用户信息
-        UserDto userDto = userService.getUserDto(username);
+        UserDto userDto = userService.getUserDto(username, true);
         if (!userDto.getIsAdmin()) {
             List<ProjectDto> projectDtoList = list(organId);
             // 获取该用户所属的各个项目

@@ -50,7 +50,7 @@ public abstract class AbstractUserService {
      *
      * @return UserDto
      */
-    protected abstract UserDto getUserDto(String userName);
+    protected abstract UserDto getUserDto(String userName, boolean roleDetail);
 
     /**
      * 查询用户信息
@@ -82,11 +82,11 @@ public abstract class AbstractUserService {
         return currentUser.getUsername();
     }
 
-    public UserDto getUserDto(String userName, String projectId) {
+    public UserDto getUserDto(String userName, String projectId, boolean roleDetail) {
         if (StringUtils.isEmpty(userName)) {
             userName = getUsername();
         }
-        return getUserDto(userName);
+        return getUserDto(userName, roleDetail);
     }
 
     /**
@@ -99,7 +99,7 @@ public abstract class AbstractUserService {
     public List<ResourceMenuDto> menu(String organId, String projectId) {
         CurrentUser currentUser = CurrentUserRepository.getUser();
         String username = JwtTokenComponent.checkToken(currentUser.getToken()).getValue().getString(USERNAME);
-        UserDto userDto = getUserDto(username);
+        UserDto userDto = getUserDto(username, true);
         List<ResourceMenuDto> resourceMenuDtoList = roleService.listMenuByRoleId(userDto, organId, projectId);
 
         return resourceMenuService.convertMenu(resourceMenuDtoList);
@@ -115,7 +115,7 @@ public abstract class AbstractUserService {
         // 查询用户角色项目权限
         String username =
                 JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken()).getValue().getString(USERNAME);
-        UserDto userDto = getUserDto(username);
+        UserDto userDto = getUserDto(username, true);
         Map<String, String> power = new HashMap<>();
         // 判断用户是否为admin 如果不是 则根据组织id、项目id  获取该用户的角色对应的中间件权限
         List<UserRole> userRoleList = new ArrayList<>();
@@ -213,7 +213,7 @@ public abstract class AbstractUserService {
         if (StringUtils.isNotEmpty(projectId)) {
             JSONObject userMap = JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken()).getValue();
 
-            List<UserRole> userRoleList = getUserDto(userMap.getString("username")).getUserRoleList();
+            List<UserRole> userRoleList = getUserDto(userMap.getString("username"), true).getUserRoleList();
             userRoleList = userRoleList.stream()
                     .filter(userRole -> userRole.getRoleId() == 1 || userRole.getProjectId().equals(projectId))
                     .collect(Collectors.toList());

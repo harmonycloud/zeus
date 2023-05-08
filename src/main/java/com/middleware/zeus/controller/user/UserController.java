@@ -50,11 +50,13 @@ public class UserController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "userName", value = "账户", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "roleDetail", value = "是否获取用户权限列表", paramType = "query", dataTypeClass = boolean.class),
     })
     @GetMapping
     public BaseResult<UserDto> get(@RequestParam(value = "userName", required = false) String userName,
-                                   @RequestParam(value = "projectId", required = false) String projectId) {
-        return BaseResult.ok(userService.getUserDto(userName, projectId));
+                                   @RequestParam(value = "projectId", required = false) String projectId,
+                                   @RequestParam(value = "roleDetail") boolean roleDetail) {
+        return BaseResult.ok(userService.getUserDto(userName, projectId, roleDetail));
     }
 
     @ApiOperation(value = "获取用户列表", notes = "获取用户列表")

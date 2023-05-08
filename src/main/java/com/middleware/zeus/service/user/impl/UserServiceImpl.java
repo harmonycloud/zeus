@@ -82,11 +82,11 @@ public class UserServiceImpl extends AbstractUserService implements UserService 
 
 
     @Override
-    public UserDto getUserDto(String userName, String projectId) {
+    public UserDto getUserDto(String userName, String projectId, boolean roleDetail) {
         if (StringUtils.isEmpty(userName)) {
             userName = getUsername();
         }
-        return getUserDto(userName);
+        return getUserDto(userName, roleDetail);
     }
 
     @Override
@@ -102,18 +102,20 @@ public class UserServiceImpl extends AbstractUserService implements UserService 
     }
 
     @Override
-    public UserDto getUserDto(String userName) {
+    public UserDto getUserDto(String userName, boolean roleDetail) {
         QueryWrapper<BeanUser> wrapper = new QueryWrapper<BeanUser>().eq("username", userName);
         BeanUser beanUser = beanUserMapper.selectOne(wrapper);
         if (ObjectUtils.isEmpty(beanUser)) {
             throw new BusinessException(ErrorMessage.USER_NOT_EXIT);
         }
         UserDto userDto = new UserDto();
-        BeanUtils.copyProperties(beanUser, userDto);
+        BeanUtils.copyProperties(beanUser, userDto, "password");
         // 设置用户角色权限
-        setUserRoleList(userName, userDto);
-        if (!CollectionUtils.isEmpty(userDto.getUserRoleList())) {
-            userDto.setIsAdmin(userDto.getUserRoleList().stream().anyMatch(userRole -> userRole.getRoleId() == 1));
+        if (roleDetail) {
+            setUserRoleList(userName, userDto);
+            if (!CollectionUtils.isEmpty(userDto.getUserRoleList())) {
+                userDto.setIsAdmin(userDto.getUserRoleList().stream().anyMatch(userRole -> userRole.getRoleId() == 1));
+            }
         }
         return userDto;
     }

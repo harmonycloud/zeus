@@ -133,7 +133,7 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
         CurrentUser currentUser = CurrentUserRepository.getUserExistNull();
         JSONObject user = JwtTokenComponent.checkToken(currentUser.getToken()).getValue();
         // 获取当前用户所在所有项目内的角色信息
-        UserDto userDto = userService.getUserDto(user.getString(USERNAME));
+        UserDto userDto = userService.getUserDto(user.getString(USERNAME), true);
         Map<String, UserRole> userRoleMap =
                 userDto.getUserRoleList().stream().filter(userRole -> userRole.getProjectId()!=null).collect(Collectors.toMap(UserRole::getProjectId, u -> u));
         // 获取组织管理员信息
