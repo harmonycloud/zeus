@@ -110,10 +110,10 @@ public class MiddlewareBackupController {
     })
     @GetMapping("/detail")
     public BaseResult<List<MiddlewareBackupRecord>> get(@PathVariable("clusterId") String clusterId,
-                                                  @PathVariable("namespace") String namespace,
-                                                  @RequestParam("backupName") String backupName,
-                                                  @RequestParam("backupId") String backupId) {
-        return BaseResult.ok(middlewareBackupService.getBackup(clusterId, namespace, backupName, backupId));
+                                                        @PathVariable("namespace") String namespace,
+                                                        @RequestParam("backupId") String backupId,
+                                                        @RequestParam("backupName") String backupName) {
+        return BaseResult.ok(middlewareBackupService.getBackup(clusterId, namespace, backupId, backupName));
     }
 
     @ApiOperation(value = "检查中间件是否已创建周期备份", notes = "检查中间件是否已创建周期备份")
@@ -234,6 +234,21 @@ public class MiddlewareBackupController {
                                                                        @PathVariable("namespace") String namespace,
                                                                        @RequestParam("backupId") String backupId) {
         return BaseResult.ok(middlewareBackupService.backupRestores(clusterId, namespace, backupId));
+    }
+
+    @ApiOperation(value = "查询克隆记录详情", notes = "查询克隆记录详情")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "restoreName", value = "克隆记录名称", paramType = "query", dataTypeClass = String.class),
+    })
+    @GetMapping("/restore/detail")
+    @Authority(power = 1)
+    public BaseResult<MiddlewareBackupRestore> restoreDetail(@PathVariable("clusterId") String clusterId,
+                                                                   @PathVariable("namespace") String namespace,
+                                                                   @RequestParam("restoreName") String restoreName) {
+
+        return BaseResult.ok();
     }
 
     @ApiOperation(value = "创建备份恢复", notes = "创建备份恢复")

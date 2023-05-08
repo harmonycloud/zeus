@@ -232,6 +232,15 @@ public interface MiddlewareBackupService {
     List<MiddlewareBackupRestore> backupRestores(String clusterId, String namespace, String backupId);
 
     /**
+     * 查询恢复记录详情
+     * @param clusterId
+     * @param namespace
+     * @param restoreName
+     * @return
+     */
+    MiddlewareBackupRestore restoreDetail(String clusterId, String namespace, String restoreName);
+
+    /**
      * 删除恢复记录
      * @param clusterId
      * @param namespace

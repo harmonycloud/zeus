@@ -105,7 +105,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     private UserService userService;
 
     // <可用区英文名,可用区别名>
-    private static Map<String,String> activeAreaMap = new HashMap<>();
+    private static final Map<String,String> activeAreaMap = new HashMap<>();
 
     @Override
     public List<MiddlewareBackupRecord> listBackup(String clusterId, String namespace, String middlewareName,
@@ -943,6 +943,13 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             return convertMiddlewareRestore(restores, clusterId);
         }
         return Collections.emptyList();
+    }
+
+    @Override
+    public MiddlewareBackupRestore restoreDetail(String clusterId, String namespace, String restoreName) {
+
+
+        return null;
     }
 
     @Override
