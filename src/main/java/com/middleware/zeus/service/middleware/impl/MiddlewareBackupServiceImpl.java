@@ -947,6 +947,11 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public MiddlewareBackupRestore restoreDetail(String clusterId, String namespace, String restoreName) {
+        // 查询restore cr
+
+        // 查询restore进程pods
+
+        // 查询备份控制器状态
 
 
         return null;
@@ -1040,12 +1045,12 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         // 根据时间降序
         recordList.sort((o1, o2) -> o1.getBackupTime() == null ? -1
                 : o2.getBackupTime() == null ? -1 : o1.getBackupTime().compareTo(o2.getBackupTime()));
-        // 设置备份记录名称
-        for (int i = 0; i < recordList.size(); i++) {
-            MiddlewareBackupRecord bak = recordList.get(i);
-            String[] bakNameSplit = bak.getBackupName().split("-");
-            bak.setRecordName(bak.getTaskName() + "-" + bakNameSplit[bakNameSplit.length - 1]);
-        }
+        // TODO 设置备份记录名称
+//        for (int i = 0; i < recordList.size(); i++) {
+//            MiddlewareBackupRecord bak = recordList.get(i);
+//            String[] bakNameSplit = bak.getBackupName().split("-");
+//            bak.setRecordName(bak.getTaskName() + "-" + bakNameSplit[bakNameSplit.length - 1]);
+//        }
         return recordList;
     }
 

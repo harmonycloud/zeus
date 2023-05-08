@@ -202,6 +202,20 @@ public class MiddlewareBackupController {
         return BaseResult.ok(middlewareBackupService.backupRecords(clusterId, namespace, middlewareName, type, backupId, backupMode));
     }
 
+    @ApiOperation(value = "查询备份进度", notes = "查询备份进度")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "backupName", value = "备份任务名称", paramType = "query", dataTypeClass = String.class),
+    })
+    @GetMapping("/record/progress")
+    @Authority(power = 1)
+    public BaseResult listTaskRecord(@PathVariable("clusterId") String clusterId,
+                                                                   @PathVariable("namespace") String namespace,
+                                                                   @RequestParam("backupName") String backupName) {
+        return BaseResult.ok();
+    }
+
     @ApiOperation(value = "查询备份任务对应的增量记录", notes = "查询备份任务对应的增量记录")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
@@ -236,7 +250,7 @@ public class MiddlewareBackupController {
         return BaseResult.ok(middlewareBackupService.backupRestores(clusterId, namespace, backupId));
     }
 
-    @ApiOperation(value = "查询克隆记录详情", notes = "查询克隆记录详情")
+    @ApiOperation(value = "查询克隆进度", notes = "查询克隆进度")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
