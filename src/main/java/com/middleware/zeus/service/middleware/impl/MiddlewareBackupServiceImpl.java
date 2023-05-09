@@ -971,6 +971,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         Map<String, String> labels = new HashMap<>();
         labels.put("backupId", backupId);
         MiddlewareRestoreList restoreList = restoreCRDService.list(clusterId, namespace, labels);
+        if (restoreList == null) {
+            return Collections.emptyList();
+        }
         List<MiddlewareRestoreCR> restores = restoreList.getItems();
         if (!CollectionUtils.isEmpty(restores)) {
             return convertMiddlewareRestore(restores, clusterId);
