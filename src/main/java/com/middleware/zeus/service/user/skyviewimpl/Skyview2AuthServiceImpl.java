@@ -51,7 +51,7 @@ public class Skyview2AuthServiceImpl extends AbstractAuthService implements Auth
         // 获取token
         String caasToken = data.getString("token");
         // 获取用户详情
-        UserDto userDto = userService.getUserDto(userName);
+        UserDto userDto = userService.getUserDto(userName, true);
         // convert info
         JSONObject userInfo = convertUserInfo(userDto);
         userInfo.put("caasToken", caasToken);

@@ -95,7 +95,7 @@ public class RoleAuthorityServiceImpl implements RoleAuthorityService {
         }
         if (StringUtils.isEmpty(roleId)) {
             String username = CurrentUserRepository.getUser().getUsername();
-            UserDto userDto = userService.getUserDto(username);
+            UserDto userDto = userService.getUserDto(username, true);
             if (userDto.getIsAdmin()) {
                 return true;
             }

@@ -26,10 +26,10 @@ public interface UserService {
     /**
      * 获取用户信息
      * @param userName 账户
-     *
+     * @param roleDetail 是否获取用户角色列表
      * @return UserDto
      */
-    UserDto getUserDto(String userName, String projectId);
+    UserDto getUserDto(String userName, String projectId, boolean roleDetail);
 
     /**
      * 查询用户原始信息
@@ -41,10 +41,10 @@ public interface UserService {
     /**
      * 获取用户信息
      * @param userName 账户
-     *
+     * @param roleDetail 是否获取角色列表
      * @return UserDto
      */
-    UserDto getUserDto(String userName);
+    UserDto getUserDto(String userName, boolean roleDetail);
 
     /**
      * 获取用户列表

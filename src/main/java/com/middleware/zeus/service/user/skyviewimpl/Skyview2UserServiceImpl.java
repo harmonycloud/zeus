@@ -41,11 +41,11 @@ public class Skyview2UserServiceImpl extends AbstractUserService implements User
     private V2UserService v2UserService;
 
     @Override
-    public UserDto getUserDto(String userName, String projectId) {
+    public UserDto getUserDto(String userName, String projectId, boolean roleDetail) {
         if (StringUtils.isEmpty(userName)) {
             userName = getUsername();
         }
-        return getUserDto(userName);
+        return getUserDto(userName, roleDetail);
     }
 
     @Override
@@ -54,7 +54,7 @@ public class Skyview2UserServiceImpl extends AbstractUserService implements User
     }
 
     @Override
-    public UserDto getUserDto(String userName) {
+    public UserDto getUserDto(String userName, boolean roleDetail) {
         return v2UserService.get(userName);
     }
 
@@ -136,7 +136,7 @@ public class Skyview2UserServiceImpl extends AbstractUserService implements User
 
     @Override
     public UserRole getUserRole(String username, String organId, String projectId) {
-        UserDto userDto = this.getUserDto(username);
+        UserDto userDto = this.getUserDto(username, true);
         if (!CollectionUtils.isEmpty(userDto.getUserRoleList())) {
             List<UserRole> userRoleList = userDto.getUserRoleList().stream()
                 .filter(userRole -> StringUtils.isNoneEmpty(userRole.getOrganId(), userRole.getProjectId())
