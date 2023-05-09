@@ -11,6 +11,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.middleware.caas.common.model.user.OrganizationDto;
+import com.middleware.zeus.bean.user.BeanOrganization;
+import com.middleware.zeus.bean.user.BeanProject;
+import com.middleware.zeus.dao.user.BeanOrganizationMapper;
+import com.middleware.zeus.dao.user.BeanProjectMapper;
+import com.middleware.zeus.service.user.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,10 +47,6 @@ import com.middleware.zeus.dao.user.BeanUserMapper;
 import com.middleware.zeus.dao.user.PersonalMapper;
 import com.middleware.zeus.service.middleware.ClusterMiddlewareInfoService;
 import com.middleware.zeus.service.system.SystemConfigService;
-import com.middleware.zeus.service.user.OrganizationUserService;
-import com.middleware.zeus.service.user.RoleService;
-import com.middleware.zeus.service.user.UserRoleService;
-import com.middleware.zeus.service.user.UserService;
 import com.middleware.zeus.service.user.abstractService.AbstractUserService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -76,6 +78,10 @@ public class UserServiceImpl extends AbstractUserService implements UserService 
     private UserRoleService userRoleService;
     @Autowired
     private OrganizationUserService organizationUserService;
+    @Autowired
+    private BeanOrganizationMapper beanOrganizationMapper;
+    @Autowired
+    private BeanProjectMapper beanProjectMapper;
 
     @Value("${system.user.passwordExpiredDate:90}")
     private Integer defaultPasswordExpiredDate;
@@ -86,7 +92,7 @@ public class UserServiceImpl extends AbstractUserService implements UserService 
         if (StringUtils.isEmpty(userName)) {
             userName = getUsername();
         }
-        return getUserDto(userName, roleDetail);
+        return getUserDto(userName, roleDetail).setPassword(null);
     }
 
     @Override
@@ -370,6 +376,11 @@ public class UserServiceImpl extends AbstractUserService implements UserService 
      * @param userDto
      */
     public void setUserRoleList(String userName, UserDto userDto) {
+        Map<String, String> organizationMap =
+            beanOrganizationMapper.selectList(new QueryWrapper<>()).stream()
+                .collect(Collectors.toMap(BeanOrganization::getOrganId, BeanOrganization::getName));
+        Map<String, String> projectMap = beanProjectMapper.selectList(new QueryWrapper<>()).stream()
+                .collect(Collectors.toMap(BeanProject::getProjectId, BeanProject::getName));
         // 获取项目下角色
         List<UserRole> userRoleList = userRoleService.get(userName);
         // 获取用户组织下角色
@@ -381,9 +392,20 @@ public class UserServiceImpl extends AbstractUserService implements UserService 
                 userRole.setOrganId(organizationUser.getOrganId());
                 userRole.setRoleId(organizationUser.getRoleId());
                 userRole.setWeight(2);
+                if (organizationUser.getOrganId() != null) {
+                    userRole.setOrganName(organizationMap.get(organizationUser.getOrganId()));
+                }
                 return userRole;
             }).collect(Collectors.toList()));
         convertManagerInfo(userDto, userRoleList);
+        userDto.getUserRoleList().forEach(ur -> {
+            if (ur.getOrganId() != null) {
+                ur.setOrganName(organizationMap.get(ur.getOrganId()));
+            }
+            if (ur.getProjectId() != null) {
+                ur.setProjectName(projectMap.get(ur.getProjectId()));
+            }
+        });
     }
 
     /**
