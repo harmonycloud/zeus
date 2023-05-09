@@ -55,7 +55,10 @@ public class UserController {
     @GetMapping
     public BaseResult<UserDto> get(@RequestParam(value = "userName", required = false) String userName,
                                    @RequestParam(value = "projectId", required = false) String projectId,
-                                   @RequestParam(value = "roleDetail") boolean roleDetail) {
+                                   @RequestParam(value = "roleDetail", required = false) Boolean roleDetail) {
+        if (roleDetail == null) {
+            roleDetail = true;
+        }
         return BaseResult.ok(userService.getUserDto(userName, projectId, roleDetail));
     }
 
