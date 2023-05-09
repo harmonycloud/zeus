@@ -109,7 +109,7 @@ public class UserServiceImpl extends AbstractUserService implements UserService 
             throw new BusinessException(ErrorMessage.USER_NOT_EXIT);
         }
         UserDto userDto = new UserDto();
-        BeanUtils.copyProperties(beanUser, userDto, "password");
+        BeanUtils.copyProperties(beanUser, userDto);
         // 设置用户角色权限
         if (roleDetail) {
             setUserRoleList(userName, userDto);
