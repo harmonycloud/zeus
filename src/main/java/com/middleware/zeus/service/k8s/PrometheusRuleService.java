@@ -2,6 +2,9 @@ package com.middleware.zeus.service.k8s;
 
 import com.middleware.zeus.integration.cluster.bean.prometheus.PrometheusRule;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * @author xutianhong
  * @Date 2021/4/27 10:45 上午
@@ -17,6 +20,16 @@ public interface PrometheusRuleService {
      * @return PrometheusRule
      */
     PrometheusRule get(String clusterId, String namespace, String name);
+
+    /**
+     * 获取告警configmap
+     *
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param labels 标签
+     * @return PrometheusRule
+     */
+    List<PrometheusRule> list(String clusterId, String namespace, Map<String, String> labels);
 
     /**
      * 更新告警configmap

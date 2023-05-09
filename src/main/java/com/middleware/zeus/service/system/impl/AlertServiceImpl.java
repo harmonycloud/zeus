@@ -1,0 +1,375 @@
+package com.middleware.zeus.service.system.impl;
+
+import static com.middleware.caas.common.constants.AlertConstant.*;
+import static com.middleware.caas.common.constants.CommonConstant.ASC;
+import static com.middleware.caas.common.constants.CommonConstant.DESC;
+
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
+import com.middleware.caas.common.enums.AlertTargetEnum;
+import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
+import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.caas.common.model.*;
+import com.middleware.caas.common.model.middleware.MiddlewareAlertsDTO;
+import com.middleware.caas.common.model.user.UserDto;
+import com.middleware.tool.uuid.UUIDUtils;
+import com.middleware.zeus.bean.BeanAlertRecord;
+import com.middleware.zeus.dao.BeanAlertRecordMapper;
+import com.middleware.zeus.integration.cluster.bean.prometheus.PrometheusRule;
+import com.middleware.zeus.service.k8s.ClusterService;
+import com.middleware.zeus.service.k8s.PrometheusRuleService;
+import com.middleware.zeus.service.system.AlertService;
+import com.middleware.zeus.service.system.AlertUserService;
+import com.middleware.zeus.service.user.UserService;
+
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * @author xutianhong
+ * @Date 2023/5/6 11:03 上午
+ */
+@Service
+@Slf4j
+public class AlertServiceImpl implements AlertService {
+
+    @Value("${system.alertRecordLimit:1000}")
+    private String alertRecordLimit;
+
+    @Autowired
+    private BeanAlertRecordMapper beanAlertRecordMapper;
+    @Autowired
+    private ClusterService clusterService;
+    @Autowired
+    private PrometheusRuleService prometheusRuleService;
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private AlertUserService alertUserService;
+
+
+    @Override
+    public List<AlertRecordIndex> alertRecordIndex(String alertType) {
+        // 封装数据库查询逻辑
+        QueryWrapper<BeanAlertRecord> wrapper =
+            new QueryWrapper<BeanAlertRecord>().ne("cluster_id", "").ne("name", "").eq("lay", alertType);
+        if (alertType.equals(SERVICE)) {
+            wrapper.isNotNull("type");
+        }
+        wrapper.last("limit " + alertRecordLimit);
+
+        // 查询告警记录
+        List<BeanAlertRecord> beanAlertRecordList = beanAlertRecordMapper.selectList(wrapper);
+
+        List<AlertRecordIndex> alertRecordIndexList = new ArrayList<>();
+        if (alertType.equals(CLUSTER)) {
+            // 获取集群别名map
+            Map<String, String> clusterAlisaNameMap = clusterService.getClusterAliasName();
+            // 根据集群id group 告警记录
+            Map<String, List<BeanAlertRecord>> beanAlertRecordMap =
+                beanAlertRecordList.stream().collect(Collectors.groupingBy(BeanAlertRecord::getClusterId));
+            // 封装数据
+            for (String key : beanAlertRecordMap.keySet()) {
+                AlertRecordIndex alertRecordIndex = new AlertRecordIndex();
+                alertRecordIndex.setClusterId(key);
+                alertRecordIndex.setClusterAliasName(clusterAlisaNameMap.get(key));
+                alertRecordIndex.setCount(beanAlertRecordMap.get(key).size());
+                alertRecordIndexList.add(alertRecordIndex);
+            }
+        } else if (alertType.equals(SERVICE)) {
+            // 根据type group 告警记录
+            Map<String, List<BeanAlertRecord>> beanAlertRecordMap =
+                beanAlertRecordList.stream().collect(Collectors.groupingBy(BeanAlertRecord::getType));
+            // 封装数据
+            for (String key : beanAlertRecordMap.keySet()) {
+                AlertRecordIndex alertRecordIndex = new AlertRecordIndex();
+                alertRecordIndex.setMiddlewareName(MiddlewareOfficialNameEnum.findByChartName(key));
+                alertRecordIndex.setMiddlewareType(key);
+                alertRecordIndex.setCount(beanAlertRecordMap.get(key).size());
+                alertRecordIndexList.add(alertRecordIndex);
+            }
+        }
+        return alertRecordIndexList;
+    }
+
+    @Override
+    public PageInfo<AlertDTO> searchAlertRecord(AlertRecordQueryDto query) {
+        // 使用分页工具
+        PageHelper.startPage(query.getCurrent(), query.getSize());
+        // 封装数据库查询逻辑
+        QueryWrapper<BeanAlertRecord> wrapper = new QueryWrapper<>();
+        // 根据告警记录对象查询
+        wrapper.eq("lay", query.getAlertType());
+        // 根据集群id查询
+        if (StringUtils.isEmpty(query.getClusterId())) {
+            wrapper.eq("cluster_id", query.getClusterId());
+        } else {
+            wrapper.ne("cluster_id", "");
+        }
+        // 根据中间件类型查询
+        if (StringUtils.isNotEmpty(query.getMiddlewareType())) {
+            wrapper.eq("type", query.getMiddlewareType());
+        }
+        // 根据告警等级查询
+        if (StringUtils.isNotEmpty(query.getAlertLevel())) {
+            wrapper.eq("level", query.getAlertLevel());
+        }
+        // 根据告警对象查询
+        if (StringUtils.isNotEmpty(query.getAlertTarget())) {
+            wrapper.eq("name", query.getAlertTarget());
+        } else {
+            wrapper.ne("name", "");
+        }
+        // 根据告警时间排序
+        if (StringUtils.isNotEmpty(query.getAlertTime())) {
+            if (query.getAlertTime().equals(ASC)) {
+                wrapper.orderByAsc("alert_time");
+            } else if (query.getAlertTime().equals(DESC)) {
+                wrapper.orderByDesc("alert_time");
+            }
+        }
+        // 根据告警接收时间排序
+        if (StringUtils.isNotEmpty(query.getReceiveTime())) {
+            if (query.getReceiveTime().equals(ASC)) {
+                wrapper.orderByAsc("alert_receive_time");
+            } else if (query.getAlertTime().equals(DESC)) {
+                wrapper.orderByDesc("alert_receive_time");
+            }
+        }
+        // 设置最多查询数据数量
+        wrapper.last("limit " + alertRecordLimit);
+        // 查询告警记录数据
+        List<BeanAlertRecord> alertRecordList = beanAlertRecordMapper.selectList(wrapper);
+        // 封装数据
+        PageInfo<AlertDTO> alertDtoPageInfo = new PageInfo<>();
+        BeanUtils.copyProperties(new PageInfo<>(alertRecordList), alertDtoPageInfo);
+
+        return alertDtoPageInfo;
+    }
+
+    @Override
+    public void alertTarget(AlertTargetDto alertTargetDto) {
+        // 存在名称即为接入，不存在名称为新增；为新增添加随机UID
+        if (StringUtils.isEmpty(alertTargetDto.getName())) {
+            alertTargetDto.setName(UUIDUtils.get16UUID());
+        }
+        // 查询prometheusRule文件
+        PrometheusRule prometheusRule = prometheusRuleService.get(alertTargetDto.getClusterId(), alertTargetDto.getNamespace(), alertTargetDto.getPrometheusRuleName());
+        if(prometheusRule == null){
+            throw new BusinessException(ErrorMessage.PROMETHEUS_RULES_NOT_EXIST);
+        }
+        // 更新labels
+        Map<String, String> labels = new HashMap<>();
+        if (prometheusRule.getMetadata().getLabels() != null){
+            labels.putAll(prometheusRule.getMetadata().getLabels());
+        }
+        labels.put("platform", "zeus");
+        labels.put("target_name", alertTargetDto.getName());
+
+        prometheusRule.getMetadata().setLabels(labels);
+
+        // 更新annotations
+        Map<String, String> annotations = new HashMap<>();
+        if (prometheusRule.getMetadata().getAnnotations() != null){
+            annotations.putAll(prometheusRule.getMetadata().getAnnotations());
+        }
+        annotations.put("target_alias_name", alertTargetDto.getAliasName());
+
+        prometheusRule.getMetadata().setAnnotations(annotations);
+
+        // 更新所有规则
+        prometheusRule.getSpec().getGroups().forEach(prometheusRuleGroups -> {
+            prometheusRuleGroups.getRules().forEach(prometheusRules -> {
+                // 修改labels
+                Map<String, String> lab = new HashMap<>();
+                if (prometheusRules.getLabels() != null){
+                    lab.putAll(prometheusRules.getLabels());
+                }
+                lab.put("clusterId", alertTargetDto.getClusterId());
+                lab.put("namespace", alertTargetDto.getNamespace());
+                prometheusRules.setLabels(lab);
+
+                // 修改annotations
+                Map<String, String> ann = new HashMap<>();
+                if (prometheusRules.getAnnotations() != null){
+                    ann.putAll(prometheusRules.getAnnotations());
+                }
+                ann.put("target_type", CLUSTER);
+                ann.put("target_name", alertTargetDto.getName());
+                prometheusRules.setAnnotations(ann);
+            });
+        });
+        // update
+        prometheusRuleService.update(alertTargetDto.getClusterId(), prometheusRule);
+    }
+
+    @Override
+    public List<AlertTargetDto> alertTargetList(String clusterId) {
+        // 初始化平台默认告警对象
+        List<AlertTargetDto> alertTargetDtoList = Arrays.stream(AlertTargetEnum.values()).map(alertTargetEnum -> {
+            AlertTargetDto alertTargetDto = new AlertTargetDto();
+            alertTargetDto.setClusterId(clusterId);
+            alertTargetDto.setName(alertTargetEnum.getName());
+            alertTargetDto.setAliasName(alertTargetEnum.getAliasName());
+            if (alertTargetEnum.getName().equals(SYSTEM)){
+                alertTargetDto.setAlertType(SYSTEM);
+            } else {
+                alertTargetDto.setAlertType(CLUSTER);
+            }
+            return alertTargetDto;
+        }).collect(Collectors.toList());
+
+        // 查询所有平台标记了的告警规则文件
+        Map<String, String> labels = new HashMap<>();
+        labels.put("platform", "zeus");
+        labels.put("target_name", null);
+        List<PrometheusRule> prometheusRuleList = prometheusRuleService.list(clusterId, null, labels);
+        // todo 是否有必要检查告警规则中的标识字段
+        // 根据告警对象名称转化为map结构
+        Map<String, PrometheusRule> prometheusRuleMap = prometheusRuleList.stream().collect(Collectors
+            .toMap(prometheusRule -> prometheusRule.getMetadata().getLabels().get("target_name"), Function.identity()));
+
+        // 完善alertTargetDtoList数据
+        for (AlertTargetDto alertTargetDto : alertTargetDtoList) {
+            if (prometheusRuleMap.containsKey(alertTargetDto.getName())) {
+                // 封装数据
+                PrometheusRule prometheusRule = prometheusRuleMap.get(alertTargetDto.getName());
+                alertTargetDto.setNamespace(prometheusRule.getMetadata().getNamespace());
+                alertTargetDto.setPrometheusRuleName(prometheusRule.getMetadata().getName());
+                alertTargetDto.setExist(true);
+                // 从map中移除该条数据
+                prometheusRuleMap.remove(alertTargetDto.getName());
+            }
+        }
+
+        // 存在非平台初始化告警对象
+        if (!CollectionUtils.isEmpty(prometheusRuleMap)) {
+            for (String key : prometheusRuleMap.keySet()) {
+                AlertTargetDto alertTargetDto = new AlertTargetDto();
+                // 获取prometheus数据对象
+                PrometheusRule prometheusRule = prometheusRuleMap.get(key);
+                // 设置集群id
+                alertTargetDto.setClusterId(clusterId);
+                // 设置告警类型
+                alertTargetDto.setAlertType(CLUSTER);
+                // 通过labels获取名称
+                alertTargetDto.setName(prometheusRule.getMetadata().getLabels().get("target_name"));
+                // 通过annotations获取别名
+                if (!CollectionUtils.isEmpty(prometheusRule.getMetadata().getAnnotations())
+                    && prometheusRule.getMetadata().getAnnotations().containsKey("target_alias_name")) {
+                    alertTargetDto.setAliasName(prometheusRule.getMetadata().getAnnotations().get("target_alias_name"));
+                } else {
+                    alertTargetDto.setAliasName(alertTargetDto.getName());
+                }
+                // 设置分区和prometheusRule名称
+                alertTargetDto.setNamespace(prometheusRule.getMetadata().getNamespace());
+                alertTargetDto.setPrometheusRuleName(prometheusRule.getMetadata().getName());
+
+                alertTargetDtoList.add(alertTargetDto);
+            }
+        }
+
+        return alertTargetDtoList;
+    }
+
+    @Override
+    public List<MiddlewareAlertsDTO> alertRule(String targetName, String clusterId, String namespace, String prometheusRuleName) {
+        // 查询 prometheusRule文件
+        PrometheusRule prometheusRule = prometheusRuleService.get(clusterId, namespace, prometheusRuleName);
+        if (prometheusRule == null){
+            throw new BusinessException(ErrorMessage.PROMETHEUS_RULES_NOT_EXIST);
+        }
+        return convertPrometheusRule(prometheusRule);
+    }
+
+    @Override
+    public List<AlertUserDto> alertUser(String clusterId, Boolean allocatable) {
+        if (allocatable) {
+            return listAllocatableAlertUser(clusterId);
+        } else {
+            return listAlertUser(clusterId);
+        }
+    }
+
+    @Override
+    public void addAlertUser(String clusterId, AlertUserListDto alertUserListDto) {
+        // 循环用户列表添加数据
+        for (AlertUserDto alertUserDto : alertUserListDto.getAlertUserDtoList()) {
+            AlertUserDo alertUserDo = new AlertUserDo();
+            alertUserDo.setUsername(alertUserDto.getUsername());
+            alertUserDo.setClusterId(clusterId);
+            alertUserDo.setMailAlert(alertUserDto.getMailAlert());
+            alertUserDo.setMessageAlert(alertUserDto.getMessageAlert());
+            // 添加平台告警用户
+            alertUserService.add(alertUserDo.setAlertType(SYSTEM));
+            // 添加集群告警用户
+            alertUserService.add(alertUserDo.setAlertType(CLUSTER));
+        }
+    }
+
+    @Override
+    public void removeAlertUser(String username, String clusterId) {
+        // 删除平台告警规则绑定的告警用户
+        alertUserService.delete(username, clusterId, null, null, SYSTEM);
+        // 删除集群告警规则绑定的告警用户
+        alertUserService.delete(username, clusterId, null, null, CLUSTER);
+    }
+
+    public List<MiddlewareAlertsDTO> convertPrometheusRule(PrometheusRule prometheusRule){
+        List<MiddlewareAlertsDTO> middlewareAlertsDTOList = new ArrayList<>();
+        prometheusRule.getSpec().getGroups().forEach(prometheusRuleGroups -> {
+            prometheusRuleGroups.getRules().forEach(prometheusRules -> {
+                MiddlewareAlertsDTO middlewareAlertsDTO = new MiddlewareAlertsDTO();
+                middlewareAlertsDTO.setLabels(middlewareAlertsDTO.getLabels());
+                middlewareAlertsDTO.setAnnotations(middlewareAlertsDTO.getAnnotations());
+                middlewareAlertsDTO.setExpr(prometheusRules.getExpr());
+                middlewareAlertsDTO.setTime(prometheusRules.getTime());
+                middlewareAlertsDTO.setName(prometheusRules.getAlert());
+                if(prometheusRules.getAnnotations() != null && prometheusRules.getAnnotations().containsKey(SILENCE)){
+                    middlewareAlertsDTO.setSilence(SILENCE);
+                }
+                middlewareAlertsDTOList.add(middlewareAlertsDTO);
+            });
+        });
+        return middlewareAlertsDTOList;
+    }
+
+    public List<AlertUserDto> listAlertUser(String clusterId){
+        // 获取告警用户列表
+        List<AlertUserDo> alertUserDoList = alertUserService.list(clusterId, null, null, CLUSTER);
+        // 返回封装数据
+        return alertUserDoList.stream().map(alertUserDo -> {
+            AlertUserDto alertUserDto = new AlertUserDto();
+            alertUserDto.convertAlertUserDo(alertUserDo);
+            return alertUserDto;
+        }).collect(Collectors.toList());
+    }
+
+    public List<AlertUserDto> listAllocatableAlertUser(String clusterId) {
+        // 获取告警用户列表
+        List<AlertUserDo> alertUserDoList = alertUserService.list(clusterId, null, null, CLUSTER);
+        // 获取用户集，并过滤掉已分配的用户
+        List<UserDto> userDtoList = userService.list(null).stream()
+            .filter(userDto -> alertUserDoList.stream()
+                .noneMatch(alertUserDo -> alertUserDo.getUsername().equals(userDto.getUserName())))
+            .collect(Collectors.toList());
+        // 返回封装数据
+        return userDtoList.stream().map(userDto -> {
+            AlertUserDto alertUserDto = new AlertUserDto();
+            BeanUtils.copyProperties(userDto, alertUserDto);
+            return alertUserDto;
+        }).collect(Collectors.toList());
+    }
+}

@@ -4,8 +4,9 @@ import java.util.List;
 
 import com.github.pagehelper.PageInfo;
 import com.middleware.caas.common.model.AlertSettingDTO;
-import com.middleware.caas.common.model.AlertUserDTO;
-import com.middleware.caas.common.model.AlertsUserDTO;
+import com.middleware.caas.common.model.AlertUserDto;
+import com.middleware.caas.common.model.AlertUserListDto;
+import com.middleware.caas.common.model.MiddlewareAlertsListDto;
 import com.middleware.caas.common.model.middleware.MiddlewareAlertsDTO;
 import com.middleware.caas.common.model.registry.HelmChartFile;
 
@@ -46,7 +47,7 @@ public interface MiddlewareAlertsService {
      * @return List<BeanPrometheusRules>
      */
     void createRules(String clusterId, String namespace, String middlewareName,
-                     List<MiddlewareAlertsDTO> middlewareAlertsDTOList) throws Exception;
+                     MiddlewareAlertsListDto middlewareAlertsListDto) throws Exception;
 
     /**
      * 删除告警规则
@@ -82,21 +83,12 @@ public interface MiddlewareAlertsService {
      * @param clusterId      集群id
      * @param namespace      命名空间
      * @param middlewareName 中间件名称
-     * @param alertUserDTO 中间件告警规则
+     * @param middlewareAlertsDTO 中间件告警规则
      * @return List<BeanPrometheusRules>
      */
     void updateRules(String clusterId, String namespace, String middlewareName,
                      String ding, String alertRuleId,
-                     AlertUserDTO alertUserDTO) throws Exception;
-
-    /**
-     * 创建系统告警规则
-     *
-     * @param clusterId 集群id
-     * @param alertsUserDTO 中间件告警规则和用户
-     */
-    void createSystemRule(String clusterId, String ding,
-                          AlertsUserDTO alertsUserDTO);
+                     MiddlewareAlertsDTO middlewareAlertsDTO) throws Exception;
 
     /**
      * 删除系统告警规则
@@ -107,31 +99,10 @@ public interface MiddlewareAlertsService {
     void deleteSystemRules(String clusterId, String alert, String alertRuleId);
 
     /**
-     * 修改系统告警规则
-     *
-     * @param clusterId 集群id
-     * @param alertUserDTO 中间件告警规则
-     */
-    void updateSystemRules(String clusterId, String ding,
-                           String alertRuleId,AlertUserDTO alertUserDTO);
-
-    /**
      * 获取告警规则详情
      * @param alertRuleId
      */
     MiddlewareAlertsDTO alertRuleDetail(String alertRuleId);
-
-    /**
-     * 保存服务告警设置
-     * @param alertSettingDTO
-     */
-    void saveServiceAlertSetting(AlertSettingDTO alertSettingDTO);
-
-    /**
-     * 保存系统告警规则设置
-     * @param alertSettingDTO
-     */
-    void saveSystemAlertSetting(AlertSettingDTO alertSettingDTO);
 
     /**
      * 查询服务告警设置
@@ -139,5 +110,39 @@ public interface MiddlewareAlertsService {
      * @return
      */
     AlertSettingDTO queryAlertSetting(String... args);
+
+    /**
+     * 查询告警用户
+     *
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param middlewareName 中间件名称
+     * @param allocatable 可分配的
+     * @param organId 组织id
+     * @param projectId 项目id
+     * @param roleId 角色id
+     * @return List<AlertUserDTO>
+     */
+    List<AlertUserDto> alertUser(String clusterId, String namespace, String middlewareName, Boolean allocatable, String organId, String projectId, Integer roleId);
+
+    /**
+     * 添加告警用户
+     *
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param middlewareName 中间件名称
+     * @param alertUserListDto 告警用户列表
+     */
+    void addAlertUser(String clusterId, String namespace, String middlewareName, AlertUserListDto alertUserListDto);
+
+    /**
+     * 移除告警用户
+     *
+     * @param username 用户名
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param middlewareName 中间件名称
+     */
+    void removeAlertUser(String clusterId, String namespace, String middlewareName, String username);
 
 }

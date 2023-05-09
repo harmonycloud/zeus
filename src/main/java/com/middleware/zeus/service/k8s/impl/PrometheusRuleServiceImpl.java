@@ -11,6 +11,9 @@ import com.middleware.zeus.integration.cluster.bean.prometheus.PrometheusRule;
 
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
+import java.util.Map;
+
 /**
  * @author xutianhong
  * @Date 2021/4/27 10:45 上午
@@ -28,6 +31,16 @@ public class PrometheusRuleServiceImpl implements PrometheusRuleService {
             return prometheusRuleWrapper.get(clusterId, namespace, name);
         } catch (Exception e) {
             log.error("集群{} 分区{} 中间件{} 获取告警规则失败", clusterId, namespace, name);
+            throw new CaasRuntimeException(ErrorMessage.PROMETHEUS_RULES_NOT_EXIST);
+        }
+    }
+
+    @Override
+    public List<PrometheusRule> list(String clusterId, String namespace, Map<String, String> labels) {
+        try {
+            return prometheusRuleWrapper.list(clusterId, namespace, labels);
+        } catch (Exception e) {
+            log.error("集群{} 获取告警规则列表失败", clusterId);
             throw new CaasRuntimeException(ErrorMessage.PROMETHEUS_RULES_NOT_EXIST);
         }
     }
