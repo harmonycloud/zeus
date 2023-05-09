@@ -286,9 +286,9 @@ public class MiddlewareBackupController {
     })
     @DeleteMapping("/restore")
     @Authority(power = 1)
-    public BaseResult<List<MiddlewareBackupRestore>> deleteRestoreRecord(@PathVariable("clusterId") String clusterId,
-                                                                       @PathVariable("namespace") String namespace,
-                                                                       @RequestParam("restoreName") String restoreName) {
+    public BaseResult deleteRestoreRecord(@PathVariable("clusterId") String clusterId,
+                                          @PathVariable("namespace") String namespace,
+                                          @RequestParam("restoreName") String restoreName) {
         middlewareBackupService.deleteRestoreRecord(clusterId, namespace, restoreName);
         return BaseResult.ok();
     }
