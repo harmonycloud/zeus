@@ -907,7 +907,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public List<MiddlewareBackupRecord> backupRecords(String clusterId, String namespace, String middlewareName, String type,
-                                                      String backupId, String backupMode) {
+                                                      String backupId, String backupMode, String orderBySize) {
         // 获取所有备份记录：包含单次备份、周期备份定时创建的、增量备份定时创建的
         List<MiddlewareBackupRecord> recordList = listBackup(clusterId, namespace, null, null);
         if ("single".equals(backupMode)) {
@@ -918,7 +918,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             recordList = recordList.stream().filter(record -> StringUtils.isNotEmpty(record.getOwner()) &&
                     backupScheduleNames.contains(record.getOwner())).collect(Collectors.toList());
         }
-        return sortAndSetAliasName(recordList);
+        return sortAndSetAliasName(recordList, orderBySize);
     }
 
     @Override
@@ -963,7 +963,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         List<MiddlewareBackupRecord> recordList = listBackup(clusterId, namespace, null, null);
         recordList = recordList.stream().filter(record -> StringUtils.isNotEmpty(record.getOwner()) &&
                 incrScheduleNames.contains(record.getOwner())).collect(Collectors.toList());
-        return sortAndSetAliasName(recordList);
+        return sortAndSetAliasName(recordList, null);
     }
 
     @Override
@@ -1099,10 +1099,27 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     // 排序并设置记录别名
-    private List<MiddlewareBackupRecord> sortAndSetAliasName(List<MiddlewareBackupRecord> recordList) {
-        // 根据时间降序
-        recordList.sort((o1, o2) -> o1.getBackupTime() == null ? -1
-                : o2.getBackupTime() == null ? -1 : o1.getBackupTime().compareTo(o2.getBackupTime()));
+    private List<MiddlewareBackupRecord> sortAndSetAliasName(List<MiddlewareBackupRecord> recordList, String orderBySize) {
+        // 根据存储大小排序，相同则按时间降序
+        recordList.sort((o1, o2) -> {
+            if (orderBySize != null) {
+                if (o1.getByteSize() == null) {
+                    return -1;
+                }
+                if (o2.getByteSize() == null) {
+                    return 1;
+                }
+                BigDecimal o1Size = new BigDecimal(o1.getByteSize());
+                BigDecimal o2Size = new BigDecimal(o2.getByteSize());
+                if (o1Size.equals(o2Size)) {
+                    return o1.getBackupTime() == null ? -1
+                            : o2.getBackupTime() == null ? -1 : o2.getBackupTime().compareTo(o1.getBackupTime());
+                }
+                return o1Size.compareTo(o2Size) * (orderBySize.equals("desc") ? -1 : 1);
+            }
+            return o1.getBackupTime() == null ? -1
+                    : o2.getBackupTime() == null ? -1 : o2.getBackupTime().compareTo(o1.getBackupTime());
+        });
         // TODO 设置备份记录名称
         for (int i = 0; i < recordList.size(); i++) {
             MiddlewareBackupRecord bak = recordList.get(i);
@@ -1515,16 +1532,21 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         } else {
             backupRecord.setPhrase("Unknown");
         }
-        // 获取备份存储大小
-        if (backupStatus != null && backupStatus.getStorageProvider() != null) {
-            JSONObject storageProvider = backupStatus.getStorageProvider();
-            String compressedSize = storageProvider.getString("compressedSize");
-            if (compressedSize != null) {
-                backupRecord.setSize(changeCompressedSizeUnit(compressedSize));
-            }
-        }
+        
 
         backupRecord.setSourceType(middlewareCrTypeService.findTypeByCrType(backup.getSpec().getType()));
+        // 获取备份存储大小
+        if (backupStatus != null && backupStatus.getStorageProvider() != null
+            && backupStatus.getStorageProvider().getJSONObject(backupRecord.getSourceType()) != null && backupStatus
+                .getStorageProvider().getJSONObject(backupRecord.getSourceType()).containsKey("compressedSize")) {
+            JSONObject storageProvider = backupStatus.getStorageProvider();
+            String compressedSize = storageProvider.getJSONObject(backupRecord.getSourceType()).getString("compressedSize");
+            if (compressedSize != null) {
+                backupRecord.setSize(changeCompressedSizeUnit(compressedSize));
+                backupRecord.setByteSize(compressedSize);
+            }
+        }
+        
         backupRecord.setAddressId(labels.get("addressId"));
         backupRecord.setSourceName(backup.getSpec().getName());
         backupRecord.setBackupMode("single");

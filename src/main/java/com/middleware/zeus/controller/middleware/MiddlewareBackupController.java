@@ -187,6 +187,7 @@ public class MiddlewareBackupController {
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "backupId", value = "备份任务id", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "backupMode", value = "备份类型(single:单次，period:周期)", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "orderBySize", value = "根据存储大小升/降序", paramType = "query", dataTypeClass = String.class)
     })
     @GetMapping("/record")
     @Authority(power = 1)
@@ -195,8 +196,9 @@ public class MiddlewareBackupController {
                                      @RequestParam("middlewareName") String middlewareName,
                                      @RequestParam("type") String type,
                                      @RequestParam("backupId") String backupId,
-                                     @RequestParam("backupMode") String backupMode) {
-        return BaseResult.ok(middlewareBackupService.backupRecords(clusterId, namespace, middlewareName, type, backupId, backupMode));
+                                     @RequestParam("backupMode") String backupMode,
+                                     @RequestParam(value = "orderBySize", required = false) String orderBySize) {
+        return BaseResult.ok(middlewareBackupService.backupRecords(clusterId, namespace, middlewareName, type, backupId, backupMode, orderBySize));
     }
 
     @ApiOperation(value = "查询备份进度", notes = "查询备份进度")

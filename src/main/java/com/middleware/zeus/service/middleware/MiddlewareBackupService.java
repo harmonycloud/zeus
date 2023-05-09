@@ -204,7 +204,7 @@ public interface MiddlewareBackupService {
      * @param backupMode
      * @return
      */
-    List<MiddlewareBackupRecord> backupRecords(String clusterId, String namespace, String middlewareName, String type, String backupId, String backupMode);
+    List<MiddlewareBackupRecord> backupRecords(String clusterId, String namespace, String middlewareName, String type, String backupId, String backupMode, String orderBySize);
 
     /**
      * 获取备份进度
