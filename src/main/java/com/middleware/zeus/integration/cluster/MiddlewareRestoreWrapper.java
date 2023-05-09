@@ -27,6 +27,15 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class MiddlewareRestoreWrapper {
 
+    public MiddlewareRestoreCR get(String clusterId, String namespace,String restoreName) {
+        // init client
+        NonNamespaceOperation<MiddlewareRestoreCR, MiddlewareRestoreList,
+                Resource<MiddlewareRestoreCR>> middlewareRestoreClient =
+                K8sClient.getClient(clusterId).resources(MiddlewareRestoreCR.class, MiddlewareRestoreList.class).inNamespace(namespace);
+        // get
+        return middlewareRestoreClient.withName(restoreName).get();
+    }
+
     /**
      * 创建恢复
      * 

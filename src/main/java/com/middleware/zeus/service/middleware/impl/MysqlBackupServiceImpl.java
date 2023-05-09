@@ -308,6 +308,11 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
+    public ProgressInfo getBackupProgress(String clusterId, String namespace, String backupName) {
+        return null;
+    }
+
+    @Override
     public List<MiddlewareBackupRecord> backupIncrRecords(String clusterId, String namespace, String middlewareName, String type, String backupId, String backupMode) {
         return null;
     }
@@ -318,7 +323,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public MiddlewareBackupRestore restoreDetail(String clusterId, String namespace, String restoreName) {
+    public ProgressInfo getRestoreProgress(String clusterId, String namespace, String restoreName) {
         return null;
     }
 

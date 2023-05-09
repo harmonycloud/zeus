@@ -4,10 +4,7 @@ import com.middleware.caas.common.model.MiddlewareBackupDTO;
 import com.middleware.caas.common.model.MiddlewareIncBackup;
 import com.middleware.caas.common.model.MiddlewareIncBackupDto;
 import com.middleware.caas.common.model.MiddlewareTaskDTO;
-import com.middleware.caas.common.model.middleware.MiddlewareBackupRecord;
-import com.middleware.caas.common.model.middleware.MiddlewareBackupRecordGroup;
-import com.middleware.caas.common.model.middleware.MiddlewareBackupRestore;
-import com.middleware.caas.common.model.middleware.MiddlewareRestoreDto;
+import com.middleware.caas.common.model.middleware.*;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareBackupSchedule;
 import com.middleware.zeus.integration.cluster.bean.Minio;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
@@ -210,6 +207,15 @@ public interface MiddlewareBackupService {
     List<MiddlewareBackupRecord> backupRecords(String clusterId, String namespace, String middlewareName, String type, String backupId, String backupMode);
 
     /**
+     * 获取备份进度
+     * @param clusterId
+     * @param namespace
+     * @param backupName
+     * @return
+     */
+    ProgressInfo getBackupProgress(String clusterId, String namespace, String backupName);
+
+    /**
      * 查询增量备份记录
      * @param clusterId
      * @param namespace
@@ -238,7 +244,7 @@ public interface MiddlewareBackupService {
      * @param restoreName
      * @return
      */
-    MiddlewareBackupRestore restoreDetail(String clusterId, String namespace, String restoreName);
+    ProgressInfo getRestoreProgress(String clusterId, String namespace, String restoreName);
 
     /**
      * 删除恢复记录

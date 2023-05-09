@@ -23,6 +23,11 @@ public class MiddlewareRestoreCRDServiceImpl implements MiddlewareRestoreCRDServ
     private MiddlewareRestoreWrapper middlewareRestoreWrapper;
 
     @Override
+    public MiddlewareRestoreCR get(String clusterId, String namespace, String name) {
+        return middlewareRestoreWrapper.get(clusterId, namespace, name);
+    }
+
+    @Override
     public void create(String clusterId, MiddlewareRestoreCR middlewareRestoreCR) throws IOException {
         middlewareRestoreWrapper.create(clusterId, middlewareRestoreCR);
     }

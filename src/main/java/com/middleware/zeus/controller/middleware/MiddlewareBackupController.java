@@ -4,10 +4,7 @@ import com.middleware.caas.common.base.BaseResult;
 import com.middleware.caas.common.model.MiddlewareBackupDTO;
 import com.middleware.caas.common.model.MiddlewareIncBackupDto;
 import com.middleware.caas.common.model.MiddlewareTaskDTO;
-import com.middleware.caas.common.model.middleware.MiddlewareBackupRecord;
-import com.middleware.caas.common.model.middleware.MiddlewareBackupRecordGroup;
-import com.middleware.caas.common.model.middleware.MiddlewareBackupRestore;
-import com.middleware.caas.common.model.middleware.MiddlewareRestoreDto;
+import com.middleware.caas.common.model.middleware.*;
 import com.middleware.zeus.annotation.Authority;
 import com.middleware.zeus.service.middleware.MiddlewareBackupService;
 import io.swagger.annotations.Api;
@@ -208,12 +205,12 @@ public class MiddlewareBackupController {
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "backupName", value = "备份任务名称", paramType = "query", dataTypeClass = String.class),
     })
-    @GetMapping("/record/progress")
+    @GetMapping("/record/{backupName}/progress")
     @Authority(power = 1)
-    public BaseResult listTaskRecord(@PathVariable("clusterId") String clusterId,
-                                                                   @PathVariable("namespace") String namespace,
-                                                                   @RequestParam("backupName") String backupName) {
-        return BaseResult.ok();
+    public BaseResult<ProgressInfo> listTaskRecord(@PathVariable("clusterId") String clusterId,
+                                                   @PathVariable("namespace") String namespace,
+                                                   @PathVariable("backupName") String backupName) {
+        return BaseResult.ok(middlewareBackupService.getBackupProgress(clusterId, namespace, backupName));
     }
 
     @ApiOperation(value = "查询备份任务对应的增量记录", notes = "查询备份任务对应的增量记录")
@@ -256,13 +253,12 @@ public class MiddlewareBackupController {
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "restoreName", value = "克隆记录名称", paramType = "query", dataTypeClass = String.class),
     })
-    @GetMapping("/restore/detail")
+    @GetMapping("/restore/{restoreName}/progress")
     @Authority(power = 1)
     public BaseResult<MiddlewareBackupRestore> restoreDetail(@PathVariable("clusterId") String clusterId,
-                                                                   @PathVariable("namespace") String namespace,
-                                                                   @RequestParam("restoreName") String restoreName) {
-
-        return BaseResult.ok();
+                                                             @PathVariable("namespace") String namespace,
+                                                             @RequestParam("restoreName") String restoreName) {
+        return BaseResult.ok(middlewareBackupService.getRestoreProgress(clusterId, namespace, restoreName));
     }
 
     @ApiOperation(value = "创建备份恢复", notes = "创建备份恢复")
@@ -290,9 +286,9 @@ public class MiddlewareBackupController {
     })
     @DeleteMapping("/restore")
     @Authority(power = 1)
-    public BaseResult<List<MiddlewareBackupRestore>> deleteRestoreRecord(@PathVariable("clusterId") String clusterId,
-                                                                       @PathVariable("namespace") String namespace,
-                                                                       @RequestParam("restoreName") String restoreName) {
+    public BaseResult deleteRestoreRecord(@PathVariable("clusterId") String clusterId,
+                                          @PathVariable("namespace") String namespace,
+                                          @RequestParam("restoreName") String restoreName) {
         middlewareBackupService.deleteRestoreRecord(clusterId, namespace, restoreName);
         return BaseResult.ok();
     }

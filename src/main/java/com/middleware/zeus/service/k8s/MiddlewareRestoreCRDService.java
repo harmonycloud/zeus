@@ -13,6 +13,15 @@ import java.util.Map;
  */
 public interface MiddlewareRestoreCRDService {
 
+
+    /**
+     * 查询恢复记录
+     * @param clusterId
+     * @param namespace
+     * @param name
+     */
+    MiddlewareRestoreCR get(String clusterId, String namespace,String name) ;
+
     /**
      * 创建恢复
      * @param clusterId
