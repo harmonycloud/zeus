@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import com.alibaba.fastjson.JSONObject;
+import com.mchange.lang.FloatUtils;
 import com.middleware.caas.common.constants.ActiveAreaConstant;
 import com.middleware.caas.common.model.user.UserRole;
 import com.middleware.caas.filters.user.CurrentUserRepository;
@@ -925,8 +926,17 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     public ProgressInfo getBackupProgress(String clusterId, String namespace, String backupName) {
         // 查询backup cr
         MiddlewareBackup backup = backupCRDService.get(clusterId, namespace, backupName);
-        MiddlewareBackupStatus status = backup.getStatus();
+        Map<String, String> annotations = backup.getMetadata().getAnnotations();
+
         ProgressInfo progressInfo = new ProgressInfo();
+        if (annotations.containsKey("middleware.maintenance.step")) {
+            String currentStep = annotations.get("middleware.maintenance.step");
+            int currentStepNum = (Integer.parseInt(currentStep) + 1);
+            String stepDescription = currentStepNum + "/3 " + BackupStepEnum.findStepDescriptionByStep(annotations.get("middleware.maintenance.step.str"));
+            progressInfo.setProgressDescription(stepDescription);
+            Float currentProgress = currentStepNum / 3f;
+            progressInfo.setCurrentProgress(currentProgress);
+        }
         progressInfo.setClusterId(clusterId);
         progressInfo.setNamespace(namespace);
         progressInfo.setPhrase(backup.getStatus().getPhase());
