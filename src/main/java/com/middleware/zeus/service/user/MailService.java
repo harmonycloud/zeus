@@ -1,11 +1,14 @@
 package com.middleware.zeus.service.user;
 
+import com.middleware.caas.common.model.AlertRecordDo;
+import com.middleware.caas.common.model.AlertUserDo;
 import com.middleware.caas.common.model.middleware.AlertInfoDto;
 import com.middleware.zeus.bean.MailInfo;
 import com.middleware.zeus.bean.user.BeanUser;
 
 import javax.mail.MessagingException;
 import java.io.IOException;
+import java.util.List;
 
 /**
  * @author yushuaikang
@@ -15,12 +18,12 @@ public interface MailService {
 
     /**
      * 使用QQ或者163邮箱发邮件
-     * @param alertInfoDto
-     * @param beanUser
+     * @param alertRecordDo 告警记录
+     * @param alertUserDoList 告警用户列表
      * @throws IOException
      * @throws MessagingException
      */
-    void sendHtmlMail(AlertInfoDto alertInfoDto, BeanUser beanUser) throws IOException, MessagingException;
+    void sendHtmlMail(AlertRecordDo alertRecordDo, List<AlertUserDo> alertUserDoList) throws IOException, MessagingException;
 
     /**
      * 添加邮箱
@@ -45,10 +48,10 @@ public interface MailService {
     /**
      * 使用新浪邮箱发送邮件
      * @param mailInfo
-     * @param alertInfoDto
-     * @param beanUser
+     * @param alertRecordDo
+     * @param alertUserDo
      * @throws MessagingException
      * @throws IOException
      */
-    void sendSinaMail(MailInfo mailInfo, AlertInfoDto alertInfoDto, BeanUser beanUser) throws MessagingException, IOException;
+    void sendSinaMail(MailInfo mailInfo, AlertRecordDo alertRecordDo, AlertUserDo alertUserDo) throws MessagingException, IOException;
 }

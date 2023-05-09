@@ -2,9 +2,11 @@ package com.middleware.zeus.service.system.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.middleware.caas.common.model.AlertUserDo;
+import com.middleware.caas.common.model.user.UserDto;
 import com.middleware.zeus.bean.BeanAlertUser;
 import com.middleware.zeus.dao.BeanAlertUserMapper;
 import com.middleware.zeus.service.system.AlertUserService;
+import com.middleware.zeus.service.user.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -12,6 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -24,6 +28,8 @@ public class AlertUserServiceImpl implements AlertUserService {
 
     @Autowired
     private BeanAlertUserMapper beanAlertUserMapper;
+    @Autowired
+    private UserService userService;
 
     @Override
     public List<AlertUserDo> list(String clusterId, String namespace, String name, String alertType) {
@@ -49,6 +55,22 @@ public class AlertUserServiceImpl implements AlertUserService {
             AlertUserDo alertUserDo = new AlertUserDo();
             BeanUtils.copyProperties(beanAlertUser, alertUserDo);
             return alertUserDo;
+        }).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<AlertUserDo> listWithUserInfo(String clusterId, String namespace, String name, String alertType) {
+        // 查询告警用户列表
+        List<AlertUserDo> alertUserDoList = this.list(clusterId, namespace, name, alertType);
+        // 获取完整用户信息列表，并转化为map
+        Map<String, UserDto> userDtoMap =
+            userService.list(null).stream().collect(Collectors.toMap(UserDto::getUserName, Function.identity()));
+        return alertUserDoList.stream().peek(alertUserDo -> {
+            if (userDtoMap.containsKey(alertUserDo.getUsername())) {
+                UserDto userDto = userDtoMap.get(alertUserDo.getUsername());
+                alertUserDo.setEmail(userDto.getEmail());
+                alertUserDo.setPhone(userDto.getPhone());
+            }
         }).collect(Collectors.toList());
     }
 

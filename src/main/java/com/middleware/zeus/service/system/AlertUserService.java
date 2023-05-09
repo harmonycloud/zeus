@@ -22,6 +22,17 @@ public interface AlertUserService {
     List<AlertUserDo> list(String clusterId, String namespace, String name, String alertType);
 
     /**
+     * 查询告警用户
+     *
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param name 名称
+     * @param alertType 告警对象类型
+     * @return List<AlertUserDo>
+     */
+    List<AlertUserDo> listWithUserInfo(String clusterId, String namespace, String name, String alertType);
+
+    /**
      * 添加告警用户
      *
      * @param alertUserDo 告警用户

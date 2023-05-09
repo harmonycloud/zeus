@@ -6,7 +6,9 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 import com.middleware.caas.common.constants.AlertConstant;
+import com.middleware.caas.common.model.AlertRecordDo;
 import com.middleware.caas.common.model.AlertSettingDTO;
+import com.middleware.caas.common.model.AlertUserDo;
 import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
 import com.middleware.zeus.bean.BeanSystemConfig;
 import com.middleware.zeus.bean.DingRobotInfo;
@@ -19,6 +21,8 @@ import com.middleware.zeus.dao.user.BeanUserMapper;
 import com.middleware.zeus.service.k8s.ClusterService;
 import com.middleware.zeus.service.middleware.MiddlewareAlertsService;
 import com.middleware.zeus.bean.BeanAlertRecord;
+import com.middleware.zeus.service.system.AlertService;
+import com.middleware.zeus.service.system.AlertUserService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -45,6 +49,8 @@ import org.springframework.util.ObjectUtils;
 
 import javax.mail.MessagingException;
 
+import static com.middleware.caas.common.constants.AlertConstant.SERVICE;
+
 /**
  * @author xutianhong
  * @Date 2021/5/7 5:46 下午
@@ -63,19 +69,15 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
     @Autowired
     private MailService mailService;
     @Autowired
-    private AlertRuleIdMapper alertRuleIdMapper;
-    @Autowired
     private AlertManagerWrapper alertManagerWrapper;
-    @Autowired
-    private DingRobotMapper dingRobotMapper;
-    @Autowired
-    private BeanUserMapper beanUserMapper;
     @Autowired
     private MiddlewareAlertsService middlewareAlertsService;
     @Autowired
-    private ClusterService clusterService;
+    private AlertService alertService;
     @Autowired
     private BeanSystemConfigMapper beanSystemConfigMapper;
+    @Autowired
+    private AlertUserService alertUserService;
 
     @Override
     public void alert(String json) throws Exception {
@@ -83,109 +85,83 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
         JSONArray alertsList = object.getJSONArray("alerts");
         for (int i = 0; i < alertsList.size(); ++i) {
             JSONObject alert = alertsList.getJSONObject(i);
+            // 过滤resolved通知
             if ("resolved".equals(alert.getString("status"))) {
                 continue;
             }
+            // 获取labels和annotation
             JSONObject labels = alert.getJSONObject("labels");
             JSONObject annotations = alert.getJSONObject("annotations");
-            if ("Pod_all_cpu_usage".equals(labels.getString("alertname"))){
+            // 过滤labels或annotation为null的告警通知
+            if (labels == null || annotations == null) {
                 continue;
             }
 
-            String clusterId = labels.getOrDefault("clusterId", "").toString();
-            String namespace = labels.getString("namespace");
-            String middlewareName = labels.getString("service");
-
-            BeanAlertRecord beanAlertRecord = new BeanAlertRecord();
-            beanAlertRecord.setName(labels.getString("service"));
-            beanAlertRecord.setNamespace(labels.getString("namespace"));
-            beanAlertRecord.setType(labels.getString("middleware"));
-
-            beanAlertRecord.setClusterId(clusterId);
-            beanAlertRecord.setAlert(labels.getString("alertname"));
-            beanAlertRecord.setLevel(labels.getString("severity"));
-            beanAlertRecord.setSummary(annotations.getString("summary"));
-            beanAlertRecord.setMessage(annotations.getString("message"));
-            Date startDateTime = convertToUtcDate(alert.getString("startsAt"));
-            beanAlertRecord.setTime(startDateTime);
-            QueryWrapper<AlertRuleId> wrapper = new QueryWrapper<>();
-            wrapper.eq("alert", labels.getString("alertname"))
-                    .eq("namespace", labels.getString("namespace"))
-                    .eq("middleware_name", labels.getString("service"))
-                    .eq("cluster_id", clusterId);
-            AlertRuleId alertInfo = new AlertRuleId();
-            List<AlertRuleId> alertInfos = alertRuleIdMapper.selectList(wrapper);
-            if (!CollectionUtils.isEmpty(alertInfos)) {
-                alertInfo = alertInfos.get(0);
-                beanAlertRecord.setLay(StringUtils.isNotEmpty(alertInfo.getLay()) ? alertInfo.getLay() : "service");
-                beanAlertRecord.setAlertId(alertInfo.getAlertId());
-                beanAlertRecord.setExpr(alertInfo.getDescription() + alertInfo.getSymbol() + alertInfo.getThreshold());
-                beanAlertRecord.setContent(alertInfo.getContent() == null ? "" : alertInfo.getContent());
-            } else {
-                beanAlertRecord.setLay("service");
+            // 获取告警规则名称
+            String alertName = labels.getString("alertname");
+            // 过滤通用cpu usage告警
+            if ("Pod_all_cpu_usage".equals(alertName)){
+                continue;
             }
-            String lay = beanAlertRecord.getLay();
-            beanAlertRecordMapper.insert(beanAlertRecord);
+            // init object
+            AlertRecordDo alertRecordDo = new AlertRecordDo();
+
+            // 区分集群/平台 和 服务 告警类型s
+            if(annotations.containsKey("target_type") && annotations.containsKey("target_name") && annotations.containsKey("target_alias_name")){
+                alertRecordDo.setAlertType(annotations.getString("target_type"));
+                alertRecordDo.setTargetName(annotations.getString("target_name"));
+                alertRecordDo.setTargetAliasName(annotations.getString("target_alias_name"));
+            } else if (labels.containsKey(SERVICE)){
+                alertRecordDo.setAlertType(SERVICE);
+                alertRecordDo.setTargetName(labels.getString(SERVICE));
+                alertRecordDo.setTargetAliasName(labels.getString(SERVICE));
+                alertRecordDo.setMiddlewareType(labels.getString("middleware"));
+            }
+
+            alertRecordDo.setClusterId(labels.getString("clusterId"));
+            alertRecordDo.setNamespace(labels.getString("namespace"));
+            alertRecordDo.setLevel(labels.getString("severity"));
+            alertRecordDo.setMessage(annotations.getString("message"));
+            alertRecordDo.setSummary(annotations.getString("summary"));
+            alertRecordDo.setAlertTime(convertToUtcDate(alert.getString("startsAt")));
+            alertRecordDo.setAlertReceiveTime(new Date());
+
+            // 数据库记录告警记录
+            saveRecord(alertRecordDo);
+
             // 设置通道沉默时间
-            if (StringUtils.isNotEmpty(clusterId)) {
-                setSilence(alert, clusterId);
+            if (StringUtils.isNotEmpty(alertRecordDo.getClusterId())) {
+                setSilence(alert, alertRecordDo.getClusterId());
             }
-            if (ObjectUtils.isEmpty(alertInfo)) {
-                return;
-            }
-            //中间件告警信息
-            AlertInfoDto alertInfoDto = new AlertInfoDto();
-            //告警指标
-            alertInfoDto.setClusterId(clusterId);
-
-            //告警时间
-            alertInfoDto.setAlertTime(startDateTime);
-            HashMap alertLabels = JSON.parseObject(alertInfo.getLabels(), HashMap.class);
-            if (alertLabels == null) {
-                continue;
-            }
-            //告警等级
-            alertInfoDto.setLevel((String) alertLabels.get("severity"));
-            //规则描述
-            alertInfoDto.setDescription(alertInfo.getDescription() + alertInfo.getSymbol() + alertInfo.getThreshold() + "%");
-            //告警内容
-            alertInfoDto.setContent(StringUtils.isBlank(alertInfo.getContent()) ? "/" : alertInfo.getContent());
-            //实际监测
-            alertInfoDto.setMessage(annotations.getString("summary"));
-            //设置中间件名称
-            alertInfoDto.setMiddlewareName(alertInfo.getMiddlewareName());
-            //ip
-            QueryWrapper<AlertRuleId> queryWrapper = new QueryWrapper<>();
-            queryWrapper.isNotNull("ip");
-            List<AlertRuleId> alertRuleIds = alertRuleIdMapper.selectList(queryWrapper);
-            if (!CollectionUtils.isEmpty(alertRuleIds)) {
-                alertInfo.setIp(alertRuleIds.get(0).getIp());
-            }
-            // 发送告警信息
-            sendAlertMessage(lay, clusterId, namespace, middlewareName, alertInfo, alertInfoDto);
+            // 发送告警通知
+            sendAlertMessage(alertRecordDo);
         }
     }
 
-    private void sendAlertMessage(String lay, String clusterId, String namespace, String middlewareaName, AlertRuleId alertInfo, AlertInfoDto alertInfoDto) {
-        AlertSettingDTO alertSettingDTO;
-        if (AlertConstant.LAY_SYSTEM.equals(lay)) {
-            alertSettingDTO = middlewareAlertsService.queryAlertSetting();
-        } else {
-            alertSettingDTO = middlewareAlertsService.queryAlertSetting(clusterId, namespace, middlewareaName);
-        }
-        if (alertSettingDTO == null){
-            log.error("集群{} 未查到相关告警设置", clusterId);
-            return;
+    private void sendAlertMessage(AlertRecordDo alertRecordDo) {
+        if (StringUtils.isNoneEmpty(alertRecordDo.getClusterId(), alertRecordDo.getNamespace(), alertRecordDo.getTargetName(), alertRecordDo.getAlertType())){
+            List<AlertUserDo> alertUserDoList = alertUserService.listWithUserInfo(alertRecordDo.getClusterId(), alertRecordDo.getNamespace(), alertRecordDo.getTargetName(), alertRecordDo.getAlertType());
+
+            // todo 钉钉通知
+
+            // 邮件通知
+            try {
+                mailService.sendHtmlMail(alertRecordDo, alertUserDoList);
+            } catch (Exception e){
+                log.error("集群{} 发送告警{} 失败", alertRecordDo.getClusterId(), alertRecordDo.getAlertName(), e);
+            }
+
+            // todo 短信通知
         }
 
-        if (Boolean.TRUE.equals(alertSettingDTO.getEnableDingAlert())) {
+        /*if (Boolean.TRUE.equals(alertSettingDTO.getEnableDingAlert())) {
             //钉钉发送
-            List<DingRobotInfo> dings = dingRobotMapper.selectList(new QueryWrapper<DingRobotInfo>());
+            List<DingRobotInfo> dings = dingRobotMapper.selectList(new QueryWrapper<>());
             dings.forEach(dingRobotInfo -> {
                 dingRobotService.send(alertInfoDto, dingRobotInfo);
             });
-        }
-        if (Boolean.TRUE.equals(alertSettingDTO.getEnableMailAlert())) {
+        }*/
+        /*if (Boolean.TRUE.equals(alertSettingDTO.getEnableMailAlert())) {
             //邮箱发送
             alertSettingDTO.getUserList().forEach(mailToUser -> {
                 QueryWrapper<BeanUser> userQueryWrapper = new QueryWrapper<>();
@@ -197,7 +173,22 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
                     e.printStackTrace();
                 }
             });
-        }
+        }*/
+    }
+
+    public void saveRecord(AlertRecordDo recordDo){
+        BeanAlertRecord beanAlertRecord = new BeanAlertRecord();
+        beanAlertRecord.setName(recordDo.getTargetName());
+        beanAlertRecord.setNamespace(recordDo.getNamespace());
+        beanAlertRecord.setType(recordDo.getMiddlewareType());
+        beanAlertRecord.setClusterId(recordDo.getClusterId());
+        beanAlertRecord.setAlert(recordDo.getAlertName());
+        beanAlertRecord.setLevel(recordDo.getLevel());
+        beanAlertRecord.setSummary(recordDo.getSummary());
+        beanAlertRecord.setMessage(recordDo.getMessage());
+        beanAlertRecord.setAlertTime(recordDo.getAlertTime());
+        beanAlertRecord.setAlertReceiveTime(recordDo.getAlertReceiveTime());
+        beanAlertRecordMapper.insert(beanAlertRecord);
     }
 
     /**
@@ -265,18 +256,6 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
                     Integer.parseInt(silence.split(DateUnitEnum.WEEK.getUnit())[0]));
         }
         return new Date();
-    }
-
-    /**
-     * 转换时间格式
-     */
-    public Date convertTime(String time) throws ParseException {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-        Date date = sdf.parse(time);
-        Calendar calendar = Calendar.getInstance();
-        calendar.setTime(date);
-        calendar.set(Calendar.HOUR,calendar.get(Calendar.HOUR)+8);
-        return calendar.getTime();
     }
 
     /**
