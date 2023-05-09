@@ -38,10 +38,15 @@ public class BeanAlertRecord implements Serializable {
     @TableField("namespace")
     private String namespace;
     /**
-     * 中间件名称
+     * 名称
      */
     @TableField("name")
     private String name;
+    /**
+     * 别名
+     */
+    @TableField("alias_name")
+    private String aliasName;
     /**
      * 中间件类型
      */

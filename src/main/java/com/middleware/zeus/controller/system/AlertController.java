@@ -36,6 +36,17 @@ public class AlertController {
         return BaseResult.ok(alertService.alertRecordIndex(alertType));
     }
 
+    @ApiOperation(value = "查询告警记录过滤条件", notes = "查询告警记录过滤条件")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "alertType", value = "告警对象类型", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "clusterId", value = "告警对象类型", required = false, paramType = "query", dataTypeClass = String.class),
+    })
+    @GetMapping("/{alertType}/record/filter")
+    public BaseResult<List<AlertRecordIndex>> alertRecordFilter(@PathVariable("alertType") String alertType,
+                                                                @RequestParam(value = "clusterId", required = false) String clusterId) {
+        return BaseResult.ok(alertService.alertRecordFilter(alertType, clusterId));
+    }
+
     @ApiOperation(value = "查询告警记录", notes = "查询告警记录")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "alertType", value = "告警对象类型", paramType = "path", dataTypeClass = String.class),

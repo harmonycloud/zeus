@@ -21,6 +21,16 @@ public interface AlertService {
     List<AlertRecordIndex> alertRecordIndex(String alertType);
 
     /**
+     * 查询告警记录索引
+     *
+     * @param alertType 告警对象类型
+     * @return List<AlertRecordIndex>
+     */
+    List<AlertRecordIndex> alertRecordFilter(String alertType, String clusterId);
+
+
+
+    /**
      * 查询告警记录
      *
      * @param alertRecordQueryDto 告警记录查询

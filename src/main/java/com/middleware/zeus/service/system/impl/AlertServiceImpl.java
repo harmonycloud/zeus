@@ -105,6 +105,31 @@ public class AlertServiceImpl implements AlertService {
     }
 
     @Override
+    public List<AlertRecordIndex> alertRecordFilter(String alertType, String clusterId) {
+        // 封装数据库查询逻辑
+        QueryWrapper<BeanAlertRecord> wrapper =
+                new QueryWrapper<BeanAlertRecord>().eq("lay", alertType);
+        if (StringUtils.isNotEmpty(clusterId)){
+            wrapper.eq("cluster_id", clusterId);
+        } else {
+            wrapper.ne("cluster_id", "");
+        }
+        if (alertType.equals(SERVICE)) {
+            wrapper.isNotNull("type");
+        }
+        wrapper.groupBy("alisa_name");
+
+        // 查询告警记录
+        List<BeanAlertRecord> beanAlertRecordList = beanAlertRecordMapper.selectList(wrapper);
+        return beanAlertRecordList.stream().map(beanAlertRecord -> {
+            AlertRecordIndex alertRecordIndex = new AlertRecordIndex();
+            alertRecordIndex.setTargetName(beanAlertRecord.getName());
+            alertRecordIndex.setTargetAliasName(beanAlertRecord.getAliasName());
+            return alertRecordIndex;
+        }).collect(Collectors.toList());
+    }
+
+    @Override
     public PageInfo<AlertDTO> searchAlertRecord(AlertRecordQueryDto query) {
         // 使用分页工具
         PageHelper.startPage(query.getCurrent(), query.getSize());
@@ -175,8 +200,8 @@ public class AlertServiceImpl implements AlertService {
         if (prometheusRule.getMetadata().getLabels() != null){
             labels.putAll(prometheusRule.getMetadata().getLabels());
         }
-        labels.put("platform", "zeus");
-        labels.put("target_name", alertTargetDto.getName());
+        labels.put("cluster_id", alertTargetDto.getClusterId());
+        labels.put("namespace", alertTargetDto.getNamespace());
 
         prometheusRule.getMetadata().setLabels(labels);
 
@@ -185,6 +210,8 @@ public class AlertServiceImpl implements AlertService {
         if (prometheusRule.getMetadata().getAnnotations() != null){
             annotations.putAll(prometheusRule.getMetadata().getAnnotations());
         }
+        annotations.put("platform", "zeus");
+        annotations.put("target_name", alertTargetDto.getName());
         annotations.put("target_alias_name", alertTargetDto.getAliasName());
 
         prometheusRule.getMetadata().setAnnotations(annotations);

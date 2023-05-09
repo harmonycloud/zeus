@@ -419,8 +419,8 @@ public class OverviewServiceImpl implements OverviewService {
            alertDTO.setNickname(convertCluster(record.getClusterId()));
            return alertDTO;
         }).collect(Collectors.toList()));
-        alertDTOPage.getList().sort(
-            (o1, o2) -> o1.getTime() == null ? -1 : o2.getTime() == null ? -1 : o2.getTime().compareTo(o1.getTime()));
+        alertDTOPage.getList().sort((o1, o2) -> o1.getAlertTime() == null ? -1
+            : o2.getAlertTime() == null ? -1 : o2.getAlertTime().compareTo(o1.getAlertTime()));
         return alertDTOPage;
     }
 

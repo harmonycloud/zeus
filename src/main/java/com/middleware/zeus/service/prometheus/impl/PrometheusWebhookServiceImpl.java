@@ -179,6 +179,7 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
     public void saveRecord(AlertRecordDo recordDo){
         BeanAlertRecord beanAlertRecord = new BeanAlertRecord();
         beanAlertRecord.setName(recordDo.getTargetName());
+        beanAlertRecord.setAliasName(recordDo.getTargetAliasName());
         beanAlertRecord.setNamespace(recordDo.getNamespace());
         beanAlertRecord.setType(recordDo.getMiddlewareType());
         beanAlertRecord.setClusterId(recordDo.getClusterId());
