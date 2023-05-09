@@ -63,6 +63,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Value("${system.cron.timezone: 0}")
     private Integer timezone;
 
+    @Value("${system.componentNamespace: middleware-operator}")
+    private String componentNamespace;
+
     @Autowired
     private MiddlewareBackupScheduleCRDService backupScheduleCRDService;
     @Autowired
@@ -103,6 +106,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     private MiddlewareBackupNameService backupNameService;
     @Autowired
     private UserService userService;
+    @Autowired
+    private PodService podService;
 
     // <可用区英文名,可用区别名>
     private static final Map<String,String> activeAreaMap = new HashMap<>();
@@ -917,6 +922,34 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
+    public ProgressInfo getBackupProgress(String clusterId, String namespace, String backupName) {
+        // 查询backup cr
+        MiddlewareBackup backup = backupCRDService.get(clusterId, namespace, backupName);
+        MiddlewareBackupStatus status = backup.getStatus();
+        ProgressInfo progressInfo = new ProgressInfo();
+        progressInfo.setClusterId(clusterId);
+        progressInfo.setNamespace(namespace);
+        progressInfo.setPhrase(backup.getStatus().getPhase());
+        // 查询backup任务pods
+        progressInfo.setTaskPods(getTaskPods(clusterId, namespace, backupName));
+        // 查询备份控制器状态
+        progressInfo.setBackupControllerStatus(getBackupComponentStatus(clusterId));
+        return progressInfo;
+    }
+
+    @Override
+    public ProgressInfo getRestoreProgress(String clusterId, String namespace, String restoreName) {
+        ProgressInfo progressInfo = new ProgressInfo();
+        // 查询restore cr
+        MiddlewareRestoreCR restoreCR = restoreCRDService.get(clusterId, namespace, restoreName);
+        // 查询restore进程pods
+        progressInfo.setTaskPods(getTaskPods(clusterId, namespace, restoreName));
+        // 查询备份控制器状态
+        progressInfo.setBackupControllerStatus(getBackupComponentStatus(clusterId));
+        return progressInfo;
+    }
+
+    @Override
     public List<MiddlewareBackupRecord> backupIncrRecords(String clusterId, String namespace, String middlewareName, String type, String backupId, String backupMode) {
         Set<String> backupScheduleNames = listMiddlewareBackupScheduleNames(clusterId, namespace, backupId);
         Set<String> incrScheduleNames = new HashSet<>();
@@ -943,18 +976,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             return convertMiddlewareRestore(restores, clusterId);
         }
         return Collections.emptyList();
-    }
-
-    @Override
-    public MiddlewareBackupRestore restoreDetail(String clusterId, String namespace, String restoreName) {
-        // 查询restore cr
-
-        // 查询restore进程pods
-
-        // 查询备份控制器状态
-
-
-        return null;
     }
 
     @Override
@@ -1032,6 +1053,40 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Override
     public boolean checkSchedule(String clusterId, String namespace, String type, String middlewareName) {
         return checkBackupScheduleExist(clusterId, namespace, middlewareName, null);
+    }
+
+    /**
+     * 获取备份组件状态
+     * @param clusterId
+     * @return 1：运行正常，0：运行异常
+     */
+    private Integer getBackupComponentStatus(String clusterId) {
+        Map<String, String> label = new HashMap<>();
+        label.put("control-plane", "backup-controller");
+        List<PodInfo> podInfos = podService.list(clusterId, componentNamespace, label);
+        if (CollectionUtils.isEmpty(podInfos)) {
+            podInfos = podService.list(clusterId, componentNamespace).stream().
+                    filter(podInfo -> "middlewarebackup-controller".equals(podInfo.getPodName())).collect(Collectors.toList());
+        }
+        for (PodInfo podInfo : podInfos) {
+            if ("Running".equals(podInfo.getStatus())) {
+                return 1;
+            }
+        }
+        return 0;
+    }
+
+    /**
+     * 返回备份或恢复任务pod信息
+     * @param clusterId
+     * @param namespace
+     * @param ownerName 备份或恢复的cr name
+     * @return
+     */
+    private List<PodInfo> getTaskPods(String clusterId, String namespace, String ownerName) {
+        Map<String, String> labels = new HashMap<>();
+        labels.put("owner", ownerName);
+        return podService.list(clusterId,namespace,labels);
     }
 
     public void deleteBackupName(String clusterId, String backupId) {
