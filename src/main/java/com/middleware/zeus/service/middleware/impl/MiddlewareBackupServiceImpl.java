@@ -1513,8 +1513,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             backupRecord.setPhrase("Unknown");
         }
         // 获取备份存储大小
-        if (backup.getStatus().getStorageProvider() != null) {
-            JSONObject storageProvider = backup.getStatus().getStorageProvider();
+        if (backupStatus != null && backupStatus.getStorageProvider() != null) {
+            JSONObject storageProvider = backupStatus.getStorageProvider();
             String compressedSize = storageProvider.getString("compressedSize");
             if (compressedSize != null) {
                 backupRecord.setSize(changeCompressedSizeUnit(compressedSize));
@@ -1533,8 +1533,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             backupRecord.setActiveArea(activeArea);
             backupRecord.setAreaAliasName(getActiveAreaAliasName(clusterId, activeArea));
         }
-
-        // 转换备份所占存储大小
 
     }
 
