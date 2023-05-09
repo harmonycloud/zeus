@@ -209,7 +209,7 @@ public class MiddlewareBackupController {
     @Authority(power = 1)
     public BaseResult<ProgressInfo> listTaskRecord(@PathVariable("clusterId") String clusterId,
                                                    @PathVariable("namespace") String namespace,
-                                                   @RequestParam("backupName") String backupName) {
+                                                   @PathVariable("backupName") String backupName) {
         return BaseResult.ok(middlewareBackupService.getBackupProgress(clusterId, namespace, backupName));
     }
 

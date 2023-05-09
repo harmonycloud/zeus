@@ -63,7 +63,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Value("${system.cron.timezone: 0}")
     private Integer timezone;
 
-    @Value("${system.componentNamespace: middleware-operator}")
+    @Value("${system.componentNamespace:middleware-operator}")
     private String componentNamespace;
 
     @Autowired
