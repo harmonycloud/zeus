@@ -30,9 +30,9 @@ public class MiddlewareAlertRecordServiceImpl implements MiddlewareAlertRecordSe
         if (StringUtils.isNotEmpty(level)) {
             wrapper.eq("level", level);
         }
-        wrapper.orderByAsc("time");
+        wrapper.orderByAsc("alert_time");
         if (normalTimeOrder != null && !normalTimeOrder) {
-            wrapper.orderByDesc("time");
+            wrapper.orderByDesc("alert_time");
         }
         wrapper.eq("name", middlewareName);
         if (StringUtils.isNotEmpty(keyword)) {

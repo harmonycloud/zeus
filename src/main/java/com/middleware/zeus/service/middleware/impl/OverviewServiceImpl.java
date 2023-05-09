@@ -373,8 +373,8 @@ public class OverviewServiceImpl implements OverviewService {
             calendar.add(Calendar.DAY_OF_MONTH, -1);
             String begin = DateFormatUtils.format(calendar.getTime(), "yyyy-MM-dd HH:mm:ss");
 
-            wrapper.ge("time",begin);
-            wrapper.le("time",end);
+            wrapper.ge("alert_time",begin);
+            wrapper.le("alert_time",end);
         }
         wrapper.orderByDesc("id");
         List<BeanAlertRecord> recordList = beanAlertRecordMapper.selectList(wrapper);
@@ -834,9 +834,9 @@ public class OverviewServiceImpl implements OverviewService {
         recordQueryWrapper.ne("name", "");
         recordQueryWrapper.eq("lay", "service");
         recordQueryWrapper.isNotNull("type");
-        recordQueryWrapper.ge("time", beginTime);
-        recordQueryWrapper.le("time", endTime);
-        recordQueryWrapper.orderByDesc("time");
+        recordQueryWrapper.ge("alert_time", beginTime);
+        recordQueryWrapper.le("alert_time", endTime);
+        recordQueryWrapper.orderByDesc("alert_time");
         PageHelper.startPage(current, size);
         // 查询告警记录
         List<BeanAlertRecord> alertRecordList = beanAlertRecordMapper.selectList(recordQueryWrapper);
