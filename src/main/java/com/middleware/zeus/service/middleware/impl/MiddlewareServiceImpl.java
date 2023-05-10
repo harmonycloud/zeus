@@ -201,6 +201,12 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         return getOperator(BaseOperator.class, BaseOperator.class, middleware).getAutoSwitch(middleware);
     }
 
+    @Override
+    public SwitchInfo manualSwitch(String clusterId, String namespace, String name, String type) {
+        Middleware middleware =
+                new Middleware().setClusterId(clusterId).setNamespace(namespace).setType(type).setName(name);
+        return getOperator(BaseOperator.class, BaseOperator.class, middleware).getManualSwitch(middleware);
+    }
 
 
     @Override

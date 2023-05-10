@@ -44,6 +44,14 @@ public interface BaseOperator {
     SwitchInfo getAutoSwitch(Middleware middleware);
 
     /**
+     * 查询中间件切换信息
+     *
+     * @param middleware 中间件信息
+     * @return
+     */
+    SwitchInfo getManualSwitch(Middleware middleware);
+
+    /**
      * 根据helm chart转换
      *
      * @param middleware 中间件信息

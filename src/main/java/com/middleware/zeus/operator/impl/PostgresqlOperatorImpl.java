@@ -269,6 +269,25 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         return switchInfo;
     }
 
+    @Override
+    public SwitchInfo getManualSwitch(Middleware middleware) {
+        String patroniName = middleware.getName() + "-patroni";
+        Integer patroniPort = getPatroniPort(middleware.getClusterId(), middleware.getNamespace(), patroniName);
+        String podName = null;
+        JSONArray dataArray = postgresqlClientWrapper.cluster(middleware.getNamespace(), patroniName, patroniPort);
+        for (int i = 0; i < dataArray.size(); ++i){
+            String role = dataArray.getJSONObject(i).getString("role");
+            if(StringUtils.isNotEmpty(role) && "sync_standby".equals(role)){
+                podName = dataArray.getJSONObject(i).getString("name");
+            }
+        }
+        SwitchInfo switchInfo = new SwitchInfo().setStatus(true);
+        if (StringUtils.isEmpty(podName)){
+            switchInfo.setStatus(false);
+        }
+        return switchInfo;
+    }
+
 
     /**
      * 检查是否是双活分区并设置双活配置字段
@@ -325,27 +344,11 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         return null;
     }
 
-
-
-
     private SwitchInfo handSwitch(Middleware middleware, MiddlewareCR cr) {
         MiddlewareClusterDTO cluster = clusterService.findById(middleware.getClusterId());
         // 获取patroniService
         String patroniName = middleware.getName() + "-patroni";
-        Service patroniService = serviceWrapper.get(middleware.getClusterId(), middleware.getNamespace(), patroniName);
-        if (patroniService == null) {
-            throw new BusinessException(DictEnum.SERVICE, patroniName, ErrorMessage.NOT_EXIST);
-        }
-        // 获取获取patroniService端口
-        Integer patroniPort = null;
-        if (patroniService.getSpec() == null || CollectionUtils.isEmpty(patroniService.getSpec().getPorts())) {
-            throw new BusinessException(DictEnum.SERVICE, patroniName, ErrorMessage.INVALID_PARAMETER);
-        }
-        for (ServicePort port : patroniService.getSpec().getPorts()) {
-            if ("patroni".equals(port.getName())) {
-                patroniPort = port.getPort();
-            }
-        }
+        Integer patroniPort = getPatroniPort(middleware.getClusterId(), middleware.getNamespace(), patroniName);
         // 确认cluster信息
         String podName = null;
         JSONArray dataArray = postgresqlClientWrapper.cluster(middleware.getNamespace(), patroniName, patroniPort);
@@ -482,6 +485,24 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         if(instanceNum < 0 || instanceNum > 3){
             throw new BusinessException(ErrorMessage.ERROR_PG_POD_NUm);
         }
+    }
+
+    public Integer getPatroniPort(String clusterId, String namespace, String name){
+        Service patroniService = serviceWrapper.get(clusterId, namespace,  name);
+        if (patroniService == null) {
+            throw new BusinessException(DictEnum.SERVICE, name, ErrorMessage.NOT_EXIST);
+        }
+        // 获取获取patroniService端口
+        Integer patroniPort = null;
+        if (patroniService.getSpec() == null || CollectionUtils.isEmpty(patroniService.getSpec().getPorts())) {
+            throw new BusinessException(DictEnum.SERVICE, name, ErrorMessage.INVALID_PARAMETER);
+        }
+        for (ServicePort port : patroniService.getSpec().getPorts()) {
+            if ("patroni".equals(port.getName())) {
+                patroniPort = port.getPort();
+            }
+        }
+        return patroniPort;
     }
     
 }

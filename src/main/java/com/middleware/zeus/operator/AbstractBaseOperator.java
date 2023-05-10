@@ -179,6 +179,10 @@ public abstract class AbstractBaseOperator {
         return null;
     }
 
+    public SwitchInfo getManualSwitch(Middleware middleware) {
+        return null;
+    }
+
     public void create(Middleware middleware, MiddlewareClusterDTO cluster) {
         if (cluster == null) {
             cluster = clusterService.findById(middleware.getClusterId());
