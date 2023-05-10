@@ -257,7 +257,7 @@ public class MiddlewareBackupController {
     })
     @GetMapping("/restore/{restoreName}/progress")
     @Authority(power = 1)
-    public BaseResult<MiddlewareBackupRestore> restoreDetail(@PathVariable("clusterId") String clusterId,
+    public BaseResult<ProgressInfo> restoreDetail(@PathVariable("clusterId") String clusterId,
                                                              @PathVariable("namespace") String namespace,
                                                              @RequestParam("restoreName") String restoreName) {
         return BaseResult.ok(middlewareBackupService.getRestoreProgress(clusterId, namespace, restoreName));
