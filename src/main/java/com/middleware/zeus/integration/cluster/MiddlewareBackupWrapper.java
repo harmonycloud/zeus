@@ -64,7 +64,7 @@ public class MiddlewareBackupWrapper {
         if (forceDelete) {
             middlewareBackupClient.withName(name).delete();
         } else {
-            middlewareBackupClient.withPropagationPolicy(DeletionPropagation.FOREGROUND).withGracePeriod(0).delete();
+            middlewareBackupClient.withName(name).withPropagationPolicy(DeletionPropagation.FOREGROUND).withGracePeriod(0).delete();
         }
     }
 
