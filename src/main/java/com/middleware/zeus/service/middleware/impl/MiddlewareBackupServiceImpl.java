@@ -1099,7 +1099,29 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     private List<PodInfo> getTaskPods(String clusterId, String namespace, String ownerName) {
         Map<String, String> labels = new HashMap<>();
         labels.put("owner", ownerName);
-        return podService.list(clusterId,namespace,labels);
+        List<PodInfo> podInfos = podService.list(clusterId, namespace, labels);
+        podInfos.sort(Comparator.comparing(PodInfo::getPodName));
+
+        for (int i = 0; i < podInfos.size(); i++) {
+            podInfos.get(i).setPodAliasName("备份进程" + getLetterByIndex(i));
+        }
+        return podInfos;
+    }
+
+    /**
+     * 根据输入的index返回对应的字母。
+     * index的范围必须在0到25之间(包含0和25)。
+     *
+     * @param index 要返回字母的索引，范围在0到25之间(包含0和25)
+     * @return 返回对应索引的字母
+     * @throws IllegalArgumentException 如果输入的index不在有效范围内，将抛出IllegalArgumentException异常
+     */
+    private char getLetterByIndex(int index) {
+        if (index < 0 || index > 25) {
+            throw new IllegalArgumentException("Index must be between 0 and 25.");
+        }
+        char letter = (char) (index + 'a'); // ASCII码中a的值为97
+        return letter;
     }
 
     public void deleteBackupName(String clusterId, String backupId) {
