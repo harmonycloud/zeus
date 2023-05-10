@@ -117,7 +117,7 @@ public class AlertServiceImpl implements AlertService {
         if (alertType.equals(SERVICE)) {
             wrapper.isNotNull("type");
         }
-        wrapper.groupBy("alisa_name");
+        wrapper.groupBy("alias_name");
 
         // 查询告警记录
         List<BeanAlertRecord> beanAlertRecordList = beanAlertRecordMapper.selectList(wrapper);
@@ -396,6 +396,7 @@ public class AlertServiceImpl implements AlertService {
         return userDtoList.stream().map(userDto -> {
             AlertUserDto alertUserDto = new AlertUserDto();
             BeanUtils.copyProperties(userDto, alertUserDto);
+            alertUserDto.setUsername(userDto.getUserName());
             return alertUserDto;
         }).collect(Collectors.toList());
     }

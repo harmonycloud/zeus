@@ -813,6 +813,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         return userDtoList.stream().map(userDto -> {
             AlertUserDto alertUserDto = new AlertUserDto();
             BeanUtils.copyProperties(userDto, alertUserDto);
+            alertUserDto.setUsername(userDto.getUserName());
             return alertUserDto;
         }).collect(Collectors.toList());
     }
