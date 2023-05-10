@@ -1109,7 +1109,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     /**
-     * 根据输入的index返回对应的字母。
+     * 根据输入的index返回对应的大写字母。
      * index的范围必须在0到25之间(包含0和25)。
      *
      * @param index 要返回字母的索引，范围在0到25之间(包含0和25)
@@ -1120,7 +1120,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         if (index < 0 || index > 25) {
             throw new IllegalArgumentException("Index must be between 0 and 25.");
         }
-        char letter = (char) (index + 'a'); // ASCII码中a的值为97
+        char letter = (char) (index + 'A'); // ASCII码中a的值为97
         return letter;
     }
 
