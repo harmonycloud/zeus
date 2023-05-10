@@ -69,17 +69,17 @@ public interface AlertService {
      *
      * @param clusterId 集群id
      * @param allocatable 可分配的
+     * @param roleId  角色id
      * @return List<AlertUserDTO>
      */
-    List<AlertUserDto> alertUser(String clusterId, Boolean allocatable);
+    List<AlertUserDto> alertUser(String clusterId, Boolean allocatable, Integer roleId);
 
     /**
      * 添加告警用户
      *
-     * @param clusterId 集群id
      * @param alertUserListDto 告警用户列表
      */
-    void addAlertUser(String clusterId, AlertUserListDto alertUserListDto);
+    void addAlertUser(AlertUserListDto alertUserListDto);
 
     /**
      * 移除告警用户

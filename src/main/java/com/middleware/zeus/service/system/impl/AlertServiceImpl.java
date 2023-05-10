@@ -200,8 +200,8 @@ public class AlertServiceImpl implements AlertService {
         if (prometheusRule.getMetadata().getLabels() != null){
             labels.putAll(prometheusRule.getMetadata().getLabels());
         }
-        labels.put("cluster_id", alertTargetDto.getClusterId());
-        labels.put("namespace", alertTargetDto.getNamespace());
+        labels.put("platform", "zeus");
+        labels.put("target_name", alertTargetDto.getName());
 
         prometheusRule.getMetadata().setLabels(labels);
 
@@ -210,8 +210,6 @@ public class AlertServiceImpl implements AlertService {
         if (prometheusRule.getMetadata().getAnnotations() != null){
             annotations.putAll(prometheusRule.getMetadata().getAnnotations());
         }
-        annotations.put("platform", "zeus");
-        annotations.put("target_name", alertTargetDto.getName());
         annotations.put("target_alias_name", alertTargetDto.getAliasName());
 
         prometheusRule.getMetadata().setAnnotations(annotations);
@@ -235,6 +233,7 @@ public class AlertServiceImpl implements AlertService {
                 }
                 ann.put("target_type", CLUSTER);
                 ann.put("target_name", alertTargetDto.getName());
+                ann.put("target_alias_name", alertTargetDto.getAliasName());
                 prometheusRules.setAnnotations(ann);
             });
         });
@@ -322,21 +321,21 @@ public class AlertServiceImpl implements AlertService {
     }
 
     @Override
-    public List<AlertUserDto> alertUser(String clusterId, Boolean allocatable) {
+    public List<AlertUserDto> alertUser(String clusterId, Boolean allocatable, Integer roleId) {
         if (allocatable) {
-            return listAllocatableAlertUser(clusterId);
+            return listAllocatableAlertUser(clusterId, roleId);
         } else {
             return listAlertUser(clusterId);
         }
     }
 
     @Override
-    public void addAlertUser(String clusterId, AlertUserListDto alertUserListDto) {
+    public void addAlertUser(AlertUserListDto alertUserListDto) {
         // 循环用户列表添加数据
         for (AlertUserDto alertUserDto : alertUserListDto.getAlertUserDtoList()) {
             AlertUserDo alertUserDo = new AlertUserDo();
             alertUserDo.setUsername(alertUserDto.getUsername());
-            alertUserDo.setClusterId(clusterId);
+            alertUserDo.setClusterId(alertUserListDto.getClusterId());
             alertUserDo.setMailAlert(alertUserDto.getMailAlert());
             alertUserDo.setMessageAlert(alertUserDto.getMessageAlert());
             // 添加平台告警用户
@@ -379,12 +378,14 @@ public class AlertServiceImpl implements AlertService {
         // 返回封装数据
         return alertUserDoList.stream().map(alertUserDo -> {
             AlertUserDto alertUserDto = new AlertUserDto();
-            alertUserDto.convertAlertUserDo(alertUserDo);
+            alertUserDto.setUsername(alertUserDo.getUsername());
+            alertUserDto.setMailAlert(alertUserDo.getMailAlert());
+            alertUserDto.setMessageAlert(alertUserDo.getMessageAlert());
             return alertUserDto;
         }).collect(Collectors.toList());
     }
 
-    public List<AlertUserDto> listAllocatableAlertUser(String clusterId) {
+    public List<AlertUserDto> listAllocatableAlertUser(String clusterId, Integer roleId) {
         // 获取告警用户列表
         List<AlertUserDo> alertUserDoList = alertUserService.list(clusterId, null, null, CLUSTER);
         // 获取用户集，并过滤掉已分配的用户
@@ -392,6 +393,13 @@ public class AlertServiceImpl implements AlertService {
             .filter(userDto -> alertUserDoList.stream()
                 .noneMatch(alertUserDo -> alertUserDo.getUsername().equals(userDto.getUserName())))
             .collect(Collectors.toList());
+        if (roleId != null) {
+            userDtoList = userService.getUserRole(userDtoList);
+            userDtoList = userDtoList.stream()
+                .filter(userDto -> !CollectionUtils.isEmpty(userDto.getUserRoleList()) && userDto.getUserRoleList()
+                    .stream().anyMatch(userRole -> userRole.getRoleId() != null && userRole.getRoleId().equals(roleId)))
+                .collect(Collectors.toList());
+        }
         // 返回封装数据
         return userDtoList.stream().map(userDto -> {
             AlertUserDto alertUserDto = new AlertUserDto();

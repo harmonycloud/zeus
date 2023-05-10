@@ -131,12 +131,7 @@ public class UserServiceImpl extends AbstractUserService implements UserService 
         QueryWrapper<BeanUser> userWrapper = new QueryWrapper<>();
         // 非超级管理员角色用户 获取创建者为自身的用户
         List<BeanUser> beanUserList = beanUserMapper.selectList(userWrapper);
-        // 获取用户项目下角色
-        List<UserRole> userRoleList = userRoleService.list();
-        // 获取用户组织下角色
-        userRoleList.addAll(organizationUserService.listUserRole(null));
-        Map<String, List<UserRole>> userRoleMap =
-                userRoleList.stream().collect(Collectors.groupingBy(UserRole::getUserName));
+        
         // 封装数据
         List<UserDto> userDtoList = beanUserList.stream().map(beanUser -> {
             UserDto userDto = new UserDto();
@@ -304,8 +299,17 @@ public class UserServiceImpl extends AbstractUserService implements UserService 
     }
 
     @Override
-    public Boolean checkAdmin(String username) {
-        return null;
+    public List<UserDto> getUserRole(List<UserDto> userDtoList) {
+        // 获取用户项目下角色
+        List<UserRole> userRoleList = userRoleService.list();
+        // 获取用户组织下角色
+        userRoleList.addAll(organizationUserService.listUserRole(null));
+        Map<String, List<UserRole>> userRoleMap =
+            userRoleList.stream().collect(Collectors.groupingBy(UserRole::getUserName));
+        return userDtoList.stream()
+            .peek(
+                userDto -> userDto.setUserRoleList(userRoleMap.getOrDefault(userDto.getUserName(), new ArrayList<>())))
+            .collect(Collectors.toList());
     }
 
     /**

@@ -103,11 +103,13 @@ public class AlertController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "allocatable", value = "可分配的", paramType = "query", dataTypeClass = Boolean.class),
+            @ApiImplicitParam(name = "roleId", value = "角色id", paramType = "query", dataTypeClass = Integer.class),
     })
     @GetMapping("/user")
     public BaseResult<List<AlertUserDto>> alertUser(@RequestParam("clusterId") String clusterId,
-                                                    @RequestParam(value = "allocatable", required = false, defaultValue = "false") Boolean allocatable) {
-        return BaseResult.ok(alertService.alertUser(clusterId, allocatable));
+                                                    @RequestParam(value = "allocatable", required = false, defaultValue = "false") Boolean allocatable,
+                                                    @RequestParam(value = "roleId", required = false) Integer roleId) {
+        return BaseResult.ok(alertService.alertUser(clusterId, allocatable, roleId));
     }
 
     @ApiOperation(value = "新增告警用户", notes = "查询告警用户")
@@ -115,9 +117,8 @@ public class AlertController {
             @ApiImplicitParam(name = "alertUserDto", value = "集群id", paramType = "query", dataTypeClass = AlertUserListDto.class),
     })
     @PostMapping("/user")
-    public BaseResult addAlertUser(@RequestParam("clusterId") String clusterId,
-                                   @RequestBody AlertUserListDto alertUserListDto) {
-        alertService.addAlertUser(clusterId, alertUserListDto);
+    public BaseResult addAlertUser(@RequestBody AlertUserListDto alertUserListDto) {
+        alertService.addAlertUser(alertUserListDto);
         return BaseResult.ok();
     }
 

@@ -451,9 +451,9 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
 
     @Override
     public List<AlertUserDto> alertUser(String clusterId, String namespace, String middlewareName, Boolean allocatable,
-                                        String organId, String projectId, Integer roleId) {
+                                        String organId, String projectId) {
         if (allocatable) {
-            return listAllocatableAlertUser(clusterId, namespace, middlewareName, organId, projectId, roleId);
+            return listAllocatableAlertUser(clusterId, namespace, middlewareName, organId, projectId);
         } else {
             return listAlertUser(clusterId, namespace, middlewareName);
         }
@@ -790,13 +790,15 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         // 返回封装数据
         return alertUserDoList.stream().map(alertUserDo -> {
             AlertUserDto alertUserDto = new AlertUserDto();
-            alertUserDto.convertAlertUserDo(alertUserDo);
+            alertUserDto.setUsername(alertUserDo.getUsername());
+            alertUserDto.setMailAlert(alertUserDo.getMailAlert());
+            alertUserDto.setMessageAlert(alertUserDo.getMessageAlert());
             return alertUserDto;
         }).collect(Collectors.toList());
     }
 
     public List<AlertUserDto> listAllocatableAlertUser(String clusterId, String namespace, String middlewareName,
-                                                       String organId, String projectId, Integer roleId) {
+                                                       String organId, String projectId) {
         // 获取告警用户列表
         List<AlertUserDo> alertUserDoList = alertUserService.list(clusterId, namespace, middlewareName, SERVICE);
         // 获取用户集，并过滤掉已分配的用户
@@ -804,11 +806,6 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
                 .filter(userDto -> alertUserDoList.stream()
                         .noneMatch(alertUserDo -> alertUserDo.getUsername().equals(userDto.getUserName())))
                 .collect(Collectors.toList());
-        // 查询指定角色的用户列表
-        if (roleId != null) {
-            userDtoList =
-                    userDtoList.stream().filter(userDto -> userDto.getRoleId().equals(roleId)).collect(Collectors.toList());
-        }
         // 返回封装数据
         return userDtoList.stream().map(userDto -> {
             AlertUserDto alertUserDto = new AlertUserDto();

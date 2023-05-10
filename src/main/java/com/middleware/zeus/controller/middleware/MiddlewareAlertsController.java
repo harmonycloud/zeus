@@ -137,7 +137,6 @@ public class MiddlewareAlertsController {
             @ApiImplicitParam(name = "allocatable", value = "可分配的", paramType = "query", dataTypeClass = Boolean.class),
             @ApiImplicitParam(name = "organId", value = "组织id", required = false, paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "projectId", value = "项目id", required = false, paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "roleId", value = "角色id", required = false, paramType = "query", dataTypeClass = Integer.class),
     })
     @GetMapping("/user")
     public BaseResult<List<AlertUserDto>> alertUser(@PathVariable("clusterId") String clusterId,
@@ -145,9 +144,8 @@ public class MiddlewareAlertsController {
                                                     @PathVariable("middlewareName") String middlewareName,
                                                     @RequestParam(value = "allocatable", required = false, defaultValue = "false") Boolean allocatable,
                                                     @RequestParam(value = "organId", required = false) String organId,
-                                                    @RequestParam(value = "projectId", required = false) String projectId,
-                                                    @RequestParam(value = "roleId", required = false) Integer roleId) {
-        return BaseResult.ok(middlewareAlertsService.alertUser(clusterId, namespace, middlewareName, allocatable, organId, projectId, roleId));
+                                                    @RequestParam(value = "projectId", required = false) String projectId) {
+        return BaseResult.ok(middlewareAlertsService.alertUser(clusterId, namespace, middlewareName, allocatable, organId, projectId));
     }
 
     @ApiOperation(value = "新增告警用户", notes = "查询告警用户")

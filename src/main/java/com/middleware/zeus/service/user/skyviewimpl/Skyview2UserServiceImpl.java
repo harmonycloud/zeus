@@ -150,7 +150,7 @@ public class Skyview2UserServiceImpl extends AbstractUserService implements User
     }
 
     @Override
-    public Boolean checkAdmin(String username) {
-        return null;
+    public List<UserDto> getUserRole(List<UserDto> userDtoList) {
+        return userDtoList;
     }
 }

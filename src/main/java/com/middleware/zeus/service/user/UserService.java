@@ -184,11 +184,12 @@ public interface UserService {
      */
     UserRole getUserRole(String username, String organId, String projectId);
 
-    /**
-     * 校验是否为超级管理员
-     * @param username 用户名
-     * @return Integer
-     */
-    Boolean checkAdmin(String username);
 
+    /**
+     * 获取用户角色绑定关系
+     *
+     * @param userDtoList 用户对象列表
+     * @return List<UserDto>
+     */
+    List<UserDto> getUserRole(List<UserDto> userDtoList);
 }

@@ -120,10 +120,9 @@ public interface MiddlewareAlertsService {
      * @param allocatable 可分配的
      * @param organId 组织id
      * @param projectId 项目id
-     * @param roleId 角色id
      * @return List<AlertUserDTO>
      */
-    List<AlertUserDto> alertUser(String clusterId, String namespace, String middlewareName, Boolean allocatable, String organId, String projectId, Integer roleId);
+    List<AlertUserDto> alertUser(String clusterId, String namespace, String middlewareName, Boolean allocatable, String organId, String projectId);
 
     /**
      * 添加告警用户
