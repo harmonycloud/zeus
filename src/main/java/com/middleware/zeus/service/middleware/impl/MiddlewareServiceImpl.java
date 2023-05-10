@@ -218,7 +218,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         // pre check
         operator.createPreCheck(middleware, cluster);
         updateRegistry(middleware,cluster);
-        // bind imagePullSecret to default serviceAccount
+        // TODO need delete
         checkAndBindImagePullSecret(middleware.getClusterId(), middleware.getNamespace(), middleware.getMirrorImageId());
         // create
         operator.create(middleware, cluster);
@@ -550,8 +550,6 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         Collections.reverse(middlewareInfos);
         Middleware middleware = detail(clusterId, namespace, name, type);
         // 升级服务时，只能升级到当前服务的上一个版本，不能跨版本升级,设置标志变量existNow来判断是否是上一个版本
-        AtomicBoolean existNow = new AtomicBoolean(false);
-        BeanClusterMiddlewareInfo clusterMwInfo = clusterMiddlewareInfoService.get(clusterId, type);
         List<MiddlewareInfoDTO> resList = middlewareInfos.stream().map(info -> {
             MiddlewareInfoDTO dto = new MiddlewareInfoDTO();
             BeanUtils.copyProperties(info, dto);

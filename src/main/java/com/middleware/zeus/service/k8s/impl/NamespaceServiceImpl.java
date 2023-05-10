@@ -4,15 +4,17 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.middleware.caas.common.constants.NamespaceConstant;
 import com.middleware.caas.common.model.*;
+import com.middleware.caas.common.model.middleware.ImageRepositoryDTO;
 import com.middleware.caas.common.model.middleware.StorageClassInfo;
 import com.middleware.caas.common.model.user.ProjectNamespaceDo;
 import com.middleware.zeus.bean.user.BeanProjectNamespace;
 import com.middleware.zeus.dao.user.BeanProjectNamespaceMapper;
-import com.middleware.zeus.service.k8s.StorageService;
+import com.middleware.zeus.service.k8s.*;
+import com.middleware.zeus.service.middleware.ImageRepositoryService;
 import com.middleware.zeus.service.user.ProjectService;
-import com.middleware.zeus.service.k8s.MiddlewareCRService;
-import com.middleware.zeus.service.k8s.NamespaceService;
-import com.middleware.zeus.service.k8s.ResourceQuotaService;
+import io.fabric8.kubernetes.api.model.LocalObjectReference;
+import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.api.model.ServiceAccount;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -60,6 +62,12 @@ public class NamespaceServiceImpl implements NamespaceService {
     private ResourceQuotaService resourceQuotaService;
     @Autowired
     private StorageService storageService;
+    @Autowired
+    private ServiceAccountService serviceAccountService;
+    @Autowired
+    private ImageRepositoryService imageRepositoryService;
+    @Value("${system.privateRegistry.middlewareServiceAccount:default}")
+    private String middlewareServiceAccount;
 
     @Value("${k8s.namespace.protect:default,kube-system,kube-public,cluster-top,cicd,caas-system,kube-federation-system,harbor-system,logging,monitoring,velero,middleware-system}")
     private void setProtectNamespaceList(String protectNamespaces) {
@@ -156,8 +164,8 @@ public class NamespaceServiceImpl implements NamespaceService {
             putContainerIdentityRange(namespace, annotations);
         }
         save(namespace.getClusterId(), namespace.getName(), label, annotations);
-        // 创建资源配额
-        //resourceQuotaService.create(namespace.getClusterId(), namespace.getName(), namespace.getQuotas());
+        // bind imagepullsecret to default sa
+        checkAndBindImagePullSecret(namespace.getClusterId(), namespace.getName(), 1);
     }
 
     @Override
@@ -323,6 +331,55 @@ public class NamespaceServiceImpl implements NamespaceService {
             return false;
         }
         return Boolean.parseBoolean(namespace.getMetadata().getLabels().get(NamespaceConstant.KEY_AVAILABLE_DOMAIN));
+    }
+
+    /**
+     * 等待指定时间后(秒),为每个镜像仓库创建secret(如果未创建)，并绑定到分区imagepullsecret(如果未绑定)
+     * @param clusterId
+     * @param namespace
+     */
+    private void checkAndBindImagePullSecret(String clusterId, String namespace, Integer waitSeconds){
+        try {
+            Thread.sleep(waitSeconds * 1000);
+        } catch (InterruptedException e) {
+            log.error("线程等待异常");
+        }
+        checkAndBindImagePullSecret(clusterId, namespace);
+    }
+
+
+    /**
+     * 为每个镜像仓库创建secret(如果未创建)，并绑定到分区imagepullsecret(如果未绑定)
+     * @param clusterId
+     * @param namespace
+     */
+    private void checkAndBindImagePullSecret(String clusterId, String namespace) {
+        ServiceAccount serviceAccount = serviceAccountService.get(clusterId, namespace, middlewareServiceAccount);
+        List<LocalObjectReference> saImagePullSecrets = serviceAccount.getImagePullSecrets();
+
+        List<ImageRepositoryDTO> imageRepositoryDTOS = imageRepositoryService.list(clusterId);
+        if (!CollectionUtils.isEmpty(imageRepositoryDTOS)) {
+            // 遍历集群所有镜像仓库，为每个镜像仓库创建secret(如果该镜像仓库不存在secret)
+            for (ImageRepositoryDTO imageRepositoryDTO : imageRepositoryDTOS) {
+                Integer repositoryId = imageRepositoryDTO.getId();
+                io.fabric8.kubernetes.api.model.Secret secret = imageRepositoryService.
+                        getImagePullSecret(clusterId, namespace, imageRepositoryDTO.getClusterId());
+                if (secret != null) {
+                    imageRepositoryService.createImagePullSecret(clusterId, namespace, repositoryId);
+                }
+            }
+            // 将镜像仓库secret绑定到分区sa default
+            List<Secret> nsImagePullSecrets = imageRepositoryService.listImagePullSecret(clusterId, namespace);
+            if (!CollectionUtils.isEmpty(saImagePullSecrets)) {
+                List<String> secretNameSet = saImagePullSecrets.stream().map(LocalObjectReference::getName).collect(Collectors.toList());
+                nsImagePullSecrets = nsImagePullSecrets.stream().filter(imgSecret ->
+                        secretNameSet.contains(imgSecret.getMetadata().getName())).collect(Collectors.toList());
+            }
+            // 将secret绑定到sa的imagepullsecret
+            if (CollectionUtils.isEmpty(nsImagePullSecrets)) {
+                serviceAccountService.bindImagePullSecret(clusterId, namespace, serviceAccount, nsImagePullSecrets);
+            }
+        }
     }
 
     public boolean checkExist(String clusterId, String name) {
