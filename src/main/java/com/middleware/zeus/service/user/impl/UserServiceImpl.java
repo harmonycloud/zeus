@@ -398,14 +398,16 @@ public class UserServiceImpl extends AbstractUserService implements UserService 
                 return userRole;
             }).collect(Collectors.toList()));
         convertManagerInfo(userDto, userRoleList);
-        userDto.getUserRoleList().forEach(ur -> {
-            if (ur.getOrganId() != null) {
-                ur.setOrganName(organizationMap.get(ur.getOrganId()));
-            }
-            if (ur.getProjectId() != null) {
-                ur.setProjectName(projectMap.get(ur.getProjectId()));
-            }
-        });
+        if (!CollectionUtils.isEmpty(userDto.getUserRoleList())) {
+            userDto.getUserRoleList().forEach(ur -> {
+                if (ur.getOrganId() != null) {
+                    ur.setOrganName(organizationMap.get(ur.getOrganId()));
+                }
+                if (ur.getProjectId() != null) {
+                    ur.setProjectName(projectMap.get(ur.getProjectId()));
+                }
+            });
+        }
     }
 
     /**

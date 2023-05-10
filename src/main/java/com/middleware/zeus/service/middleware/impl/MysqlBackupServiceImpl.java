@@ -303,7 +303,7 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public List<MiddlewareBackupRecord> backupRecords(String clusterId, String namespace, String middlewareName,
-                                                      String type, String backupId, String backupMode, String orderBySize) {
+                                                      String type, String backupId, String backupMode, String orderBy) {
         return null;
     }
 

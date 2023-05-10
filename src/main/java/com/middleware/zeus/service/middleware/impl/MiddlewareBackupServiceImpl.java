@@ -908,7 +908,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public List<MiddlewareBackupRecord> backupRecords(String clusterId, String namespace, String middlewareName, String type,
-                                                      String backupId, String backupMode, String orderBySize) {
+                                                      String backupId, String backupMode, String orderBy) {
         // 获取所有备份记录：包含单次备份、周期备份定时创建的、增量备份定时创建的
         List<MiddlewareBackupRecord> recordList = listBackup(clusterId, namespace, null, null);
         if ("single".equals(backupMode)) {
@@ -919,7 +919,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             recordList = recordList.stream().filter(record -> StringUtils.isNotEmpty(record.getOwner()) &&
                     backupScheduleNames.contains(record.getOwner())).collect(Collectors.toList());
         }
-        return sortAndSetAliasName(recordList, orderBySize);
+        return sortAndSetAliasName(recordList, orderBy);
     }
 
     @Override
@@ -1109,26 +1109,28 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     // 排序并设置记录别名
-    private List<MiddlewareBackupRecord> sortAndSetAliasName(List<MiddlewareBackupRecord> recordList, String orderBySize) {
-        // 根据存储大小排序，相同则按时间降序
+    private List<MiddlewareBackupRecord> sortAndSetAliasName(List<MiddlewareBackupRecord> recordList, String orderBy) {
         recordList.sort((o1, o2) -> {
-            if (orderBySize != null) {
+            if (StringUtils.isBlank(orderBy) || orderBy.split(",").length != 2) {
+                return 0;
+            }
+            String[] order = orderBy.split(",");
+            if ("size".equals(order[0])) {
                 if (o1.getByteSize() == null) {
-                    return -1;
+                    return 1;
                 }
                 if (o2.getByteSize() == null) {
-                    return 1;
+                    return -1;
                 }
                 BigDecimal o1Size = new BigDecimal(o1.getByteSize());
                 BigDecimal o2Size = new BigDecimal(o2.getByteSize());
-                if (o1Size.equals(o2Size)) {
-                    return o1.getBackupTime() == null ? -1
-                            : o2.getBackupTime() == null ? -1 : o2.getBackupTime().compareTo(o1.getBackupTime());
-                }
-                return o1Size.compareTo(o2Size) * (orderBySize.equals("desc") ? -1 : 1);
+                return o1Size.compareTo(o2Size) * (order[1].equals("desc") ? -1 : 1);
+            } else if ("time".equals(order[0])) {
+                return o1.getBackupTime() == null ? 1
+                        : o2.getBackupTime() == null ? -1 : o2.getBackupTime().compareTo(o1.getBackupTime()) * ("desc".equals(order[1]) ? 1 : -1);
+            } else {
+                return 0;
             }
-            return o1.getBackupTime() == null ? -1
-                    : o2.getBackupTime() == null ? -1 : o2.getBackupTime().compareTo(o1.getBackupTime());
         });
         // TODO 设置备份记录名称
         for (int i = 0; i < recordList.size(); i++) {
@@ -1137,6 +1139,26 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             bak.setRecordName(bak.getTaskName() + "-" + bakNameSplit[bakNameSplit.length - 1]);
         }
         return recordList;
+    }
+
+    public static void main(String[] args) {
+        List<Integer> s = new ArrayList<>();
+        s.add(null);
+        s.add(2);
+        s.add(null);
+        s.add(null);
+        s.add(5);
+        s.add(4);
+        s.sort(((o1, o2) -> {
+            if (o1 == null) {
+                return 1;
+            }
+            if (o2 == null) {
+                return -1;
+            }
+            return o1.compareTo(o2);
+        }));
+        System.out.println("ok");
     }
 
     /**
