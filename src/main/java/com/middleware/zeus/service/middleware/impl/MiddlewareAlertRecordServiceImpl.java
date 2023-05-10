@@ -3,12 +3,20 @@ package com.middleware.zeus.service.middleware.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import com.middleware.caas.common.model.AlertDTO;
+import com.middleware.caas.common.model.AlertRecordQueryDto;
 import com.middleware.zeus.bean.BeanAlertRecord;
 import com.middleware.zeus.dao.BeanAlertRecordMapper;
 import com.middleware.zeus.service.middleware.MiddlewareAlertRecordService;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
+
+import static com.middleware.caas.common.constants.CommonConstant.ASC;
+import static com.middleware.caas.common.constants.CommonConstant.DESC;
 
 /**
  * @author liyinlong
@@ -21,25 +29,39 @@ public class MiddlewareAlertRecordServiceImpl implements MiddlewareAlertRecordSe
     private BeanAlertRecordMapper alertRecordMapper;
 
     @Override
-    public PageInfo list(String clusterId, String namespace, String middlewareName, Integer current, Integer size, String keyword, String level, Boolean normalTimeOrder) {
+    public PageInfo<AlertDTO> list(String clusterId, String namespace, String middlewareName, AlertRecordQueryDto queryDto) {
         QueryWrapper<BeanAlertRecord> wrapper = new QueryWrapper<>();
         wrapper.eq("cluster_id", clusterId);
         if (StringUtils.isNotEmpty(namespace)) {
             wrapper.eq("namespace", namespace);
         }
-        if (StringUtils.isNotEmpty(level)) {
-            wrapper.eq("level", level);
+        if (StringUtils.isNotEmpty(queryDto.getAlertLevel())) {
+            wrapper.eq("level", queryDto.getAlertLevel());
         }
-        wrapper.orderByAsc("alert_time");
-        if (normalTimeOrder != null && !normalTimeOrder) {
-            wrapper.orderByDesc("alert_time");
+        // 根据告警时间排序
+        if (StringUtils.isNotEmpty(queryDto.getAlertTime())) {
+            if (queryDto.getAlertTime().equals(ASC)) {
+                wrapper.orderByAsc("alert_time");
+            } else if (queryDto.getAlertTime().equals(DESC)) {
+                wrapper.orderByDesc("alert_time");
+            }
         }
-        wrapper.eq("name", middlewareName);
-        if (StringUtils.isNotEmpty(keyword)) {
-            wrapper.like("expr", keyword);
+        // 根据告警接收时间排序
+        if (StringUtils.isNotEmpty(queryDto.getReceiveTime())) {
+            if (queryDto.getReceiveTime().equals(ASC)) {
+                wrapper.orderByAsc("alert_receive_time");
+            } else if (queryDto.getAlertTime().equals(DESC)) {
+                wrapper.orderByDesc("alert_receive_time");
+            }
         }
-        PageHelper.startPage(current, size);
-        return new PageInfo<>(alertRecordMapper.selectList(wrapper));
+        PageHelper.startPage(queryDto.getCurrent(), queryDto.getSize());
+        // 查询告警记录数据
+        List<BeanAlertRecord> alertRecordList = alertRecordMapper.selectList(wrapper);
+        // 封装数据
+        PageInfo<AlertDTO> alertDtoPageInfo = new PageInfo<>();
+        BeanUtils.copyProperties(new PageInfo<>(alertRecordList), alertDtoPageInfo);
+
+        return alertDtoPageInfo;
     }
 
 }

@@ -1,6 +1,8 @@
 package com.middleware.zeus.service.middleware;
 
 import com.github.pagehelper.PageInfo;
+import com.middleware.caas.common.model.AlertDTO;
+import com.middleware.caas.common.model.AlertRecordQueryDto;
 import com.middleware.zeus.bean.BeanAlertRecord;
 
 /**
@@ -11,16 +13,12 @@ public interface MiddlewareAlertRecordService {
 
     /**
      * 查询告警记录
-     * @param clusterId
-     * @param namespace
-     * @param middlewareName
-     * @param current
-     * @param size
-     * @param keyword
-     * @param level
-     * @param normalTimeOrder
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param middlewareName 中间件名称
+     * @param alertRecordQueryDto 告警记录查询条件
      * @return
      */
-    PageInfo list(String clusterId, String namespace, String middlewareName, Integer current, Integer size, String keyword, String level, Boolean normalTimeOrder);
+    PageInfo<AlertDTO> list(String clusterId, String namespace, String middlewareName, AlertRecordQueryDto alertRecordQueryDto);
 
 }
