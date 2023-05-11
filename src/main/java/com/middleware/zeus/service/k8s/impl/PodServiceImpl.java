@@ -293,7 +293,7 @@ public class PodServiceImpl implements PodService {
             String.valueOf(ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(limitCpu), 2, RoundingMode.CEILING)));
         resource.setLimitMemory(String
             .valueOf(ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(limitMemory), 2, RoundingMode.CEILING)));
-        pi.setReady(getPodReadyStatus(pod));
+        pi.setReadyStatus(getPodReadyStatus(pod));
         return pi.setResources(resource);
     }
 
