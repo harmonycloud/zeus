@@ -1546,4 +1546,20 @@ public abstract class AbstractBaseOperator {
         }
     }
 
+    public String changeConfigRoleToValueArg(String customConfigRole, boolean reserve) {
+        if (!reserve) {
+            switch (customConfigRole) {
+                case "major" :
+                    return "";
+                default: return customConfigRole;
+            }
+        } else {
+            switch (customConfigRole) {
+                case "" :
+                    return "major";
+                default: return customConfigRole;
+            }
+        }
+    }
+
 }

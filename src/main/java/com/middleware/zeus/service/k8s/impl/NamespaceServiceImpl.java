@@ -391,6 +391,12 @@ public class NamespaceServiceImpl implements NamespaceService {
                     imageRepositoryService.createOrReplaceImagePullSecret(clusterId, namespace, currentRepositoryId);
                 }
             }
+            // 等待secret创建完成
+            try {
+                Thread.sleep(1500);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
             // 将镜像仓库secret绑定到分区sa default
             List<Secret> nsImagePullSecrets = imageRepositoryService.listImagePullSecret(clusterId, namespace);
             if (!CollectionUtils.isEmpty(saImagePullSecrets)) {
@@ -399,7 +405,7 @@ public class NamespaceServiceImpl implements NamespaceService {
                         secretNameSet.contains(imgSecret.getMetadata().getName())).collect(Collectors.toList());
             }
             // 将secret绑定到sa的imagepullsecret
-            if (CollectionUtils.isEmpty(nsImagePullSecrets)) {
+            if (!CollectionUtils.isEmpty(nsImagePullSecrets)) {
                 serviceAccountService.bindImagePullSecret(clusterId, namespace, serviceAccount, nsImagePullSecrets);
             }
         }
