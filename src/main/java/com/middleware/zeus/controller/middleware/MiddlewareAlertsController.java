@@ -179,5 +179,38 @@ public class MiddlewareAlertsController {
         middlewareAlertsService.removeAlertUser(clusterId, namespace, middlewareName, username);
         return BaseResult.ok();
     }
+
+    @ApiOperation(value = "查询备份告警开关状态", notes = "查询备份告警开关状态")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "lay",value = "告警层面",paramType = "query",dataTypeClass = String .class),
+            @ApiImplicitParam(name = "keyword", value = "关键字", paramType = "query", dataTypeClass = String.class)
+    })
+    @GetMapping("/backup")
+    @Authority(power = 1)
+    public BaseResult<List<MiddlewareAlertsDTO>> getBackupAlert(@PathVariable("clusterId") String clusterId,
+                                                                @PathVariable("namespace") String namespace,
+                                                                @PathVariable("middlewareName") String middlewareName) {
+        return BaseResult.ok(middlewareAlertsService.getBackupAlert(clusterId, namespace, middlewareName));
+    }
+
+    @ApiOperation(value = "修改备份告警开关状态", notes = "修改备份告警开关状态")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "enable",value = "告警层面",paramType = "query",dataTypeClass = Boolean.class),
+    })
+    @PutMapping("/backup")
+    @Authority(power = 1)
+    public BaseResult<List<MiddlewareAlertsDTO>> editBackupAlert(@PathVariable("clusterId") String clusterId,
+                                                                 @PathVariable("namespace") String namespace,
+                                                                 @PathVariable("middlewareName") String middlewareName,
+                                                                 @RequestParam("enable") Boolean enable) {
+        middlewareAlertsService.editBackupAlert(clusterId, namespace, middlewareName, enable);
+        return BaseResult.ok();
+    }
 }
 

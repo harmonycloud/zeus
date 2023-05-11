@@ -144,4 +144,23 @@ public interface MiddlewareAlertsService {
      */
     void removeAlertUser(String clusterId, String namespace, String middlewareName, String username);
 
+    /**
+     * 获取备份告警开关状态
+     *
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param middlewareName 中间件名称
+     */
+    Boolean getBackupAlert(String clusterId, String namespace, String middlewareName);
+
+    /**
+     * 修改备份告警开关状态
+     *
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param middlewareName 中间件名称
+     * @param enable 开启/关闭
+     */
+    void editBackupAlert(String clusterId, String namespace, String middlewareName, Boolean enable);
+
 }

@@ -49,6 +49,7 @@ import org.springframework.util.ObjectUtils;
 
 import javax.mail.MessagingException;
 
+import static com.middleware.caas.common.constants.AlertConstant.BACKUP;
 import static com.middleware.caas.common.constants.AlertConstant.SERVICE;
 
 /**
@@ -140,6 +141,16 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
 
     private void sendAlertMessage(AlertRecordDo alertRecordDo) {
         if (StringUtils.isNoneEmpty(alertRecordDo.getClusterId(), alertRecordDo.getNamespace(), alertRecordDo.getTargetName(), alertRecordDo.getAlertType())){
+            // 备份告警是否开启判断
+            if (alertRecordDo.getAlertType().equals(BACKUP)) {
+                if (!middlewareAlertsService.getBackupAlert(alertRecordDo.getClusterId(), alertRecordDo.getNamespace(),
+                    alertRecordDo.getTargetName())) {
+                    return;
+                } else {
+                    alertRecordDo.setAlertType(SERVICE);
+                }
+            }
+            // 获取告警通知用户
             List<AlertUserDo> alertUserDoList = alertUserService.listWithUserInfo(alertRecordDo.getClusterId(), alertRecordDo.getNamespace(), alertRecordDo.getTargetName(), alertRecordDo.getAlertType());
 
             // todo 钉钉通知

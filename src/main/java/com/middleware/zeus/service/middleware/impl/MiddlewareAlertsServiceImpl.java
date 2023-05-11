@@ -177,9 +177,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             }
             MiddlewareAlertsDTO middlewareAlertsDTO = new MiddlewareAlertsDTO();
             BeanUtils.copyProperties(rule, middlewareAlertsDTO);
-            middlewareAlertsDTO.setDescription(rule.getAnnotations().containsKey("description")
-                    && !type.equals(MiddlewareTypeEnum.POSTGRESQL.getType()) ? rule.getAnnotations().get("description")
-                    : rule.getAlert());
+            middlewareAlertsDTO.setDescription(rule.getAlert());
             middlewareAlertsDTO.setUnit(rule.getAnnotations().getOrDefault("unit", ""));
             middlewareAlertsDTO.setType(type);
             middlewareAlertsDTOList.add(middlewareAlertsDTO);
@@ -478,6 +476,25 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
     @Override
     public void removeAlertUser(String clusterId, String namespace, String middlewareName, String username) {
         alertUserService.delete(username, clusterId, namespace, middlewareName, SERVICE);
+    }
+
+    @Override
+    public Boolean getBackupAlert(String clusterId, String namespace, String middlewareName) {
+        List<AlertUserDo> alertUserDoList = alertUserService.list(clusterId, namespace, middlewareName, BACKUP);
+        return !CollectionUtils.isEmpty(alertUserDoList);
+    }
+
+    @Override
+    public void editBackupAlert(String clusterId, String namespace, String middlewareName, Boolean enable) {
+        alertUserService.delete(null, clusterId, namespace, middlewareName, BACKUP);
+        if (enable){
+            AlertUserDo alertUserDo = new AlertUserDo();
+            alertUserDo.setClusterId(clusterId);
+            alertUserDo.setNamespace(namespace);
+            alertUserDo.setName(middlewareName);
+            alertUserDo.setAlertType(BACKUP);
+            alertUserService.add(alertUserDo);
+        }
     }
 
     /**
