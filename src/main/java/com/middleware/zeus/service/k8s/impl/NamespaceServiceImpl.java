@@ -238,7 +238,7 @@ public class NamespaceServiceImpl implements NamespaceService {
         // 修改数据表 project_namespace 中分区中文名
         updateAliasName(clusterId, name, namespace.getAliasName());
         // 给分区添加imagepullsecret
-        bindImagePullSecret(clusterId, namespace.getName());
+        bindImagePullSecret(clusterId, name);
     }
 
     @Override
