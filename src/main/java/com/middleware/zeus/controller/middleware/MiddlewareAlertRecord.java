@@ -35,7 +35,7 @@ public class MiddlewareAlertRecord {
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", required = true, dataTypeClass = String.class),
             @ApiImplicitParam(name = "alertRecordQueryDto", value = "告警记录查询", paramType = "query", dataTypeClass = AlertRecordQueryDto.class),
     })
-    @GetMapping()
+    @PostMapping
     public BaseResult<PageInfo<AlertDTO>> getAlertsRecord(@PathVariable(value = "clusterId") String clusterId,
                                                           @PathVariable(value = "namespace") String namespace,
                                                           @PathVariable(value = "middlewareName") String middlewareName,
