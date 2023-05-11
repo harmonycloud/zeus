@@ -1625,8 +1625,10 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             String activeArea = labels.get("activeArea");
             backupRecord.setActiveArea(activeArea);
             backupRecord.setAreaAliasName(getActiveAreaAliasName(clusterId, activeArea));
+            backupRecord.setActiveActive(true);
+        } else {
+            backupRecord.setActiveActive(false);
         }
-
     }
 
     private String changeCompressedSizeUnit(String compressedSize) {

@@ -32,6 +32,7 @@ import io.fabric8.kubernetes.api.model.ObjectMeta;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.*;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_OPERATOR;
@@ -238,7 +239,9 @@ public class NamespaceServiceImpl implements NamespaceService {
         // 修改数据表 project_namespace 中分区中文名
         updateAliasName(clusterId, name, namespace.getAliasName());
         // 给分区添加imagepullsecret
-        bindImagePullSecret(clusterId, name);
+        Executors.newSingleThreadExecutor().execute(()->{
+            bindImagePullSecret(clusterId, name);
+        });
     }
 
     @Override
@@ -358,7 +361,9 @@ public class NamespaceServiceImpl implements NamespaceService {
         } catch (InterruptedException e) {
             log.error("线程等待异常");
         }
-        checkAndBindImagePullSecret(clusterId, namespace, null);
+        Executors.newSingleThreadExecutor().execute(()->{
+            checkAndBindImagePullSecret(clusterId, namespace, null);
+        });
     }
 
     /**
@@ -393,7 +398,7 @@ public class NamespaceServiceImpl implements NamespaceService {
             }
             // 等待secret创建完成
             try {
-                Thread.sleep(1500);
+                Thread.sleep(2000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
