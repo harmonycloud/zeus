@@ -907,7 +907,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public List<MiddlewareBackupRecord> backupRecords(String clusterId, String namespace, String middlewareName, String type,
-                                                      String backupId, String backupMode, String orderBy) {
+                                                      String backupId, String backupMode, String orderBy, String activeArea) {
         // 获取所有备份记录：包含单次备份、周期备份定时创建的、增量备份定时创建的
         List<MiddlewareBackupRecord> recordList = listBackup(clusterId, namespace, null, null);
         if ("single".equals(backupMode)) {
@@ -917,6 +917,10 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             Set<String> backupScheduleNames = listMiddlewareBackupScheduleNames(clusterId, namespace, backupId);
             recordList = recordList.stream().filter(record -> StringUtils.isNotEmpty(record.getOwner()) &&
                     backupScheduleNames.contains(record.getOwner())).collect(Collectors.toList());
+        }
+        if (StringUtils.isNotEmpty(activeArea)) {
+            recordList = recordList.stream().filter(record ->
+                    activeArea.equals(record.getActiveArea())).collect(Collectors.toList());
         }
         return sortAndSetAliasName(recordList, orderBy);
     }

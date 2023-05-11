@@ -187,18 +187,20 @@ public class MiddlewareBackupController {
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "backupId", value = "备份任务id", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "backupMode", value = "备份类型(single:单次，period:周期)", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "orderBy", value = "根据存储大小或时间进行升/降序", paramType = "query", dataTypeClass = String.class)
+            @ApiImplicitParam(name = "orderBy", value = "根据存储大小或时间进行升/降序", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "activeArea", value = "可用区", paramType = "query", dataTypeClass = String.class)
     })
     @GetMapping("/record")
     @Authority(power = 1)
     public BaseResult<List<MiddlewareBackupRecord>> listTaskRecord(@PathVariable("clusterId") String clusterId,
-                                     @PathVariable("namespace") String namespace,
-                                     @RequestParam("middlewareName") String middlewareName,
-                                     @RequestParam("type") String type,
-                                     @RequestParam("backupId") String backupId,
-                                     @RequestParam("backupMode") String backupMode,
-                                     @RequestParam(value = "orderBy", required = false) String orderBy) {
-        return BaseResult.ok(middlewareBackupService.backupRecords(clusterId, namespace, middlewareName, type, backupId, backupMode, orderBy));
+                                                                   @PathVariable("namespace") String namespace,
+                                                                   @RequestParam("middlewareName") String middlewareName,
+                                                                   @RequestParam("type") String type,
+                                                                   @RequestParam("backupId") String backupId,
+                                                                   @RequestParam("backupMode") String backupMode,
+                                                                   @RequestParam(value = "orderBy", required = false) String orderBy,
+                                                                   @RequestParam(value = "activeArea", required = false) String activeArea) {
+        return BaseResult.ok(middlewareBackupService.backupRecords(clusterId, namespace, middlewareName, type, backupId, backupMode, orderBy, activeArea));
     }
 
     @ApiOperation(value = "查询备份进度", notes = "查询备份进度")
