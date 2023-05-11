@@ -179,9 +179,7 @@ public class UserServiceImpl extends AbstractUserService implements UserService 
         beanUser.setPhone(userDto.getPhone());
         beanUserMapper.update(beanUser, wrapper);
         // 分配或删除管理员角色
-        if (userDto.getManager() != null) {
-            bindManager(userDto);
-        }
+        bindManager(userDto);
     }
 
     @Override

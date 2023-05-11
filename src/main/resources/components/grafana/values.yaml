@@ -834,3 +834,6 @@ grafana:
       enabled: false
 multicluster:
   enabled: false
+zeus:
+  dashboards:
+    label: zeus_dashboard

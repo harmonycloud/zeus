@@ -12,7 +12,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import com.alibaba.fastjson.JSONObject;
-import com.mchange.lang.FloatUtils;
 import com.middleware.caas.common.constants.ActiveAreaConstant;
 import com.middleware.caas.common.model.user.UserRole;
 import com.middleware.caas.filters.user.CurrentUserRepository;
@@ -923,7 +922,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public ProgressInfo getBackupProgress(String clusterId, String namespace, String backupName) {
+    public ProgressInfo getBackupProgress(String clusterId, String namespace, String middlewareName, String backupName) {
         // 查询backup cr
         MiddlewareBackup backup = backupCRDService.get(clusterId, namespace, backupName);
         Map<String, String> annotations = backup.getMetadata().getAnnotations();
@@ -937,8 +936,10 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             Float currentProgress = currentStepNum / 3f;
             progressInfo.setCurrentProgress(currentProgress);
         }
+
         progressInfo.setClusterId(clusterId);
         progressInfo.setNamespace(namespace);
+        progressInfo.setBackupSourceName(middlewareName);
         progressInfo.setPhrase(backup.getStatus().getPhase());
         // 查询backup任务pods
         progressInfo.setTaskPods(getTaskPods(clusterId, namespace, backupName));
@@ -948,14 +949,27 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public ProgressInfo getRestoreProgress(String clusterId, String namespace, String restoreName) {
+    public ProgressInfo getRestoreProgress(String clusterId, String namespace, String middlewareName, String restoreName) {
         ProgressInfo progressInfo = new ProgressInfo();
+        progressInfo.setClusterId(clusterId);
+        progressInfo.setNamespace(namespace);
+        progressInfo.setBackupSourceName(middlewareName);
         // 查询restore cr
         MiddlewareRestoreCR restoreCR = restoreCRDService.get(clusterId, namespace, restoreName);
+        Map<String, String> annotations = restoreCR.getMetadata().getAnnotations();
+        if (annotations.containsKey("middleware.maintenance.step")) {
+            String currentStep = annotations.get("middleware.maintenance.step");
+            int currentStepNum = (Integer.parseInt(currentStep) + 1);
+            String stepDescription = currentStepNum + "/3 " + RestoreStepEnum.findStepDescriptionByStep(annotations.get("middleware.maintenance.step.str"));
+            progressInfo.setProgressDescription(stepDescription);
+            Float currentProgress = currentStepNum / 3f;
+            progressInfo.setCurrentProgress(currentProgress);
+        }
         // 查询restore进程pods
         progressInfo.setTaskPods(getTaskPods(clusterId, namespace, restoreName));
         // 查询备份控制器状态
         progressInfo.setBackupControllerStatus(getBackupComponentStatus(clusterId));
+        progressInfo.setBackupSourceName(middlewareName);
         return progressInfo;
     }
 
@@ -1333,12 +1347,12 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             backupRestore.setRestoreName(restoreCR.getMetadata().getName());
             backupRestore.setNamespace(restoreCR.getMetadata().getNamespace());
             MiddlewareRestoreStatus restoreCRStatus = restoreCR.getStatus();
+            // 获取并设置克隆时间
+            Date creationTime = DateUtils.parseUTCDate(restoreCR.getMetadata().getCreationTimestamp());
+            backupRestore.setCreationTime(creationTime);
             if (restoreCRStatus != null) {
                 backupRestore.setPhrase(restoreCR.getStatus().getPhase());
                 backupRestore.setReason(restoreCR.getStatus().getReason());
-                // 获取并设置克隆时间
-                Date creationTime = DateUtils.parseUTCDate(restoreCR.getMetadata().getCreationTimestamp());
-                backupRestore.setCreationTime(creationTime);
                 // 获取并设置克隆记录所在可用区
                 Map<String, String> labels = restoreCR.getMetadata().getLabels();
                 String activeArea = labels.get("activeArea");

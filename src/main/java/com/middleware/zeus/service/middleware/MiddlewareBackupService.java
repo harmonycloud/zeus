@@ -210,10 +210,11 @@ public interface MiddlewareBackupService {
      * 获取备份进度
      * @param clusterId
      * @param namespace
+     * @param middlewareName
      * @param backupName
      * @return
      */
-    ProgressInfo getBackupProgress(String clusterId, String namespace, String backupName);
+    ProgressInfo getBackupProgress(String clusterId, String namespace, String middlewareName, String backupName);
 
     /**
      * 查询增量备份记录
@@ -241,10 +242,11 @@ public interface MiddlewareBackupService {
      * 查询恢复记录详情
      * @param clusterId
      * @param namespace
+     * @param middlewareName
      * @param restoreName
      * @return
      */
-    ProgressInfo getRestoreProgress(String clusterId, String namespace, String restoreName);
+    ProgressInfo getRestoreProgress(String clusterId, String namespace, String middlewareName, String restoreName);
 
     /**
      * 删除恢复记录
