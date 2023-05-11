@@ -228,6 +228,8 @@ public class NamespaceServiceImpl implements NamespaceService {
         namespaceWrapper.save(clusterId, ns);
         // 修改数据表 project_namespace 中分区中文名
         updateAliasName(clusterId, name, namespace.getAliasName());
+        // 给分区添加imagepullsecret
+        checkAndBindImagePullSecret(clusterId, namespace.getName());
     }
 
     @Override
@@ -364,7 +366,7 @@ public class NamespaceServiceImpl implements NamespaceService {
                 Integer repositoryId = imageRepositoryDTO.getId();
                 io.fabric8.kubernetes.api.model.Secret secret = imageRepositoryService.
                         getImagePullSecret(clusterId, namespace, imageRepositoryDTO.getClusterId());
-                if (secret != null) {
+                if (secret == null) {
                     imageRepositoryService.createImagePullSecret(clusterId, namespace, repositoryId);
                 }
             }
