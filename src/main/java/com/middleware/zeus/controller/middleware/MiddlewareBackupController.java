@@ -45,7 +45,7 @@ public class MiddlewareBackupController {
         return BaseResult.ok();
     }
 
-    @ApiOperation(value = "创建增量备份", notes = "创建增量备份")
+    @ApiOperation(value = "创建或更新增量备份", notes = "创建或更新增量备份")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
