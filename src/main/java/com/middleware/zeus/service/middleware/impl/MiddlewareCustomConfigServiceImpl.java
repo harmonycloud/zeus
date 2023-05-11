@@ -132,7 +132,7 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         Middleware middleware =
             new Middleware(config.getClusterId(), config.getNamespace(), config.getName(), config.getType());
         // 获取节点类型
-        String podType = getOperator(BaseOperator.class, BaseOperator.class, middleware).getPodType(config.getRole());
+        String podType = getOperator(BaseOperator.class, BaseOperator.class, middleware).changeConfigRoleToValueArg(config.getRole(), false);
         // 获取values
         JSONObject values = helmChartService.getInstalledValues(config.getName(), config.getNamespace(), cluster);
         // 获取configs
@@ -428,23 +428,20 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
             args = newValues.getJSONObject("args");
         } else if (!newValues.containsKey(podType)) {
             args = new JSONObject();
-            newValues.put(podType, args);
-        } else {
-            args = newValues.getJSONObject(podType).getJSONObject("args");
-        }
-        if (args == null) {
+            JSONObject roleArgs = new JSONObject();
+            roleArgs.put("args", args);
+            newValues.put(podType, roleArgs);
+        } else if (!newValues.getJSONObject(podType).containsKey("args")){
             args = new JSONObject();
+            newValues.getJSONObject(podType).put("args", args);
+        } else {
+            throw new BusinessException(ErrorMessage.UPDATE_CUSTOM_CONFIG_FAILED);
         }
         for (String key : dataMap.keySet()) {
             if (StringUtils.isEmpty(dataMap.get(key))) {
                 continue;
             }
             args.put(key, dataMap.get(key));
-        }
-        if (podType.equalsIgnoreCase("Master")) {
-            newValues.put("args", args);
-        } else {
-            newValues.getJSONObject(podType).put("args", args);
         }
         helmChartService.upgrade(middleware, values, newValues, cluster);
     }

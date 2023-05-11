@@ -206,4 +206,12 @@ public interface BaseOperator {
      */
     String getPodType(String customConfigRole);
 
+    /**
+     * configRole字段和values中保存的字段转换
+     * @param customConfigRole configRole字段
+     * @param reserve true时反向，values中保存的字段转换为configRole
+     * @return
+     */
+    String changeConfigRoleToValueArg(String customConfigRole, boolean reserve);
+
 }
