@@ -399,7 +399,7 @@ public class NamespaceServiceImpl implements NamespaceService {
                         secretNameSet.contains(imgSecret.getMetadata().getName())).collect(Collectors.toList());
             }
             // 将secret绑定到sa的imagepullsecret
-            if (CollectionUtils.isEmpty(nsImagePullSecrets)) {
+            if (!CollectionUtils.isEmpty(nsImagePullSecrets)) {
                 serviceAccountService.bindImagePullSecret(clusterId, namespace, serviceAccount, nsImagePullSecrets);
             }
         }
