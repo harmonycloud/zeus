@@ -66,8 +66,11 @@ public class NamespaceServiceImpl implements NamespaceService {
     private ServiceAccountService serviceAccountService;
     @Autowired
     private ImageRepositoryService imageRepositoryService;
+
     @Value("${system.privateRegistry.middlewareServiceAccount:default}")
     private String middlewareServiceAccount;
+    @Value("${system.privateRegistry.updateNamespaceDefaultSecret:false}")
+    private boolean updateNamespaceDefaultSecret;
 
     @Value("${k8s.namespace.protect:default,kube-system,kube-public,cluster-top,cicd,caas-system,kube-federation-system,harbor-system,logging,monitoring,velero,middleware-system}")
     private void setProtectNamespaceList(String protectNamespaces) {
@@ -164,8 +167,10 @@ public class NamespaceServiceImpl implements NamespaceService {
             putContainerIdentityRange(namespace, annotations);
         }
         save(namespace.getClusterId(), namespace.getName(), label, annotations);
-        // bind imagepullsecret to default sa
-        checkAndBindImagePullSecret(namespace.getClusterId(), namespace.getName(), 1);
+        if (updateNamespaceDefaultSecret) {
+            // bind imagePullSecret to default sa
+            bindImagePullSecret(namespace.getClusterId(), namespace.getName(), 1500);
+        }
     }
 
     @Override
@@ -181,6 +186,10 @@ public class NamespaceServiceImpl implements NamespaceService {
         meta.setAnnotations(annotations);
         ns.setMetadata(meta);
         namespaceWrapper.save(clusterId, ns);
+        if (updateNamespaceDefaultSecret) {
+            // bind imagePullSecret to default sa
+            bindImagePullSecret(clusterId, name, 1);
+        }
     }
 
     @Override
@@ -229,7 +238,7 @@ public class NamespaceServiceImpl implements NamespaceService {
         // 修改数据表 project_namespace 中分区中文名
         updateAliasName(clusterId, name, namespace.getAliasName());
         // 给分区添加imagepullsecret
-        checkAndBindImagePullSecret(clusterId, namespace.getName());
+        bindImagePullSecret(clusterId, namespace.getName());
     }
 
     @Override
@@ -336,38 +345,50 @@ public class NamespaceServiceImpl implements NamespaceService {
     }
 
     /**
-     * 等待指定时间后(秒),为每个镜像仓库创建secret(如果未创建)，并绑定到分区imagepullsecret(如果未绑定)
+     * 等待指定时间后(毫秒),为每个镜像仓库创建secret(如果未创建)，并绑定到分区imagepullsecret(如果未绑定)
      * @param clusterId
      * @param namespace
      */
-    private void checkAndBindImagePullSecret(String clusterId, String namespace, Integer waitSeconds){
+    private void bindImagePullSecret(String clusterId, String namespace, Integer waitMilliSeconds) {
+        if (waitMilliSeconds == null) {
+            waitMilliSeconds = 1000;
+        }
         try {
-            Thread.sleep(waitSeconds * 1000);
+            Thread.sleep(waitMilliSeconds);
         } catch (InterruptedException e) {
             log.error("线程等待异常");
         }
-        checkAndBindImagePullSecret(clusterId, namespace);
+        checkAndBindImagePullSecret(clusterId, namespace, null);
     }
 
-
     /**
-     * 为每个镜像仓库创建secret(如果未创建)，并绑定到分区imagepullsecret(如果未绑定)
+     * 为镜像仓库创建secret(如果未创建)，并绑定到分区imagepullsecret(如果未绑定)
      * @param clusterId
      * @param namespace
      */
-    private void checkAndBindImagePullSecret(String clusterId, String namespace) {
+    private void bindImagePullSecret(String clusterId, String namespace){
+        checkAndBindImagePullSecret(clusterId, namespace, null);
+    }
+
+    @Override
+    public void checkAndBindImagePullSecret(String clusterId, String namespace, Integer repositoryId) {
         ServiceAccount serviceAccount = serviceAccountService.get(clusterId, namespace, middlewareServiceAccount);
         List<LocalObjectReference> saImagePullSecrets = serviceAccount.getImagePullSecrets();
 
         List<ImageRepositoryDTO> imageRepositoryDTOS = imageRepositoryService.list(clusterId);
+        if (repositoryId != null) {
+            imageRepositoryDTOS = imageRepositoryDTOS.stream().filter(imageRepositoryDTO ->
+                    repositoryId.equals(imageRepositoryDTO.getId())).collect(Collectors.toList());
+        }
+
         if (!CollectionUtils.isEmpty(imageRepositoryDTOS)) {
             // 遍历集群所有镜像仓库，为每个镜像仓库创建secret(如果该镜像仓库不存在secret)
             for (ImageRepositoryDTO imageRepositoryDTO : imageRepositoryDTOS) {
-                Integer repositoryId = imageRepositoryDTO.getId();
+                Integer currentRepositoryId = imageRepositoryDTO.getId();
                 io.fabric8.kubernetes.api.model.Secret secret = imageRepositoryService.
-                        getImagePullSecret(clusterId, namespace, String.valueOf(repositoryId));
+                        getImagePullSecret(clusterId, namespace, String.valueOf(currentRepositoryId));
                 if (secret == null) {
-                    imageRepositoryService.createImagePullSecret(clusterId, namespace, repositoryId);
+                    imageRepositoryService.createOrReplaceImagePullSecret(clusterId, namespace, currentRepositoryId);
                 }
             }
             // 将镜像仓库secret绑定到分区sa default

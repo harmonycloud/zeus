@@ -5,16 +5,17 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.github.pagehelper.PageInfo;
 import com.middleware.caas.common.constants.CommonConstant;
 import com.middleware.caas.common.constants.middleware.MiddlewareConstant;
+import com.middleware.caas.common.constants.registry.RegistryConstant;
 import com.middleware.caas.common.enums.ErrorMessage;
 import com.middleware.caas.common.exception.BusinessException;
 import com.middleware.caas.common.model.middleware.ImageRepositoryDTO;
-import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.caas.common.model.middleware.Namespace;
 import com.middleware.caas.common.model.middleware.Registry;
 import com.middleware.tool.uuid.UUIDUtils;
 import com.middleware.zeus.bean.BeanImageRepository;
 import com.middleware.zeus.dao.BeanImageRepositoryMapper;
 import com.middleware.zeus.integration.cluster.SecretWrapper;
-import com.middleware.zeus.service.k8s.ClusterService;
+import com.middleware.zeus.service.k8s.NamespaceService;
 import com.middleware.zeus.service.middleware.ImageRepositoryService;
 import com.middleware.zeus.service.registry.RegistryService;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
@@ -43,10 +44,13 @@ public class ImageRepositoryServiceImpl implements ImageRepositoryService {
     @Autowired
     private RegistryService registryService;
     @Autowired
-    private ClusterService clusterService;
+    private NamespaceService namespaceService;
 
     @Value("${system.checkRegistry:false}")
     private boolean checkRegistry;
+
+    @Value("${system.privateRegistry.updateNamespaceDefaultSecret:false}")
+    private boolean updateNamespaceDefaultSecret;
 
     @Value("${system.privateRegistry.registryLabelKey:middleware-registry-id}")
     private String registryLabelKey;
@@ -68,14 +72,10 @@ public class ImageRepositoryServiceImpl implements ImageRepositoryService {
         beanImageRepository.setAddress(address);
         beanImageRepository.setCreateTime(new Date());
         beanImageRepositoryMapper.insert(beanImageRepository);
-        // 更新集群默认镜像仓库
-        /*MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
-        Registry registry = new Registry();
-        BeanUtils.copyProperties(imageRepositoryDTO, registry);
-        registry.setUser(imageRepositoryDTO.getUsername()).setAddress(imageRepositoryDTO.getHostAddress())
-                .setType("harbor").setChartRepo(imageRepositoryDTO.getProject()).setId(beanImageRepository.getId());
-        cluster.setRegistry(registry);
-        clusterService.update(cluster);*/
+        // 更新分区secret(imagePUllSecret)
+        if (updateNamespaceDefaultSecret) {
+            saveImagePullSecret(clusterId, imageRepositoryDTO.getId());
+        }
     }
 
     @Override
@@ -123,17 +123,10 @@ public class ImageRepositoryServiceImpl implements ImageRepositoryService {
         beanImageRepository.setAddress(address);
         beanImageRepository.setUpdateTime(new Date());
         beanImageRepositoryMapper.updateById(beanImageRepository);
-        // 更新集群默认镜像仓库
-        /*MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
-        if (cluster.getRegistry() != null && cluster.getRegistry().getId() != null
-                && cluster.getRegistry().getId().equals(imageRepositoryDTO.getId())) {
-            Registry registry = cluster.getRegistry();
-            BeanUtils.copyProperties(imageRepositoryDTO, registry);
-            registry.setUser(imageRepositoryDTO.getUsername()).setAddress(imageRepositoryDTO.getHostAddress())
-                    .setChartRepo(imageRepositoryDTO.getProject()).setId(beanImageRepository.getId());
-            cluster.setRegistry(registry);
-            clusterService.update(cluster);
-        }*/
+        // 更新分区secret(imagePUllSecret)
+        if (updateNamespaceDefaultSecret) {
+            saveImagePullSecret(clusterId, imageRepositoryDTO.getId());
+        }
     }
 
     @Override
@@ -213,34 +206,34 @@ public class ImageRepositoryServiceImpl implements ImageRepositoryService {
     }
 
     @Override
-    public void createImagePullSecret(String clusterId, String namespace, List<ImageRepositoryDTO> imageRepositoryDTOS) {
+    public void createOrReplaceImagePullSecret(String clusterId, String namespace, List<ImageRepositoryDTO> imageRepositoryDTOS) {
         for (ImageRepositoryDTO repositoryDTO : imageRepositoryDTOS) {
             String sa = "middleware-registry-" + UUIDUtils.get8UUID();
-            createImagePullSecret(clusterId, namespace, repositoryDTO.getId(), sa);
+            createOrReplaceImagePullSecret(clusterId, namespace, repositoryDTO.getId(), sa);
         }
     }
 
     @Override
-    public void createImagePullSecret(String clusterId, String namespace, Integer registryId) {
+    public void createOrReplaceImagePullSecret(String clusterId, String namespace, Integer registryId) {
         ImageRepositoryDTO imageRepositoryDTO = detailById(registryId);
         if (imageRepositoryDTO == null) {
             throw new BusinessException(ErrorMessage.REGISTRY_NOT_FOUND);
         }
         List<ImageRepositoryDTO> imageRepositoryDTOS = new ArrayList<>();
         imageRepositoryDTOS.add(imageRepositoryDTO);
-        createImagePullSecret(clusterId, namespace, imageRepositoryDTOS);
+        createOrReplaceImagePullSecret(clusterId, namespace, imageRepositoryDTOS);
     }
 
     @Override
-    public void createImagePullSecret(String clusterId, String namespace, Integer registryId, String secretName) {
+    public void createOrReplaceImagePullSecret(String clusterId, String namespace, Integer registryId, String secretName) {
         Secret secret = secretWrapper.get(clusterId, namespace, registryLabelKey);
         if (secret == null) {
             Map<String, String> data = new HashMap<>();
-            data.put(".dockerconfigjson", encryptRegistry(registryId));
+            data.put(RegistryConstant.KEY_IMAGE_PULL_SECRET, encryptRegistry(registryId));
             secret = new Secret();
             secret.setKind(MiddlewareConstant.SECRET);
             secret.setApiVersion(MiddlewareConstant.V1);
-            secret.setType("kubernetes.io/dockerconfigjson");
+            secret.setType(RegistryConstant.IMAGE_PULL_SECRET_TYPE);
             secret.setData(data);
             ObjectMeta objectMeta = new ObjectMeta();
             objectMeta.setNamespace(namespace);
@@ -249,7 +242,14 @@ public class ImageRepositoryServiceImpl implements ImageRepositoryService {
             labels.put(registryLabelKey, registryId.toString());
             objectMeta.setLabels(labels);
             secret.setMetadata(objectMeta);
-            secretWrapper.create(clusterId, namespace, secret);
+            secretWrapper.createOrReplace(clusterId, namespace, secret);
+        } else {
+            String secretStr = secret.getData().get(RegistryConstant.KEY_IMAGE_PULL_SECRET);
+            String newSecretStr = encryptRegistry(registryId);
+            if (!secretStr.equals(newSecretStr)) {
+                secret.getData().put(RegistryConstant.KEY_IMAGE_PULL_SECRET, newSecretStr);
+                secretWrapper.createOrReplace(clusterId, namespace, secret);
+            }
         }
     }
 
@@ -272,6 +272,22 @@ public class ImageRepositoryServiceImpl implements ImageRepositoryService {
             return repositories.get(0);
         }
         return null;
+    }
+
+    private void saveImagePullSecret(String clusterId, Integer repositoryId) {
+        // 先查询全部已注册的分区
+        List<Namespace> nsList = namespaceService.list(clusterId, true, false, false, null, null, null);
+        // 遍历nsList,根据label查询分区下的secret
+        for (Namespace namespace : nsList) {
+            Secret secret = secretWrapper.get(clusterId, namespace.getName(), registryLabelKey, String.valueOf(repositoryId));
+            // 判断secret是否存在，不存在则创建，并绑定到默认分区
+            if (secret == null) {
+                namespaceService.checkAndBindImagePullSecret(clusterId, namespace.getName(), repositoryId);
+            } else {
+                // 更新secret
+                createOrReplaceImagePullSecret(clusterId, namespace.getName(), repositoryId, secret.getMetadata().getName());
+            }
+        }
     }
 
     /**

@@ -35,7 +35,6 @@ import com.middleware.zeus.service.registry.HelmChartService;
 import com.middleware.zeus.service.system.LicenseService;
 import com.middleware.zeus.service.user.ProjectService;
 import com.middleware.zeus.service.user.RoleAuthorityService;
-import com.middleware.zeus.service.user.UserRoleService;
 import com.middleware.zeus.service.user.UserService;
 import com.middleware.zeus.util.ChartVersionUtil;
 import com.middleware.zeus.util.MiddlewareResourceCalculateUtil;
@@ -60,7 +59,6 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -650,7 +648,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         imagePullSecrets = imagePullSecrets.stream().filter(
                 imagePullSecret -> secret != null && imagePullSecret.getName().equals(secret.getMetadata().getName())).collect(Collectors.toList());
         if (CollectionUtils.isEmpty(imagePullSecrets)) {
-            imageRepositoryService.createImagePullSecret(clusterId, namespace, Integer.parseInt(registryId));
+            imageRepositoryService.createOrReplaceImagePullSecret(clusterId, namespace, Integer.parseInt(registryId));
             List<Secret> secrets = imageRepositoryService.listImagePullSecret(clusterId, namespace);
             serviceAccountService.bindImagePullSecret(clusterId, namespace, serviceAccount, secrets);
         }
