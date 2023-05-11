@@ -39,7 +39,20 @@ public class MiddlewareBackupScheduleWrapper {
             Resource<MiddlewareBackupSchedule>> backupScheduleClient = K8sClient.getClient(clusterId)
                 .resources(MiddlewareBackupSchedule.class, MiddlewareBackupScheduleList.class);
         // create
-        backupScheduleClient.resource(backupScheduleCr).create();
+        backupScheduleClient.resource(backupScheduleCr).createOrReplace();
+    }
+
+    public void createOrReplace(String clusterId, MiddlewareBackupSchedule backupScheduleCr) throws IOException {
+        // init client
+        NonNamespaceOperation<MiddlewareBackupSchedule, MiddlewareBackupScheduleList,
+                Resource<MiddlewareBackupSchedule>> backupScheduleClient = K8sClient.getClient(clusterId)
+                .resources(MiddlewareBackupSchedule.class, MiddlewareBackupScheduleList.class);
+        MiddlewareBackupSchedule schedule = get(clusterId, backupScheduleCr.getMetadata().getNamespace(), backupScheduleCr.getMetadata().getName());
+        if(schedule == null){
+            backupScheduleClient.resource(backupScheduleCr).create();
+        }else{
+            backupScheduleClient.resource(backupScheduleCr).update();
+        }
     }
 
     /**

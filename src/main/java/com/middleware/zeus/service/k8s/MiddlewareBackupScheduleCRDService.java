@@ -23,6 +23,14 @@ public interface MiddlewareBackupScheduleCRDService {
     void create(String clusterId, MiddlewareBackupSchedule middlewareBackupSchedule)  throws IOException;
 
     /**
+     * 创建备份
+     * @param clusterId
+     * @param middlewareBackupSchedule
+     * @throws IOException
+     */
+    void createOrReplace(String clusterId, MiddlewareBackupSchedule middlewareBackupSchedule)  throws IOException;
+
+    /**
      * 更新备份
      * @param clusterId
      * @param middlewareBackupSchedule

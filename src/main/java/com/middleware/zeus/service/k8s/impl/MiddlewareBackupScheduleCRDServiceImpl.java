@@ -31,6 +31,11 @@ public class MiddlewareBackupScheduleCRDServiceImpl implements MiddlewareBackupS
     }
 
     @Override
+    public void createOrReplace(String clusterId, MiddlewareBackupSchedule middlewareBackupSchedule) throws IOException {
+        middlewareBackupScheduleWrapper.createOrReplace(clusterId, middlewareBackupSchedule);
+    }
+
+    @Override
     public void update(String clusterId, MiddlewareBackupSchedule middlewareBackupSchedule) throws IOException {
         middlewareBackupScheduleWrapper.update(clusterId, middlewareBackupSchedule);
     }
