@@ -8,6 +8,9 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import com.middleware.tool.date.DateUtils;
+import com.middleware.zeus.integration.cluster.bean.prometheus.PrometheusRuleGroups;
+import com.middleware.zeus.integration.cluster.bean.prometheus.PrometheusRules;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -68,7 +71,7 @@ public class AlertServiceImpl implements AlertService {
         if (alertType.equals(SERVICE)) {
             wrapper.isNotNull("type");
         }
-        wrapper.last("limit " + alertRecordLimit);
+        //wrapper.last("limit " + alertRecordLimit);
 
         // 查询告警记录
         List<BeanAlertRecord> beanAlertRecordList = beanAlertRecordMapper.selectList(wrapper);
@@ -203,7 +206,6 @@ public class AlertServiceImpl implements AlertService {
             labels.putAll(prometheusRule.getMetadata().getLabels());
         }
         labels.put("platform", "zeus");
-        labels.put("target_name", alertTargetDto.getName());
 
         prometheusRule.getMetadata().setLabels(labels);
 
@@ -212,6 +214,12 @@ public class AlertServiceImpl implements AlertService {
         if (prometheusRule.getMetadata().getAnnotations() != null){
             annotations.putAll(prometheusRule.getMetadata().getAnnotations());
         }
+        if (alertTargetDto.getName().equals(PLATFORM)) {
+            annotations.put("target_type", PLATFORM);
+        } else {
+            annotations.put("target_type", CLUSTER);
+        }
+        annotations.put("target_name", alertTargetDto.getName());
         annotations.put("target_alias_name", alertTargetDto.getAliasName());
 
         prometheusRule.getMetadata().setAnnotations(annotations);
@@ -262,12 +270,16 @@ public class AlertServiceImpl implements AlertService {
         // 查询所有平台标记了的告警规则文件
         Map<String, String> labels = new HashMap<>();
         labels.put("platform", "zeus");
-        labels.put("target_name", null);
         List<PrometheusRule> prometheusRuleList = prometheusRuleService.list(clusterId, null, labels);
-        // todo 是否有必要检查告警规则中的标识字段
+        // 检查告警规则中的标识字段
+        checkPlatformLabels(clusterId, prometheusRuleList);
         // 根据告警对象名称转化为map结构
-        Map<String, PrometheusRule> prometheusRuleMap = prometheusRuleList.stream().collect(Collectors
-            .toMap(prometheusRule -> prometheusRule.getMetadata().getLabels().get("target_name"), Function.identity()));
+        Map<String, PrometheusRule> prometheusRuleMap = prometheusRuleList.stream()
+            .filter(prometheusRule -> prometheusRule.getMetadata().getAnnotations() != null
+                || prometheusRule.getMetadata().getAnnotations().containsKey("target_name"))
+            .collect(
+                Collectors.toMap(prometheusRule -> prometheusRule.getMetadata().getAnnotations().get("target_name"),
+                    Function.identity()));
 
         // 完善alertTargetDtoList数据
         for (AlertTargetDto alertTargetDto : alertTargetDtoList) {
@@ -292,14 +304,10 @@ public class AlertServiceImpl implements AlertService {
                 alertTargetDto.setClusterId(clusterId);
                 // 设置告警类型
                 alertTargetDto.setAlertType(CLUSTER);
-                // 通过labels获取名称
-                alertTargetDto.setName(prometheusRule.getMetadata().getLabels().get("target_name"));
                 // 通过annotations获取别名
-                if (!CollectionUtils.isEmpty(prometheusRule.getMetadata().getAnnotations())
-                    && prometheusRule.getMetadata().getAnnotations().containsKey("target_alias_name")) {
+                if (!CollectionUtils.isEmpty(prometheusRule.getMetadata().getAnnotations())) {
+                    alertTargetDto.setName(prometheusRule.getMetadata().getAnnotations().get("target_name"));
                     alertTargetDto.setAliasName(prometheusRule.getMetadata().getAnnotations().get("target_alias_name"));
-                } else {
-                    alertTargetDto.setAliasName(alertTargetDto.getName());
                 }
                 // 设置分区和prometheusRule名称
                 alertTargetDto.setNamespace(prometheusRule.getMetadata().getNamespace());
@@ -366,9 +374,14 @@ public class AlertServiceImpl implements AlertService {
                 middlewareAlertsDTO.setTime(prometheusRules.getTime());
                 middlewareAlertsDTO.setName(prometheusRules.getAlert());
                 middlewareAlertsDTO.setLevel(prometheusRules.getLabels().get("severity"));
-                if(prometheusRules.getAnnotations() != null && prometheusRules.getAnnotations().containsKey(SILENCE)){
-                    middlewareAlertsDTO.setSilence(SILENCE);
+                if(prometheusRules.getAnnotations() != null){
+                    if(prometheusRules.getAnnotations().containsKey(SILENCE)){
+                        middlewareAlertsDTO.setSilence(prometheusRules.getAnnotations().get(SILENCE));
+                    }
                 }
+                // 将文件创建时间设置为告警规则时间
+                middlewareAlertsDTO.setCreateTime(DateUtils.parseUTCDate(prometheusRule.getMetadata().getCreationTimestamp()));
+
                 middlewareAlertsDTOList.add(middlewareAlertsDTO);
             });
         });
@@ -410,5 +423,45 @@ public class AlertServiceImpl implements AlertService {
             alertUserDto.setUsername(userDto.getUserName());
             return alertUserDto;
         }).collect(Collectors.toList());
+    }
+
+    public void checkPlatformLabels(String clusterId, List<PrometheusRule> prometheusRuleList) {
+        for (PrometheusRule prometheusRule : prometheusRuleList) {
+            boolean flag = false;
+            for (PrometheusRuleGroups prometheusRuleGroups : prometheusRule.getSpec().getGroups()) {
+                for (PrometheusRules prometheusRules : prometheusRuleGroups.getRules()) {
+
+                    Map<String, String> labels = prometheusRules.getLabels();
+                    if (labels == null) {
+                        labels = new HashMap<>();
+                    }
+                    if (!labels.containsKey("clusterId") || !labels.containsKey("namespace")) {
+                        labels.put("clusterId", clusterId);
+                        labels.put("namespace", prometheusRule.getMetadata().getNamespace());
+                        flag = true;
+                    }
+                    prometheusRules.setLabels(labels);
+
+                    Map<String, String> annotations = prometheusRules.getAnnotations();
+                    if (annotations == null) {
+                        annotations = new HashMap<>();
+                    }
+                    if (!annotations.containsKey("target_type") || !annotations.containsKey("target_name")
+                        || !annotations.containsKey("target_alias_name")) {
+                        if (CollectionUtils.isEmpty(prometheusRule.getMetadata().getAnnotations())) {
+                            Map<String, String> parentAnn = prometheusRule.getMetadata().getAnnotations();
+                            annotations.put("target_type", parentAnn.get("target_type"));
+                            annotations.put("target_name", parentAnn.get("target_name"));
+                            annotations.put("target_alias_name", parentAnn.get("target_alias_name"));
+                            flag = true;
+                        }
+                    }
+                    prometheusRules.setAnnotations(annotations);
+                }
+            }
+            if (flag) {
+                prometheusRuleService.update(clusterId, prometheusRule);
+            }
+        }
     }
 }
