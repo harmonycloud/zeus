@@ -173,6 +173,10 @@ public class AlertServiceImpl implements AlertService {
                 wrapper.orderByDesc("alert_receive_time");
             }
         }
+        // keyword根据告警信息进行查询
+        if (StringUtils.isNotEmpty(query.getKeyword())){
+            wrapper.like("message", "%" + query.getKeyword() + "%");
+        }
         // 设置最多查询数据数量
         wrapper.last("limit " + alertRecordLimit);
         // 查询告警记录数据
@@ -363,6 +367,7 @@ public class AlertServiceImpl implements AlertService {
                 middlewareAlertsDTO.setExpr(prometheusRules.getExpr());
                 middlewareAlertsDTO.setTime(prometheusRules.getTime());
                 middlewareAlertsDTO.setName(prometheusRules.getAlert());
+                middlewareAlertsDTO.setLevel(prometheusRules.getLabels().get("severity"));
                 if(prometheusRules.getAnnotations() != null && prometheusRules.getAnnotations().containsKey(SILENCE)){
                     middlewareAlertsDTO.setSilence(SILENCE);
                 }

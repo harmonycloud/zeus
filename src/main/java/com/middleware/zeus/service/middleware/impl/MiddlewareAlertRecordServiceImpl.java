@@ -35,6 +35,9 @@ public class MiddlewareAlertRecordServiceImpl implements MiddlewareAlertRecordSe
         if (StringUtils.isNotEmpty(namespace)) {
             wrapper.eq("namespace", namespace);
         }
+        if (StringUtils.isNotEmpty(middlewareName)){
+            wrapper.eq("name", middlewareName);
+        }
         if (StringUtils.isNotEmpty(queryDto.getAlertLevel())) {
             wrapper.eq("level", queryDto.getAlertLevel());
         }
@@ -53,6 +56,10 @@ public class MiddlewareAlertRecordServiceImpl implements MiddlewareAlertRecordSe
             } else if (queryDto.getAlertTime().equals(DESC)) {
                 wrapper.orderByDesc("alert_receive_time");
             }
+        }
+        // keyword根据告警信息进行查询
+        if (StringUtils.isNotEmpty(queryDto.getKeyword())){
+            wrapper.like("message", "%" + queryDto.getKeyword() + "%");
         }
         PageHelper.startPage(queryDto.getCurrent(), queryDto.getSize());
         // 查询告警记录数据
