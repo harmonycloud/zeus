@@ -293,6 +293,7 @@ public class PodServiceImpl implements PodService {
             String.valueOf(ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(limitCpu), 2, RoundingMode.CEILING)));
         resource.setLimitMemory(String
             .valueOf(ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(limitMemory), 2, RoundingMode.CEILING)));
+        pi.setReady(getPodReadyStatus(pod));
         return pi.setResources(resource);
     }
 
@@ -365,6 +366,24 @@ public class PodServiceImpl implements PodService {
             log.error("节点迁移失败");
             throw new BusinessException(ErrorMessage.POD_MIGRATE_FAILED);
         }
+    }
+
+    /**
+     * 返回pod容器ready信息
+     * @param pod
+     * @return
+     */
+    public String getPodReadyStatus(Pod pod) {
+        PodStatus status = pod.getStatus();
+        int readyCount = 0;
+        int totalCount = 0;
+        for (ContainerStatus containerStatus : status.getContainerStatuses()) {
+            totalCount++;
+            if (containerStatus.getReady()) {
+                readyCount++;
+            }
+        }
+        return String.format("%d/%d", readyCount, totalCount);
     }
 
     public void checkExist(String clusterId, String namespace, String podName) {

@@ -951,8 +951,20 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Override
     public ProgressInfo getRestoreProgress(String clusterId, String namespace, String middlewareName, String restoreName) {
         ProgressInfo progressInfo = new ProgressInfo();
+        progressInfo.setClusterId(clusterId);
+        progressInfo.setNamespace(namespace);
+        progressInfo.setBackupSourceName(middlewareName);
         // 查询restore cr
         MiddlewareRestoreCR restoreCR = restoreCRDService.get(clusterId, namespace, restoreName);
+        Map<String, String> annotations = restoreCR.getMetadata().getAnnotations();
+        if (annotations.containsKey("middleware.maintenance.step")) {
+            String currentStep = annotations.get("middleware.maintenance.step");
+            int currentStepNum = (Integer.parseInt(currentStep) + 1);
+            String stepDescription = currentStepNum + "/3 " + RestoreStepEnum.findStepDescriptionByStep(annotations.get("middleware.maintenance.step.str"));
+            progressInfo.setProgressDescription(stepDescription);
+            Float currentProgress = currentStepNum / 3f;
+            progressInfo.setCurrentProgress(currentProgress);
+        }
         // 查询restore进程pods
         progressInfo.setTaskPods(getTaskPods(clusterId, namespace, restoreName));
         // 查询备份控制器状态
