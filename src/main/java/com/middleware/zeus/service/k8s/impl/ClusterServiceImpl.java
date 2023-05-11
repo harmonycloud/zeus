@@ -484,7 +484,7 @@ public class ClusterServiceImpl extends AbstractClusterService implements Cluste
         List<ConfigMap> monitorList = configMapService.list(clusterId, "monitoring", labels);
         HashMap<String, MonitorDto> monitorMap = new HashMap<>();
         if (CollectionUtils.isEmpty(monitorList)) {
-            return monitorMap;
+            return null;
         }
         monitorList.forEach(cm -> {
             if (CollectionUtils.isEmpty(cm.getData())) {

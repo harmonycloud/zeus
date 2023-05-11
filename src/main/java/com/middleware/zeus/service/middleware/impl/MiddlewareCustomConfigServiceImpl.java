@@ -83,8 +83,8 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         // 获取values
         JSONObject values = helmChartService.getInstalledValues(middlewareName, namespace, cluster);
         // 获取configs
-        String podType = getOperator(BaseOperator.class, BaseOperator.class, middleware).getPodType(role);
-        Map<String, String> data = getConfigFromValues(middleware, values, podType);
+        String valuesType = getOperator(BaseOperator.class, BaseOperator.class, middleware).changeConfigRoleToValueArg(role, false);
+        Map<String, String> data = getConfigFromValues(middleware, values, valuesType);
         // 取出chartVersion
         middleware.setChartVersion(values.getString("chart-version"));
         // 获取数据库数据
@@ -401,13 +401,13 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         return true;
     }
 
-    public Map<String, String> getConfigFromValues(Middleware middleware, JSONObject values, String podType) {
+    public Map<String, String> getConfigFromValues(Middleware middleware, JSONObject values, String valuesType) {
         Map<String, String> data = new HashMap<>();
         JSONObject args;
-        if (podType.equalsIgnoreCase("Master") && values.containsKey("args")) {
+        if (valuesType.equalsIgnoreCase("Master") && values.containsKey("args")) {
             args = values.getJSONObject("args");
-        } else if (values.containsKey(podType) && values.getJSONObject(podType).containsKey("args")) {
-            args = values.getJSONObject(podType).getJSONObject("args");
+        } else if (values.containsKey(valuesType) && values.getJSONObject(valuesType).containsKey("args")) {
+            args = values.getJSONObject(valuesType).getJSONObject("args");
         } else {
             return data;
         }
@@ -435,7 +435,7 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
             args = new JSONObject();
             newValues.getJSONObject(podType).put("args", args);
         } else {
-            throw new BusinessException(ErrorMessage.UPDATE_CUSTOM_CONFIG_FAILED);
+            args = newValues.getJSONObject(podType).getJSONObject("args");
         }
         for (String key : dataMap.keySet()) {
             if (StringUtils.isEmpty(dataMap.get(key))) {

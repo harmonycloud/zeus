@@ -29,6 +29,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.util.*;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 /**
@@ -74,7 +75,9 @@ public class ImageRepositoryServiceImpl implements ImageRepositoryService {
         beanImageRepositoryMapper.insert(beanImageRepository);
         // 更新分区secret(imagePUllSecret)
         if (updateNamespaceDefaultSecret) {
-            saveImagePullSecret(clusterId, imageRepositoryDTO.getId());
+            Executors.newSingleThreadExecutor().execute(() -> {
+                saveImagePullSecret(clusterId, imageRepositoryDTO.getId());
+            });
         }
     }
 
@@ -125,7 +128,9 @@ public class ImageRepositoryServiceImpl implements ImageRepositoryService {
         beanImageRepositoryMapper.updateById(beanImageRepository);
         // 更新分区secret(imagePUllSecret)
         if (updateNamespaceDefaultSecret) {
-            saveImagePullSecret(clusterId, imageRepositoryDTO.getId());
+            Executors.newSingleThreadExecutor().execute(() -> {
+                saveImagePullSecret(clusterId, imageRepositoryDTO.getId());
+            });
         }
     }
 

@@ -134,7 +134,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     public List<MiddlewareBackupRecord> getBackup(String clusterId, String namespace, String backupId, String backupMode) {
         if (BackupMode.PERIOD.getMode().equals(backupMode)) {
             List<MiddlewareBackupSchedule> scheduleCRList = listMiddlewareBackupSchedule(clusterId, namespace, backupId);
-            return convertBackupSchedulesToRecords(scheduleCRList);
+            return convertBackupSchedulesToRecords(clusterId, scheduleCRList);
         } else {
             List<MiddlewareBackup> backupCRList = listMiddlewareBackup(clusterId, namespace, backupId);
             return convertBackupsToRecords(clusterId, backupCRList);
@@ -428,7 +428,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         // 转换时间单位
         cr.getSpec().getSchedule().setCron(CronUtils.convertTimeToCron(time));
         try {
-            backupScheduleCRDService.create(clusterId, cr);
+            backupScheduleCRDService.createOrReplace(clusterId, cr);
         } catch (Exception e) {
             log.error("集群{}分区{}创建增量备份{}失败", clusterId, namespace, backupName + "-incr", e);
             throw new BusinessException(ErrorMessage.CREATE_INCREMENT_BACKUP_FAILED);
@@ -738,7 +738,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             }
 
             MiddlewareBackupRecord backupRecord = new MiddlewareBackupRecord();
-            convertBackupScheduleToRecord(schedule, backupRecord);
+            convertBackupScheduleToRecord(clusterId, schedule, backupRecord);
             recordList.add(backupRecord);
         }
         // 设置增量备份
@@ -907,7 +907,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public List<MiddlewareBackupRecord> backupRecords(String clusterId, String namespace, String middlewareName, String type,
-                                                      String backupId, String backupMode, String orderBy) {
+                                                      String backupId, String backupMode, String orderBy, String activeArea) {
         // 获取所有备份记录：包含单次备份、周期备份定时创建的、增量备份定时创建的
         List<MiddlewareBackupRecord> recordList = listBackup(clusterId, namespace, null, null);
         if ("single".equals(backupMode)) {
@@ -917,6 +917,10 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             Set<String> backupScheduleNames = listMiddlewareBackupScheduleNames(clusterId, namespace, backupId);
             recordList = recordList.stream().filter(record -> StringUtils.isNotEmpty(record.getOwner()) &&
                     backupScheduleNames.contains(record.getOwner())).collect(Collectors.toList());
+        }
+        if (StringUtils.isNotEmpty(activeArea)) {
+            recordList = recordList.stream().filter(record ->
+                    activeArea.equals(record.getActiveArea())).collect(Collectors.toList());
         }
         return sortAndSetAliasName(recordList, orderBy);
     }
@@ -1446,20 +1450,28 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
      * @param schedules
      * @return
      */
-    public List<MiddlewareBackupRecord> convertBackupSchedulesToRecords(List<MiddlewareBackupSchedule> schedules) {
+    public List<MiddlewareBackupRecord> convertBackupSchedulesToRecords(String clusterId, List<MiddlewareBackupSchedule> schedules) {
         List<MiddlewareBackupRecord> records = new ArrayList<>();
         schedules.forEach(backupSchedule -> {
             MiddlewareBackupRecord record = new MiddlewareBackupRecord();
-            convertBackupScheduleToRecord(backupSchedule, record);
+            convertBackupScheduleToRecord(clusterId, backupSchedule, record);
             records.add(record);
         });
         return records;
     }
 
+    public void convertBackupScheduleToRecord(MiddlewareBackupSchedule schedule, MiddlewareBackupRecord backupRecord) {
+        convertBackupSchedule(null, schedule, backupRecord);
+    }
+
+    public void convertBackupScheduleToRecord(String clusterId, MiddlewareBackupSchedule schedule, MiddlewareBackupRecord backupRecord) {
+        convertBackupSchedule(clusterId, schedule, backupRecord);
+    }
+
     /**
      * 对象封装: MiddlewareBackupScheduleCR -> MiddlewareBackupRecord
      */
-    public void convertBackupScheduleToRecord(MiddlewareBackupSchedule schedule, MiddlewareBackupRecord backupRecord) {
+    public void convertBackupSchedule(String clusterId, MiddlewareBackupSchedule schedule, MiddlewareBackupRecord backupRecord) {
         if (schedule == null) {
             throw new BusinessException(ErrorMessage.BACKUP_NOT_EXISTS);
         }
@@ -1530,6 +1542,14 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             }
         } else {
             backupRecord.setBackupMode("single");
+        }
+        if (labels.containsKey("activeArea")) {
+            String activeArea = labels.get("activeArea");
+            backupRecord.setActiveArea(activeArea);
+            backupRecord.setAreaAliasName(getActiveAreaAliasName(clusterId, activeArea));
+            backupRecord.setActiveActive(true);
+        } else {
+            backupRecord.setActiveActive(false);
         }
     }
 
@@ -1625,8 +1645,10 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             String activeArea = labels.get("activeArea");
             backupRecord.setActiveArea(activeArea);
             backupRecord.setAreaAliasName(getActiveAreaAliasName(clusterId, activeArea));
+            backupRecord.setActiveActive(true);
+        } else {
+            backupRecord.setActiveActive(false);
         }
-
     }
 
     private String changeCompressedSizeUnit(String compressedSize) {
