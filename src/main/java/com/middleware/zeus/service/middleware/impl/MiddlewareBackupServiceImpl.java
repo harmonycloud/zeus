@@ -939,6 +939,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
         progressInfo.setClusterId(clusterId);
         progressInfo.setNamespace(namespace);
+        progressInfo.setBackupSourceName(middlewareName);
         progressInfo.setPhrase(backup.getStatus().getPhase());
         // 查询backup任务pods
         progressInfo.setTaskPods(getTaskPods(clusterId, namespace, backupName));
