@@ -211,8 +211,9 @@ public class MiddlewareBackupController {
     @Authority(power = 1)
     public BaseResult<ProgressInfo> listTaskRecord(@PathVariable("clusterId") String clusterId,
                                                    @PathVariable("namespace") String namespace,
-                                                   @PathVariable("backupName") String backupName) {
-        return BaseResult.ok(middlewareBackupService.getBackupProgress(clusterId, namespace, backupName));
+                                                   @PathVariable("backupName") String backupName,
+                                                   @RequestParam("middlewareName") String middlewareName) {
+        return BaseResult.ok(middlewareBackupService.getBackupProgress(clusterId, namespace, middlewareName, backupName));
     }
 
     @ApiOperation(value = "查询备份任务对应的增量记录", notes = "查询备份任务对应的增量记录")
@@ -258,9 +259,10 @@ public class MiddlewareBackupController {
     @GetMapping("/restore/{restoreName}/progress")
     @Authority(power = 1)
     public BaseResult<ProgressInfo> restoreDetail(@PathVariable("clusterId") String clusterId,
-                                                             @PathVariable("namespace") String namespace,
-                                                             @RequestParam("restoreName") String restoreName) {
-        return BaseResult.ok(middlewareBackupService.getRestoreProgress(clusterId, namespace, restoreName));
+                                                  @PathVariable("namespace") String namespace,
+                                                  @RequestParam("restoreName") String restoreName,
+                                                  @RequestParam("middlewareName") String middlewareName) {
+        return BaseResult.ok(middlewareBackupService.getRestoreProgress(clusterId, namespace, middlewareName, restoreName));
     }
 
     @ApiOperation(value = "创建备份恢复", notes = "创建备份恢复")

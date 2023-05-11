@@ -12,7 +12,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
 import com.alibaba.fastjson.JSONObject;
-import com.mchange.lang.FloatUtils;
 import com.middleware.caas.common.constants.ActiveAreaConstant;
 import com.middleware.caas.common.model.user.UserRole;
 import com.middleware.caas.filters.user.CurrentUserRepository;
@@ -923,7 +922,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public ProgressInfo getBackupProgress(String clusterId, String namespace, String backupName) {
+    public ProgressInfo getBackupProgress(String clusterId, String namespace, String middlewareName, String backupName) {
         // 查询backup cr
         MiddlewareBackup backup = backupCRDService.get(clusterId, namespace, backupName);
         Map<String, String> annotations = backup.getMetadata().getAnnotations();
@@ -937,6 +936,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             Float currentProgress = currentStepNum / 3f;
             progressInfo.setCurrentProgress(currentProgress);
         }
+
         progressInfo.setClusterId(clusterId);
         progressInfo.setNamespace(namespace);
         progressInfo.setPhrase(backup.getStatus().getPhase());
@@ -948,7 +948,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public ProgressInfo getRestoreProgress(String clusterId, String namespace, String restoreName) {
+    public ProgressInfo getRestoreProgress(String clusterId, String namespace, String middlewareName, String restoreName) {
         ProgressInfo progressInfo = new ProgressInfo();
         // 查询restore cr
         MiddlewareRestoreCR restoreCR = restoreCRDService.get(clusterId, namespace, restoreName);
@@ -956,6 +956,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         progressInfo.setTaskPods(getTaskPods(clusterId, namespace, restoreName));
         // 查询备份控制器状态
         progressInfo.setBackupControllerStatus(getBackupComponentStatus(clusterId));
+        progressInfo.setBackupSourceName(middlewareName);
         return progressInfo;
     }
 
