@@ -53,7 +53,7 @@ public class MiddlewareAlertRecordServiceImpl implements MiddlewareAlertRecordSe
         if (StringUtils.isNotEmpty(queryDto.getReceiveTime())) {
             if (queryDto.getReceiveTime().equals(ASC)) {
                 wrapper.orderByAsc("alert_receive_time");
-            } else if (queryDto.getAlertTime().equals(DESC)) {
+            } else if (queryDto.getReceiveTime().equals(DESC)) {
                 wrapper.orderByDesc("alert_receive_time");
             }
         }

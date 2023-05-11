@@ -138,7 +138,7 @@ public class AlertServiceImpl implements AlertService {
         // 根据告警记录对象查询
         wrapper.eq("lay", query.getAlertType());
         // 根据集群id查询
-        if (StringUtils.isEmpty(query.getClusterId())) {
+        if (StringUtils.isNotEmpty(query.getClusterId())) {
             wrapper.eq("cluster_id", query.getClusterId());
         } else {
             wrapper.ne("cluster_id", "");
@@ -169,7 +169,7 @@ public class AlertServiceImpl implements AlertService {
         if (StringUtils.isNotEmpty(query.getReceiveTime())) {
             if (query.getReceiveTime().equals(ASC)) {
                 wrapper.orderByAsc("alert_receive_time");
-            } else if (query.getAlertTime().equals(DESC)) {
+            } else if (query.getReceiveTime().equals(DESC)) {
                 wrapper.orderByDesc("alert_receive_time");
             }
         }
@@ -177,8 +177,6 @@ public class AlertServiceImpl implements AlertService {
         if (StringUtils.isNotEmpty(query.getKeyword())){
             wrapper.like("message", "%" + query.getKeyword() + "%");
         }
-        // 设置最多查询数据数量
-        wrapper.last("limit " + alertRecordLimit);
         // 查询告警记录数据
         List<BeanAlertRecord> alertRecordList = beanAlertRecordMapper.selectList(wrapper);
         // 封装数据

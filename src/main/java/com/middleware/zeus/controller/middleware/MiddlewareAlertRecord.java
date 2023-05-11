@@ -1,20 +1,18 @@
 package com.middleware.zeus.controller.middleware;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
 import com.github.pagehelper.PageInfo;
 import com.middleware.caas.common.base.BaseResult;
 import com.middleware.caas.common.model.AlertDTO;
 import com.middleware.caas.common.model.AlertRecordQueryDto;
-import com.middleware.zeus.bean.BeanAlertRecord;
 import com.middleware.zeus.service.middleware.MiddlewareAlertRecordService;
+
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 /**
  * @author liyinlong
@@ -22,7 +20,7 @@ import java.util.List;
  */
 @Api(tags = {"监控告警","服务告警"}, value = "服务告警", description = "服务告警")
 @RestController
-@RequestMapping(value = {"/clusters/{clusterId}/namespaces/{namespace}/middlewares/{middlewareName}/records"})
+@RequestMapping("/clusters/{clusterId}/namespaces/{namespace}/middlewares/{middlewareName}/records")
 public class MiddlewareAlertRecord {
 
     @Autowired
