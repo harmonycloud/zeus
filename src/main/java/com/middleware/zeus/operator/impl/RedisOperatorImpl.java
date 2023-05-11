@@ -685,14 +685,14 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         if (!reserve) {
             switch (customConfigRole) {
                 case "major" :
-                    return "";
+                    return "Master";
                 case "proxy" :
                     return "predixy";
                 default: return customConfigRole;
             }
         } else {
             switch (customConfigRole) {
-                case "" :
+                case "Master" :
                     return "major";
                 case "predixy" :
                     return "proxy";
