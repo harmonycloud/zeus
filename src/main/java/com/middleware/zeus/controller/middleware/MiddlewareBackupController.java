@@ -260,7 +260,7 @@ public class MiddlewareBackupController {
     @Authority(power = 1)
     public BaseResult<ProgressInfo> restoreDetail(@PathVariable("clusterId") String clusterId,
                                                   @PathVariable("namespace") String namespace,
-                                                  @RequestParam("restoreName") String restoreName,
+                                                  @PathVariable("restoreName") String restoreName,
                                                   @RequestParam("middlewareName") String middlewareName) {
         return BaseResult.ok(middlewareBackupService.getRestoreProgress(clusterId, namespace, middlewareName, restoreName));
     }
