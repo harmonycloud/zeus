@@ -81,6 +81,7 @@ data:
       privateRegistry:
         enable: false
         imagePullSecret: middleware-zeus-secret
+        updateNamespaceDefaultSecret: false
 
     overview:
       overall:

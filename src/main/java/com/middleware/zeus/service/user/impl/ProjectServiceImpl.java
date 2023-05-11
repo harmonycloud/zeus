@@ -720,7 +720,7 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
             return;
         }
         List<ImageRepositoryDTO> imageRepositoryDTOS = imageRepositoryService.list(clusterId);
-        imageRepositoryService.createImagePullSecret(clusterId, namespace, imageRepositoryDTOS);
+        imageRepositoryService.createOrReplaceImagePullSecret(clusterId, namespace, imageRepositoryDTOS);
         List<Secret> allImagePullSecret = imageRepositoryService.listImagePullSecret(clusterId, namespace);
         serviceAccountService.bindImagePullSecret(clusterId, namespace, serviceAccount, allImagePullSecret);
     }

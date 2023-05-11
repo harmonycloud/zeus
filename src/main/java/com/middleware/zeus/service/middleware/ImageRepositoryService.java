@@ -95,17 +95,17 @@ public interface ImageRepositoryService {
     /**
      * 创建imagePullSecret
      */
-    void createImagePullSecret(String clusterId, String namespace, List<ImageRepositoryDTO> imageRepositoryDTOS);
+    void createOrReplaceImagePullSecret(String clusterId, String namespace, List<ImageRepositoryDTO> imageRepositoryDTOS);
 
     /**
      * 创建imagePullSecret
      */
-    void createImagePullSecret(String clusterId, String namespace, Integer registryId);
+    void createOrReplaceImagePullSecret(String clusterId, String namespace, Integer registryId);
 
     /**
      * 创建imagePullSecret
      */
-    void createImagePullSecret(String clusterId, String namespace, Integer registryId,String secretName);
+    void createOrReplaceImagePullSecret(String clusterId, String namespace, Integer registryId, String secretName);
 
     /**
      * 查询分区下所有中间件平台的imagePullSecret

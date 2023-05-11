@@ -154,6 +154,13 @@ public interface NamespaceService {
     void createMiddlewareOperator(String clusterId);
 
     /**
+     * 为镜像仓库创建secret(如果未创建)，并绑定到分区imagepullsecret(如果未绑定)
+     * @param clusterId
+     * @param namespace
+     */
+    void checkAndBindImagePullSecret(String clusterId, String namespace, Integer repositoryId);
+
+    /**
      * 绑定/解绑分区
      *
      * @param clusterId 集群id
