@@ -365,7 +365,7 @@ public class NamespaceServiceImpl implements NamespaceService {
             for (ImageRepositoryDTO imageRepositoryDTO : imageRepositoryDTOS) {
                 Integer repositoryId = imageRepositoryDTO.getId();
                 io.fabric8.kubernetes.api.model.Secret secret = imageRepositoryService.
-                        getImagePullSecret(clusterId, namespace, imageRepositoryDTO.getClusterId());
+                        getImagePullSecret(clusterId, namespace, String.valueOf(repositoryId));
                 if (secret == null) {
                     imageRepositoryService.createImagePullSecret(clusterId, namespace, repositoryId);
                 }
