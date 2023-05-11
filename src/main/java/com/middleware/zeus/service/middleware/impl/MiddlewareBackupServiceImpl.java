@@ -1347,12 +1347,12 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             backupRestore.setRestoreName(restoreCR.getMetadata().getName());
             backupRestore.setNamespace(restoreCR.getMetadata().getNamespace());
             MiddlewareRestoreStatus restoreCRStatus = restoreCR.getStatus();
+            // 获取并设置克隆时间
+            Date creationTime = DateUtils.parseUTCDate(restoreCR.getMetadata().getCreationTimestamp());
+            backupRestore.setCreationTime(creationTime);
             if (restoreCRStatus != null) {
                 backupRestore.setPhrase(restoreCR.getStatus().getPhase());
                 backupRestore.setReason(restoreCR.getStatus().getReason());
-                // 获取并设置克隆时间
-                Date creationTime = DateUtils.parseUTCDate(restoreCR.getMetadata().getCreationTimestamp());
-                backupRestore.setCreationTime(creationTime);
                 // 获取并设置克隆记录所在可用区
                 Map<String, String> labels = restoreCR.getMetadata().getLabels();
                 String activeArea = labels.get("activeArea");
