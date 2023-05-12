@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 
 import com.alibaba.fastjson.JSONObject;
 import com.middleware.caas.common.constants.ActiveAreaConstant;
+import com.middleware.caas.common.constants.BackupConstant;
 import com.middleware.caas.common.model.user.UserRole;
 import com.middleware.caas.filters.user.CurrentUserRepository;
 import com.middleware.tool.date.DateUtils;
@@ -32,6 +33,7 @@ import com.middleware.zeus.service.user.RoleAuthorityService;
 import com.middleware.zeus.service.user.UserRoleService;
 import com.middleware.zeus.service.user.UserService;
 import com.middleware.zeus.util.MathUtil;
+import com.middleware.zeus.util.MiddlewareBackupTrimUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -132,12 +134,15 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public List<MiddlewareBackupRecord> getBackup(String clusterId, String namespace, String backupId, String backupMode) {
+        List<MiddlewareBackupRecord> records;
         if (BackupMode.PERIOD.getMode().equals(backupMode)) {
             List<MiddlewareBackupSchedule> scheduleCRList = listMiddlewareBackupSchedule(clusterId, namespace, backupId);
-            return convertBackupSchedulesToRecords(clusterId, scheduleCRList);
+            records = convertBackupSchedulesToRecords(clusterId, scheduleCRList);
+            return MiddlewareBackupTrimUtil.trimScheduleBackup(records);
         } else {
             List<MiddlewareBackup> backupCRList = listMiddlewareBackup(clusterId, namespace, backupId);
-            return convertBackupsToRecords(clusterId, backupCRList);
+            records = convertBackupsToRecords(clusterId, backupCRList);
+            return MiddlewareBackupTrimUtil.trimBackup(records);
         }
     }
 
@@ -898,11 +903,41 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             }
         }
 
+        // 设置可用区信息
+        if(cr.getMetadata() != null && cr.getMetadata().getLabels() != null && cr.getMetadata().getLabels().containsKey("activeArea")){
+            String activeArea = cr.getMetadata().getLabels().get("activeArea");
+            middlewareIncBackupDto.setActiveArea(activeArea);
+            middlewareIncBackupDto.setAreaAliasName(getActiveAreaAliasName(clusterId, activeArea));
+        }
+
         // 封装数据
         middlewareIncBackupDto.setPause(cr.getSpec().getPause())
                 .setTime(CronUtils.convertCronToTime(cr.getSpec().getSchedule().getCron()))
                 .setBackupName(cr.getMetadata().getName());
         return middlewareIncBackupDto;
+    }
+
+    @Override
+    public List<MiddlewareIncBackupDto> getIncBackupInfoList(String clusterId, String namespace, String backupId) {
+        List<MiddlewareBackupSchedule> scheduleCRList = listMiddlewareBackupSchedule(clusterId, namespace, backupId);
+        List<MiddlewareIncBackupDto> incBackupDtos = new ArrayList<>();
+        if (scheduleCRList.size() == 2) {
+            MiddlewareBackupSchedule scheduleA = scheduleCRList.get(0);
+            MiddlewareBackupSchedule scheduleB = scheduleCRList.get(1);
+            MiddlewareIncBackupDto incBackupInfoA = getIncBackupInfo(clusterId, namespace, scheduleA.getMetadata().getName());
+            MiddlewareIncBackupDto incBackupInfoB = getIncBackupInfo(clusterId, namespace, scheduleB.getMetadata().getName());
+            if (incBackupInfoA.getTime().equals(incBackupInfoB.getTime())
+                    && incBackupInfoA.getPause().equals(incBackupInfoB.getPause())) {
+                incBackupInfoA.setSameActiveActiveBackup(true);
+                incBackupDtos.add(incBackupInfoA);
+            } else {
+                incBackupInfoA.setSameActiveActiveBackup(true);
+                incBackupInfoB.setSameActiveActiveBackup(true);
+                incBackupDtos.add(incBackupInfoA);
+                incBackupDtos.add(incBackupInfoB);
+            }
+        }
+        return incBackupDtos;
     }
 
     @Override

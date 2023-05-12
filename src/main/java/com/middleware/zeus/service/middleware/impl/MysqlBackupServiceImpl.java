@@ -302,6 +302,11 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
+    public List<MiddlewareIncBackupDto> getIncBackupInfoList(String clusterId, String namespace, String backupId) {
+        return null;
+    }
+
+    @Override
     public List<MiddlewareBackupRecord> backupRecords(String clusterId, String namespace, String middlewareName,
                                                       String type, String backupId, String backupMode, String orderBy, String activeArea) {
         return null;

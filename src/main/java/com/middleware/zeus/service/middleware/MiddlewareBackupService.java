@@ -186,13 +186,22 @@ public interface MiddlewareBackupService {
     List<MiddlewareBackupRecordGroup> backupTaskGroupList(String clusterId, String namespace, String middlewareName, String organId, String projectId, String type, String keyword);
 
     /**
-     * 备份任务详情
+     * 获取增量备份任务详情
      * @param clusterId
      * @param namespace
      * @param backupName
      * @return
      */
     MiddlewareIncBackupDto getIncBackupInfo(String clusterId, String namespace, String backupName);
+
+    /**
+     * 获取增量备份任务详情列表
+     * @param clusterId
+     * @param namespace
+     * @param backupId
+     * @return
+     */
+    List<MiddlewareIncBackupDto> getIncBackupInfoList(String clusterId, String namespace, String backupId);
 
     /**
      * 查询全量备份记录
