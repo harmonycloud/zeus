@@ -49,15 +49,15 @@ public class MiddlewareBackupController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "backupName", value = "备份名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "backupId", value = "备份任务id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "time", value = "间隔时间", paramType = "query", dataTypeClass = String.class),
     })
-    @PostMapping("{backupName}/inc")
+    @PostMapping("{backupId}/inc")
     public BaseResult createInc(@PathVariable("clusterId") String clusterId,
                                 @PathVariable("namespace") String namespace,
-                                @PathVariable("backupName") String backupName,
+                                @PathVariable("backupId") String backupId,
                                 @RequestParam("time") String time) {
-        middlewareBackupService.createIncBackup(clusterId, namespace, backupName, time);
+        middlewareBackupService.createIncBackup(clusterId, namespace, backupId, time);
         return BaseResult.ok();
     }
 

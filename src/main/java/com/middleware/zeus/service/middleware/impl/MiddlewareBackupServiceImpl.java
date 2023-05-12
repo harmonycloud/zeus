@@ -13,7 +13,6 @@ import java.util.stream.Collectors;
 
 import com.alibaba.fastjson.JSONObject;
 import com.middleware.caas.common.constants.ActiveAreaConstant;
-import com.middleware.caas.common.constants.BackupConstant;
 import com.middleware.caas.common.model.user.UserRole;
 import com.middleware.caas.filters.user.CurrentUserRepository;
 import com.middleware.tool.date.DateUtils;
@@ -186,18 +185,21 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public void createIncBackup(String clusterId, String namespace, String backupName, String time) {
-        // 校验备份周期和保留时间
-        MiddlewareBackupSchedule baks = backupScheduleCRDService.get(clusterId, namespace, backupName);
-        if (baks == null || baks.getSpec() == null || baks.getSpec().getSchedule() == null) {
-            throw new BusinessException(ErrorMessage.FIND_BACKUP_SCHEDULE_CRON_FAILED);
+    public void createIncBackup(String clusterId, String namespace, String backupId, String time) {
+        List<MiddlewareBackupSchedule> scheduleCRList = listMiddlewareBackupSchedule(clusterId, namespace, backupId);
+        for (MiddlewareBackupSchedule middlewareBackupSchedule : scheduleCRList) {
+            // 校验备份周期和保留时间
+            MiddlewareBackupSchedule baks = backupScheduleCRDService.get(clusterId, namespace, middlewareBackupSchedule.getMetadata().getName());
+            if (baks == null || baks.getSpec() == null || baks.getSpec().getSchedule() == null) {
+                throw new BusinessException(ErrorMessage.FIND_BACKUP_SCHEDULE_CRON_FAILED);
+            }
+            String cron = baks.getSpec().getSchedule().getCron();
+            Integer retentionTime = baks.getSpec().getSchedule().getRetentionTime();
+            if ("day".equalsIgnoreCase(baks.getMetadata().getLabels().get("unit"))) {
+                checkTimeLawful(cron, retentionTime);
+            }
+            createIncBackup(clusterId, namespace, backupId, time, baks);
         }
-        String cron = baks.getSpec().getSchedule().getCron();
-        Integer retentionTime = baks.getSpec().getSchedule().getRetentionTime();
-        if ("day".equalsIgnoreCase(baks.getMetadata().getLabels().get("unit"))) {
-            checkTimeLawful(cron, retentionTime);
-        }
-        createIncBackup(clusterId, namespace, backupName, time, null);
     }
 
     @Override
