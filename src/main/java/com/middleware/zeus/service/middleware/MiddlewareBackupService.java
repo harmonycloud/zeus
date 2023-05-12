@@ -30,7 +30,7 @@ public interface MiddlewareBackupService {
      * 创建增量备份
      *
      */
-    void createIncBackup(String clusterId, String namespace, String backupName, String time);
+    void createIncBackup(String clusterId, String namespace, String backupId, String time);
 
     /**
      * 创建增量备份
