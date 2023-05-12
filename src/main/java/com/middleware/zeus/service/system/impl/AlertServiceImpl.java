@@ -440,7 +440,10 @@ public class AlertServiceImpl implements AlertService {
             boolean flag = false;
             for (PrometheusRuleGroups prometheusRuleGroups : prometheusRule.getSpec().getGroups()) {
                 for (PrometheusRules prometheusRules : prometheusRuleGroups.getRules()) {
-
+                    if (StringUtils.isEmpty(prometheusRules.getAlert())
+                        || StringUtils.isNotEmpty(prometheusRules.getRecord())) {
+                        continue;
+                    }
                     Map<String, String> labels = prometheusRules.getLabels();
                     if (labels == null) {
                         labels = new HashMap<>();
