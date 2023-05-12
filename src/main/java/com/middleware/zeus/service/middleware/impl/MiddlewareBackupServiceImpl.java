@@ -188,8 +188,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     public void createIncBackup(String clusterId, String namespace, String backupId, String time) {
         List<MiddlewareBackupSchedule> scheduleCRList = listMiddlewareBackupSchedule(clusterId, namespace, backupId);
         for (MiddlewareBackupSchedule middlewareBackupSchedule : scheduleCRList) {
+            String backupName = middlewareBackupSchedule.getMetadata().getName();
             // 校验备份周期和保留时间
-            MiddlewareBackupSchedule baks = backupScheduleCRDService.get(clusterId, namespace, middlewareBackupSchedule.getMetadata().getName());
+            MiddlewareBackupSchedule baks = backupScheduleCRDService.get(clusterId, namespace, backupName);
             if (baks == null || baks.getSpec() == null || baks.getSpec().getSchedule() == null) {
                 throw new BusinessException(ErrorMessage.FIND_BACKUP_SCHEDULE_CRON_FAILED);
             }
@@ -198,7 +199,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             if ("day".equalsIgnoreCase(baks.getMetadata().getLabels().get("unit"))) {
                 checkTimeLawful(cron, retentionTime);
             }
-            createIncBackup(clusterId, namespace, backupId, time, baks);
+            createIncBackup(clusterId, namespace, backupName, time, baks);
         }
     }
 
@@ -225,6 +226,15 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public void updateBackupSchedule(MiddlewareBackupDTO backupDTO) {
+        List<MiddlewareBackupSchedule> schedules = listMiddlewareBackupSchedule(backupDTO.getClusterId(), backupDTO.getNamespace(), backupDTO.getBackupId());
+        for (MiddlewareBackupSchedule schedule : schedules) {
+            updateBackupSchedule(schedule.getMetadata().getName(), backupDTO);
+        }
+    }
+
+    @Override
+    public void updateBackupSchedule(String backupName, MiddlewareBackupDTO backupDTO) {
+        backupDTO.setBackupName(backupName);
         if ("day".equalsIgnoreCase(backupDTO.getDateUnit()) && backupDTO.getIncrement() != null && backupDTO.getIncrement()) {
             checkTimeLawful(backupDTO.getCron(), backupDTO.getRetentionTime());
         }
@@ -937,6 +947,13 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 incBackupInfoB.setSameActiveActiveBackup(true);
                 incBackupDtos.add(incBackupInfoA);
                 incBackupDtos.add(incBackupInfoB);
+            }
+        } else {
+            for (MiddlewareBackupSchedule schedule : scheduleCRList) {
+                MiddlewareIncBackupDto incBackupInfo = getIncBackupInfo(clusterId, namespace, schedule.getMetadata().getName());
+                if (incBackupInfo != null) {
+                    incBackupDtos.add(incBackupInfo);
+                }
             }
         }
         return incBackupDtos;

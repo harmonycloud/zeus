@@ -39,12 +39,18 @@ public interface MiddlewareBackupService {
     void createIncBackup(String clusterId, String namespace, String backupName, String time, MiddlewareBackupSchedule scheduleCR);
 
     /**
-     * 更新备份规则
-     *
+     * 更新备份周期备份
      * @param middlewareBackupDTO
      * @return
      */
     void updateBackupSchedule(MiddlewareBackupDTO middlewareBackupDTO);
+
+    /**
+     * 更新备份周期备份
+     * @param backupName
+     * @param middlewareBackupDTO
+     */
+    void updateBackupSchedule(String backupName, MiddlewareBackupDTO middlewareBackupDTO);
 
     /**
      * 创建备份规则

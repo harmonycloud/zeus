@@ -155,6 +155,11 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
+    public void updateBackupSchedule(String backupName, MiddlewareBackupDTO middlewareBackupDTO) {
+
+    }
+
+    @Override
     public void deleteRecord(String clusterId, String namespace, String type, String backupName, Boolean forceDelete) {
         try {
             backupService.delete(clusterId, namespace, backupName);
