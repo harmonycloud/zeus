@@ -1550,12 +1550,12 @@ public abstract class AbstractBaseOperator {
         if (!reserve) {
             switch (customConfigRole) {
                 case "major" :
-                    return "";
+                    return "Master";
                 default: return customConfigRole;
             }
         } else {
             switch (customConfigRole) {
-                case "" :
+                case "Master" :
                     return "major";
                 default: return customConfigRole;
             }

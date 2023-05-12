@@ -35,4 +35,8 @@ public class StatefulSetWrapper {
             throw e;
         }
     }
+
+    public void delete(String clusterId, String namespace, String name) {
+        K8sClient.getClient(clusterId).apps().statefulSets().inNamespace(namespace).withName(name).delete();
+    }
 }
