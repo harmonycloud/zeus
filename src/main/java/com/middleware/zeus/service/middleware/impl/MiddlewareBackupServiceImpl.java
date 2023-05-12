@@ -646,6 +646,10 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         String activeArea = restoreDto.getActiveArea();
         String restoreTime = restoreDto.getRestoreTime();
 
+        if (StringUtils.isAnyEmpty(clusterId, namespace, type, middlewareName, backupName, sourceName, backupId, restoreTime)) {
+            throw new BusinessException(ErrorMessage.PARAMETER_NOT_COMPLETE);
+        }
+
         MiddlewareRestoreCR crd = new MiddlewareRestoreCR();
         ObjectMeta meta = new ObjectMeta();
         meta.setNamespace(namespace);
