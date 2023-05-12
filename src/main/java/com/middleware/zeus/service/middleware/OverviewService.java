@@ -55,6 +55,7 @@ public interface OverviewService {
      *
      * @return List<AlertDTO>
      */
+    @Deprecated
     PageInfo<AlertDTO> getAlertRecord(String clusterId, String namespace, String middlewareName, Integer current, Integer size, String level, String keyword, String lay);
 
     MiddlewareOverviewDTO getChartPlatformOverview();

@@ -184,8 +184,18 @@ public class AlertServiceImpl implements AlertService {
         List<BeanAlertRecord> alertRecordList = beanAlertRecordMapper.selectList(wrapper);
         // 封装数据
         PageInfo<AlertDTO> alertDtoPageInfo = new PageInfo<>();
-        BeanUtils.copyProperties(new PageInfo<>(alertRecordList), alertDtoPageInfo);
-
+        
+        PageInfo<BeanAlertRecord> alertRecordPageInfo = new PageInfo<>(alertRecordList);
+        BeanUtils.copyProperties(alertRecordPageInfo, alertDtoPageInfo);
+        // 处理告警信息为空的告警记录
+        alertDtoPageInfo.setList(alertRecordPageInfo.getList().stream().map(beanAlertRecord -> {
+            AlertDTO alertDTO = new AlertDTO();
+            BeanUtils.copyProperties(beanAlertRecord, alertDTO);
+            if (StringUtils.isEmpty(alertDTO.getMessage())) {
+                alertDTO.setMessage(alertDTO.getSummary());
+            }
+            return alertDTO;
+        }).collect(Collectors.toList()));
         return alertDtoPageInfo;
     }
 

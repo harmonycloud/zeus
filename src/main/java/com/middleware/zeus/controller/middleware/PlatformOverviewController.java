@@ -108,6 +108,7 @@ public class PlatformOverviewController {
     })
     @GetMapping("/alerts")
     @Authority(power = 1)
+    @Deprecated
     public BaseResult<List<AlertDTO>> getAlertsRecord(@RequestParam(value = "clusterId", required = false) String clusterId,
                                                       @RequestParam(value = "namespace", required = false) String namespace,
                                                       @RequestParam(value = "current", required = false) Integer current,
