@@ -128,7 +128,11 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         MiddlewareQuota quota = middleware.getQuota().get(middleware.getType());
         replaceCommonResources(quota, values.getJSONObject(RESOURCES));
         replaceCommonStorages(quota, values);
-        super.setSecurityContext(middleware, values);
+        JSONObject stsConfig = values.getJSONObject("statefulSetConfiguration");
+        // 设置uid和gid
+        if (stsConfig != null && stsConfig.containsKey("securityContext")) {
+            super.setSecurityContext(middleware, stsConfig);
+        }
 
         //添加业务数据库
         if (middleware.getBusinessDeploy() != null && !middleware.getBusinessDeploy().isEmpty()) {
@@ -191,7 +195,12 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         convertCommonByHelmChart(middleware, values);
         convertStoragesByHelmChart(middleware, middleware.getType(), values);
         convertRegistry(middleware, values);
-        convertSecurityContext(middleware, values);
+
+        // 设置uid和gid
+        JSONObject stsConfig = values.getJSONObject("statefulSetConfiguration");
+        if (stsConfig != null && stsConfig.containsKey("securityContext")) {
+            convertSecurityContext(middleware, stsConfig);
+        }
         // 处理mysql的特有参数
         if (values != null) {
             convertResourcesByHelmChart(middleware, middleware.getType(), values.getJSONObject(RESOURCES));

@@ -216,8 +216,6 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         // pre check
         operator.createPreCheck(middleware, cluster);
         updateRegistry(middleware,cluster);
-        // TODO need delete
-        checkAndBindImagePullSecret(middleware.getClusterId(), middleware.getNamespace(), middleware.getMirrorImageId());
         // create
         operator.create(middleware, cluster);
         // 查看middleware有没有创建出来
