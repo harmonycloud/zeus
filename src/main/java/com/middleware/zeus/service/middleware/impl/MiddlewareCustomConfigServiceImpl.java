@@ -131,12 +131,13 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         MiddlewareClusterDTO cluster = clusterService.findById(config.getClusterId());
         Middleware middleware =
             new Middleware(config.getClusterId(), config.getNamespace(), config.getName(), config.getType());
-        // 获取节点类型
-        String podType = getOperator(BaseOperator.class, BaseOperator.class, middleware).changeConfigRoleToValueArg(config.getRole(), false);
+        // 获取values类型
+        BaseOperator operator = getOperator(BaseOperator.class, BaseOperator.class, middleware);
+        String valuesType = operator.changeConfigRoleToValueArg(config.getRole(), false);
         // 获取values
         JSONObject values = helmChartService.getInstalledValues(config.getName(), config.getNamespace(), cluster);
         // 获取configs
-        Map<String, String> data = getConfigFromValues(middleware, values, podType);
+        Map<String, String> data = getConfigFromValues(middleware, values, valuesType);
         if (CollectionUtils.isEmpty(data)) {
             // 从parameter.yaml文件创建一份
             QueryWrapper<BeanCustomConfig> wrapper = new QueryWrapper<BeanCustomConfig>()
@@ -164,7 +165,8 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
             || config.getType().equals(MiddlewareTypeEnum.REDIS.getType())) && config.getRole().equalsIgnoreCase("major")) {
             doUpdateCustomConfig(config, cluster, config.getType());
         }
-
+        // 获取节点类型
+        String podType = operator.getPodType(config.getRole());
         updateValues(middleware, data, cluster, values, podType);
         // 添加修改历史
         customConfigHistoryService.insert(config.getName(), oldDate, config);
