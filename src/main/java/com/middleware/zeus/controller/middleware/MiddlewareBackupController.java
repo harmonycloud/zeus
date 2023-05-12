@@ -132,14 +132,14 @@ public class MiddlewareBackupController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "backupName", value = "备份名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "backupId", value = "备份任务id", paramType = "path", dataTypeClass = String.class),
     })
-    @GetMapping("/{backupName}/inc")
+    @GetMapping("/{backupId}/inc")
     @Authority(power = 1)
-    public BaseResult<MiddlewareIncBackupDto> getIncBackupInfo(@PathVariable("clusterId") String clusterId,
+    public BaseResult<List<MiddlewareIncBackupDto>> getIncBackupInfo(@PathVariable("clusterId") String clusterId,
                                                                @PathVariable("namespace") String namespace,
-                                                               @PathVariable("backupName") String backupName) {
-        return BaseResult.ok(middlewareBackupService.getIncBackupInfo(clusterId, namespace, backupName));
+                                                               @PathVariable("backupId") String backupId) {
+        return BaseResult.ok(middlewareBackupService.getIncBackupInfoList(clusterId, namespace, backupId));
     }
 
     @ApiOperation(value = "删除备份任务", notes = "删除备份任务")
