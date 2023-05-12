@@ -17,10 +17,14 @@ public class MiddlewareBackupTrimUtil {
             MiddlewareBackupRecord recordA = records.get(0);
             MiddlewareBackupRecord recordB = records.get(1);
             if(recordA.getPosition().equals(recordB.getPosition())){
+                recordA.setSameActiveActiveBackup(true);
                 filteredRecords.add(recordA);
                 return filteredRecords;
             }
         }
+        records.forEach(middlewareBackupRecord -> {
+            middlewareBackupRecord.setSameActiveActiveBackup(false);
+        });
         return records;
     }
 
@@ -32,10 +36,14 @@ public class MiddlewareBackupTrimUtil {
             if (recordA.getPosition().equals(recordB.getPosition())
                     && recordA.getCron().equals(recordB.getCron())
                     && (recordA.getLimitRecord().equals(recordB.getLimitRecord()))) {
+                recordA.setSameActiveActiveBackup(true);
                 filteredRecords.add(recordA);
                 return filteredRecords;
             }
         }
+        records.forEach(middlewareBackupRecord -> {
+            middlewareBackupRecord.setSameActiveActiveBackup(false);
+        });
         return records;
     }
 

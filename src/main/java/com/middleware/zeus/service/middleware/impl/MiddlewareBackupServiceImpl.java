@@ -928,8 +928,11 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             MiddlewareIncBackupDto incBackupInfoB = getIncBackupInfo(clusterId, namespace, scheduleB.getMetadata().getName());
             if (incBackupInfoA.getTime().equals(incBackupInfoB.getTime())
                     && incBackupInfoA.getPause().equals(incBackupInfoB.getPause())) {
+                incBackupInfoA.setSameActiveActiveBackup(true);
                 incBackupDtos.add(incBackupInfoA);
             } else {
+                incBackupInfoA.setSameActiveActiveBackup(true);
+                incBackupInfoB.setSameActiveActiveBackup(true);
                 incBackupDtos.add(incBackupInfoA);
                 incBackupDtos.add(incBackupInfoB);
             }
