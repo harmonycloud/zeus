@@ -1670,12 +1670,12 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
      */
     private String getActiveAreaAliasName(String clusterId, String activeArea){
         String activeAreaAliasName = activeAreaMap.get(activeArea);
-        if(StringUtils.isEmpty(activeArea)){
+        if(StringUtils.isEmpty(activeAreaAliasName)){
             BeanActiveArea beanActiveArea = activeAreaService.get(clusterId, activeArea);
             if (beanActiveArea != null) {
                 activeAreaMap.put(activeArea, beanActiveArea.getAliasName());
+                return beanActiveArea.getAliasName();
             }
-            return beanActiveArea.getAliasName();
         }
         return activeAreaAliasName;
     }
