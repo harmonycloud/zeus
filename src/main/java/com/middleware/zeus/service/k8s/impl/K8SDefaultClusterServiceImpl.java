@@ -1,7 +1,7 @@
 package com.middleware.zeus.service.k8s.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.zeus.common.model.middleware.MiddlewareClusterDTO;
 import com.middleware.zeus.bean.BeanK8sDefaultCluster;
 import com.middleware.zeus.dao.BeanK8sDefaultClusterMapper;
 import com.middleware.zeus.service.k8s.K8sDefaultClusterService;

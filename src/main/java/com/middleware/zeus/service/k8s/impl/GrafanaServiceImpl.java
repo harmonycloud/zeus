@@ -1,6 +1,6 @@
 package com.middleware.zeus.service.k8s.impl;
 
-import com.middleware.caas.common.model.middleware.MiddlewareClusterMonitorInfo;
+import com.middleware.zeus.common.model.middleware.MiddlewareClusterMonitorInfo;
 import com.middleware.zeus.integration.cluster.GrafanaWrapper;
 import com.middleware.zeus.integration.cluster.bean.prometheus.GrafanaApiKey;
 import com.middleware.zeus.service.k8s.GrafanaService;

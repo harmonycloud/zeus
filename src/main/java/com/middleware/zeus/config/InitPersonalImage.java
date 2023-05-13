@@ -1,7 +1,7 @@
 package com.middleware.zeus.config;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.middleware.caas.common.constants.DateStyle;
+import com.middleware.zeus.common.constants.DateStyle;
 import com.middleware.zeus.bean.PersonalizedConfiguration;
 import com.middleware.zeus.dao.user.PersonalMapper;
 import lombok.extern.slf4j.Slf4j;

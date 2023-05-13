@@ -1,16 +1,15 @@
 package com.middleware.zeus.service.k8s.impl;
 
-import static com.middleware.caas.common.constants.NameConstant.STORAGE;
-import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.STORAGE_PROVISIONER;
+import static com.middleware.zeus.common.constants.NameConstant.STORAGE;
+import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.STORAGE_PROVISIONER;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
-import com.middleware.caas.common.model.StorageDto;
+import com.middleware.zeus.common.model.StorageDto;
 import com.middleware.zeus.integration.cluster.PvcWrapper;
 import com.middleware.zeus.integration.cluster.StorageClassWrapper;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareInfo;
@@ -23,10 +22,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import com.middleware.caas.common.model.ResourceQuotaDo;
-import com.middleware.caas.common.model.StorageClassDTO;
-import com.middleware.caas.common.model.StorageQuota;
-import com.middleware.caas.common.model.middleware.StorageClassInfo;
+import com.middleware.zeus.common.model.ResourceQuotaDo;
+import com.middleware.zeus.common.model.StorageClassDTO;
+import com.middleware.zeus.common.model.StorageQuota;
+import com.middleware.zeus.common.model.middleware.StorageClassInfo;
 
 import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
 

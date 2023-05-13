@@ -1,6 +1,6 @@
 package com.middleware.zeus.service.middleware;
 
-import com.middleware.caas.common.model.middleware.MiddlewareCustomConfig;
+import com.middleware.zeus.common.model.middleware.MiddlewareCustomConfig;
 import com.middleware.zeus.bean.BeanCustomConfigHistory;
 
 import java.util.List;

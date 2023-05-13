@@ -1,6 +1,6 @@
 package com.middleware.zeus.service.user;
 
-import com.middleware.caas.common.model.user.UserRole;
+import com.middleware.zeus.common.model.user.UserRole;
 import com.middleware.zeus.bean.user.BeanOrganizationUser;
 
 import java.util.List;

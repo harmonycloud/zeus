@@ -2,20 +2,19 @@ package com.middleware.zeus.service.k8s.impl;
 
 import java.math.RoundingMode;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.middleware.caas.common.model.QuotaBase;
-import com.middleware.caas.common.model.ResourceQuotaDo;
-import com.middleware.caas.common.model.StorageDto;
-import com.middleware.caas.common.model.StorageQuota;
-import com.middleware.caas.common.model.middleware.StorageClassInfo;
+import com.middleware.zeus.common.model.QuotaBase;
+import com.middleware.zeus.common.model.ResourceQuotaDo;
+import com.middleware.zeus.common.model.StorageDto;
+import com.middleware.zeus.common.model.StorageQuota;
+import com.middleware.zeus.common.model.middleware.StorageClassInfo;
 import com.middleware.zeus.service.k8s.ResourceQuotaService;
 import com.middleware.zeus.service.k8s.StorageService;
-import com.middleware.zeus.util.CalculateUtil;
+import com.middleware.zeus.util.numeric.CalculateUtil;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.ResourceQuotaSpec;
 import org.apache.commons.lang3.StringUtils;
@@ -24,16 +23,16 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import com.middleware.caas.common.enums.middleware.ResourceUnitEnum;
-import com.middleware.caas.common.model.middleware.ResourceQuotaDTO;
+import com.middleware.zeus.common.enums.middleware.ResourceUnitEnum;
+import com.middleware.zeus.common.model.middleware.ResourceQuotaDTO;
 import com.middleware.zeus.integration.cluster.ResourceQuotaWrapper;
-import com.middleware.tool.numeric.ResourceCalculationUtil;
+import com.middleware.zeus.util.numeric.ResourceCalculationUtil;
 
 import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.ResourceQuota;
 
-import static com.middleware.caas.common.constants.CommonConstant.DOT;
-import static com.middleware.caas.common.constants.NameConstant.*;
+import static com.middleware.zeus.common.constants.CommonConstant.DOT;
+import static com.middleware.zeus.common.constants.NameConstant.*;
 
 /**
  * @author dengyulong

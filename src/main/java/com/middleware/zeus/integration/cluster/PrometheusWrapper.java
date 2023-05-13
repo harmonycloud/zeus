@@ -2,9 +2,9 @@ package com.middleware.zeus.integration.cluster;
 
 import java.util.Map;
 
-import com.middleware.caas.common.enums.ErrorMessage;
-import com.middleware.caas.common.exception.BusinessException;
-import com.middleware.caas.common.model.ClusterComponentsDto;
+import com.middleware.zeus.common.enums.ErrorMessage;
+import com.middleware.zeus.common.exception.BusinessException;
+import com.middleware.zeus.common.model.ClusterComponentsDto;
 import com.middleware.zeus.integration.cluster.api.PrometheusApi;
 import com.middleware.zeus.integration.cluster.client.PrometheusClient;
 import com.middleware.zeus.service.k8s.ClusterComponentService;
@@ -15,14 +15,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import com.middleware.caas.common.enums.Protocol;
-import com.middleware.caas.common.model.PrometheusRulesResponse;
-import com.middleware.caas.common.model.PrometheusResponse;
-import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.middleware.caas.common.model.middleware.MiddlewareClusterMonitorInfo;
+import com.middleware.zeus.common.enums.Protocol;
+import com.middleware.zeus.common.model.PrometheusRulesResponse;
+import com.middleware.zeus.common.model.PrometheusResponse;
+import com.middleware.zeus.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.zeus.common.model.middleware.MiddlewareClusterMonitorInfo;
 import org.springframework.util.CollectionUtils;
 
-import static com.middleware.caas.common.constants.NameConstant.ADMIN;
+import static com.middleware.zeus.common.constants.NameConstant.ADMIN;
 
 /**
  * @author xutianhong

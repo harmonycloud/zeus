@@ -2,8 +2,8 @@ package com.middleware.zeus.service.middleware;
 
 import java.util.List;
 
-import com.middleware.caas.common.model.middleware.Backup;
-import com.middleware.caas.common.model.middleware.Middleware;
+import com.middleware.zeus.common.model.middleware.Backup;
+import com.middleware.zeus.common.model.middleware.Middleware;
 import com.middleware.zeus.integration.cluster.bean.BackupCR;
 import com.middleware.zeus.integration.cluster.bean.BackupStorageProvider;
 

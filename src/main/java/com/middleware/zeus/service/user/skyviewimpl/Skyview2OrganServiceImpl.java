@@ -7,12 +7,12 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 
-import com.middleware.caas.common.enums.ErrorMessage;
-import com.middleware.caas.common.exception.BusinessException;
-import com.middleware.caas.common.model.ResourceQuotaDo;
-import com.middleware.caas.common.model.user.OrganizationDto;
-import com.middleware.caas.common.model.user.OrganizationQuota;
-import com.middleware.caas.common.model.user.UserDto;
+import com.middleware.zeus.common.enums.ErrorMessage;
+import com.middleware.zeus.common.exception.BusinessException;
+import com.middleware.zeus.common.model.ResourceQuotaDo;
+import com.middleware.zeus.common.model.user.OrganizationDto;
+import com.middleware.zeus.common.model.user.OrganizationQuota;
+import com.middleware.zeus.common.model.user.UserDto;
 import com.middleware.zeus.annotation.Skyview;
 import com.middleware.zeus.service.user.OrganizationService;
 import com.middleware.zeus.service.user.abstractService.AbstractOrganizationService;

@@ -37,8 +37,6 @@
         <evosuite.version>1.0.6</evosuite.version>
         <junit.version>4.12</junit.version>
 
-        <caas.version>3.0.1-middleware</caas.version>
-        <middleware.tools.version>1.0.1-middleware</middleware.tools.version>
         <auth0.jwt.version>3.8.3</auth0.jwt.version>
 
         <elasticsearch.version>7.17.1</elasticsearch.version>
@@ -103,6 +101,12 @@
             <groupId>org.apache.rocketmq</groupId>
             <artifactId>rocketmq-acl</artifactId>
             <version>4.8.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-all</artifactId>
+            <version>4.5.10</version>
         </dependency>
 
 
@@ -257,26 +261,6 @@
             <scope>test</scope>
         </dependency>
 
-        <dependency>
-            <groupId>com.middleware.caas</groupId>
-            <artifactId>common</artifactId>
-            <version>${caas.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.middleware</groupId>
-            <artifactId>tools</artifactId>
-            <version>${middleware.tools.version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.squareup.okhttp3</groupId>
-                    <artifactId>okhttp</artifactId>
-                </exclusion>
-                <exclusion>
-                    <groupId>org.apache.logging.log4j</groupId>
-                    <artifactId>log4j-api</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
         <dependency>
             <groupId>com.squareup.okhttp3</groupId>
             <artifactId>okhttp</artifactId>

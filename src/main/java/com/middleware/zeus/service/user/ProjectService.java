@@ -1,11 +1,11 @@
 package com.middleware.zeus.service.user;
 
-import com.middleware.caas.common.model.BackupServerDTO;
-import com.middleware.caas.common.model.ResourceQuotaDo;
-import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.middleware.caas.common.model.middleware.Namespace;
-import com.middleware.caas.common.model.middleware.ProjectMiddlewareResourceInfo;
-import com.middleware.caas.common.model.user.*;
+import com.middleware.zeus.common.model.BackupServerDTO;
+import com.middleware.zeus.common.model.ResourceQuotaDo;
+import com.middleware.zeus.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.zeus.common.model.middleware.Namespace;
+import com.middleware.zeus.common.model.middleware.ProjectMiddlewareResourceInfo;
+import com.middleware.zeus.common.model.user.*;
 import com.middleware.zeus.annotation.Skyview;
 import com.middleware.zeus.bean.user.BeanProject;
 

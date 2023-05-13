@@ -1,8 +1,8 @@
 package com.middleware.zeus.service.k8s.impl;
 
 import com.alibaba.fastjson.JSONObject;
-import com.middleware.caas.common.enums.ErrorMessage;
-import com.middleware.caas.common.model.YamlCheck;
+import com.middleware.zeus.common.enums.ErrorMessage;
+import com.middleware.zeus.common.model.YamlCheck;
 import com.middleware.zeus.integration.cluster.CommonResourceWrapper;
 import com.middleware.zeus.integration.cluster.CustomResourceDefinitionWrapper;
 import com.middleware.zeus.service.k8s.YamlService;
@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.*;
+import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.*;
 
 /**
  * @author xutianhong

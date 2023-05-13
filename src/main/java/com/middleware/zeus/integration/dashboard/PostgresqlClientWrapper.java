@@ -5,12 +5,12 @@ import org.springframework.stereotype.Component;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.middleware.caas.common.enums.ErrorMessage;
-import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.zeus.common.enums.ErrorMessage;
+import com.middleware.zeus.common.exception.BusinessException;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static com.middleware.caas.common.constants.CommonConstant.DOT;
+import static com.middleware.zeus.common.constants.CommonConstant.DOT;
 
 /**
  * @author xutianhong

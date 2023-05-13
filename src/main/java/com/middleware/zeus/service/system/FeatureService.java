@@ -1,6 +1,6 @@
 package com.middleware.zeus.service.system;
 
-import com.middleware.caas.common.model.FeatureDto;
+import com.middleware.zeus.common.model.FeatureDto;
 
 import java.util.List;
 

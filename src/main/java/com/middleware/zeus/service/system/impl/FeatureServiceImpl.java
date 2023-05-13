@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import com.middleware.caas.common.model.FeatureDto;
+import com.middleware.zeus.common.model.FeatureDto;
 import com.middleware.zeus.config.FeatureConfig;
 import com.middleware.zeus.service.system.FeatureService;
 

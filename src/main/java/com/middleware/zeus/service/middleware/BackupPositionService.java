@@ -1,7 +1,7 @@
 package com.middleware.zeus.service.middleware;
 
-import com.middleware.caas.common.model.BackupPositionDTO;
-import com.middleware.caas.common.model.BackupServerDTO;
+import com.middleware.zeus.common.model.BackupPositionDTO;
+import com.middleware.zeus.common.model.BackupServerDTO;
 import com.middleware.zeus.bean.BeanBackupPosition;
 import com.middleware.zeus.bean.BeanBackupServer;
 import com.middleware.zeus.integration.cluster.bean.Minio;

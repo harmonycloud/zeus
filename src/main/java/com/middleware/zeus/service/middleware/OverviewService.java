@@ -1,12 +1,12 @@
 package com.middleware.zeus.service.middleware;
 
 import com.github.pagehelper.PageInfo;
-import com.middleware.caas.common.model.AlertDTO;
-import com.middleware.caas.common.model.MiddlewareDTO;
+import com.middleware.zeus.common.model.AlertDTO;
+import com.middleware.zeus.common.model.MiddlewareDTO;
 import com.middleware.zeus.bean.AlertMessageDTO;
 import com.middleware.zeus.bean.BeanOperationAudit;
 import com.middleware.zeus.bean.PlatformOverviewDTO;
-import com.middleware.caas.common.model.middleware.*;
+import com.middleware.zeus.common.model.middleware.*;
 
 import java.util.List;
 import java.util.Map;

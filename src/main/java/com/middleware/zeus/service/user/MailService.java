@@ -1,10 +1,8 @@
 package com.middleware.zeus.service.user;
 
-import com.middleware.caas.common.model.AlertRecordDo;
-import com.middleware.caas.common.model.AlertUserDo;
-import com.middleware.caas.common.model.middleware.AlertInfoDto;
+import com.middleware.zeus.common.model.AlertRecordDo;
+import com.middleware.zeus.common.model.AlertUserDo;
 import com.middleware.zeus.bean.MailInfo;
-import com.middleware.zeus.bean.user.BeanUser;
 
 import javax.mail.MessagingException;
 import java.io.IOException;

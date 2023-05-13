@@ -4,7 +4,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import com.alibaba.fastjson.JSONArray;
-import com.middleware.caas.common.model.AffinityDTO;
+import com.middleware.zeus.common.model.AffinityDTO;
 import io.fabric8.kubernetes.api.model.*;
 import org.apache.commons.lang3.StringUtils;
 

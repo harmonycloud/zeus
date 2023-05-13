@@ -1,6 +1,6 @@
 package com.middleware.zeus.service.prometheus;
 
-import com.middleware.caas.common.model.PrometheusResponse;
+import com.middleware.zeus.common.model.PrometheusResponse;
 
 import java.util.Map;
 

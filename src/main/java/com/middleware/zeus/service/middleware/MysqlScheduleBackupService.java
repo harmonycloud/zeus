@@ -1,7 +1,7 @@
 package com.middleware.zeus.service.middleware;
 
-import com.middleware.caas.common.model.middleware.MiddlewareBackupRecord;
-import com.middleware.caas.common.model.middleware.ScheduleBackup;
+import com.middleware.zeus.common.model.middleware.MiddlewareBackupRecord;
+import com.middleware.zeus.common.model.middleware.ScheduleBackup;
 import com.middleware.zeus.integration.cluster.bean.MysqlScheduleBackupCR;
 
 import java.util.List;

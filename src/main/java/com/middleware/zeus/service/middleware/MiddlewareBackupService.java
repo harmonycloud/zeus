@@ -1,10 +1,10 @@
 package com.middleware.zeus.service.middleware;
 
-import com.middleware.caas.common.model.MiddlewareBackupDTO;
-import com.middleware.caas.common.model.MiddlewareIncBackup;
-import com.middleware.caas.common.model.MiddlewareIncBackupDto;
-import com.middleware.caas.common.model.MiddlewareTaskDTO;
-import com.middleware.caas.common.model.middleware.*;
+import com.middleware.zeus.common.model.MiddlewareBackupDTO;
+import com.middleware.zeus.common.model.MiddlewareIncBackup;
+import com.middleware.zeus.common.model.MiddlewareIncBackupDto;
+import com.middleware.zeus.common.model.MiddlewareTaskDTO;
+import com.middleware.zeus.common.model.middleware.*;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareBackupSchedule;
 import com.middleware.zeus.integration.cluster.bean.Minio;
 import io.fabric8.kubernetes.api.model.ObjectMeta;

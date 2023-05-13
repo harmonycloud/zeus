@@ -1,9 +1,9 @@
 package com.middleware.zeus.integration.registry.api.harbor;
 
-import static com.middleware.caas.common.constants.NameConstant.ADMIN;
-import static com.middleware.caas.common.constants.registry.HelmChartConstant.CHART_REPO_DIR_NAME;
-import static com.middleware.tool.api.util.HttpMethod.GET;
-import static com.middleware.tool.api.util.HttpMethod.POST;
+import static com.middleware.zeus.common.constants.NameConstant.ADMIN;
+import static com.middleware.zeus.common.constants.registry.HelmChartConstant.CHART_REPO_DIR_NAME;
+import static com.middleware.zeus.util.api.util.HttpMethod.GET;
+import static com.middleware.zeus.util.api.util.HttpMethod.POST;
 
 import java.io.File;
 import java.util.List;
@@ -12,12 +12,12 @@ import com.middleware.zeus.integration.registry.bean.harbor.V1HelmChartVersion;
 import org.springframework.http.HttpStatus;
 
 import com.alibaba.fastjson.TypeReference;
-import com.middleware.caas.common.base.BaseResult;
-import com.middleware.tool.api.AbstractApi;
-import com.middleware.tool.api.client.BaseClient;
-import com.middleware.tool.api.common.ApiException;
-import com.middleware.tool.api.common.ApiResponse;
-import com.middleware.tool.api.common.RequestParams;
+import com.middleware.zeus.common.base.BaseResult;
+import com.middleware.zeus.util.api.AbstractApi;
+import com.middleware.zeus.util.api.client.BaseClient;
+import com.middleware.zeus.util.api.common.ApiException;
+import com.middleware.zeus.util.api.common.ApiResponse;
+import com.middleware.zeus.util.api.common.RequestParams;
 
 import okhttp3.Call;
 

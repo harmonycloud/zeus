@@ -2,11 +2,11 @@ package com.middleware.zeus.service.k8s.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.middleware.caas.common.constants.NamespaceConstant;
-import com.middleware.caas.common.model.*;
-import com.middleware.caas.common.model.middleware.ImageRepositoryDTO;
-import com.middleware.caas.common.model.middleware.StorageClassInfo;
-import com.middleware.caas.common.model.user.ProjectNamespaceDo;
+import com.middleware.zeus.common.constants.NamespaceConstant;
+import com.middleware.zeus.common.model.*;
+import com.middleware.zeus.common.model.middleware.ImageRepositoryDTO;
+import com.middleware.zeus.common.model.middleware.StorageClassInfo;
+import com.middleware.zeus.common.model.user.ProjectNamespaceDo;
 import com.middleware.zeus.bean.user.BeanProjectNamespace;
 import com.middleware.zeus.dao.user.BeanProjectNamespaceMapper;
 import com.middleware.zeus.service.k8s.*;
@@ -21,11 +21,11 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import com.middleware.caas.common.enums.ErrorMessage;
-import com.middleware.caas.common.exception.BusinessException;
-import com.middleware.caas.common.model.middleware.Namespace;
-import com.middleware.caas.common.model.middleware.ResourceQuotaDTO;
-import com.middleware.tool.date.DateUtils;
+import com.middleware.zeus.common.enums.ErrorMessage;
+import com.middleware.zeus.common.exception.BusinessException;
+import com.middleware.zeus.common.model.middleware.Namespace;
+import com.middleware.zeus.common.model.middleware.ResourceQuotaDTO;
+import com.middleware.zeus.util.date.DateUtils;
 import com.middleware.zeus.integration.cluster.NamespaceWrapper;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
@@ -35,7 +35,7 @@ import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
-import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_OPERATOR;
+import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_OPERATOR;
 
 /**
  * @author dengyulong

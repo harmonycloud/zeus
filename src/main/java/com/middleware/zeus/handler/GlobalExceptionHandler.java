@@ -5,10 +5,10 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import com.middleware.caas.common.base.BaseResult;
-import com.middleware.caas.common.enums.ErrorMessage;
-import com.middleware.caas.common.exception.BusinessException;
-import com.middleware.caas.common.exception.CaasRuntimeException;
+import com.middleware.zeus.common.base.BaseResult;
+import com.middleware.zeus.common.enums.ErrorMessage;
+import com.middleware.zeus.common.exception.BusinessException;
+import com.middleware.zeus.common.exception.CaasRuntimeException;
 import com.middleware.caas.filters.exception.AuthRuntimeException;
 
 import lombok.extern.slf4j.Slf4j;

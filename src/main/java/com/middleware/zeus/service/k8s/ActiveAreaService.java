@@ -1,8 +1,8 @@
 package com.middleware.zeus.service.k8s;
 
-import com.middleware.caas.common.model.ActiveAreaDto;
-import com.middleware.caas.common.model.ActivePoolDto;
-import com.middleware.caas.common.model.ClusterNodeResourceDto;
+import com.middleware.zeus.common.model.ActiveAreaDto;
+import com.middleware.zeus.common.model.ActivePoolDto;
+import com.middleware.zeus.common.model.ClusterNodeResourceDto;
 import com.middleware.zeus.bean.BeanActiveArea;
 
 import java.util.List;

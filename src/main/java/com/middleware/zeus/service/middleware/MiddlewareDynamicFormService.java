@@ -1,6 +1,6 @@
 package com.middleware.zeus.service.middleware;
 
-import com.middleware.caas.common.model.middleware.QuestionYaml;
+import com.middleware.zeus.common.model.middleware.QuestionYaml;
 
 /**
  * @author xutianhong

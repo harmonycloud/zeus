@@ -1,6 +1,6 @@
 package com.middleware.zeus.service.k8s.impl;
 
-import com.middleware.caas.common.model.ActiveAreaClusterDto;
+import com.middleware.zeus.common.model.ActiveAreaClusterDto;
 import com.middleware.zeus.service.k8s.ActiveAreaClusterService;
 import com.middleware.zeus.service.k8s.ActiveAreaService;
 import com.middleware.zeus.service.k8s.ClusterService;

@@ -1,14 +1,14 @@
 package com.middleware.zeus.service.system.impl;
 
-import static com.middleware.caas.common.constants.AlertConstant.*;
-import static com.middleware.caas.common.constants.CommonConstant.ASC;
-import static com.middleware.caas.common.constants.CommonConstant.DESC;
+import static com.middleware.zeus.common.constants.AlertConstant.*;
+import static com.middleware.zeus.common.constants.CommonConstant.ASC;
+import static com.middleware.zeus.common.constants.CommonConstant.DESC;
 
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import com.middleware.tool.date.DateUtils;
+import com.middleware.zeus.util.date.DateUtils;
 import com.middleware.zeus.integration.cluster.bean.prometheus.PrometheusRuleGroups;
 import com.middleware.zeus.integration.cluster.bean.prometheus.PrometheusRules;
 import org.apache.commons.lang3.StringUtils;
@@ -21,14 +21,14 @@ import org.springframework.util.CollectionUtils;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
-import com.middleware.caas.common.enums.AlertTargetEnum;
-import com.middleware.caas.common.enums.ErrorMessage;
-import com.middleware.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
-import com.middleware.caas.common.exception.BusinessException;
-import com.middleware.caas.common.model.*;
-import com.middleware.caas.common.model.middleware.MiddlewareAlertsDTO;
-import com.middleware.caas.common.model.user.UserDto;
-import com.middleware.tool.uuid.UUIDUtils;
+import com.middleware.zeus.common.enums.AlertTargetEnum;
+import com.middleware.zeus.common.enums.ErrorMessage;
+import com.middleware.zeus.common.enums.middleware.MiddlewareOfficialNameEnum;
+import com.middleware.zeus.common.exception.BusinessException;
+import com.middleware.zeus.common.model.*;
+import com.middleware.zeus.common.model.middleware.MiddlewareAlertsDTO;
+import com.middleware.zeus.common.model.user.UserDto;
+import com.middleware.zeus.util.uuid.UUIDUtils;
 import com.middleware.zeus.bean.BeanAlertRecord;
 import com.middleware.zeus.dao.BeanAlertRecordMapper;
 import com.middleware.zeus.integration.cluster.bean.prometheus.PrometheusRule;

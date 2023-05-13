@@ -1,8 +1,8 @@
 package com.middleware.zeus.integration.cluster.api;
 
-import static com.middleware.tool.api.util.HttpMethod.DELETE;
-import static com.middleware.tool.api.util.HttpMethod.GET;
-import static com.middleware.tool.api.util.HttpMethod.POST;
+import static com.middleware.zeus.util.api.util.HttpMethod.DELETE;
+import static com.middleware.zeus.util.api.util.HttpMethod.GET;
+import static com.middleware.zeus.util.api.util.HttpMethod.POST;
 
 import java.util.List;
 
@@ -11,11 +11,11 @@ import org.apache.commons.lang3.StringUtils;
 
 import com.alibaba.fastjson.JSONObject;
 import com.alibaba.fastjson.TypeReference;
-import com.middleware.tool.api.AbstractApi;
-import com.middleware.tool.api.client.BaseClient;
-import com.middleware.tool.api.common.ApiException;
-import com.middleware.tool.api.common.ApiResponse;
-import com.middleware.tool.api.common.RequestParams;
+import com.middleware.zeus.util.api.AbstractApi;
+import com.middleware.zeus.util.api.client.BaseClient;
+import com.middleware.zeus.util.api.common.ApiException;
+import com.middleware.zeus.util.api.common.ApiResponse;
+import com.middleware.zeus.util.api.common.RequestParams;
 
 import okhttp3.Call;
 

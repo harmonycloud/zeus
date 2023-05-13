@@ -1,6 +1,6 @@
 package com.middleware.zeus.controller.user;
 
-import com.middleware.caas.common.base.BaseResult;
+import com.middleware.zeus.common.base.BaseResult;
 import com.middleware.zeus.bean.MailInfo;
 import com.middleware.zeus.service.user.MailService;
 import io.swagger.annotations.Api;

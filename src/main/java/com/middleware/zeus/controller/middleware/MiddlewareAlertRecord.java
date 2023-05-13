@@ -4,9 +4,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import com.github.pagehelper.PageInfo;
-import com.middleware.caas.common.base.BaseResult;
-import com.middleware.caas.common.model.AlertDTO;
-import com.middleware.caas.common.model.AlertRecordQueryDto;
+import com.middleware.zeus.common.base.BaseResult;
+import com.middleware.zeus.common.model.AlertDTO;
+import com.middleware.zeus.common.model.AlertRecordQueryDto;
 import com.middleware.zeus.service.middleware.MiddlewareAlertRecordService;
 
 import io.swagger.annotations.Api;

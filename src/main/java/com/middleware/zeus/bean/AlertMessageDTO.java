@@ -1,7 +1,7 @@
 package com.middleware.zeus.bean;
 
 import com.github.pagehelper.PageInfo;
-import com.middleware.caas.common.model.AlertSummaryDTO;
+import com.middleware.zeus.common.model.AlertSummaryDTO;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

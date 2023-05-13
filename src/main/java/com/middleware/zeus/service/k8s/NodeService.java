@@ -1,9 +1,9 @@
 package com.middleware.zeus.service.k8s;
 
-import com.middleware.caas.common.model.ClusterNodeResourceDto;
-import com.middleware.caas.common.model.Node;
-import com.middleware.caas.common.model.ResourceQuotaDo;
-import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.zeus.common.model.ClusterNodeResourceDto;
+import com.middleware.zeus.common.model.Node;
+import com.middleware.zeus.common.model.ResourceQuotaDo;
+import com.middleware.zeus.common.model.middleware.MiddlewareClusterDTO;
 
 import java.util.List;
 import java.util.Map;

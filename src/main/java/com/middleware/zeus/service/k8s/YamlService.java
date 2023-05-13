@@ -1,6 +1,6 @@
 package com.middleware.zeus.service.k8s;
 
-import com.middleware.caas.common.model.YamlCheck;
+import com.middleware.zeus.common.model.YamlCheck;
 
 /**
  * @author xutianhong

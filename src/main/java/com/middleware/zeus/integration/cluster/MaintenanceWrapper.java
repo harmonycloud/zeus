@@ -1,6 +1,6 @@
 package com.middleware.zeus.integration.cluster;
 
-import static com.middleware.caas.common.constants.NameConstant.FOUR_ZERO_FOUR;
+import static com.middleware.zeus.common.constants.NameConstant.FOUR_ZERO_FOUR;
 
 import java.io.IOException;
 import java.util.ArrayList;

@@ -1,7 +1,7 @@
 package com.middleware.zeus.service.middleware;
 
-import com.middleware.caas.common.model.EventDetail;
-import com.middleware.caas.common.model.middleware.MiddlewarePvcDto;
+import com.middleware.zeus.common.model.EventDetail;
+import com.middleware.zeus.common.model.middleware.MiddlewarePvcDto;
 
 import java.util.List;
 import java.util.Map;

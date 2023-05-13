@@ -1,12 +1,12 @@
 package com.middleware.zeus.service.mysql.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.middleware.caas.common.constants.MysqlConstant;
-import com.middleware.caas.common.enums.ErrorMessage;
-import com.middleware.caas.common.exception.BusinessException;
-import com.middleware.caas.common.model.MysqlDbDTO;
-import com.middleware.caas.common.model.MysqlDbDetail;
-import com.middleware.caas.common.model.MysqlDbPrivilege;
+import com.middleware.zeus.common.constants.MysqlConstant;
+import com.middleware.zeus.common.enums.ErrorMessage;
+import com.middleware.zeus.common.exception.BusinessException;
+import com.middleware.zeus.common.model.MysqlDbDTO;
+import com.middleware.zeus.common.model.MysqlDbDetail;
+import com.middleware.zeus.common.model.MysqlDbPrivilege;
 import com.middleware.zeus.bean.BeanMysqlDb;
 import com.middleware.zeus.bean.BeanMysqlDbPriv;
 import com.middleware.zeus.dao.BeanMysqlDbMapper;
@@ -31,8 +31,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.middleware.zeus.util.MysqlConnectionUtil.getDBConnection;
-import static com.middleware.zeus.util.MysqlConnectionUtil.getMysqlQualifiedName;
+import static com.middleware.zeus.util.middleware.MysqlConnectionUtil.getDBConnection;
+import static com.middleware.zeus.util.middleware.MysqlConnectionUtil.getMysqlQualifiedName;
 
 /**
  * @author liyinlong

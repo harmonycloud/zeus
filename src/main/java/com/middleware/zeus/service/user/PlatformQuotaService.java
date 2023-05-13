@@ -1,10 +1,9 @@
 package com.middleware.zeus.service.user;
 
-import com.middleware.caas.common.model.ResourceQuotaDo;
+import com.middleware.zeus.common.model.ResourceQuotaDo;
 import com.middleware.zeus.bean.user.BeanPlatformQuota;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author xutianhong

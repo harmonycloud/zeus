@@ -1,9 +1,8 @@
 package com.middleware.zeus.service.middleware;
 
 import com.github.pagehelper.PageInfo;
-import com.middleware.caas.common.model.AlertDTO;
-import com.middleware.caas.common.model.AlertRecordQueryDto;
-import com.middleware.zeus.bean.BeanAlertRecord;
+import com.middleware.zeus.common.model.AlertDTO;
+import com.middleware.zeus.common.model.AlertRecordQueryDto;
 
 /**
  * @author liyinlong

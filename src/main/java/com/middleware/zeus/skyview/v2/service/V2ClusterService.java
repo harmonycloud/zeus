@@ -1,6 +1,6 @@
 package com.middleware.zeus.skyview.v2.service;
 
-import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.zeus.common.model.middleware.MiddlewareClusterDTO;
 
 import java.util.List;
 

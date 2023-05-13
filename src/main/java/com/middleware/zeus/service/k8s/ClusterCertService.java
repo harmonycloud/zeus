@@ -1,7 +1,7 @@
 package com.middleware.zeus.service.k8s;
 
-import com.middleware.caas.common.model.ClusterCert;
-import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.zeus.common.model.ClusterCert;
+import com.middleware.zeus.common.model.middleware.MiddlewareClusterDTO;
 
 /**
  * @author dengyulong

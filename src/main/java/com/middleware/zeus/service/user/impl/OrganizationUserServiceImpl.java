@@ -5,18 +5,17 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
-import com.middleware.caas.common.model.user.UserRole;
+import com.middleware.zeus.common.model.user.UserRole;
 import com.middleware.zeus.bean.user.BeanOrganization;
 import com.middleware.zeus.dao.user.BeanOrganizationMapper;
-import com.middleware.zeus.service.user.OrganizationService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.middleware.caas.common.enums.ErrorMessage;
-import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.zeus.common.enums.ErrorMessage;
+import com.middleware.zeus.common.exception.BusinessException;
 import com.middleware.zeus.bean.user.BeanOrganizationUser;
 import com.middleware.zeus.dao.user.BeanOrganizationUserMapper;
 import com.middleware.zeus.service.user.OrganizationUserService;

@@ -1,15 +1,15 @@
 package com.middleware.zeus.skyview.v2.service.impl;
 
-import static com.middleware.caas.common.constants.NameConstant.CPU;
-import static com.middleware.caas.common.constants.NameConstant.MEMORY;
+import static com.middleware.zeus.common.constants.NameConstant.CPU;
+import static com.middleware.zeus.common.constants.NameConstant.MEMORY;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.middleware.caas.common.enums.CaasRole;
-import com.middleware.caas.common.model.user.UserDto;
-import com.middleware.caas.common.model.user.UserRole;
+import com.middleware.zeus.common.enums.CaasRole;
+import com.middleware.zeus.common.model.user.UserDto;
+import com.middleware.zeus.common.model.user.UserRole;
 import com.middleware.zeus.bean.user.BeanRole;
 import com.middleware.zeus.service.user.RoleService;
 import com.middleware.zeus.util.ZeusCurrentUser;
@@ -19,12 +19,12 @@ import org.springframework.util.CollectionUtils;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.middleware.caas.common.base.CaasResult;
-import com.middleware.caas.common.model.QuotaBase;
-import com.middleware.caas.common.model.ResourceQuotaDo;
-import com.middleware.caas.common.model.StorageQuota;
-import com.middleware.caas.common.model.middleware.Namespace;
-import com.middleware.caas.common.model.user.ProjectDto;
+import com.middleware.zeus.common.base.CaasResult;
+import com.middleware.zeus.common.model.QuotaBase;
+import com.middleware.zeus.common.model.ResourceQuotaDo;
+import com.middleware.zeus.common.model.StorageQuota;
+import com.middleware.zeus.common.model.middleware.Namespace;
+import com.middleware.zeus.common.model.user.ProjectDto;
 import com.middleware.zeus.skyview.v2.client.V2ProjectServiceClient;
 import com.middleware.zeus.skyview.v2.service.V2ProjectService;
 

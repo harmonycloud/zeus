@@ -1,8 +1,8 @@
 package com.middleware.zeus.util;
 
-import com.middleware.caas.common.constants.DateStyle;
-import com.middleware.caas.common.enums.DateType;
-import com.middleware.tool.date.DateUtils;
+import com.middleware.zeus.common.constants.DateStyle;
+import com.middleware.zeus.common.enums.DateType;
+import com.middleware.zeus.util.date.DateUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,8 +14,8 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
-import static com.middleware.caas.common.constants.CommonConstant.NUM_NINE;
-import static com.middleware.caas.common.constants.CommonConstant.NUM_TEN;
+import static com.middleware.zeus.common.constants.CommonConstant.NUM_NINE;
+import static com.middleware.zeus.common.constants.CommonConstant.NUM_TEN;
 
 public class DateUtil {
 

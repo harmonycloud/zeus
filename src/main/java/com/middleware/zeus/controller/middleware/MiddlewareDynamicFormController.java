@@ -1,7 +1,7 @@
 package com.middleware.zeus.controller.middleware;
 
-import com.middleware.caas.common.base.BaseResult;
-import com.middleware.caas.common.model.middleware.QuestionYaml;
+import com.middleware.zeus.common.base.BaseResult;
+import com.middleware.zeus.common.model.middleware.QuestionYaml;
 import com.middleware.zeus.annotation.Authority;
 import com.middleware.zeus.service.middleware.MiddlewareDynamicFormService;
 import io.swagger.annotations.Api;

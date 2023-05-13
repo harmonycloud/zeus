@@ -8,7 +8,7 @@ import io.fabric8.kubernetes.model.annotation.Version;
 import lombok.AllArgsConstructor;
 import lombok.experimental.Accessors;
 
-import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.*;
+import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.*;
 
 /**
  * 中间件备份crd

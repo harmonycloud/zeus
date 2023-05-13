@@ -1,8 +1,8 @@
 package com.middleware.zeus.service.middleware.impl;
 
-import static com.middleware.caas.common.constants.NameConstant.SENTINEL;
-import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_EXPOSE_NODEPORT;
-import static com.middleware.zeus.util.RedisUtil.getRedisSentinelIsOk;
+import static com.middleware.zeus.common.constants.NameConstant.SENTINEL;
+import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_EXPOSE_NODEPORT;
+import static com.middleware.zeus.util.middleware.RedisUtil.getRedisSentinelIsOk;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -10,9 +10,9 @@ import java.util.stream.Collectors;
 import cn.hutool.core.collection.CollectionUtil;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.middleware.caas.common.enums.DictEnum;
-import com.middleware.caas.common.model.Node;
-import com.middleware.caas.common.model.middleware.*;
+import com.middleware.zeus.common.enums.DictEnum;
+import com.middleware.zeus.common.model.Node;
+import com.middleware.zeus.common.model.middleware.*;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
 import com.middleware.zeus.operator.api.RedisOperator;
 import com.middleware.zeus.service.k8s.MiddlewareCRService;
@@ -25,12 +25,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import com.middleware.caas.common.constants.RedisConstant;
-import com.middleware.caas.common.enums.ErrorMessage;
-import com.middleware.caas.common.enums.middleware.MiddlewareTypeEnum;
-import com.middleware.caas.common.exception.BusinessException;
-import com.middleware.caas.common.model.RedisAccessInfo;
-import com.middleware.caas.common.model.RedisDbDTO;
+import com.middleware.zeus.common.constants.RedisConstant;
+import com.middleware.zeus.common.enums.ErrorMessage;
+import com.middleware.zeus.common.enums.middleware.MiddlewareTypeEnum;
+import com.middleware.zeus.common.exception.BusinessException;
+import com.middleware.zeus.common.model.RedisAccessInfo;
+import com.middleware.zeus.common.model.RedisDbDTO;
 import com.middleware.zeus.service.k8s.IngressService;
 import com.middleware.zeus.service.middleware.AbstractMiddlewareService;
 import com.middleware.zeus.service.middleware.RedisService;

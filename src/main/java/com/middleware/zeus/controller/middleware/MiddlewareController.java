@@ -1,8 +1,8 @@
 package com.middleware.zeus.controller.middleware;
 
-import com.middleware.caas.common.base.BaseResult;
-import com.middleware.caas.common.model.K8sResource;
-import com.middleware.caas.common.model.middleware.*;
+import com.middleware.zeus.common.base.BaseResult;
+import com.middleware.zeus.common.model.K8sResource;
+import com.middleware.zeus.common.model.middleware.*;
 import com.middleware.zeus.annotation.Authority;
 import com.middleware.zeus.service.middleware.MiddlewareService;
 import io.swagger.annotations.Api;
@@ -13,9 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
-import static com.middleware.caas.common.constants.CommonConstant.ASTERISK;
+import static com.middleware.zeus.common.constants.CommonConstant.ASTERISK;
 
 /**
  * @author dengyulong

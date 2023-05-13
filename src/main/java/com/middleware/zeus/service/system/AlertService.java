@@ -1,8 +1,8 @@
 package com.middleware.zeus.service.system;
 
 import com.github.pagehelper.PageInfo;
-import com.middleware.caas.common.model.*;
-import com.middleware.caas.common.model.middleware.MiddlewareAlertsDTO;
+import com.middleware.zeus.common.model.*;
+import com.middleware.zeus.common.model.middleware.MiddlewareAlertsDTO;
 
 import java.util.List;
 

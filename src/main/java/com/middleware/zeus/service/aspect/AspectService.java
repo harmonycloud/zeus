@@ -1,9 +1,9 @@
 package com.middleware.zeus.service.aspect;
 
 import com.alibaba.fastjson.JSONObject;
-import com.middleware.caas.common.model.middleware.Middleware;
-import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.middleware.caas.common.model.middleware.QuestionYaml;
+import com.middleware.zeus.common.model.middleware.Middleware;
+import com.middleware.zeus.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.zeus.common.model.middleware.QuestionYaml;
 
 import java.util.Map;
 

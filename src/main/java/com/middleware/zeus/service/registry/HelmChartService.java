@@ -1,11 +1,11 @@
 package com.middleware.zeus.service.registry;
 
 import com.alibaba.fastjson.JSONObject;
-import com.middleware.caas.common.model.middleware.Middleware;
-import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.middleware.caas.common.model.middleware.QuestionYaml;
-import com.middleware.caas.common.model.middleware.Registry;
-import com.middleware.caas.common.model.registry.HelmChartFile;
+import com.middleware.zeus.common.model.middleware.Middleware;
+import com.middleware.zeus.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.zeus.common.model.middleware.QuestionYaml;
+import com.middleware.zeus.common.model.middleware.Registry;
+import com.middleware.zeus.common.model.registry.HelmChartFile;
 import com.middleware.zeus.integration.registry.bean.harbor.HelmListInfo;
 import com.middleware.zeus.integration.registry.bean.harbor.V1HelmChartVersion;
 

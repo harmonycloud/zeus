@@ -4,8 +4,8 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
-import com.middleware.caas.common.model.SqlRecordQueryDto;
-import com.middleware.caas.common.model.dashboard.ExecuteSqlDto;
+import com.middleware.zeus.common.model.SqlRecordQueryDto;
+import com.middleware.zeus.common.model.dashboard.ExecuteSqlDto;
 import com.middleware.zeus.bean.BeanSqlExecuteRecord;
 import com.middleware.zeus.dao.BeanSqlExecuteRecordMapper;
 import com.middleware.zeus.service.dashboard.ExecuteSqlService;
@@ -19,7 +19,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.ASCEND;
+import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.ASCEND;
 
 /**
  * @author xutianhong

@@ -1,7 +1,7 @@
 package com.middleware.zeus.service.k8s.impl;
 
-import com.middleware.caas.common.model.ClusterQuotaQuery;
-import com.middleware.caas.common.model.ResourceQuotaDo;
+import com.middleware.zeus.common.model.ClusterQuotaQuery;
+import com.middleware.zeus.common.model.ResourceQuotaDo;
 import com.middleware.zeus.service.k8s.ClusterService;
 import com.middleware.zeus.service.k8s.ClusterQuotaService;
 import lombok.extern.slf4j.Slf4j;

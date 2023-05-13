@@ -6,7 +6,7 @@ import lombok.experimental.Accessors;
 
 import java.util.List;
 
-import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.CR_API_VERSION;
+import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.CR_API_VERSION;
 
 /**
  * @author dengyulong

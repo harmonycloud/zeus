@@ -1,12 +1,12 @@
 package com.middleware.zeus.operator.impl;
 
 import com.alibaba.fastjson.JSONObject;
-import com.middleware.caas.common.enums.ErrorMessage;
-import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.zeus.common.enums.ErrorMessage;
+import com.middleware.zeus.common.exception.BusinessException;
 import com.middleware.zeus.annotation.Operator;
 import com.middleware.zeus.operator.api.KafkaOperator;
 import com.middleware.zeus.operator.miiddleware.AbstractKafkaOperator;
-import com.middleware.caas.common.model.middleware.*;
+import com.middleware.zeus.common.model.middleware.*;
 import com.middleware.zeus.util.VersionUtil;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import org.apache.commons.lang3.StringUtils;
@@ -14,7 +14,7 @@ import org.springframework.util.ObjectUtils;
 
 import java.util.*;
 
-import static com.middleware.caas.common.constants.NameConstant.RESOURCES;
+import static com.middleware.zeus.common.constants.NameConstant.RESOURCES;
 
 /**
  * 处理Kafka逻辑

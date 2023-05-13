@@ -1,6 +1,6 @@
 package com.middleware.zeus.service.system;
 
-import com.middleware.caas.common.model.AlertUserDo;
+import com.middleware.zeus.common.model.AlertUserDo;
 
 import java.util.List;
 

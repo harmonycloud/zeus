@@ -1,10 +1,10 @@
 package com.middleware.zeus.controller.middleware;
 
-import com.middleware.caas.common.base.BaseResult;
-import com.middleware.caas.common.model.AlertDTO;
-import com.middleware.caas.common.model.middleware.ClusterQuotaDTO;
-import com.middleware.caas.common.model.middleware.MiddlewareBriefInfoDTO;
-import com.middleware.caas.common.model.middleware.MiddlewareOperatorDTO;
+import com.middleware.zeus.common.base.BaseResult;
+import com.middleware.zeus.common.model.AlertDTO;
+import com.middleware.zeus.common.model.middleware.ClusterQuotaDTO;
+import com.middleware.zeus.common.model.middleware.MiddlewareBriefInfoDTO;
+import com.middleware.zeus.common.model.middleware.MiddlewareOperatorDTO;
 import com.middleware.zeus.annotation.Authority;
 import com.middleware.zeus.bean.AlertMessageDTO;
 import com.middleware.zeus.bean.BeanOperationAudit;

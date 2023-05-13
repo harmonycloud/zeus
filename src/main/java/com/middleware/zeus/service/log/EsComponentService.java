@@ -1,9 +1,8 @@
 package com.middleware.zeus.service.log;
 
-import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.middleware.caas.common.model.middleware.MysqlLogDTO;
-import com.middleware.caas.common.model.middleware.MiddlewareLogQuery;
-import com.middleware.tool.page.PageObject;
+import com.middleware.zeus.common.model.middleware.MysqlLogDTO;
+import com.middleware.zeus.common.model.middleware.MiddlewareLogQuery;
+import com.middleware.zeus.util.page.PageObject;
 import com.middleware.zeus.bean.BeanOperationAudit;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.client.RestClient;

@@ -1,7 +1,7 @@
 package com.middleware.zeus.schedule;
 
-import com.middleware.caas.common.model.middleware.Middleware;
-import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.zeus.common.model.middleware.Middleware;
+import com.middleware.zeus.common.model.middleware.MiddlewareClusterDTO;
 import com.middleware.zeus.operator.BaseOperator;
 import com.middleware.zeus.operator.impl.MysqlOperatorImpl;
 import lombok.extern.slf4j.Slf4j;

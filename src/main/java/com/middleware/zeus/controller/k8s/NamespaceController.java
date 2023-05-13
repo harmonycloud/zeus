@@ -4,14 +4,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.middleware.caas.common.constants.NamespaceConstant;
-import com.middleware.caas.common.model.StorageDto;
+import com.middleware.zeus.common.constants.NamespaceConstant;
+import com.middleware.zeus.common.model.StorageDto;
 import com.middleware.zeus.service.k8s.NamespaceService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import com.middleware.caas.common.base.BaseResult;
-import com.middleware.caas.common.model.middleware.Namespace;
+import com.middleware.zeus.common.base.BaseResult;
+import com.middleware.zeus.common.model.middleware.Namespace;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;

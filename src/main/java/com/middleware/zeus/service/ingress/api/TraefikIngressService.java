@@ -1,7 +1,7 @@
 package com.middleware.zeus.service.ingress.api;
 
 import com.alibaba.fastjson.JSONObject;
-import com.middleware.caas.common.model.TraefikPort;
+import com.middleware.zeus.common.model.TraefikPort;
 import com.middleware.zeus.service.ingress.BaseIngressService;
 
 import java.util.List;

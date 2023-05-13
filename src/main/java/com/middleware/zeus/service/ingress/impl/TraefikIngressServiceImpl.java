@@ -3,20 +3,20 @@ package com.middleware.zeus.service.ingress.impl;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.middleware.caas.common.enums.ErrorMessage;
-import com.middleware.caas.common.enums.IngressEnum;
-import com.middleware.caas.common.exception.BusinessException;
-import com.middleware.caas.common.model.AffinityDTO;
-import com.middleware.caas.common.model.ClusterComponentsDto;
-import com.middleware.caas.common.model.IngressComponentDto;
-import com.middleware.caas.common.model.TraefikPort;
-import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.middleware.caas.common.model.middleware.MiddlewareValues;
-import com.middleware.caas.common.model.middleware.PodInfo;
-import com.middleware.caas.common.util.ThreadPoolExecutorFactory;
-import com.middleware.tool.cmd.CmdExecUtil;
-import com.middleware.tool.cmd.HelmChartUtil;
-import com.middleware.tool.collection.JsonUtils;
+import com.middleware.zeus.common.enums.ErrorMessage;
+import com.middleware.zeus.common.enums.IngressEnum;
+import com.middleware.zeus.common.exception.BusinessException;
+import com.middleware.zeus.common.model.AffinityDTO;
+import com.middleware.zeus.common.model.ClusterComponentsDto;
+import com.middleware.zeus.common.model.IngressComponentDto;
+import com.middleware.zeus.common.model.TraefikPort;
+import com.middleware.zeus.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.zeus.common.model.middleware.MiddlewareValues;
+import com.middleware.zeus.common.model.middleware.PodInfo;
+import com.middleware.zeus.util.ThreadPoolExecutorFactory;
+import com.middleware.zeus.util.cmd.CmdExecUtil;
+import com.middleware.zeus.util.cmd.HelmChartUtil;
+import com.middleware.zeus.util.collection.JsonUtils;
 import com.middleware.zeus.annotation.Operator;
 import com.middleware.zeus.bean.BeanIngressComponents;
 import com.middleware.zeus.service.ingress.AbstractBaseOperator;
@@ -37,8 +37,8 @@ import java.io.File;
 import java.util.*;
 import java.util.function.Function;
 
-import static com.middleware.caas.common.constants.CommonConstant.RESOURCE_ALREADY_EXISTED;
-import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_OPERATOR;
+import static com.middleware.zeus.common.constants.CommonConstant.RESOURCE_ALREADY_EXISTED;
+import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_OPERATOR;
 
 /**
  * @author liyinlong

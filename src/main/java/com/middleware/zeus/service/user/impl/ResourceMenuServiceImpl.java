@@ -1,7 +1,7 @@
 package com.middleware.zeus.service.user.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.middleware.caas.common.model.user.ResourceMenuDto;
+import com.middleware.zeus.common.model.user.ResourceMenuDto;
 import com.middleware.zeus.bean.user.BeanResourceMenu;
 import com.middleware.zeus.dao.user.BeanResourceMenuMapper;
 import com.middleware.zeus.service.user.ResourceMenuService;

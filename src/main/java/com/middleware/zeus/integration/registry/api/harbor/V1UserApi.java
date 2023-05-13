@@ -1,13 +1,13 @@
 package com.middleware.zeus.integration.registry.api.harbor;
 
 import com.middleware.zeus.integration.registry.bean.harbor.V1CurrentUser;
-import com.middleware.tool.api.AbstractApi;
-import com.middleware.tool.api.client.BaseClient;
-import com.middleware.tool.api.common.ApiException;
+import com.middleware.zeus.util.api.AbstractApi;
+import com.middleware.zeus.util.api.client.BaseClient;
+import com.middleware.zeus.util.api.common.ApiException;
 import okhttp3.Call;
 
-import static com.middleware.caas.common.constants.NameConstant.ADMIN;
-import static com.middleware.tool.api.util.HttpMethod.GET;
+import static com.middleware.zeus.common.constants.NameConstant.ADMIN;
+import static com.middleware.zeus.util.api.util.HttpMethod.GET;
 
 /**
  * @author dengyulong

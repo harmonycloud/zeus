@@ -1,6 +1,6 @@
 package com.middleware.zeus.service.user;
 
-import com.middleware.caas.common.model.user.ResourceMenuDto;
+import com.middleware.zeus.common.model.user.ResourceMenuDto;
 
 import java.util.List;
 

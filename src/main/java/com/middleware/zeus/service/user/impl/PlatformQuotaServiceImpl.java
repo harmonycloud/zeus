@@ -1,12 +1,11 @@
 package com.middleware.zeus.service.user.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.extension.api.R;
-import com.middleware.caas.common.model.QuotaBase;
-import com.middleware.caas.common.model.ResourceQuotaDo;
-import com.middleware.caas.common.model.StorageDto;
-import com.middleware.caas.common.model.StorageQuota;
-import com.middleware.caas.common.model.middleware.StorageClassInfo;
+import com.middleware.zeus.common.model.QuotaBase;
+import com.middleware.zeus.common.model.ResourceQuotaDo;
+import com.middleware.zeus.common.model.StorageDto;
+import com.middleware.zeus.common.model.StorageQuota;
+import com.middleware.zeus.common.model.middleware.StorageClassInfo;
 import com.middleware.zeus.bean.user.BeanPlatformQuota;
 import com.middleware.zeus.dao.user.BeanPlatformQuotaMapper;
 import com.middleware.zeus.service.k8s.StorageService;
@@ -21,7 +20,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static com.middleware.caas.common.constants.NameConstant.*;
+import static com.middleware.zeus.common.constants.NameConstant.*;
 
 /**
  * @author xutianhong

@@ -1,8 +1,8 @@
 package com.middleware.zeus.integration.cluster.bean;
 
 import com.alibaba.fastjson.JSONObject;
-import com.middleware.caas.common.model.ClusterCert;
-import com.middleware.caas.common.model.middleware.*;
+import com.middleware.zeus.common.model.ClusterCert;
+import com.middleware.zeus.common.model.middleware.*;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;

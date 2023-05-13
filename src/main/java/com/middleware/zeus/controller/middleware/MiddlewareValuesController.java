@@ -1,7 +1,7 @@
 package com.middleware.zeus.controller.middleware;
 
-import com.middleware.caas.common.base.BaseResult;
-import com.middleware.caas.common.model.middleware.MiddlewareValues;
+import com.middleware.zeus.common.base.BaseResult;
+import com.middleware.zeus.common.model.middleware.MiddlewareValues;
 import com.middleware.zeus.annotation.Authority;
 import com.middleware.zeus.service.middleware.MiddlewareValuesService;
 import io.swagger.annotations.Api;

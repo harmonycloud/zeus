@@ -4,9 +4,9 @@ import com.middleware.zeus.service.middleware.MiddlewareInfoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import com.middleware.caas.common.base.BaseResult;
-import com.middleware.caas.common.model.MiddlewareVersionDto;
-import com.middleware.caas.common.model.middleware.MiddlewareInfoDTO;
+import com.middleware.zeus.common.base.BaseResult;
+import com.middleware.zeus.common.model.MiddlewareVersionDto;
+import com.middleware.zeus.common.model.middleware.MiddlewareInfoDTO;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;

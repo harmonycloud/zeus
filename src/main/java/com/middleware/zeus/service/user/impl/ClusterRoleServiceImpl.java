@@ -1,10 +1,10 @@
 package com.middleware.zeus.service.user.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.middleware.caas.common.enums.ErrorMessage;
-import com.middleware.caas.common.exception.BusinessException;
-import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.middleware.caas.common.model.middleware.Namespace;
+import com.middleware.zeus.common.enums.ErrorMessage;
+import com.middleware.zeus.common.exception.BusinessException;
+import com.middleware.zeus.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.zeus.common.model.middleware.Namespace;
 import com.middleware.zeus.bean.user.BeanClusterRole;
 import com.middleware.zeus.dao.user.BeanClusterRoleMapper;
 import com.middleware.zeus.service.user.ClusterRoleService;

@@ -1,7 +1,7 @@
 package com.middleware.zeus.service.k8s.abstractService;
 
-import static com.middleware.caas.common.constants.NameConstant.*;
-import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.PODS;
+import static com.middleware.zeus.common.constants.NameConstant.*;
+import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.PODS;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.middleware.zeus.bean.BeanActiveArea;
+import com.middleware.zeus.common.model.*;
 import com.middleware.zeus.dao.BeanActiveAreaMapper;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -21,18 +22,17 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 
 import com.alibaba.fastjson.JSONObject;
-import com.middleware.caas.common.constants.NameConstant;
-import com.middleware.caas.common.enums.ComponentsEnum;
-import com.middleware.caas.common.enums.ErrorMessage;
-import com.middleware.caas.common.enums.middleware.ResourceUnitEnum;
-import com.middleware.caas.common.exception.CaasRuntimeException;
-import com.middleware.caas.common.model.*;
-import com.middleware.caas.common.model.middleware.*;
-import com.middleware.caas.common.model.user.OrganizationDto;
-import com.middleware.caas.common.util.ThreadPoolExecutorFactory;
+import com.middleware.zeus.common.constants.NameConstant;
+import com.middleware.zeus.common.enums.ComponentsEnum;
+import com.middleware.zeus.common.enums.ErrorMessage;
+import com.middleware.zeus.common.enums.middleware.ResourceUnitEnum;
+import com.middleware.zeus.common.exception.CaasRuntimeException;
+import com.middleware.zeus.common.model.middleware.*;
+import com.middleware.zeus.common.model.user.OrganizationDto;
+import com.middleware.zeus.util.ThreadPoolExecutorFactory;
 import com.middleware.caas.filters.user.CurrentUser;
 import com.middleware.caas.filters.user.CurrentUserRepository;
-import com.middleware.tool.numeric.ResourceCalculationUtil;
+import com.middleware.zeus.util.numeric.ResourceCalculationUtil;
 import com.middleware.zeus.integration.cluster.NamespaceWrapper;
 import com.middleware.zeus.integration.cluster.PrometheusWrapper;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
@@ -46,7 +46,7 @@ import com.middleware.zeus.service.user.OrganizationService;
 import com.middleware.zeus.service.user.PlatformQuotaService;
 import com.middleware.zeus.service.user.ProjectService;
 import com.middleware.zeus.util.K8sClient;
-import com.middleware.zeus.util.MathUtil;
+import com.middleware.zeus.util.numeric.MathUtil;
 
 import lombok.extern.slf4j.Slf4j;
 

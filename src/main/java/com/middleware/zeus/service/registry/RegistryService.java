@@ -1,6 +1,6 @@
 package com.middleware.zeus.service.registry;
 
-import com.middleware.caas.common.model.middleware.Registry;
+import com.middleware.zeus.common.model.middleware.Registry;
 
 /**
  * @author dengyulong

@@ -1,14 +1,13 @@
 package com.middleware.zeus.service.middleware;
 
 import com.alibaba.fastjson.JSONObject;
-import com.middleware.caas.common.base.BaseResult;
-import com.middleware.caas.common.model.ActiveAreaAnnotationDto;
-import com.middleware.caas.common.model.K8sResource;
-import com.middleware.caas.common.model.middleware.*;
+import com.middleware.zeus.common.base.BaseResult;
+import com.middleware.zeus.common.model.ActiveAreaAnnotationDto;
+import com.middleware.zeus.common.model.K8sResource;
+import com.middleware.zeus.common.model.middleware.*;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareInfo;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author dengyulong

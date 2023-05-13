@@ -1,6 +1,6 @@
 package com.middleware.zeus.service.k8s;
 
-import com.middleware.caas.common.model.middleware.ServicePortDTO;
+import com.middleware.zeus.common.model.middleware.ServicePortDTO;
 
 import java.util.List;
 

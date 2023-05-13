@@ -1,6 +1,6 @@
 package com.middleware.zeus.service.user;
 
-import com.middleware.caas.common.model.LdapConfigDto;
+import com.middleware.zeus.common.model.LdapConfigDto;
 import com.middleware.zeus.bean.BeanSystemConfig;
 
 /**

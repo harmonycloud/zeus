@@ -1,7 +1,7 @@
 package com.middleware.zeus.service.ingress;
 
-import com.middleware.caas.common.model.IngressComponentDto;
-import com.middleware.caas.common.model.middleware.MiddlewareValues;
+import com.middleware.zeus.common.model.IngressComponentDto;
+import com.middleware.zeus.common.model.middleware.MiddlewareValues;
 import com.middleware.zeus.bean.BeanIngressComponents;
 
 import java.util.List;

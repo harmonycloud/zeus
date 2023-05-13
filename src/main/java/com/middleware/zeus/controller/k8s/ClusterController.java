@@ -10,13 +10,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.middleware.caas.common.base.BaseResult;
-import com.middleware.caas.common.model.ClusterNamespaceResourceDto;
-import com.middleware.caas.common.model.ClusterNodeResourceDto;
-import com.middleware.caas.common.model.middleware.ClusterQuotaDTO;
-import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.middleware.caas.common.model.middleware.MiddlewareResourceInfo;
-import com.middleware.caas.common.model.middleware.Registry;
+import com.middleware.zeus.common.base.BaseResult;
+import com.middleware.zeus.common.model.ClusterNamespaceResourceDto;
+import com.middleware.zeus.common.model.ClusterNodeResourceDto;
+import com.middleware.zeus.common.model.middleware.ClusterQuotaDTO;
+import com.middleware.zeus.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.zeus.common.model.middleware.MiddlewareResourceInfo;
+import com.middleware.zeus.common.model.middleware.Registry;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;

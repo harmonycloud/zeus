@@ -1,9 +1,9 @@
 package com.middleware.zeus.service.dashboard;
 
 import com.github.pagehelper.PageInfo;
-import com.middleware.caas.common.model.dashboard.ExecResult;
+import com.middleware.zeus.common.model.dashboard.ExecResult;
 import com.middleware.zeus.bean.BeanSqlExecuteRecord;
-import com.middleware.caas.common.model.dashboard.mysql.*;
+import com.middleware.zeus.common.model.dashboard.mysql.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;

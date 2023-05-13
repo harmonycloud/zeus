@@ -1,6 +1,6 @@
 package com.middleware.zeus.controller.k8s;
 
-import com.middleware.caas.common.base.BaseResult;
+import com.middleware.zeus.common.base.BaseResult;
 import com.middleware.zeus.service.k8s.SecretService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;

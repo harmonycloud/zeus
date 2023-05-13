@@ -1,6 +1,6 @@
 package com.middleware.zeus.service.k8s;
 
-import com.middleware.caas.common.model.EventDetail;
+import com.middleware.zeus.common.model.EventDetail;
 
 import java.util.List;
 import java.util.Map;

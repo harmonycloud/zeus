@@ -1,7 +1,7 @@
 package com.middleware.zeus.service.middleware.impl;
 
-import com.middleware.caas.common.model.middleware.QuestionYaml;
-import com.middleware.caas.common.model.registry.HelmChartFile;
+import com.middleware.zeus.common.model.middleware.QuestionYaml;
+import com.middleware.zeus.common.model.registry.HelmChartFile;
 import com.middleware.zeus.service.k8s.ClusterService;
 import com.middleware.zeus.service.middleware.MiddlewareDynamicFormService;
 import com.middleware.zeus.service.middleware.MiddlewareInfoService;

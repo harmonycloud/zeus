@@ -1,8 +1,8 @@
 package com.middleware.zeus.integration.minio;
 
-import com.middleware.caas.common.enums.ErrorMessage;
-import com.middleware.caas.common.exception.BusinessException;
-import com.middleware.caas.common.exception.CaasRuntimeException;
+import com.middleware.zeus.common.enums.ErrorMessage;
+import com.middleware.zeus.common.exception.BusinessException;
+import com.middleware.zeus.common.exception.CaasRuntimeException;
 import com.middleware.zeus.integration.cluster.bean.Minio;
 import io.minio.*;
 import io.minio.errors.MinioException;

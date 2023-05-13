@@ -1,14 +1,14 @@
 package com.middleware.zeus.service.mysql.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.middleware.caas.common.constants.MysqlConstant;
+import com.middleware.zeus.common.constants.MysqlConstant;
 import com.middleware.zeus.bean.BeanMysqlDbPriv;
 import com.middleware.zeus.dao.BeanMysqlDbPrivMapper;
 import com.middleware.zeus.service.mysql.MysqlDbPrivService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import static com.middleware.zeus.util.MysqlConnectionUtil.getMysqlQualifiedName;
+import static com.middleware.zeus.util.middleware.MysqlConnectionUtil.getMysqlQualifiedName;
 
 /**
  * @author liyinlong

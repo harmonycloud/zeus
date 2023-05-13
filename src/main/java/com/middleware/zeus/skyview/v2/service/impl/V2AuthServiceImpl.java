@@ -1,7 +1,7 @@
 package com.middleware.zeus.skyview.v2.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
-import com.middleware.caas.common.base.CaasResult;
+import com.middleware.zeus.common.base.CaasResult;
 import com.middleware.zeus.skyview.v2.client.V2AuthServiceClient;
 import com.middleware.zeus.skyview.v2.service.V2AuthService;
 import com.middleware.zeus.util.CryptoUtils;

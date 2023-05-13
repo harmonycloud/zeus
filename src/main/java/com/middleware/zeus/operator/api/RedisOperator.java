@@ -1,6 +1,6 @@
 package com.middleware.zeus.operator.api;
 
-import com.middleware.caas.common.model.middleware.Middleware;
+import com.middleware.zeus.common.model.middleware.Middleware;
 import com.middleware.zeus.operator.BaseOperator;
 
 /**

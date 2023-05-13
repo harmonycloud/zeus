@@ -1,7 +1,7 @@
 package com.middleware.zeus.service.user.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.middleware.caas.common.model.user.ResourceMenuDto;
+import com.middleware.zeus.common.model.user.ResourceMenuDto;
 import com.middleware.zeus.bean.user.BeanResourceMenuRole;
 import com.middleware.zeus.dao.user.BeanResourceMenuRoleMapper;
 import com.middleware.zeus.service.user.ResourceMenuRoleService;
@@ -15,10 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * @author xutianhong

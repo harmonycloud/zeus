@@ -5,12 +5,14 @@ import com.dtflys.forest.annotation.Address;
 import com.dtflys.forest.annotation.Get;
 import com.dtflys.forest.annotation.Header;
 import com.dtflys.forest.annotation.Var;
+import org.springframework.stereotype.Component;
 
 /**
  * @author liyinlong
  * @description http工具类
  * @since 2022/10/6 3:37 下午
  */
+@Component
 public interface HttpServiceClient {
 
     /**

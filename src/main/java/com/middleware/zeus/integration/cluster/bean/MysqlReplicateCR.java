@@ -1,6 +1,6 @@
 package com.middleware.zeus.integration.cluster.bean;
 
-import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.*;
+import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.*;
 
 import io.fabric8.kubernetes.api.model.Namespaced;
 import io.fabric8.kubernetes.client.CustomResource;

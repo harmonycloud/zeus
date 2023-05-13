@@ -6,8 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import com.github.pagehelper.PageInfo;
-import com.middleware.caas.common.base.BaseResult;
-import com.middleware.caas.common.model.*;
+import com.middleware.zeus.common.base.BaseResult;
+import com.middleware.zeus.common.model.*;
 import com.middleware.zeus.service.system.AlertService;
 
 import io.swagger.annotations.Api;

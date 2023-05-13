@@ -1,6 +1,6 @@
 package com.middleware.zeus.controller.system;
 
-import com.middleware.caas.common.base.BaseResult;
+import com.middleware.zeus.common.base.BaseResult;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Value;

@@ -1,6 +1,6 @@
 package com.middleware.zeus.dao;
 
-import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.zeus.common.model.middleware.MiddlewareClusterDTO;
 import com.middleware.zeus.bean.BeanMiddlewareInfo;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import feign.Param;

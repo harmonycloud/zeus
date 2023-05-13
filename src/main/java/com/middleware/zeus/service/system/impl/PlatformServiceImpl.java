@@ -1,44 +1,33 @@
 package com.middleware.zeus.service.system.impl;
 
 import com.alibaba.fastjson.JSONObject;
-import com.middleware.caas.common.constants.NameConstant;
-import com.middleware.caas.common.enums.ErrorMessage;
-import com.middleware.caas.common.exception.BusinessException;
-import com.middleware.caas.common.model.DisasterRecoveryDto;
-import com.middleware.caas.common.model.DisasterRecoveryInfo;
+import com.middleware.zeus.common.constants.NameConstant;
+import com.middleware.zeus.common.enums.ErrorMessage;
+import com.middleware.zeus.common.exception.BusinessException;
+import com.middleware.zeus.common.model.DisasterRecoveryDto;
+import com.middleware.zeus.common.model.DisasterRecoveryInfo;
 import com.middleware.caas.filters.user.CurrentUserRepository;
-import com.middleware.tool.date.DateUtils;
-import com.middleware.zeus.bean.BeanSystemConfig;
-import com.middleware.zeus.integration.cluster.MiddlewareWrapper;
+import com.middleware.zeus.util.date.DateUtils;
 import com.middleware.zeus.integration.cluster.MysqlClusterWrapper;
 import com.middleware.zeus.integration.cluster.MysqlReplicateWrapper;
-import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
 import com.middleware.zeus.integration.cluster.bean.MysqlCluster;
 import com.middleware.zeus.integration.cluster.bean.MysqlReplicateCR;
 import com.middleware.zeus.integration.cluster.bean.MysqlReplicateStatus;
 import com.middleware.zeus.integration.platform.PlatformClient;
-import com.middleware.zeus.service.k8s.ClusterService;
 import com.middleware.zeus.service.registry.HelmChartService;
 import com.middleware.zeus.service.system.PlatformService;
-import com.middleware.zeus.service.system.SystemConfigService;
 import com.middleware.zeus.util.K8sClient;
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import javax.annotation.PostConstruct;
-import javax.servlet.http.HttpServletRequest;
-import java.io.IOException;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import static com.middleware.caas.common.constants.NameConstant.RUNNING;
 
 /**
  * @auther wangpenglei

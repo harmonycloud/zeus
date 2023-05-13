@@ -1,8 +1,8 @@
 package com.middleware.zeus.service.middleware;
 
 import com.github.pagehelper.PageInfo;
-import com.middleware.caas.common.model.middleware.ImageRepositoryDTO;
-import com.middleware.caas.common.model.middleware.Registry;
+import com.middleware.zeus.common.model.middleware.ImageRepositoryDTO;
+import com.middleware.zeus.common.model.middleware.Registry;
 import com.middleware.zeus.bean.BeanImageRepository;
 import io.fabric8.kubernetes.api.model.Secret;
 

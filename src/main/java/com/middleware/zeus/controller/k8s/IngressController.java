@@ -1,7 +1,7 @@
 package com.middleware.zeus.controller.k8s;
 
-import com.middleware.caas.common.base.BaseResult;
-import com.middleware.caas.common.model.middleware.IngressDTO;
+import com.middleware.zeus.common.base.BaseResult;
+import com.middleware.zeus.common.model.middleware.IngressDTO;
 import com.middleware.zeus.annotation.Authority;
 import com.middleware.zeus.service.k8s.IngressService;
 import com.middleware.zeus.service.k8s.NodeService;
@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-import static com.middleware.caas.common.constants.CommonConstant.ASTERISK;
+import static com.middleware.zeus.common.constants.CommonConstant.ASTERISK;
 
 /**
  * @author dengyulong

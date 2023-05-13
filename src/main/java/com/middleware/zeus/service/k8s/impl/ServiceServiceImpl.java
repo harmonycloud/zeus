@@ -2,8 +2,8 @@ package com.middleware.zeus.service.k8s.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.middleware.caas.common.model.middleware.PortDetailDTO;
-import com.middleware.caas.common.model.middleware.ServicePortDTO;
+import com.middleware.zeus.common.model.middleware.PortDetailDTO;
+import com.middleware.zeus.common.model.middleware.ServicePortDTO;
 import com.middleware.zeus.bean.BeanMiddlewareInfo;
 import com.middleware.zeus.dao.BeanMiddlewareInfoMapper;
 import com.middleware.zeus.integration.cluster.ServiceWrapper;
@@ -14,7 +14,7 @@ import com.middleware.zeus.service.k8s.ClusterService;
 import com.middleware.zeus.service.k8s.MiddlewareCRService;
 import com.middleware.zeus.service.k8s.ServiceService;
 import com.middleware.zeus.service.registry.HelmChartService;
-import com.middleware.zeus.util.MiddlewareServicePurposeUtil;
+import com.middleware.zeus.util.middleware.MiddlewareServicePurposeUtil;
 import io.fabric8.kubernetes.api.model.ServicePort;
 import io.fabric8.kubernetes.api.model.ServiceSpec;
 import org.apache.commons.lang3.StringUtils;
@@ -27,8 +27,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.EXPORTER;
-import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.HEADLESS;
+import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.EXPORTER;
+import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.HEADLESS;
 
 /**
  * @author tangtx

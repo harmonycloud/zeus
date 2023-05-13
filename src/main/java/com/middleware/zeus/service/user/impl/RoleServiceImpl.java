@@ -4,14 +4,13 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import com.alibaba.fastjson.JSONObject;
-import com.middleware.caas.common.model.user.UserDto;
+import com.middleware.zeus.common.model.user.UserDto;
 import com.middleware.zeus.bean.BeanMiddlewareInfo;
 import com.middleware.zeus.bean.LicenseInfo;
 import com.middleware.zeus.bean.user.BeanRoleAuthority;
 import com.middleware.zeus.service.middleware.MiddlewareInfoService;
 import com.middleware.zeus.service.registry.HelmChartService;
 import com.middleware.zeus.service.system.LicenseService;
-import com.middleware.zeus.service.user.*;
 import com.middleware.zeus.service.user.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -22,18 +21,18 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.middleware.caas.common.enums.ErrorMessage;
-import com.middleware.caas.common.exception.BusinessException;
-import com.middleware.caas.common.model.user.ResourceMenuDto;
-import com.middleware.caas.common.model.user.RoleDto;
-import com.middleware.caas.common.model.user.UserRole;
+import com.middleware.zeus.common.enums.ErrorMessage;
+import com.middleware.zeus.common.exception.BusinessException;
+import com.middleware.zeus.common.model.user.ResourceMenuDto;
+import com.middleware.zeus.common.model.user.RoleDto;
+import com.middleware.zeus.common.model.user.UserRole;
 import com.middleware.zeus.bean.user.BeanResourceMenuRole;
 import com.middleware.zeus.bean.user.BeanRole;
 import com.middleware.zeus.dao.user.BeanRoleMapper;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static com.middleware.caas.common.constants.CommonConstant.*;
+import static com.middleware.zeus.common.constants.CommonConstant.*;
 /**
  * @author xutianhong
  * @Date 2021/7/27 2:54 下午

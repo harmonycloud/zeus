@@ -2,7 +2,7 @@ package com.middleware.zeus.skyview.v2.client;
 
 import com.alibaba.fastjson.JSONArray;
 import com.dtflys.forest.annotation.*;
-import com.middleware.caas.common.base.CaasResult;
+import com.middleware.zeus.common.base.CaasResult;
 import com.middleware.zeus.config.ForestUnauthorizedSuccessCondition;
 import com.middleware.zeus.config.SkyviewAddressSource;
 import com.middleware.zeus.interceptor.SkyviewInterceptor;

@@ -1,7 +1,7 @@
 package com.middleware.zeus.integration.cluster.client;
 
-import com.middleware.caas.common.model.middleware.MiddlewareClusterMonitorInfo;
-import com.middleware.tool.api.client.BaseClient;
+import com.middleware.zeus.common.model.middleware.MiddlewareClusterMonitorInfo;
+import com.middleware.zeus.util.api.client.BaseClient;
 
 /**
  * @author dengyulong

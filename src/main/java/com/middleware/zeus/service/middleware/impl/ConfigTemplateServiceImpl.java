@@ -6,9 +6,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.middleware.caas.common.enums.ErrorMessage;
-import com.middleware.caas.common.exception.BusinessException;
-import com.middleware.tool.uuid.UUIDUtils;
+import com.middleware.zeus.common.enums.ErrorMessage;
+import com.middleware.zeus.common.exception.BusinessException;
+import com.middleware.zeus.util.uuid.UUIDUtils;
 import com.middleware.zeus.bean.BeanCustomConfig;
 import com.middleware.zeus.bean.BeanCustomConfigTemplate;
 import com.middleware.zeus.dao.BeanCustomConfigMapper;
@@ -20,8 +20,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.middleware.caas.common.model.middleware.CustomConfig;
-import com.middleware.caas.common.model.middleware.CustomConfigTemplateDTO;
+import com.middleware.zeus.common.model.middleware.CustomConfig;
+import com.middleware.zeus.common.model.middleware.CustomConfigTemplateDTO;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;

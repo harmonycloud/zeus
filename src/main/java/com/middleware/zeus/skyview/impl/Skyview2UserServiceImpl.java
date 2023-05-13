@@ -1,11 +1,9 @@
 package com.middleware.zeus.skyview.impl;
 
 import com.alibaba.fastjson.JSONObject;
-import com.middleware.caas.common.base.CaasResult;
+import com.middleware.zeus.common.base.CaasResult;
 import com.middleware.zeus.skyview.Skyview2UserService;
-import com.middleware.zeus.skyview.client.Skyview2UserServiceClient;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 

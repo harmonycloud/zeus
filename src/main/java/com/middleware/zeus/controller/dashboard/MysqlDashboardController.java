@@ -1,12 +1,12 @@
 package com.middleware.zeus.controller.dashboard;
 
 import com.github.pagehelper.PageInfo;
-import com.middleware.caas.common.base.BaseResult;
-import com.middleware.caas.common.model.dashboard.ExecResult;
-import com.middleware.caas.common.model.dashboard.mysql.*;
-import com.middleware.caas.common.model.middleware.MiddlewareLogQuery;
-import com.middleware.caas.common.model.middleware.MysqlLogDTO;
-import com.middleware.tool.page.PageObject;
+import com.middleware.zeus.common.base.BaseResult;
+import com.middleware.zeus.common.model.dashboard.ExecResult;
+import com.middleware.zeus.common.model.dashboard.mysql.*;
+import com.middleware.zeus.common.model.middleware.MiddlewareLogQuery;
+import com.middleware.zeus.common.model.middleware.MysqlLogDTO;
+import com.middleware.zeus.util.page.PageObject;
 import com.middleware.zeus.service.dashboard.MysqlDashboardService;
 import com.middleware.zeus.service.middleware.MysqlService;
 import io.swagger.annotations.Api;

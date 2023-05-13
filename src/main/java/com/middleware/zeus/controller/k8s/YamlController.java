@@ -1,7 +1,7 @@
 package com.middleware.zeus.controller.k8s;
 
-import com.middleware.caas.common.base.BaseResult;
-import com.middleware.caas.common.model.YamlCheck;
+import com.middleware.zeus.common.base.BaseResult;
+import com.middleware.zeus.common.model.YamlCheck;
 import com.middleware.zeus.service.k8s.YamlService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;

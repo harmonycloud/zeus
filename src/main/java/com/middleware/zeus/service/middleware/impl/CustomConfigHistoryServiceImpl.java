@@ -1,8 +1,8 @@
 package com.middleware.zeus.service.middleware.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.middleware.caas.common.model.middleware.CustomConfig;
-import com.middleware.caas.common.model.middleware.MiddlewareCustomConfig;
+import com.middleware.zeus.common.model.middleware.CustomConfig;
+import com.middleware.zeus.common.model.middleware.MiddlewareCustomConfig;
 import com.middleware.zeus.bean.BeanCustomConfigHistory;
 import com.middleware.zeus.dao.BeanCustomConfigHistoryMapper;
 import com.middleware.zeus.service.middleware.CustomConfigHistoryService;

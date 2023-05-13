@@ -5,9 +5,9 @@ import com.middleware.zeus.integration.registry.bean.harbor.V1CurrentUser;
 import com.middleware.zeus.util.ExceptionUtils;
 import org.springframework.stereotype.Component;
 
-import com.middleware.caas.common.model.middleware.Registry;
+import com.middleware.zeus.common.model.middleware.Registry;
 import com.middleware.zeus.integration.registry.client.RegistryClientFactory;
-import com.middleware.tool.api.common.ApiException;
+import com.middleware.zeus.util.api.common.ApiException;
 
 /**
  * @author dengyulong

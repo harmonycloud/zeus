@@ -1,6 +1,6 @@
 package com.middleware.zeus.service.k8s.impl;
 
-import com.middleware.caas.common.model.k8s.PvDo;
+import com.middleware.zeus.common.model.k8s.PvDo;
 import com.middleware.zeus.integration.cluster.PvWrapper;
 import com.middleware.zeus.service.k8s.PvService;
 import io.fabric8.kubernetes.api.model.PersistentVolume;

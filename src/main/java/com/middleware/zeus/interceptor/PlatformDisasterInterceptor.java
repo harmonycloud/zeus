@@ -4,7 +4,7 @@ import cn.hutool.json.JSONObject;
 import com.dtflys.forest.http.ForestRequest;
 import com.dtflys.forest.interceptor.Interceptor;
 
-import static com.middleware.caas.common.constants.NameConstant.AUTH_TYPE;
+import static com.middleware.zeus.common.constants.NameConstant.AUTH_TYPE;
 
 /**
  * @author xutianhong

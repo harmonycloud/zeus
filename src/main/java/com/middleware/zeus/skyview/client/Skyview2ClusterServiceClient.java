@@ -5,7 +5,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.dtflys.forest.annotation.Address;
 import com.dtflys.forest.annotation.Get;
 import com.dtflys.forest.annotation.Var;
-import com.middleware.caas.common.base.CaasResult;
+import com.middleware.zeus.common.base.CaasResult;
 import com.middleware.zeus.config.SkyviewAddressSource;
 
 /**

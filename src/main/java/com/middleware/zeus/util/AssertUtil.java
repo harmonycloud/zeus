@@ -1,7 +1,7 @@
 package com.middleware.zeus.util;
 
-import com.middleware.caas.common.enums.DictEnum;
-import com.middleware.caas.common.enums.ErrorMessage;
+import com.middleware.zeus.common.enums.DictEnum;
+import com.middleware.zeus.common.enums.ErrorMessage;
 import com.middleware.caas.filters.enumm.LanguageEnum;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.CollectionUtils;

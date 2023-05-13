@@ -1,7 +1,7 @@
 package com.middleware.zeus.controller.middleware;
 
-import com.middleware.caas.common.base.BaseResult;
-import com.middleware.caas.common.model.middleware.ImageRepositoryDTO;
+import com.middleware.zeus.common.base.BaseResult;
+import com.middleware.zeus.common.model.middleware.ImageRepositoryDTO;
 import com.middleware.zeus.service.middleware.ImageRepositoryService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;

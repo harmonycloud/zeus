@@ -1,20 +1,13 @@
 package com.middleware.zeus.integration.cluster;
 
-import com.alibaba.fastjson.JSONObject;
-import com.middleware.caas.common.constants.PostgresqlConstant;
-import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
-import com.middleware.zeus.integration.cluster.bean.MiddlewareList;
+import com.middleware.zeus.common.constants.PostgresqlConstant;
 import com.middleware.zeus.integration.cluster.bean.Postgresql;
 import com.middleware.zeus.integration.cluster.bean.PostgresqlList;
 import com.middleware.zeus.util.K8sClient;
-import io.fabric8.kubernetes.api.model.GenericKubernetesResource;
 import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
-import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-
-import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.NAMESPACED;
 
 /**
  * @author liyinlong

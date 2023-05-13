@@ -1,6 +1,6 @@
 package com.middleware.zeus.service.user;
 
-import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.zeus.common.model.middleware.MiddlewareClusterDTO;
 
 import java.util.List;
 

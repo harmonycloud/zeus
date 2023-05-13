@@ -3,10 +3,10 @@ package com.middleware.zeus.service.middleware;
 import java.util.List;
 
 import com.alibaba.fastjson.JSONObject;
-import com.middleware.caas.common.model.middleware.CustomConfig;
-import com.middleware.caas.common.model.middleware.CustomConfigHistoryDTO;
-import com.middleware.caas.common.model.middleware.MiddlewareCustomConfig;
-import com.middleware.caas.common.model.registry.HelmChartFile;
+import com.middleware.zeus.common.model.middleware.CustomConfig;
+import com.middleware.zeus.common.model.middleware.CustomConfigHistoryDTO;
+import com.middleware.zeus.common.model.middleware.MiddlewareCustomConfig;
+import com.middleware.zeus.common.model.registry.HelmChartFile;
 import com.middleware.zeus.bean.BeanCustomConfig;
 
 /**

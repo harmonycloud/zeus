@@ -1,8 +1,8 @@
 package com.middleware.zeus.controller.k8s;
 
-import com.middleware.caas.common.base.BaseResult;
-import com.middleware.caas.common.model.ActiveAreaDto;
-import com.middleware.caas.common.model.ClusterNodeResourceDto;
+import com.middleware.zeus.common.base.BaseResult;
+import com.middleware.zeus.common.model.ActiveAreaDto;
+import com.middleware.zeus.common.model.ClusterNodeResourceDto;
 import com.middleware.zeus.service.k8s.ActiveAreaService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;

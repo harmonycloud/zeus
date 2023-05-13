@@ -1,7 +1,5 @@
 package com.middleware.zeus.integration.cluster;
 
-import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.*;
-
 import java.io.IOException;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +11,6 @@ import com.middleware.zeus.util.K8sClient;
 
 import io.fabric8.kubernetes.client.dsl.NonNamespaceOperation;
 import io.fabric8.kubernetes.client.dsl.Resource;
-import io.fabric8.kubernetes.client.dsl.base.ResourceDefinitionContext;
 
 /**
  * @author dengyulong

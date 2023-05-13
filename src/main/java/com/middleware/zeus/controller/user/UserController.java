@@ -6,20 +6,18 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.github.pagehelper.PageInfo;
-import com.middleware.caas.common.model.user.ResourceMenuDto;
-import com.middleware.caas.common.model.user.SystemConfigDto;
-import com.middleware.zeus.annotation.Skyview;
+import com.middleware.zeus.common.model.user.ResourceMenuDto;
+import com.middleware.zeus.common.model.user.SystemConfigDto;
 import com.middleware.zeus.bean.PersonalizedConfiguration;
 import com.middleware.zeus.service.user.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
-import com.middleware.caas.common.base.BaseResult;
-import com.middleware.caas.common.model.user.UserDto;
+import com.middleware.zeus.common.base.BaseResult;
+import com.middleware.zeus.common.model.user.UserDto;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -27,9 +25,7 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletResponse;
-
-import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.ASCEND;
+import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.ASCEND;
 
 /**
  * @author xutianhong

@@ -1,8 +1,8 @@
 package com.middleware.zeus.util;
 
 import com.alibaba.fastjson.JSONObject;
-import com.middleware.caas.common.model.SendResult;
-import com.middleware.caas.common.model.TextMessage;
+import com.middleware.zeus.common.model.SendResult;
+import com.middleware.zeus.common.model.TextMessage;
 import org.apache.commons.net.smtp.SMTPClient;
 import org.apache.commons.net.smtp.SMTPReply;
 import org.apache.http.HttpResponse;

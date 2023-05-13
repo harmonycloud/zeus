@@ -1,9 +1,9 @@
 package com.middleware.zeus.integration.registry.client;
 
-import static com.middleware.caas.common.constants.NameConstant.ADMIN;
+import static com.middleware.zeus.common.constants.NameConstant.ADMIN;
 
-import com.middleware.caas.common.model.middleware.Registry;
-import com.middleware.tool.api.client.BaseClient;
+import com.middleware.zeus.common.model.middleware.Registry;
+import com.middleware.zeus.util.api.client.BaseClient;
 
 /**
  * @author dengyulong

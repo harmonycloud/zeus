@@ -9,10 +9,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.middleware.caas.common.enums.ComponentsEnum;
+import com.middleware.zeus.common.enums.ComponentsEnum;
 import com.middleware.zeus.integration.cluster.PodWrapper;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
-import com.middleware.zeus.service.k8s.*;
 import com.middleware.zeus.bean.BeanActiveArea;
 import com.middleware.zeus.dao.BeanActiveAreaMapper;
 import com.middleware.zeus.integration.cluster.NodeWrapper;
@@ -27,14 +26,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.middleware.caas.common.enums.ActiveAreaEnum;
-import com.middleware.caas.common.enums.ErrorMessage;
-import com.middleware.caas.common.exception.BusinessException;
-import com.middleware.caas.common.model.ActiveAreaDto;
-import com.middleware.caas.common.model.ActivePoolDto;
-import com.middleware.caas.common.model.ClusterNodeResourceDto;
-import com.middleware.caas.common.model.Node;
-import com.middleware.tool.numeric.ResourceCalculationUtil;
+import com.middleware.zeus.common.enums.ActiveAreaEnum;
+import com.middleware.zeus.common.enums.ErrorMessage;
+import com.middleware.zeus.common.exception.BusinessException;
+import com.middleware.zeus.common.model.ActiveAreaDto;
+import com.middleware.zeus.common.model.ActivePoolDto;
+import com.middleware.zeus.common.model.ClusterNodeResourceDto;
+import com.middleware.zeus.common.model.Node;
+import com.middleware.zeus.util.numeric.ResourceCalculationUtil;
 
 import io.fabric8.kubernetes.api.model.Taint;
 import lombok.extern.slf4j.Slf4j;

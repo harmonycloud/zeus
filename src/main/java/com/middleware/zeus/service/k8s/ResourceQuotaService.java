@@ -1,10 +1,9 @@
 package com.middleware.zeus.service.k8s;
 
 import java.util.List;
-import java.util.Map;
 
-import com.middleware.caas.common.model.ResourceQuotaDo;
-import com.middleware.caas.common.model.middleware.ResourceQuotaDTO;
+import com.middleware.zeus.common.model.ResourceQuotaDo;
+import com.middleware.zeus.common.model.middleware.ResourceQuotaDTO;
 
 /**
  * @author dengyulong

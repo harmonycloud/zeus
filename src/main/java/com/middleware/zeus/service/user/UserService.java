@@ -1,17 +1,16 @@
 package com.middleware.zeus.service.user;
 
-import com.middleware.caas.common.model.MailUserDTO;
-import com.middleware.caas.common.model.UploadImageFileDto;
-import com.middleware.caas.common.model.user.ResourceMenuDto;
-import com.middleware.caas.common.model.user.SystemConfigDto;
-import com.middleware.caas.common.model.user.UserDto;
-import com.middleware.caas.common.model.user.UserRole;
+import com.middleware.zeus.common.model.MailUserDTO;
+import com.middleware.zeus.common.model.UploadImageFileDto;
+import com.middleware.zeus.common.model.user.ResourceMenuDto;
+import com.middleware.zeus.common.model.user.SystemConfigDto;
+import com.middleware.zeus.common.model.user.UserDto;
+import com.middleware.zeus.common.model.user.UserRole;
 import com.middleware.zeus.annotation.Skyview;
 import com.middleware.zeus.bean.PersonalizedConfiguration;
 import com.middleware.zeus.bean.user.BeanUser;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;

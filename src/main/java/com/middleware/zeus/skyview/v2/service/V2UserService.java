@@ -1,7 +1,7 @@
 package com.middleware.zeus.skyview.v2.service;
 
-import com.middleware.caas.common.model.ResourceQuotaDo;
-import com.middleware.caas.common.model.user.UserDto;
+import com.middleware.zeus.common.model.ResourceQuotaDo;
+import com.middleware.zeus.common.model.user.UserDto;
 
 import java.util.List;
 

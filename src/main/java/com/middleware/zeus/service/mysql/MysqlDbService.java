@@ -1,8 +1,8 @@
 package com.middleware.zeus.service.mysql;
 
-import com.middleware.caas.common.model.MysqlDbDTO;
-import com.middleware.caas.common.model.MysqlDbDetail;
-import com.middleware.caas.common.model.MysqlDbPrivilege;
+import com.middleware.zeus.common.model.MysqlDbDTO;
+import com.middleware.zeus.common.model.MysqlDbDetail;
+import com.middleware.zeus.common.model.MysqlDbPrivilege;
 import com.middleware.zeus.bean.BeanMysqlDb;
 
 import java.sql.Connection;

@@ -5,13 +5,13 @@ import java.util.List;
 import java.util.Map;
 
 import com.github.pagehelper.PageInfo;
-import com.middleware.caas.common.model.dashboard.*;
-import com.middleware.caas.common.model.dashboard.mysql.QueryInfo;
+import com.middleware.zeus.common.model.dashboard.*;
+import com.middleware.zeus.common.model.dashboard.mysql.QueryInfo;
 import com.middleware.zeus.service.dashboard.PostgresqlDashboardService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import com.middleware.caas.common.base.BaseResult;
+import com.middleware.zeus.common.base.BaseResult;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;

@@ -3,8 +3,8 @@ package com.middleware.zeus.service.middleware.impl;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
-import com.middleware.caas.common.model.AlertDTO;
-import com.middleware.caas.common.model.AlertRecordQueryDto;
+import com.middleware.zeus.common.model.AlertDTO;
+import com.middleware.zeus.common.model.AlertRecordQueryDto;
 import com.middleware.zeus.bean.BeanAlertRecord;
 import com.middleware.zeus.dao.BeanAlertRecordMapper;
 import com.middleware.zeus.service.middleware.MiddlewareAlertRecordService;
@@ -15,8 +15,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
-import static com.middleware.caas.common.constants.CommonConstant.ASC;
-import static com.middleware.caas.common.constants.CommonConstant.DESC;
+import static com.middleware.zeus.common.constants.CommonConstant.ASC;
+import static com.middleware.zeus.common.constants.CommonConstant.DESC;
 
 /**
  * @author liyinlong

@@ -1,6 +1,6 @@
 package com.middleware.zeus.controller.prometheus;
 
-import com.middleware.caas.common.base.BaseResult;
+import com.middleware.zeus.common.base.BaseResult;
 import com.middleware.zeus.annotation.ExcludeAuditMethod;
 import com.middleware.zeus.service.prometheus.PrometheusWebhookService;
 import io.swagger.annotations.Api;

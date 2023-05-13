@@ -1,14 +1,13 @@
 package com.middleware.zeus.service.user.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.middleware.caas.common.model.user.UserDto;
-import com.middleware.caas.common.model.user.UserRole;
+import com.middleware.zeus.common.model.user.UserDto;
+import com.middleware.zeus.common.model.user.UserRole;
 import com.middleware.caas.filters.user.CurrentUserRepository;
 import com.middleware.zeus.bean.user.BeanRoleAuthority;
 import com.middleware.zeus.dao.user.BeanRoleAuthorityMapper;
 import com.middleware.zeus.service.user.ResourceMenuRoleService;
 import com.middleware.zeus.service.user.RoleAuthorityService;
-import com.middleware.zeus.service.user.UserRoleService;
 import com.middleware.zeus.service.user.UserService;
 import com.middleware.zeus.util.RequestUtil;
 import lombok.extern.slf4j.Slf4j;

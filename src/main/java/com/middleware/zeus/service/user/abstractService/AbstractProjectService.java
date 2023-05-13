@@ -1,18 +1,18 @@
 package com.middleware.zeus.service.user.abstractService;
 
-import com.middleware.caas.common.enums.ComponentsEnum;
-import com.middleware.caas.common.enums.ErrorMessage;
-import com.middleware.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
-import com.middleware.caas.common.exception.BusinessException;
-import com.middleware.caas.common.model.BackupPositionDTO;
-import com.middleware.caas.common.model.BackupServerDTO;
-import com.middleware.caas.common.model.ProjectBackupServerDTO;
-import com.middleware.caas.common.model.middleware.MiddlewareResourceInfo;
-import com.middleware.caas.common.model.middleware.Namespace;
-import com.middleware.caas.common.model.middleware.ProjectMiddlewareResourceInfo;
-import com.middleware.caas.common.model.user.ProjectDto;
-import com.middleware.caas.common.model.user.ProjectQuota;
-import com.middleware.caas.common.model.user.UserDto;
+import com.middleware.zeus.common.enums.ComponentsEnum;
+import com.middleware.zeus.common.enums.ErrorMessage;
+import com.middleware.zeus.common.enums.middleware.MiddlewareOfficialNameEnum;
+import com.middleware.zeus.common.exception.BusinessException;
+import com.middleware.zeus.common.model.BackupPositionDTO;
+import com.middleware.zeus.common.model.BackupServerDTO;
+import com.middleware.zeus.common.model.ProjectBackupServerDTO;
+import com.middleware.zeus.common.model.middleware.MiddlewareResourceInfo;
+import com.middleware.zeus.common.model.middleware.Namespace;
+import com.middleware.zeus.common.model.middleware.ProjectMiddlewareResourceInfo;
+import com.middleware.zeus.common.model.user.ProjectDto;
+import com.middleware.zeus.common.model.user.ProjectQuota;
+import com.middleware.zeus.common.model.user.UserDto;
 import com.middleware.caas.filters.token.JwtTokenComponent;
 import com.middleware.caas.filters.user.CurrentUserRepository;
 import com.middleware.zeus.bean.BeanClusterMiddlewareInfo;
@@ -20,7 +20,6 @@ import com.middleware.zeus.bean.BeanMiddlewareInfo;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
 import com.middleware.zeus.service.k8s.*;
 import com.middleware.zeus.service.middleware.*;
-import com.middleware.zeus.service.user.PlatformQuotaService;
 import com.middleware.zeus.service.user.RoleService;
 import com.middleware.zeus.service.user.UserService;
 import org.apache.commons.lang3.StringUtils;
@@ -30,7 +29,7 @@ import org.springframework.util.CollectionUtils;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.middleware.caas.common.constants.user.UserConstant.USERNAME;
+import static com.middleware.zeus.common.constants.user.UserConstant.USERNAME;
 
 /**
  * @author xutianhong

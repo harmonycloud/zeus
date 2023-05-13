@@ -1,6 +1,6 @@
 package com.middleware.zeus.service.k8s;
 
-import com.middleware.caas.common.model.Secret;
+import com.middleware.zeus.common.model.Secret;
 
 import java.util.List;
 

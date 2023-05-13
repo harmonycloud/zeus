@@ -1,7 +1,6 @@
 package com.middleware.zeus.service.middleware;
 
-import com.middleware.caas.common.model.ProjectBackupServerDTO;
-import com.middleware.zeus.bean.BeanProjectBackupServer;
+import com.middleware.zeus.common.model.ProjectBackupServerDTO;
 
 import java.util.List;
 

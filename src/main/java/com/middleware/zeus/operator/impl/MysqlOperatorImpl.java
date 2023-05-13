@@ -1,18 +1,18 @@
 package com.middleware.zeus.operator.impl;
 
-import static com.middleware.caas.common.constants.NameConstant.*;
-import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.*;
+import static com.middleware.zeus.common.constants.NameConstant.*;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import com.middleware.caas.common.enums.Protocol;
-import com.middleware.caas.common.model.ActiveAreaAnnotationDto;
-import com.middleware.caas.common.model.IngressComponentDto;
-import com.middleware.caas.common.model.MiddlewareServiceNameIndex;
-import com.middleware.tool.cmd.CmdExecUtil;
+import cn.hutool.json.JSONUtil;
+import com.middleware.zeus.common.enums.Protocol;
+import com.middleware.zeus.common.model.ActiveAreaAnnotationDto;
+import com.middleware.zeus.common.model.IngressComponentDto;
+import com.middleware.zeus.common.model.MiddlewareServiceNameIndex;
+import com.middleware.zeus.util.cmd.CmdExecUtil;
 import com.middleware.zeus.bean.BeanCacheMiddleware;
 import com.middleware.zeus.bean.BeanMysqlUser;
 import com.middleware.zeus.service.k8s.*;
@@ -22,7 +22,7 @@ import com.middleware.zeus.service.mysql.MysqlDbPrivService;
 import com.middleware.zeus.service.mysql.MysqlDbService;
 import com.middleware.zeus.service.mysql.MysqlUserService;
 import com.middleware.zeus.util.*;
-import com.middleware.caas.common.model.middleware.*;
+import com.middleware.zeus.common.model.middleware.*;
 import com.middleware.zeus.operator.BaseOperator;
 import com.middleware.zeus.operator.api.MysqlOperator;
 import com.middleware.zeus.operator.miiddleware.AbstractMysqlOperator;
@@ -30,6 +30,9 @@ import com.middleware.zeus.service.middleware.BackupService;
 import com.middleware.zeus.service.middleware.MysqlScheduleBackupService;
 import com.middleware.zeus.service.middleware.impl.MiddlewareServiceImpl;
 import com.middleware.zeus.service.middleware.impl.MysqlBackupServiceImpl;
+import com.middleware.zeus.util.middleware.ChartVersionUtil;
+import com.middleware.zeus.util.middleware.MiddlewareResourceCalculateUtil;
+import com.middleware.zeus.util.middleware.MysqlConnectionUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -37,38 +40,29 @@ import org.springframework.util.CollectionUtils;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.middleware.caas.common.constants.MysqlConstant;
-import com.middleware.caas.common.constants.NameConstant;
-import com.middleware.caas.common.enums.DateType;
-import com.middleware.caas.common.enums.DictEnum;
-import com.middleware.caas.common.enums.ErrorMessage;
-import com.middleware.caas.common.enums.middleware.MiddlewareTypeEnum;
-import com.middleware.caas.common.exception.BusinessException;
-import com.middleware.tool.date.DateUtils;
-import com.middleware.tool.encrypt.PasswordUtils;
+import com.middleware.zeus.common.constants.MysqlConstant;
+import com.middleware.zeus.common.enums.DateType;
+import com.middleware.zeus.common.enums.DictEnum;
+import com.middleware.zeus.common.enums.ErrorMessage;
+import com.middleware.zeus.common.enums.middleware.MiddlewareTypeEnum;
+import com.middleware.zeus.common.exception.BusinessException;
+import com.middleware.zeus.util.date.DateUtils;
+import com.middleware.zeus.util.encrypt.PasswordUtils;
 import com.middleware.zeus.annotation.Operator;
 import com.middleware.zeus.integration.cluster.MysqlClusterWrapper;
 
-import cn.hutool.json.JSONUtil;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.CollectionUtils;
 
-import java.io.IOException;
 import java.text.MessageFormat;
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.stream.Collectors;
 
-import static com.middleware.caas.common.constants.CmdConstant.MYSQL_HAND_SWITCH;
-import static com.middleware.caas.common.constants.CommonConstant.OFF;
-import static com.middleware.caas.common.constants.CommonConstant.ON;
-import static com.middleware.caas.common.constants.MysqlConstant.SLOW_QUERY_LOG;
-import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_EXPOSE_INGRESS;
-import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.SYNC_SLAVE;
+import static com.middleware.zeus.common.constants.CmdConstant.MYSQL_HAND_SWITCH;
+import static com.middleware.zeus.common.constants.CommonConstant.OFF;
+import static com.middleware.zeus.common.constants.CommonConstant.ON;
+import static com.middleware.zeus.common.constants.MysqlConstant.SLOW_QUERY_LOG;
+import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_EXPOSE_INGRESS;
+import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.SYNC_SLAVE;
 
 /**
  * @author dengyulong

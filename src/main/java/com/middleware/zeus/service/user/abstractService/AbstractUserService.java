@@ -1,7 +1,7 @@
 package com.middleware.zeus.service.user.abstractService;
 
-import static com.middleware.caas.common.constants.CommonConstant.NUM_TWO;
-import static com.middleware.caas.common.constants.user.UserConstant.USERNAME;
+import static com.middleware.zeus.common.constants.CommonConstant.NUM_TWO;
+import static com.middleware.zeus.common.constants.user.UserConstant.USERNAME;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -17,11 +17,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.middleware.caas.common.enums.middleware.MiddlewareOfficialNameEnum;
-import com.middleware.caas.common.model.UploadImageFileDto;
-import com.middleware.caas.common.model.user.ResourceMenuDto;
-import com.middleware.caas.common.model.user.UserDto;
-import com.middleware.caas.common.model.user.UserRole;
+import com.middleware.zeus.common.enums.middleware.MiddlewareOfficialNameEnum;
+import com.middleware.zeus.common.model.UploadImageFileDto;
+import com.middleware.zeus.common.model.user.ResourceMenuDto;
+import com.middleware.zeus.common.model.user.UserDto;
+import com.middleware.zeus.common.model.user.UserRole;
 import com.middleware.caas.filters.token.JwtTokenComponent;
 import com.middleware.caas.filters.user.CurrentUser;
 import com.middleware.caas.filters.user.CurrentUserRepository;

@@ -1,6 +1,6 @@
 package com.middleware.zeus.service.middleware;
 
-import com.middleware.caas.common.model.middleware.Middleware;
+import com.middleware.zeus.common.model.middleware.Middleware;
 import com.middleware.zeus.bean.BeanCacheMiddleware;
 
 import java.util.List;

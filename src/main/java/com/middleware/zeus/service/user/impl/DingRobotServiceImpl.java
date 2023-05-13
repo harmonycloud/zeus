@@ -1,13 +1,13 @@
 package com.middleware.zeus.service.user.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.middleware.caas.common.constants.CommonConstant;
-import com.middleware.caas.common.enums.ErrorMessage;
-import com.middleware.caas.common.exception.BusinessException;
-import com.middleware.caas.common.model.DingRobotDTO;
-import com.middleware.caas.common.model.SendResult;
-import com.middleware.caas.common.model.TextMessage;
-import com.middleware.caas.common.model.middleware.AlertInfoDto;
+import com.middleware.zeus.common.constants.CommonConstant;
+import com.middleware.zeus.common.enums.ErrorMessage;
+import com.middleware.zeus.common.exception.BusinessException;
+import com.middleware.zeus.common.model.DingRobotDTO;
+import com.middleware.zeus.common.model.SendResult;
+import com.middleware.zeus.common.model.TextMessage;
+import com.middleware.zeus.common.model.middleware.AlertInfoDto;
 import com.middleware.zeus.bean.DingRobotInfo;
 import com.middleware.zeus.dao.DingRobotMapper;
 import com.middleware.zeus.service.user.DingRobotService;

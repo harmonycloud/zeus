@@ -1,8 +1,8 @@
 package com.middleware.zeus.service.system.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.middleware.caas.common.model.AlertUserDo;
-import com.middleware.caas.common.model.user.UserDto;
+import com.middleware.zeus.common.model.AlertUserDo;
+import com.middleware.zeus.common.model.user.UserDto;
 import com.middleware.zeus.bean.BeanAlertUser;
 import com.middleware.zeus.dao.BeanAlertUserMapper;
 import com.middleware.zeus.service.system.AlertUserService;

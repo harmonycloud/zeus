@@ -1,11 +1,11 @@
 package com.middleware.zeus.service.middleware;
 
-import com.middleware.caas.common.model.MiddlewareVersionDto;
-import com.middleware.caas.common.model.middleware.Middleware;
-import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.middleware.caas.common.model.middleware.MiddlewareInfoDTO;
-import com.middleware.caas.common.model.middleware.MiddlewareOperatorDTO;
-import com.middleware.caas.common.model.registry.HelmChartFile;
+import com.middleware.zeus.common.model.MiddlewareVersionDto;
+import com.middleware.zeus.common.model.middleware.Middleware;
+import com.middleware.zeus.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.zeus.common.model.middleware.MiddlewareInfoDTO;
+import com.middleware.zeus.common.model.middleware.MiddlewareOperatorDTO;
+import com.middleware.zeus.common.model.registry.HelmChartFile;
 import com.middleware.zeus.bean.BeanMiddlewareInfo;
 
 import java.io.File;

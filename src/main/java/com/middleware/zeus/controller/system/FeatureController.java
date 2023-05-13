@@ -1,8 +1,7 @@
 package com.middleware.zeus.controller.system;
 
-import com.middleware.caas.common.base.BaseResult;
-import com.middleware.caas.common.model.FeatureDto;
-import com.middleware.caas.common.model.LdapConfigDto;
+import com.middleware.zeus.common.base.BaseResult;
+import com.middleware.zeus.common.model.FeatureDto;
 import com.middleware.zeus.service.system.FeatureService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

@@ -3,7 +3,7 @@ package com.middleware.zeus.util;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.middleware.caas.common.model.ClusterCert;
+import com.middleware.zeus.common.model.ClusterCert;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;

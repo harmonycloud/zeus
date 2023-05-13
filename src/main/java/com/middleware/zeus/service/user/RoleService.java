@@ -2,9 +2,9 @@ package com.middleware.zeus.service.user;
 
 import java.util.List;
 
-import com.middleware.caas.common.model.user.ResourceMenuDto;
-import com.middleware.caas.common.model.user.RoleDto;
-import com.middleware.caas.common.model.user.UserDto;
+import com.middleware.zeus.common.model.user.ResourceMenuDto;
+import com.middleware.zeus.common.model.user.RoleDto;
+import com.middleware.zeus.common.model.user.UserDto;
 import com.middleware.zeus.bean.user.BeanRole;
 
 /**

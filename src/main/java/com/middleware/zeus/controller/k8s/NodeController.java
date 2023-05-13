@@ -1,11 +1,11 @@
 package com.middleware.zeus.controller.k8s;
 
-import com.middleware.caas.common.model.Node;
+import com.middleware.zeus.common.model.Node;
 import com.middleware.zeus.service.k8s.NodeService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import com.middleware.caas.common.base.BaseResult;
+import com.middleware.zeus.common.base.BaseResult;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;

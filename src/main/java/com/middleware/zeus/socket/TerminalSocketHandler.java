@@ -15,8 +15,8 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.middleware.caas.common.constants.NameConstant;
-import com.middleware.caas.common.model.middleware.LogQueryDto;
+import com.middleware.zeus.common.constants.NameConstant;
+import com.middleware.zeus.common.model.middleware.LogQueryDto;
 import com.middleware.caas.filters.user.CurrentUser;
 import com.middleware.caas.filters.user.CurrentUserRepository;
 

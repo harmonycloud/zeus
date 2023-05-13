@@ -2,10 +2,10 @@ package com.middleware.zeus.integration.dashboard;
 
 import com.alibaba.fastjson.JSONObject;
 import com.dtflys.forest.annotation.*;
-import com.middleware.caas.common.model.dashboard.SqlQuery;
+import com.middleware.zeus.common.model.dashboard.SqlQuery;
 import com.middleware.zeus.interceptor.MiddlewareApiInterceptor;
 import com.middleware.zeus.interceptor.MysqlDashboardInterceptor;
-import com.middleware.caas.common.model.dashboard.mysql.*;
+import com.middleware.zeus.common.model.dashboard.mysql.*;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

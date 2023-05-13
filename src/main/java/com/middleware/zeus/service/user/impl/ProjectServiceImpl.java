@@ -1,13 +1,17 @@
 package com.middleware.zeus.service.user.impl;
 
-import static com.middleware.caas.common.constants.CommonConstant.NUM_TWO;
-import static com.middleware.caas.common.constants.NameConstant.*;
-import static com.middleware.caas.common.constants.user.UserConstant.USERNAME;
+import static com.middleware.zeus.common.constants.CommonConstant.NUM_TWO;
+import static com.middleware.zeus.common.constants.NameConstant.*;
+import static com.middleware.zeus.common.constants.user.UserConstant.USERNAME;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
 import com.middleware.zeus.bean.user.BeanRole;
+import com.middleware.zeus.common.model.ProjectBackupServerDTO;
+import com.middleware.zeus.common.model.ResourceQuotaDo;
+import com.middleware.zeus.common.model.StorageDto;
+import com.middleware.zeus.common.model.StorageQuota;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,19 +22,18 @@ import org.springframework.util.CollectionUtils;
 
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.middleware.caas.common.enums.DictEnum;
-import com.middleware.caas.common.enums.ErrorMessage;
-import com.middleware.caas.common.exception.BusinessException;
-import com.middleware.caas.common.model.*;
-import com.middleware.caas.common.model.middleware.ImageRepositoryDTO;
-import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.middleware.caas.common.model.middleware.Namespace;
-import com.middleware.caas.common.model.middleware.StorageClassInfo;
-import com.middleware.caas.common.model.user.*;
+import com.middleware.zeus.common.enums.DictEnum;
+import com.middleware.zeus.common.enums.ErrorMessage;
+import com.middleware.zeus.common.exception.BusinessException;
+import com.middleware.zeus.common.model.middleware.ImageRepositoryDTO;
+import com.middleware.zeus.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.zeus.common.model.middleware.Namespace;
+import com.middleware.zeus.common.model.middleware.StorageClassInfo;
+import com.middleware.zeus.common.model.user.*;
 import com.middleware.caas.filters.token.JwtTokenComponent;
 import com.middleware.caas.filters.user.CurrentUser;
 import com.middleware.caas.filters.user.CurrentUserRepository;
-import com.middleware.tool.uuid.UUIDUtils;
+import com.middleware.zeus.util.uuid.UUIDUtils;
 import com.middleware.zeus.annotation.Skyview;
 import com.middleware.zeus.bean.user.BeanProject;
 import com.middleware.zeus.bean.user.BeanProjectNamespace;

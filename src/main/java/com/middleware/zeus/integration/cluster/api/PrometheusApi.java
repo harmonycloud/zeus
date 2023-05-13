@@ -1,18 +1,18 @@
 package com.middleware.zeus.integration.cluster.api;
 
-import com.middleware.caas.common.model.PrometheusRulesResponse;
-import com.middleware.caas.common.model.PrometheusResponse;
-import com.middleware.tool.api.AbstractApi;
-import com.middleware.tool.api.client.BaseClient;
-import com.middleware.tool.api.common.Pair;
-import com.middleware.tool.api.common.RequestParams;
+import com.middleware.zeus.common.model.PrometheusRulesResponse;
+import com.middleware.zeus.common.model.PrometheusResponse;
+import com.middleware.zeus.util.api.AbstractApi;
+import com.middleware.zeus.util.api.client.BaseClient;
+import com.middleware.zeus.util.api.common.Pair;
+import com.middleware.zeus.util.api.common.RequestParams;
 import okhttp3.Call;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.util.CollectionUtils;
 
 import java.util.Map;
 
-import static com.middleware.tool.api.util.HttpMethod.GET;
+import static com.middleware.zeus.util.api.util.HttpMethod.GET;
 
 /**
  * @author xutianhong

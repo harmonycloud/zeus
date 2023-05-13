@@ -13,22 +13,17 @@ import java.util.stream.Collectors;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.middleware.caas.common.enums.ErrorMessage;
-import com.middleware.caas.common.exception.BusinessException;
-import com.middleware.caas.common.model.user.RoleDto;
-import com.middleware.caas.common.model.user.UserDto;
-import com.middleware.caas.common.model.user.UserRole;
+import com.middleware.zeus.common.enums.ErrorMessage;
+import com.middleware.zeus.common.exception.BusinessException;
+import com.middleware.zeus.common.model.user.RoleDto;
 import com.middleware.caas.filters.token.JwtTokenComponent;
 import com.middleware.caas.filters.user.CurrentUser;
 import com.middleware.caas.filters.user.CurrentUserRepository;
 import com.middleware.zeus.bean.user.BeanRoleAuthority;
 import com.middleware.zeus.service.user.RoleAuthorityService;
 import com.middleware.zeus.service.user.RoleService;
-import com.middleware.zeus.service.user.UserRoleService;
-import com.middleware.zeus.service.user.UserService;
 import com.middleware.zeus.util.RequestUtil;
 import com.middleware.zeus.bean.BeanOperationAudit;
-import io.swagger.models.auth.In;
 import org.apache.commons.lang3.StringUtils;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -46,9 +41,9 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.middleware.caas.common.base.BaseResult;
-import com.middleware.caas.common.constants.CommonConstant;
-import com.middleware.tool.api.util.HttpMethod;
+import com.middleware.zeus.common.base.BaseResult;
+import com.middleware.zeus.common.constants.CommonConstant;
+import com.middleware.zeus.util.api.util.HttpMethod;
 import com.middleware.zeus.annotation.Authority;
 import com.middleware.zeus.service.system.OperationAuditService;
 
@@ -56,9 +51,9 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 
-import static com.middleware.caas.common.constants.CommonConstant.*;
-import static com.middleware.caas.common.constants.user.UserConstant.ADMIN;
-import static com.middleware.caas.common.constants.user.UserConstant.SUPER_MANAGER;
+import static com.middleware.zeus.common.constants.CommonConstant.*;
+import static com.middleware.zeus.common.constants.user.UserConstant.ADMIN;
+import static com.middleware.zeus.common.constants.user.UserConstant.SUPER_MANAGER;
 
 /**
  * 操作审计拦截器

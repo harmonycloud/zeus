@@ -1,14 +1,14 @@
 package com.middleware.zeus.service.mysql.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.middleware.caas.common.constants.MysqlConstant;
-import com.middleware.caas.common.enums.ErrorMessage;
-import com.middleware.caas.common.enums.MysqlPrivilegeEnum;
-import com.middleware.caas.common.exception.BusinessException;
-import com.middleware.caas.common.model.MysqlAccessInfo;
-import com.middleware.caas.common.model.MysqlDbPrivilege;
-import com.middleware.caas.common.model.MysqlUserDTO;
-import com.middleware.caas.common.model.MysqlUserDetail;
+import com.middleware.zeus.common.constants.MysqlConstant;
+import com.middleware.zeus.common.enums.ErrorMessage;
+import com.middleware.zeus.common.enums.MysqlPrivilegeEnum;
+import com.middleware.zeus.common.exception.BusinessException;
+import com.middleware.zeus.common.model.MysqlAccessInfo;
+import com.middleware.zeus.common.model.MysqlDbPrivilege;
+import com.middleware.zeus.common.model.MysqlUserDTO;
+import com.middleware.zeus.common.model.MysqlUserDetail;
 import com.middleware.zeus.bean.BeanMysqlDbPriv;
 import com.middleware.zeus.bean.BeanMysqlUser;
 import com.middleware.zeus.dao.BeanMysqlUserMapper;
@@ -16,7 +16,7 @@ import com.middleware.zeus.operator.api.MysqlOperator;
 import com.middleware.zeus.service.middleware.impl.MysqlServiceImpl;
 import com.middleware.zeus.service.mysql.MysqlDbPrivService;
 import com.middleware.zeus.service.mysql.MysqlUserService;
-import com.middleware.zeus.util.MyAESUtil;
+import com.middleware.zeus.util.encrypt.MyAESUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.handlers.BeanHandler;
@@ -35,8 +35,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.ROOT;
-import static com.middleware.zeus.util.MysqlConnectionUtil.*;
+import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.ROOT;
+import static com.middleware.zeus.util.middleware.MysqlConnectionUtil.*;
 
 /**
  * @author liyinlong

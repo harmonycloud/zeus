@@ -4,8 +4,8 @@ import com.middleware.zeus.service.k8s.PrometheusRuleService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.middleware.caas.common.enums.ErrorMessage;
-import com.middleware.caas.common.exception.CaasRuntimeException;
+import com.middleware.zeus.common.enums.ErrorMessage;
+import com.middleware.zeus.common.exception.CaasRuntimeException;
 import com.middleware.zeus.integration.cluster.PrometheusRuleWrapper;
 import com.middleware.zeus.integration.cluster.bean.prometheus.PrometheusRule;
 

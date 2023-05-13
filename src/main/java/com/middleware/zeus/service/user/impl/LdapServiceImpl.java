@@ -1,10 +1,10 @@
 package com.middleware.zeus.service.user.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.middleware.caas.common.constants.LdapConfigConstant;
-import com.middleware.caas.common.enums.ErrorMessage;
-import com.middleware.caas.common.exception.BusinessException;
-import com.middleware.caas.common.model.LdapConfigDto;
+import com.middleware.zeus.common.constants.LdapConfigConstant;
+import com.middleware.zeus.common.enums.ErrorMessage;
+import com.middleware.zeus.common.exception.BusinessException;
+import com.middleware.zeus.common.model.LdapConfigDto;
 import com.middleware.zeus.bean.BeanSystemConfig;
 import com.middleware.zeus.dao.BeanSystemConfigMapper;
 import com.middleware.zeus.service.user.LdapService;

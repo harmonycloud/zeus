@@ -1,11 +1,11 @@
 package com.middleware.zeus.service.user.impl;
 
-import com.middleware.caas.common.enums.DictEnum;
-import com.middleware.caas.common.enums.ErrorMessage;
-import com.middleware.caas.common.exception.BusinessException;
-import com.middleware.caas.common.model.LdapConfigDto;
-import com.middleware.caas.common.model.user.UserDto;
-import com.middleware.tool.encrypt.PasswordUtils;
+import com.middleware.zeus.common.enums.DictEnum;
+import com.middleware.zeus.common.enums.ErrorMessage;
+import com.middleware.zeus.common.exception.BusinessException;
+import com.middleware.zeus.common.model.LdapConfigDto;
+import com.middleware.zeus.common.model.user.UserDto;
+import com.middleware.zeus.util.encrypt.PasswordUtils;
 import com.middleware.zeus.bean.user.BeanUser;
 import com.middleware.zeus.service.user.AuthManager4Ldap;
 import com.middleware.zeus.service.user.UserService;
@@ -29,7 +29,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.middleware.caas.common.constants.LdapConfigConstant.*;
+import static com.middleware.zeus.common.constants.LdapConfigConstant.*;
 
 /**
  * @author liyinlong

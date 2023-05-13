@@ -3,14 +3,14 @@ package com.middleware.zeus.service.k8s.impl;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import com.middleware.caas.common.enums.ErrorMessage;
-import com.middleware.caas.common.exception.BusinessException;
+import com.middleware.zeus.common.enums.ErrorMessage;
+import com.middleware.zeus.common.exception.BusinessException;
 import com.middleware.zeus.service.k8s.SecretService;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.middleware.caas.common.model.Secret;
+import com.middleware.zeus.common.model.Secret;
 import com.middleware.zeus.integration.cluster.SecretWrapper;
 
 import lombok.extern.slf4j.Slf4j;

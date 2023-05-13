@@ -6,17 +6,17 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.github.pagehelper.PageInfo;
-import com.middleware.caas.common.constants.NameConstant;
-import com.middleware.caas.common.enums.ErrorMessage;
-import com.middleware.caas.common.enums.middleware.MiddlewareTypeEnum;
-import com.middleware.caas.common.exception.CaasRuntimeException;
-import com.middleware.caas.common.model.*;
-import com.middleware.caas.common.model.middleware.Middleware;
-import com.middleware.caas.common.model.middleware.MiddlewareAlertsDTO;
-import com.middleware.caas.common.model.registry.HelmChartFile;
-import com.middleware.caas.common.model.user.UserDto;
-import com.middleware.tool.date.DateUtils;
-import com.middleware.tool.uuid.UUIDUtils;
+import com.middleware.zeus.common.constants.NameConstant;
+import com.middleware.zeus.common.enums.ErrorMessage;
+import com.middleware.zeus.common.enums.middleware.MiddlewareTypeEnum;
+import com.middleware.zeus.common.exception.CaasRuntimeException;
+import com.middleware.zeus.common.model.*;
+import com.middleware.zeus.common.model.middleware.Middleware;
+import com.middleware.zeus.common.model.middleware.MiddlewareAlertsDTO;
+import com.middleware.zeus.common.model.registry.HelmChartFile;
+import com.middleware.zeus.common.model.user.UserDto;
+import com.middleware.zeus.util.date.DateUtils;
+import com.middleware.zeus.util.uuid.UUIDUtils;
 import com.middleware.zeus.bean.AlertRuleId;
 import com.middleware.zeus.bean.BeanAlertRule;
 import com.middleware.zeus.bean.BeanAlertSetting;
@@ -38,7 +38,6 @@ import com.middleware.zeus.service.middleware.MiddlewareService;
 import com.middleware.zeus.service.registry.HelmChartService;
 import com.middleware.zeus.service.system.AlertUserService;
 import com.middleware.zeus.service.user.ProjectService;
-import com.middleware.zeus.service.user.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -53,8 +52,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static com.middleware.caas.common.constants.AlertConstant.*;
-import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.OFFICIAL_TAG;
+import static com.middleware.zeus.common.constants.AlertConstant.*;
 
 /**
  * @author xutianhong

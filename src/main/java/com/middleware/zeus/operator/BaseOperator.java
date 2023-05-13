@@ -1,13 +1,12 @@
 package com.middleware.zeus.operator;
 
-import com.middleware.caas.common.model.ActiveAreaAnnotationDto;
+import com.middleware.zeus.common.model.ActiveAreaAnnotationDto;
 import com.alibaba.fastjson.JSONObject;
-import com.middleware.caas.common.model.middleware.*;
+import com.middleware.zeus.common.model.middleware.*;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * @author dengyulong

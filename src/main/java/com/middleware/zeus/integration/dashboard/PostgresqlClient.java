@@ -1,7 +1,7 @@
 package com.middleware.zeus.integration.dashboard;
 
 import com.dtflys.forest.http.ForestResponse;
-import com.middleware.caas.common.model.dashboard.*;
+import com.middleware.zeus.common.model.dashboard.*;
 import com.middleware.zeus.interceptor.MiddlewareApiInterceptor;
 import org.springframework.stereotype.Component;
 

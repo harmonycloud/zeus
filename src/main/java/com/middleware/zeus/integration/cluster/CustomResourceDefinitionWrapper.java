@@ -1,9 +1,8 @@
 package com.middleware.zeus.integration.cluster;
 
-import com.alibaba.fastjson.JSONObject;
-import com.middleware.caas.common.enums.ErrorMessage;
-import com.middleware.caas.common.exception.BusinessException;
-import com.middleware.caas.common.model.CRDBasicInfo;
+import com.middleware.zeus.common.enums.ErrorMessage;
+import com.middleware.zeus.common.exception.BusinessException;
+import com.middleware.zeus.common.model.CRDBasicInfo;
 import com.middleware.zeus.util.K8sClient;
 import io.fabric8.kubernetes.api.model.GenericKubernetesResource;
 import io.fabric8.kubernetes.api.model.apiextensions.v1.CustomResourceDefinition;
@@ -18,7 +17,7 @@ import org.yaml.snakeyaml.Yaml;
 
 import java.util.*;
 
-import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.NAMESPACED;
+import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.NAMESPACED;
 
 /**
  * @author xutianhong

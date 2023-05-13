@@ -1,8 +1,8 @@
 package com.middleware.zeus.service.dashboard;
 
 import com.github.pagehelper.PageInfo;
-import com.middleware.caas.common.model.SqlRecordQueryDto;
-import com.middleware.caas.common.model.dashboard.ExecuteSqlDto;
+import com.middleware.zeus.common.model.SqlRecordQueryDto;
+import com.middleware.zeus.common.model.dashboard.ExecuteSqlDto;
 import com.middleware.zeus.bean.BeanSqlExecuteRecord;
 
 /**

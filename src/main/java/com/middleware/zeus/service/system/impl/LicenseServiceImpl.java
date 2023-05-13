@@ -1,6 +1,6 @@
 package com.middleware.zeus.service.system.impl;
 
-import static com.middleware.caas.common.constants.NameConstant.*;
+import static com.middleware.zeus.common.constants.NameConstant.*;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -20,16 +20,16 @@ import org.springframework.util.CollectionUtils;
 
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
-import com.middleware.caas.common.enums.ErrorMessage;
-import com.middleware.caas.common.exception.BusinessException;
-import com.middleware.caas.common.model.LicenseInfoDto;
-import com.middleware.caas.common.model.MonitorResourceQuotaBase;
-import com.middleware.caas.common.model.middleware.Middleware;
-import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.middleware.caas.common.model.middleware.Namespace;
-import com.middleware.caas.common.util.ThreadPoolExecutorFactory;
-import com.middleware.tool.encrypt.RSAUtils;
-import com.middleware.tool.numeric.ResourceCalculationUtil;
+import com.middleware.zeus.common.enums.ErrorMessage;
+import com.middleware.zeus.common.exception.BusinessException;
+import com.middleware.zeus.common.model.LicenseInfoDto;
+import com.middleware.zeus.common.model.MonitorResourceQuotaBase;
+import com.middleware.zeus.common.model.middleware.Middleware;
+import com.middleware.zeus.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.zeus.common.model.middleware.Namespace;
+import com.middleware.zeus.util.ThreadPoolExecutorFactory;
+import com.middleware.zeus.util.encrypt.RSAUtils;
+import com.middleware.zeus.util.numeric.ResourceCalculationUtil;
 import com.middleware.zeus.bean.BeanSystemConfig;
 import com.middleware.zeus.bean.LicenseInfo;
 import com.middleware.zeus.integration.cluster.NamespaceWrapper;

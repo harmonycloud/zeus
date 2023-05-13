@@ -1,8 +1,8 @@
 package com.middleware.zeus.service.k8s.impl;
 
-import com.middleware.caas.common.enums.ComponentsEnum;
-import com.middleware.caas.common.model.ClusterComponentsDto;
-import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.zeus.common.enums.ComponentsEnum;
+import com.middleware.zeus.common.model.ClusterComponentsDto;
+import com.middleware.zeus.common.model.middleware.MiddlewareClusterDTO;
 import com.middleware.zeus.service.k8s.AlertManagerInfoService;
 import com.middleware.zeus.service.k8s.ClusterComponentService;
 import com.middleware.zeus.service.k8s.ClusterService;

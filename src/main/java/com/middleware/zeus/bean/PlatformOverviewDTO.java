@@ -1,10 +1,10 @@
 package com.middleware.zeus.bean;
 
 import com.github.pagehelper.PageInfo;
-import com.middleware.caas.common.model.AlertSummaryDTO;
-import com.middleware.caas.common.model.middleware.ClusterQuotaDTO;
-import com.middleware.caas.common.model.middleware.MiddlewareBriefInfoDTO;
-import com.middleware.caas.common.model.middleware.MiddlewareOperatorDTO;
+import com.middleware.zeus.common.model.AlertSummaryDTO;
+import com.middleware.zeus.common.model.middleware.ClusterQuotaDTO;
+import com.middleware.zeus.common.model.middleware.MiddlewareBriefInfoDTO;
+import com.middleware.zeus.common.model.middleware.MiddlewareOperatorDTO;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 

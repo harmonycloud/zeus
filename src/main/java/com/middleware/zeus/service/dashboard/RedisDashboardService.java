@@ -1,10 +1,10 @@
 package com.middleware.zeus.service.dashboard;
 
 import com.alibaba.fastjson.JSONObject;
-import com.middleware.caas.common.model.dashboard.redis.DataDto;
-import com.middleware.caas.common.model.dashboard.redis.DatabaseDto;
-import com.middleware.caas.common.model.dashboard.redis.KeyValueDto;
-import com.middleware.caas.common.model.dashboard.redis.ScanResult;
+import com.middleware.zeus.common.model.dashboard.redis.DataDto;
+import com.middleware.zeus.common.model.dashboard.redis.DatabaseDto;
+import com.middleware.zeus.common.model.dashboard.redis.KeyValueDto;
+import com.middleware.zeus.common.model.dashboard.redis.ScanResult;
 
 import java.util.List;
 

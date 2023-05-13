@@ -1,7 +1,7 @@
 package com.middleware.zeus.skyview;
 
 import com.alibaba.fastjson.JSONObject;
-import com.middleware.caas.common.base.CaasResult;
+import com.middleware.zeus.common.base.CaasResult;
 
 /**
  * @author xutianhong

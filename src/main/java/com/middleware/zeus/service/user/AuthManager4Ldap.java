@@ -1,7 +1,7 @@
 package com.middleware.zeus.service.user;
 
-import com.middleware.caas.common.model.LdapConfigDto;
-import com.middleware.caas.common.model.user.UserDto;
+import com.middleware.zeus.common.model.LdapConfigDto;
+import com.middleware.zeus.common.model.user.UserDto;
 
 /**
  * @author liyinlong

@@ -1,7 +1,7 @@
 package com.middleware.zeus.operator.miiddleware;
 
-import com.middleware.caas.common.enums.middleware.MiddlewareTypeEnum;
-import com.middleware.caas.common.model.middleware.Middleware;
+import com.middleware.zeus.common.enums.middleware.MiddlewareTypeEnum;
+import com.middleware.zeus.common.model.middleware.Middleware;
 import com.middleware.zeus.operator.AbstractBaseOperator;
 
 /**

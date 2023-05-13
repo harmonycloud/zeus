@@ -1,9 +1,9 @@
 package com.middleware.zeus.service.k8s;
 
-import com.middleware.caas.common.model.IngressComponentDto;
-import com.middleware.caas.common.model.middleware.IngressDTO;
-import com.middleware.caas.common.model.middleware.MiddlewareValues;
-import com.middleware.caas.common.model.middleware.PodInfo;
+import com.middleware.zeus.common.model.IngressComponentDto;
+import com.middleware.zeus.common.model.middleware.IngressDTO;
+import com.middleware.zeus.common.model.middleware.MiddlewareValues;
+import com.middleware.zeus.common.model.middleware.PodInfo;
 
 import java.util.List;
 

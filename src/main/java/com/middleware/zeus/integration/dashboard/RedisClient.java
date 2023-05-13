@@ -2,7 +2,7 @@ package com.middleware.zeus.integration.dashboard;
 
 import com.alibaba.fastjson.JSONObject;
 import com.dtflys.forest.annotation.*;
-import com.middleware.caas.common.model.dashboard.redis.KeyValueDto;
+import com.middleware.zeus.common.model.dashboard.redis.KeyValueDto;
 import com.middleware.zeus.interceptor.MiddlewareApiInterceptor;
 import org.springframework.stereotype.Component;
 

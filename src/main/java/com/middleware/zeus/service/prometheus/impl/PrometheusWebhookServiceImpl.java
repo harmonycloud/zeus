@@ -1,24 +1,12 @@
 package com.middleware.zeus.service.prometheus.impl;
 
-import java.io.IOException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
-import com.middleware.caas.common.constants.AlertConstant;
-import com.middleware.caas.common.model.AlertRecordDo;
-import com.middleware.caas.common.model.AlertSettingDTO;
-import com.middleware.caas.common.model.AlertUserDo;
-import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.zeus.common.model.AlertRecordDo;
+import com.middleware.zeus.common.model.AlertUserDo;
 import com.middleware.zeus.bean.BeanSystemConfig;
-import com.middleware.zeus.bean.DingRobotInfo;
-import com.middleware.zeus.bean.user.BeanUser;
 import com.middleware.zeus.dao.*;
-import com.middleware.zeus.dao.AlertRuleIdMapper;
 import com.middleware.zeus.dao.BeanAlertRecordMapper;
-import com.middleware.zeus.dao.DingRobotMapper;
-import com.middleware.zeus.dao.user.BeanUserMapper;
-import com.middleware.zeus.service.k8s.ClusterService;
 import com.middleware.zeus.service.middleware.MiddlewareAlertsService;
 import com.middleware.zeus.bean.BeanAlertRecord;
 import com.middleware.zeus.service.system.AlertService;
@@ -28,16 +16,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.middleware.caas.common.constants.DateStyle;
-import com.middleware.caas.common.constants.NameConstant;
-import com.middleware.caas.common.enums.DateUnitEnum;
-import com.middleware.caas.common.model.middleware.AlertInfoDto;
-import com.middleware.tool.date.DateUtils;
-import com.middleware.zeus.bean.AlertRuleId;
+import com.middleware.zeus.common.constants.DateStyle;
+import com.middleware.zeus.common.constants.NameConstant;
+import com.middleware.zeus.common.enums.DateUnitEnum;
+import com.middleware.zeus.util.date.DateUtils;
 import com.middleware.zeus.integration.cluster.AlertManagerWrapper;
 import com.middleware.zeus.service.prometheus.PrometheusWebhookService;
 import com.middleware.zeus.service.user.DingRobotService;
@@ -45,12 +30,9 @@ import com.middleware.zeus.service.user.MailService;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.ObjectUtils;
 
-import javax.mail.MessagingException;
-
-import static com.middleware.caas.common.constants.AlertConstant.BACKUP;
-import static com.middleware.caas.common.constants.AlertConstant.SERVICE;
+import static com.middleware.zeus.common.constants.AlertConstant.BACKUP;
+import static com.middleware.zeus.common.constants.AlertConstant.SERVICE;
 
 /**
  * @author xutianhong

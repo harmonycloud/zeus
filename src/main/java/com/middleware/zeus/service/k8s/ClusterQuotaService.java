@@ -1,7 +1,7 @@
 package com.middleware.zeus.service.k8s;
 
-import com.middleware.caas.common.model.ClusterQuotaQuery;
-import com.middleware.caas.common.model.ResourceQuotaDo;
+import com.middleware.zeus.common.model.ClusterQuotaQuery;
+import com.middleware.zeus.common.model.ResourceQuotaDo;
 
 import java.util.List;
 

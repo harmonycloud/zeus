@@ -1,8 +1,8 @@
 package com.middleware.zeus.service.mysql;
 
-import com.middleware.caas.common.model.MysqlDbPrivilege;
-import com.middleware.caas.common.model.MysqlUserDTO;
-import com.middleware.caas.common.model.MysqlUserDetail;
+import com.middleware.zeus.common.model.MysqlDbPrivilege;
+import com.middleware.zeus.common.model.MysqlUserDTO;
+import com.middleware.zeus.common.model.MysqlUserDetail;
 import com.middleware.zeus.bean.BeanMysqlUser;
 import org.springframework.stereotype.Service;
 

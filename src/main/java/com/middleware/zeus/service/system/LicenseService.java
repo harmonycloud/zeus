@@ -1,6 +1,6 @@
 package com.middleware.zeus.service.system;
 
-import com.middleware.caas.common.model.LicenseInfoDto;
+import com.middleware.zeus.common.model.LicenseInfoDto;
 import com.middleware.zeus.bean.LicenseInfo;
 
 /**

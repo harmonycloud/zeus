@@ -1,6 +1,6 @@
 package com.middleware.zeus.service.k8s;
 
-import com.middleware.caas.common.model.k8s.PvDo;
+import com.middleware.zeus.common.model.k8s.PvDo;
 
 import java.util.List;
 

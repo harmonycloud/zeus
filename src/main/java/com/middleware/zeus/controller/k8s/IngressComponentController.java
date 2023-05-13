@@ -1,12 +1,11 @@
 package com.middleware.zeus.controller.k8s;
 
-import com.middleware.caas.common.base.BaseResult;
-import com.middleware.caas.common.model.IngressComponentDto;
-import com.middleware.caas.common.model.middleware.IngressDTO;
-import com.middleware.caas.common.model.middleware.MiddlewareValues;
-import com.middleware.caas.common.model.middleware.PodInfo;
+import com.middleware.zeus.common.base.BaseResult;
+import com.middleware.zeus.common.model.IngressComponentDto;
+import com.middleware.zeus.common.model.middleware.IngressDTO;
+import com.middleware.zeus.common.model.middleware.MiddlewareValues;
+import com.middleware.zeus.common.model.middleware.PodInfo;
 import com.middleware.zeus.service.k8s.IngressComponentService;
-import com.middleware.zeus.service.k8s.NodeService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;

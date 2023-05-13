@@ -1,10 +1,10 @@
 package com.middleware.zeus.service.prometheus.impl;
 
-import com.middleware.caas.common.constants.NameConstant;
-import com.middleware.caas.common.enums.ErrorMessage;
-import com.middleware.caas.common.exception.BusinessException;
-import com.middleware.caas.common.model.PrometheusResponse;
-import com.middleware.tool.numeric.ResourceCalculationUtil;
+import com.middleware.zeus.common.constants.NameConstant;
+import com.middleware.zeus.common.enums.ErrorMessage;
+import com.middleware.zeus.common.exception.BusinessException;
+import com.middleware.zeus.common.model.PrometheusResponse;
+import com.middleware.zeus.util.numeric.ResourceCalculationUtil;
 import com.middleware.zeus.integration.cluster.PrometheusWrapper;
 import com.middleware.zeus.service.prometheus.PrometheusResourceMonitorService;
 import lombok.extern.slf4j.Slf4j;

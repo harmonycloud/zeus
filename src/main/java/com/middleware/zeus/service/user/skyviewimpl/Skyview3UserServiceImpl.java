@@ -1,9 +1,6 @@
 package com.middleware.zeus.service.user.skyviewimpl;
 
-import com.middleware.caas.common.model.user.UserDto;
 import com.middleware.zeus.annotation.Skyview;
-import com.middleware.zeus.service.user.UserService;
-import com.middleware.zeus.service.user.abstractService.AbstractUserService;
 
 /**
  * @author xutianhong

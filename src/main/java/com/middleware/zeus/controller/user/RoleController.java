@@ -1,7 +1,7 @@
 package com.middleware.zeus.controller.user;
 
-import com.middleware.caas.common.base.BaseResult;
-import com.middleware.caas.common.model.user.RoleDto;
+import com.middleware.zeus.common.base.BaseResult;
+import com.middleware.zeus.common.model.user.RoleDto;
 import com.middleware.zeus.service.user.RoleService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;

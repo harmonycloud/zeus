@@ -1,6 +1,6 @@
 package com.middleware.zeus.service.k8s;
 
-import com.middleware.caas.common.model.ClusterComponentsDto;
+import com.middleware.zeus.common.model.ClusterComponentsDto;
 
 import java.util.List;
 

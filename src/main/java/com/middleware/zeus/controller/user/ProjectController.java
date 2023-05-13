@@ -1,17 +1,15 @@
 package com.middleware.zeus.controller.user;
 
-import com.middleware.caas.common.base.BaseResult;
-import com.middleware.caas.common.model.BackupPositionDTO;
-import com.middleware.caas.common.model.BackupServerDTO;
-import com.middleware.caas.common.model.ResourceQuotaDo;
-import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.middleware.caas.common.model.middleware.MiddlewareInfoDTO;
-import com.middleware.caas.common.model.middleware.Namespace;
-import com.middleware.caas.common.model.middleware.ProjectMiddlewareResourceInfo;
-import com.middleware.caas.common.model.user.OrganizationQuota;
-import com.middleware.caas.common.model.user.ProjectDto;
-import com.middleware.caas.common.model.user.ProjectQuota;
-import com.middleware.caas.common.model.user.UserDto;
+import com.middleware.zeus.common.base.BaseResult;
+import com.middleware.zeus.common.model.BackupServerDTO;
+import com.middleware.zeus.common.model.ResourceQuotaDo;
+import com.middleware.zeus.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.zeus.common.model.middleware.MiddlewareInfoDTO;
+import com.middleware.zeus.common.model.middleware.Namespace;
+import com.middleware.zeus.common.model.middleware.ProjectMiddlewareResourceInfo;
+import com.middleware.zeus.common.model.user.ProjectDto;
+import com.middleware.zeus.common.model.user.ProjectQuota;
+import com.middleware.zeus.common.model.user.UserDto;
 import com.middleware.zeus.service.middleware.MiddlewareInfoService;
 import com.middleware.zeus.service.user.ProjectService;
 import io.swagger.annotations.Api;

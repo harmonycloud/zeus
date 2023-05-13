@@ -1,8 +1,8 @@
 package com.middleware.zeus.service.user;
 
-import com.middleware.caas.common.model.DingRobotDTO;
-import com.middleware.caas.common.model.SendResult;
-import com.middleware.caas.common.model.middleware.AlertInfoDto;
+import com.middleware.zeus.common.model.DingRobotDTO;
+import com.middleware.zeus.common.model.SendResult;
+import com.middleware.zeus.common.model.middleware.AlertInfoDto;
 import com.middleware.zeus.bean.DingRobotInfo;
 
 import java.io.IOException;

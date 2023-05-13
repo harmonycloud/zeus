@@ -1,8 +1,8 @@
 package com.middleware.zeus.service.k8s;
 
-import com.middleware.caas.common.model.middleware.Middleware;
-import com.middleware.caas.common.model.middleware.PodInfo;
-import com.middleware.caas.common.model.middleware.PodMigrateDTO;
+import com.middleware.zeus.common.model.middleware.Middleware;
+import com.middleware.zeus.common.model.middleware.PodInfo;
+import com.middleware.zeus.common.model.middleware.PodMigrateDTO;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
 import com.middleware.zeus.integration.cluster.bean.MigrateInfo;
 

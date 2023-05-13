@@ -2,9 +2,8 @@ package com.middleware.zeus.service.middleware.impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.middleware.caas.common.model.BackupServerDTO;
-import com.middleware.caas.common.model.ProjectBackupServerDTO;
-import com.middleware.zeus.bean.BeanBackupServer;
+import com.middleware.zeus.common.model.BackupServerDTO;
+import com.middleware.zeus.common.model.ProjectBackupServerDTO;
 import com.middleware.zeus.bean.BeanProjectBackupServer;
 import com.middleware.zeus.dao.BeanProjectBackupServerMapper;
 import com.middleware.zeus.service.middleware.BackupServerService;
@@ -16,7 +15,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 /**

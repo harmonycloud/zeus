@@ -4,7 +4,7 @@ import io.fabric8.kubernetes.api.model.ObjectMeta;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
-import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.CR_API_VERSION;
+import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.CR_API_VERSION;
 
 /**
  * @author dengyulong

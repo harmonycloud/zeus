@@ -1,8 +1,8 @@
 package com.middleware.zeus.util;
 
-import com.middleware.caas.common.enums.ErrorMessage;
-import com.middleware.caas.common.exception.BusinessException;
-import com.middleware.tool.api.common.ApiException;
+import com.middleware.zeus.common.enums.ErrorMessage;
+import com.middleware.zeus.common.exception.BusinessException;
+import com.middleware.zeus.util.api.common.ApiException;
 
 /**
  * @author chwetion

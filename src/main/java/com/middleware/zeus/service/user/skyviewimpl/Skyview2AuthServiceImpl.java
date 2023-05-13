@@ -1,24 +1,15 @@
 package com.middleware.zeus.service.user.skyviewimpl;
 
 import com.alibaba.fastjson.JSONObject;
-import com.middleware.caas.common.base.CaasResult;
-import com.middleware.caas.common.enums.CaasErrorMessage;
-import com.middleware.caas.common.enums.ErrorMessage;
-import com.middleware.caas.common.exception.BusinessException;
-import com.middleware.caas.common.model.user.UserDto;
-import com.middleware.tool.encrypt.RSAUtils;
+import com.middleware.zeus.common.base.CaasResult;
+import com.middleware.zeus.common.model.user.UserDto;
 import com.middleware.zeus.annotation.Skyview;
 import com.middleware.zeus.service.user.AuthService;
 import com.middleware.zeus.service.user.abstractService.AbstractAuthService;
-import com.middleware.zeus.skyview.Skyview2UserService;
-import com.middleware.zeus.skyview.client.Skyview2UserServiceClient;
 import com.middleware.zeus.skyview.v2.service.V2AuthService;
-import com.middleware.zeus.util.CaasResponseUtil;
-import com.middleware.zeus.util.CryptoUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import javax.servlet.http.HttpServletRequest;

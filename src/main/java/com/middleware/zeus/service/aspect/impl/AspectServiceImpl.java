@@ -2,13 +2,13 @@ package com.middleware.zeus.service.aspect.impl;
 
 import java.util.Map;
 
-import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.zeus.common.model.middleware.MiddlewareClusterDTO;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.alibaba.fastjson.JSONObject;
-import com.middleware.caas.common.model.middleware.Middleware;
-import com.middleware.caas.common.model.middleware.QuestionYaml;
+import com.middleware.zeus.common.model.middleware.Middleware;
+import com.middleware.zeus.common.model.middleware.QuestionYaml;
 import com.middleware.zeus.service.aspect.AspectService;
 import com.middleware.zeus.util.SpringContextUtils;
 

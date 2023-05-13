@@ -3,7 +3,7 @@ package com.middleware.zeus.service.middleware;
 import java.util.List;
 import java.util.Map;
 
-import com.middleware.caas.common.model.RedisDbDTO;
+import com.middleware.zeus.common.model.RedisDbDTO;
 
 /**
  * @author dengyulong

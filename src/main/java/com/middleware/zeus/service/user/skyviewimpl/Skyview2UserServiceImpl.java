@@ -4,16 +4,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.middleware.caas.common.model.user.UserRole;
+import com.middleware.zeus.common.model.user.UserRole;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.middleware.caas.common.enums.ErrorMessage;
-import com.middleware.caas.common.exception.BusinessException;
-import com.middleware.caas.common.model.MailUserDTO;
-import com.middleware.caas.common.model.user.SystemConfigDto;
-import com.middleware.caas.common.model.user.UserDto;
+import com.middleware.zeus.common.enums.ErrorMessage;
+import com.middleware.zeus.common.exception.BusinessException;
+import com.middleware.zeus.common.model.MailUserDTO;
+import com.middleware.zeus.common.model.user.SystemConfigDto;
+import com.middleware.zeus.common.model.user.UserDto;
 import com.middleware.zeus.annotation.Skyview;
 import com.middleware.zeus.bean.user.BeanUser;
 import com.middleware.zeus.service.user.RoleService;
@@ -23,8 +23,6 @@ import com.middleware.zeus.skyview.v2.service.V2UserService;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
-
-import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author liyinlong

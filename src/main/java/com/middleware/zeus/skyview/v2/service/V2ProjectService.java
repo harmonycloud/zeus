@@ -1,8 +1,8 @@
 package com.middleware.zeus.skyview.v2.service;
 
-import com.middleware.caas.common.model.middleware.Namespace;
-import com.middleware.caas.common.model.user.ProjectDto;
-import com.middleware.caas.common.model.user.UserRole;
+import com.middleware.zeus.common.model.middleware.Namespace;
+import com.middleware.zeus.common.model.user.ProjectDto;
+import com.middleware.zeus.common.model.user.UserRole;
 
 import java.util.List;
 

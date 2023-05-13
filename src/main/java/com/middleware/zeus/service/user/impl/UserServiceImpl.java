@@ -1,8 +1,8 @@
 package com.middleware.zeus.service.user.impl;
 
-import static com.middleware.caas.common.constants.CommonConstant.NUM_ONE;
-import static com.middleware.caas.common.constants.user.UserConstant.ADMIN;
-import static com.middleware.caas.common.constants.user.UserConstant.USERNAME;
+import static com.middleware.zeus.common.constants.CommonConstant.NUM_ONE;
+import static com.middleware.zeus.common.constants.user.UserConstant.ADMIN;
+import static com.middleware.zeus.common.constants.user.UserConstant.USERNAME;
 import static com.middleware.caas.filters.base.GlobalKey.NUM_ROLE_ADMIN;
 
 import java.util.ArrayList;
@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.middleware.caas.common.model.user.OrganizationDto;
 import com.middleware.zeus.bean.user.BeanOrganization;
 import com.middleware.zeus.bean.user.BeanProject;
 import com.middleware.zeus.dao.user.BeanOrganizationMapper;
@@ -26,18 +25,18 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.middleware.caas.common.enums.ErrorMessage;
-import com.middleware.caas.common.enums.SystemConfigKeyEnum;
-import com.middleware.caas.common.exception.BusinessException;
-import com.middleware.caas.common.model.MailUserDTO;
-import com.middleware.caas.common.model.user.SystemConfigDto;
-import com.middleware.caas.common.model.user.UserDto;
-import com.middleware.caas.common.model.user.UserRole;
+import com.middleware.zeus.common.enums.ErrorMessage;
+import com.middleware.zeus.common.enums.SystemConfigKeyEnum;
+import com.middleware.zeus.common.exception.BusinessException;
+import com.middleware.zeus.common.model.MailUserDTO;
+import com.middleware.zeus.common.model.user.SystemConfigDto;
+import com.middleware.zeus.common.model.user.UserDto;
+import com.middleware.zeus.common.model.user.UserRole;
 import com.middleware.caas.filters.token.JwtTokenComponent;
 import com.middleware.caas.filters.user.CurrentUser;
 import com.middleware.caas.filters.user.CurrentUserRepository;
-import com.middleware.tool.encrypt.PasswordUtils;
-import com.middleware.tool.encrypt.RSAUtils;
+import com.middleware.zeus.util.encrypt.PasswordUtils;
+import com.middleware.zeus.util.encrypt.RSAUtils;
 import com.middleware.zeus.annotation.Skyview;
 import com.middleware.zeus.bean.BeanMailToUser;
 import com.middleware.zeus.bean.BeanSystemConfig;

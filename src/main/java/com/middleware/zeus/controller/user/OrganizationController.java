@@ -1,14 +1,14 @@
 package com.middleware.zeus.controller.user;
 
-import com.middleware.caas.common.model.BackupServerDTO;
-import com.middleware.caas.common.model.ResourceQuotaDo;
-import com.middleware.caas.common.model.user.OrganizationQuota;
-import com.middleware.caas.common.model.user.UserDto;
+import com.middleware.zeus.common.model.BackupServerDTO;
+import com.middleware.zeus.common.model.ResourceQuotaDo;
+import com.middleware.zeus.common.model.user.OrganizationQuota;
+import com.middleware.zeus.common.model.user.UserDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import com.middleware.caas.common.base.BaseResult;
-import com.middleware.caas.common.model.user.OrganizationDto;
+import com.middleware.zeus.common.base.BaseResult;
+import com.middleware.zeus.common.model.user.OrganizationDto;
 import com.middleware.zeus.service.user.OrganizationService;
 
 import io.swagger.annotations.Api;

@@ -1,10 +1,9 @@
 package com.middleware.zeus.service.components.impl;
 
-import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.middleware.caas.common.enums.*;
-import com.middleware.caas.common.enums.middleware.MiddlewareTypeEnum;
-import com.middleware.caas.common.model.ClusterComponentsDto;
+import com.middleware.zeus.common.enums.ComponentsEnum;
+import com.middleware.zeus.common.enums.middleware.MiddlewareTypeEnum;
+import com.middleware.zeus.common.model.ClusterComponentsDto;
 import com.middleware.zeus.annotation.Operator;
 import com.middleware.zeus.bean.BeanClusterComponents;
 import com.middleware.zeus.bean.BeanClusterMiddlewareInfo;
@@ -15,19 +14,17 @@ import com.middleware.zeus.service.k8s.ClusterService;
 import com.middleware.zeus.service.middleware.ClusterMiddlewareInfoService;
 import com.middleware.zeus.service.middleware.EsService;
 import com.middleware.zeus.service.middleware.MiddlewareManagerService;
-import com.middleware.caas.common.model.middleware.IngressDTO;
-import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.middleware.caas.common.model.middleware.PodInfo;
-import com.middleware.caas.common.model.middleware.ServiceDTO;
+import com.middleware.zeus.common.model.middleware.IngressDTO;
+import com.middleware.zeus.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.zeus.common.model.middleware.PodInfo;
+import com.middleware.zeus.common.model.middleware.ServiceDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import static com.middleware.caas.common.constants.CommonConstant.SIMPLE;
+import static com.middleware.zeus.common.constants.CommonConstant.SIMPLE;
 
 import java.io.File;
 import java.util.ArrayList;

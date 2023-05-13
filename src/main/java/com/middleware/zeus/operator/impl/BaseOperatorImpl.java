@@ -1,21 +1,13 @@
 package com.middleware.zeus.operator.impl;
 
-import com.alibaba.fastjson.JSONObject;
-import com.middleware.caas.common.enums.ErrorMessage;
-import com.middleware.caas.common.enums.middleware.MiddlewareTypeEnum;
-import com.middleware.caas.common.exception.BusinessException;
-import com.middleware.caas.common.model.middleware.*;
+import com.middleware.zeus.common.enums.middleware.MiddlewareTypeEnum;
+import com.middleware.zeus.common.model.middleware.*;
 import com.middleware.zeus.annotation.Operator;
-import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
-import com.middleware.zeus.integration.cluster.bean.MiddlewareInfo;
 import com.middleware.zeus.operator.AbstractBaseOperator;
 import com.middleware.zeus.operator.BaseOperator;
 import io.fabric8.kubernetes.api.model.ConfigMap;
-import org.springframework.util.CollectionUtils;
 
 import java.util.*;
-
-import static com.middleware.caas.common.constants.middleware.MiddlewareConstant.PODS;
 
 /**
  * @author dengyulong

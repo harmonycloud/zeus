@@ -1,9 +1,9 @@
 package com.middleware.zeus.service.k8s;
 
-import com.middleware.caas.common.model.middleware.IngressDTO;
-import com.middleware.caas.common.model.middleware.IngressRuleDTO;
-import com.middleware.caas.common.model.middleware.MiddlewareClusterDTO;
-import com.middleware.caas.common.model.middleware.ServiceDTO;
+import com.middleware.zeus.common.model.middleware.IngressDTO;
+import com.middleware.zeus.common.model.middleware.IngressRuleDTO;
+import com.middleware.zeus.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.zeus.common.model.middleware.ServiceDTO;
 
 import java.util.List;
 import java.util.Set;

@@ -1,7 +1,7 @@
 package com.middleware.zeus.service.middleware;
 
-import com.middleware.caas.common.model.middleware.CustomConfig;
-import com.middleware.caas.common.model.middleware.CustomConfigTemplateDTO;
+import com.middleware.zeus.common.model.middleware.CustomConfig;
+import com.middleware.zeus.common.model.middleware.CustomConfigTemplateDTO;
 
 import java.util.List;
 

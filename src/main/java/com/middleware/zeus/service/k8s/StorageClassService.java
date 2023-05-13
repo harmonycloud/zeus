@@ -1,8 +1,8 @@
 package com.middleware.zeus.service.k8s;
 
-import com.middleware.caas.common.model.StorageClassDTO;
-import com.middleware.caas.common.model.StorageDto;
-import com.middleware.caas.common.model.middleware.StorageClassInfo;
+import com.middleware.zeus.common.model.StorageClassDTO;
+import com.middleware.zeus.common.model.StorageDto;
+import com.middleware.zeus.common.model.middleware.StorageClassInfo;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareInfo;
 
 import java.util.List;

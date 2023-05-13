@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 
-import static com.middleware.caas.common.constants.NameConstant.CONFIG_NAME;
+import static com.middleware.zeus.common.constants.NameConstant.CONFIG_NAME;
 
 /**
  * @author xutianhong

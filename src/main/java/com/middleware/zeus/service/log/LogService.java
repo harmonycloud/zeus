@@ -1,11 +1,11 @@
 package com.middleware.zeus.service.log;
 
-import com.middleware.caas.common.base.BaseResult;
-import com.middleware.caas.common.model.middleware.LogQuery;
-import com.middleware.caas.common.model.middleware.LogQueryDto;
-import com.middleware.caas.common.model.middleware.MiddlewareLogQuery;
-import com.middleware.caas.common.model.middleware.MysqlLogDTO;
-import com.middleware.tool.page.PageObject;
+import com.middleware.zeus.common.base.BaseResult;
+import com.middleware.zeus.common.model.middleware.LogQuery;
+import com.middleware.zeus.common.model.middleware.LogQueryDto;
+import com.middleware.zeus.common.model.middleware.MiddlewareLogQuery;
+import com.middleware.zeus.common.model.middleware.MysqlLogDTO;
+import com.middleware.zeus.util.page.PageObject;
 
 import javax.servlet.http.HttpServletResponse;
 

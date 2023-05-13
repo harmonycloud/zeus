@@ -21,11 +21,11 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.middleware.caas.common.model.EventDetail;
+import com.middleware.zeus.common.model.EventDetail;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static com.middleware.caas.common.constants.NameConstant.*;
+import static com.middleware.zeus.common.constants.NameConstant.*;
 
 /**
  * @author xutianhong
