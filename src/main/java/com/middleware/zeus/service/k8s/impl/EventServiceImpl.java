@@ -38,8 +38,8 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public List<EventDetail> getEvents(String clusterId, String namespace, String middlewareName, String middlewareType, 
-        String eventType, String kind) {
+    public List<EventDetail> getEvents(String clusterId, String namespace, String middlewareName, String middlewareType,
+                                       String eventType, String kind) {
         MiddlewareCR mw = middlewareCRService.getCR(clusterId, namespace, middlewareType, middlewareName);
         if (mw == null) {
             return new ArrayList<>(0);
@@ -50,10 +50,10 @@ public class EventServiceImpl implements EventService {
         Set<String> nameSet = new HashSet<>();
         nameSet.add(middlewareName);
         mw.getStatus().getInclude()
-            .forEach((k, v) -> v.forEach(middlewareInfo -> nameSet.add(middlewareInfo.getName())));
+                .forEach((k, v) -> v.forEach(middlewareInfo -> nameSet.add(middlewareInfo.getName())));
         List<Event> events = eventWrapper.list(clusterId, namespace);
         // 类型转换，并且按照lastTimestamp降序
-        return events.stream().filter(e -> {
+        events = events.stream().filter(e -> {
             if (StringUtils.isNotBlank(eventType) && !eventType.equals(e.getType())) {
                 return false;
             }
@@ -62,8 +62,10 @@ public class EventServiceImpl implements EventService {
                 return false;
             }
             // 过滤中间件信息
-            return nameSet.contains(e.getMetadata().getName());
-        }).map(this::convertEventDetail).sorted((e1, e2) -> {
+            return nameSet.contains(e.getInvolvedObject().getName());
+        }).collect(Collectors.toList());
+
+        return events.stream().map(this::convertEventDetail).sorted((e1, e2) -> {
             if (e1.getLastTimestamp().equals(e2.getLastTimestamp())) {
                 return 0;
             }
