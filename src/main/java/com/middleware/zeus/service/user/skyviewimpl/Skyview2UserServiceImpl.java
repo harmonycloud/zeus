@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import com.middleware.zeus.common.model.user.RoleDto;
 import com.middleware.zeus.common.model.user.UserRole;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,8 +38,6 @@ public class Skyview2UserServiceImpl extends AbstractUserService implements User
     private RoleService roleService;
     @Autowired
     private V2UserService v2UserService;
-    @Autowired
-    private RoleAuthorityService roleAuthorityService;
 
     @Override
     public UserDto getUserDto(String userName, String projectId, boolean roleDetail) {
