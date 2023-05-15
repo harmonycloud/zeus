@@ -659,7 +659,10 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         if (StringUtils.isAnyEmpty(clusterId, namespace, type, middlewareName, backupName, sourceName, backupId, restoreTime)) {
             throw new BusinessException(ErrorMessage.PARAMETER_NOT_COMPLETE);
         }
-
+        // 等待中间件状态正常
+        if (!waitingMiddleware(clusterId, namespace, middlewareName, type)) {
+            return;
+        }
         MiddlewareRestoreCR crd = new MiddlewareRestoreCR();
         ObjectMeta meta = new ObjectMeta();
         meta.setNamespace(namespace);

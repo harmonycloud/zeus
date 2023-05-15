@@ -7,6 +7,7 @@ import com.middleware.zeus.common.model.MiddlewareTaskDTO;
 import com.middleware.zeus.common.model.middleware.*;
 import com.middleware.zeus.annotation.Authority;
 import com.middleware.zeus.service.middleware.MiddlewareBackupService;
+import com.middleware.zeus.util.ThreadPoolExecutorFactory;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -187,7 +188,7 @@ public class MiddlewareBackupController {
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "backupId", value = "备份任务id", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "backupMode", value = "备份类型(single:单次，period:周期)", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "orderBy", value = "根据存储大小或时间进行升/降序", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "orderBy", value = "根据存储大小size或时间time进行升/降序(例：time或size,desc或asc)", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "activeArea", value = "可用区", paramType = "query", dataTypeClass = String.class)
     })
     @GetMapping("/record")
@@ -279,7 +280,7 @@ public class MiddlewareBackupController {
                                     @RequestBody MiddlewareRestoreDto restoreDto) {
         restoreDto.setClusterId(clusterId);
         restoreDto.setNamespace(namespace);
-        middlewareBackupService.createRestore(restoreDto);
+        ThreadPoolExecutorFactory.executor.execute(() -> middlewareBackupService.createRestore(restoreDto));
         return BaseResult.ok();
     }
 
