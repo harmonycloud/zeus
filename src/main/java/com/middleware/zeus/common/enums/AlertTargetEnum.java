@@ -21,7 +21,7 @@ public enum AlertTargetEnum {
     middlewareScheduler("middlewareScheduler", "扩展调度器"),
     lvmController("lvmController", "lvm控制器"),
     localPathController("localPathController", "local-path控制器"),
-    cluster("集群监控", "日志组件"),
+    cluster("luster", "集群监控"),
     ;
 
     private final String name;
