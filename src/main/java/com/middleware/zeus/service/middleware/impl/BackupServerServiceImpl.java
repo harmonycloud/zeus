@@ -282,7 +282,6 @@ public class BackupServerServiceImpl implements BackupServerService {
             if (StringUtils.isNotEmpty(clusterId)) {
                 MiddlewareClusterDTO clusterDTO;
                 try {
-                    // todo
                     clusterDTO = clusterService.findById(backupServerDTO.getClusterId());
                     backupServerDTO.setClusterNickName(clusterDTO.getNickname());
                 } catch (Exception e) {

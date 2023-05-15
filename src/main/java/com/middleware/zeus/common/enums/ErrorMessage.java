@@ -183,6 +183,7 @@ public enum ErrorMessage {
     CLUSTER_NOT_SET_DEFAULT_REPOSITORY(300034, "cluster not set default repository", "集群未设置默认镜像仓库"),
     STORAGE_NOT_ENOUGH(300036, "storage not enough", "存储不足"),
     UPDATE_MAXIMUM_LOG_RETENTION_TIME_FAILED(300037,"update the maximum log retention time failed","更新日志最大保留时间失败"),
+    EMPTY_CLUSTER_ID(300038, "cluster id can't be empty", "集群id不能为空"),
 
     // node 301xxx
     EDGE_NODE_PACKAGE_NOT_FOUND(301001, "Install package not found", "安装包未找到，请先生成"),

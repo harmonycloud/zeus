@@ -5,6 +5,7 @@ import com.middleware.zeus.common.constants.PostgresqlConstant;
 import io.fabric8.kubernetes.api.model.Namespaced;
 import io.fabric8.kubernetes.client.CustomResource;
 import io.fabric8.kubernetes.model.annotation.Group;
+import io.fabric8.kubernetes.model.annotation.Kind;
 import io.fabric8.kubernetes.model.annotation.Plural;
 import io.fabric8.kubernetes.model.annotation.Version;
 import lombok.AllArgsConstructor;
@@ -19,6 +20,7 @@ import lombok.experimental.Accessors;
 @Group(PostgresqlConstant.POSTGRESQL_GROUP)
 @Version(PostgresqlConstant.POSTGRESQL_VERSION)
 @Plural(PostgresqlConstant.POSTGRESQL_PLURAL)
+@Kind("postgresql")
 public class Postgresql extends CustomResource<PostgresqlSpec, Status> implements Namespaced {
 
 }
