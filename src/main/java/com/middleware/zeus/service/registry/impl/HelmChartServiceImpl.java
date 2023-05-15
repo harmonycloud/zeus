@@ -476,7 +476,8 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
     @Override
     public void upgrade(Middleware middleware, String updateValues, String clusterId) {
         if (StringUtils.isEmpty(clusterId)) {
-            // TODO  throw exception
+            log.error("helm upgrade失败，clusterId为空");
+            throw new BusinessException(ErrorMessage.EMPTY_CLUSTER_ID);
         }
         MiddlewareClusterDTO clusterDTO = clusterService.findById(middleware.getClusterId());
         this.upgrade(middleware, updateValues, clusterDTO);

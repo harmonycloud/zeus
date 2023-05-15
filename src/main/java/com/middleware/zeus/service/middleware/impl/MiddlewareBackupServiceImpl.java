@@ -1954,7 +1954,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         backupIdRecordMap.forEach((backupId, records) -> {
             MiddlewareBackupRecord record = records.get(0);
             MiddlewareBackupRecordGroup recordGroup = new MiddlewareBackupRecordGroup();
-            // TODO 开发完成后需要删除
             recordGroup.setMiddlewareBackupRecords(records);
             recordGroup.setBackupMode(record.getBackupMode());
             recordGroup.setClusterId(clusterId);

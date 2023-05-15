@@ -147,26 +147,6 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
             // todo 短信通知
         }
 
-        /*if (Boolean.TRUE.equals(alertSettingDTO.getEnableDingAlert())) {
-            //钉钉发送
-            List<DingRobotInfo> dings = dingRobotMapper.selectList(new QueryWrapper<>());
-            dings.forEach(dingRobotInfo -> {
-                dingRobotService.send(alertInfoDto, dingRobotInfo);
-            });
-        }*/
-        /*if (Boolean.TRUE.equals(alertSettingDTO.getEnableMailAlert())) {
-            //邮箱发送
-            alertSettingDTO.getUserList().forEach(mailToUser -> {
-                QueryWrapper<BeanUser> userQueryWrapper = new QueryWrapper<>();
-                userQueryWrapper.eq("id", mailToUser.getId());
-                BeanUser beanUser = beanUserMapper.selectOne(userQueryWrapper);
-                try {
-                    mailService.sendHtmlMail(alertInfoDto, beanUser);
-                } catch (IOException | MessagingException e) {
-                    e.printStackTrace();
-                }
-            });
-        }*/
     }
 
     public void saveRecord(AlertRecordDo recordDo){

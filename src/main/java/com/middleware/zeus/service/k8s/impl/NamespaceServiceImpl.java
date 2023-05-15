@@ -491,7 +491,7 @@ public class NamespaceServiceImpl implements NamespaceService {
         // 添加gid范围
         ContainerIdentityRange containerGIDRange = namespace.getContainerGIDRange();
         if (containerGIDRange != null) {
-            containerIdentityRange.put(NamespaceConstant.KEY_CONTAINER_GID_RANGE, containerUIDRange);
+            containerIdentityRange.put(NamespaceConstant.KEY_CONTAINER_GID_RANGE, containerGIDRange);
         }
         if (containerIdentityRange.keySet().size() != 0) {
             annotations.put(NamespaceConstant.KEY_CONTAINER_IDENTITY_RANGE, containerIdentityRange.toString());

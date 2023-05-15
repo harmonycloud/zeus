@@ -52,7 +52,6 @@ public class MiddlewareBackupRecordGroup {
     @ApiModelProperty("备份地址")
     private List<String> backupAddresses;
 
-    @Deprecated
     @ApiModelProperty("备份记录列表")
     private List<MiddlewareBackupRecord> middlewareBackupRecords;
 

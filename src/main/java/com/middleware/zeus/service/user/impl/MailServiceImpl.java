@@ -223,10 +223,6 @@ public class MailServiceImpl implements MailService {
 
         String href = "";
         String ip = "";
-        /*if (StringUtils.isNotEmpty(alertRecordDo.getIp())) {
-            href =  "<a href=\"" + "http://" + alertInfoDto.getIp() + "\">";
-            ip = alertInfoDto.getIp() + "</a>";
-        }*/
         //填充html模板中的五个参数
         String htmlText = MessageFormat.format(sb.toString(), emailHeadColor, level, contentText, "", header, linesBuffer.toString(),href,ip);
 
