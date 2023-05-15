@@ -327,6 +327,9 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
             if (securityContext.containsKey(ContainerConstant.UID)) {
                 middleware.setContainerUID(securityContext.getLong(ContainerConstant.UID));
             }
+            if (securityContext.containsKey(ContainerConstant.GID)) {
+                middleware.setContainerGID(securityContext.getLong(ContainerConstant.GID));
+            }
         }
     }
 
