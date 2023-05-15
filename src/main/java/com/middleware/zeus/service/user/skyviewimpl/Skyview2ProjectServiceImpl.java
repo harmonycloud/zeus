@@ -254,6 +254,7 @@ public class Skyview2ProjectServiceImpl extends AbstractProjectService implement
         List<ResourceQuotaDo> resourceQuotaDoList = new ArrayList<>();
         for (String key : rqListMap.keySet()) {
             ResourceQuotaDo resourceQuotaDo = resourceQuotaService.calculateQuota(rqListMap.get(key));
+            resourceQuotaDo.setClusterId(key);
             resourceQuotaDoList.add(resourceQuotaDo);
         }
         return resourceQuotaDoList;

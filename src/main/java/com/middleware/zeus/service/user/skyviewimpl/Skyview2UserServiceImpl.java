@@ -37,6 +37,8 @@ public class Skyview2UserServiceImpl extends AbstractUserService implements User
     private RoleService roleService;
     @Autowired
     private V2UserService v2UserService;
+    @Autowired
+    private RoleAuthorityService roleAuthorityService;
 
     @Override
     public UserDto getUserDto(String userName, String projectId, boolean roleDetail) {
@@ -53,7 +55,9 @@ public class Skyview2UserServiceImpl extends AbstractUserService implements User
 
     @Override
     public UserDto getUserDto(String userName, boolean roleDetail) {
-        return v2UserService.get(userName);
+        UserDto userDto = v2UserService.get(userName);
+        setPower(userDto);
+        return userDto;
     }
 
     @Override
@@ -140,7 +144,7 @@ public class Skyview2UserServiceImpl extends AbstractUserService implements User
                 .filter(userRole -> StringUtils.isNoneEmpty(userRole.getOrganId(), userRole.getProjectId())
                     && userRole.getOrganId().equals(organId) && userRole.getProjectId().equals(projectId))
                 .collect(Collectors.toList());
-            if (CollectionUtils.isEmpty(userRoleList)) {
+            if (!CollectionUtils.isEmpty(userRoleList)) {
                 return userRoleList.get(0);
             }
         }
@@ -150,5 +154,18 @@ public class Skyview2UserServiceImpl extends AbstractUserService implements User
     @Override
     public List<UserDto> getUserRole(List<UserDto> userDtoList) {
         return userDtoList;
+    }
+
+    private void setPower(UserDto userDto) {
+        if (!CollectionUtils.isEmpty(userDto.getUserRoleList())) {
+            // 获取角色信息
+            Map<Integer, RoleDto> roleDtoMap =
+                roleService.list(null).stream().collect(Collectors.toMap(RoleDto::getId, r -> r));
+            userDto.setUserRoleList(userDto.getUserRoleList().stream().peek(userRole -> {
+                userRole.setRoleName(roleDtoMap.get(userRole.getRoleId()).getName());
+                userRole.setWeight(roleDtoMap.get(userRole.getRoleId()).getWeight());
+                userRole.setPower(roleDtoMap.get(userRole.getRoleId()).getPower());
+            }).collect(Collectors.toList()));
+        }
     }
 }

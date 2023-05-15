@@ -1771,7 +1771,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         } else {
             backupRecord.setPhrase("Unknown");
         }
-        
+
 
         backupRecord.setSourceType(middlewareCrTypeService.findTypeByCrType(backup.getSpec().getType()));
         // 获取备份存储大小
@@ -1785,7 +1785,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 backupRecord.setByteSize(compressedSize);
             }
         }
-        
+
         backupRecord.setAddressId(labels.get("addressId"));
         backupRecord.setSourceName(backup.getSpec().getName());
         backupRecord.setBackupMode("single");
@@ -2077,7 +2077,10 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     private List<MiddlewareBackupRecord> filterByProject(List<MiddlewareBackupRecord> records, String organId, String projectId) {
         // 查询用户在当前项目下所有可见的中间件类型
         String username = CurrentUserRepository.getUser().getUsername();
-
+        // 写入组织id
+        if (StringUtils.isEmpty(organId)){
+            organId = RequestUtil.getOrganId();
+        }
         // 根据分区过滤
         List<Namespace> namespaces = projectService.getNamespace(organId, projectId);
         if (!CollectionUtils.isEmpty(namespaces)) {
