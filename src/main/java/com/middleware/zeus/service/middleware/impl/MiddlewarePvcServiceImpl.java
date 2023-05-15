@@ -77,7 +77,7 @@ public class MiddlewarePvcServiceImpl implements MiddlewarePvcService {
         fields.put("involvedObject.name", pvcName);
         fields.put("involvedObject.namespace", namespace);
         fields.put("involvedObject.kind", PERSISTENT_VOLUME_CLAIM);
-        return eventService.getEvents(clusterId, fields);
+        return eventService.getEvents(clusterId, namespace);
     }
 
     @Override
