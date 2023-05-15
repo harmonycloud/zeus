@@ -50,11 +50,13 @@ CREATE TABLE `alert_record` (
   `cluster_id` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '集群id',
   `namespace` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '分区',
   `name` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '中间件名称',
+  `alias_name` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '别名',
   `alert` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '告警名称',
   `summary` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '简讯',
   `message` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '告警信息',
   `level` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '告警等级',
-  `time` timestamp NULL DEFAULT NULL COMMENT '告警时间',
+  `alert_time` timestamp NULL DEFAULT NULL COMMENT '权重',
+  `alert_receive_time` timestamp NULL DEFAULT NULL COMMENT '权重',
   `type` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '中间件类型',
   `lay` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '告警层面',
   `expr` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '规则描述',
@@ -173,6 +175,35 @@ CREATE TABLE `alert_setting` (
 LOCK TABLES `alert_setting` WRITE;
 /*!40000 ALTER TABLE `alert_setting` DISABLE KEYS */;
 /*!40000 ALTER TABLE `alert_setting` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `alert_user`
+--
+
+DROP TABLE IF EXISTS `alert_user`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `alert_user` (
+  `id` int NOT NULL AUTO_INCREMENT,
+  `username` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '用户名称',
+  `alert_type` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '告警对象类型',
+  `cluster_id` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '集群id',
+  `namespace` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '命名空间',
+  `name` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '名称',
+  `mail_alert` tinyint(1) DEFAULT NULL COMMENT '邮箱告警',
+  `message_alert` tinyint(1) DEFAULT NULL COMMENT '短信告警',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='告警用户表';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `alert_user`
+--
+
+LOCK TABLES `alert_user` WRITE;
+/*!40000 ALTER TABLE `alert_user` DISABLE KEYS */;
+/*!40000 ALTER TABLE `alert_user` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -381,7 +412,7 @@ DROP TABLE IF EXISTS `cluster_ingress_components`;
 CREATE TABLE `cluster_ingress_components` (
   `id` int NOT NULL AUTO_INCREMENT COMMENT '自增id',
   `name` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'ingress name',
-  `type` varchar(32) COLLATE utf8_bin DEFAULT NULL COMMENT 'ingress类型 nginx或traefik',
+  `type` varchar(32) CHARACTER SET utf8 COLLATE utf8_bin DEFAULT NULL COMMENT 'ingress类型 nginx或traefik',
   `ingress_class_name` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'ingress class name',
   `cluster_id` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '集群id',
   `namespace` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '分区',
@@ -470,6 +501,7 @@ CREATE TABLE `custom_config` (
   `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '描述',
   `chart_version` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT 'chart版本',
   `pattern` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '正则校验',
+  `role` varchar(16) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '节点类型',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='自定义配置表';
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -501,6 +533,7 @@ CREATE TABLE `custom_config_history` (
   `restart` tinyint(1) DEFAULT NULL COMMENT '是否需要重启',
   `status` tinyint(1) DEFAULT NULL COMMENT '是否已启用',
   `date` timestamp NULL DEFAULT NULL COMMENT '日期',
+  `role` varchar(16) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '节点类型',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='自定义配置修改历史表';
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -529,6 +562,7 @@ CREATE TABLE `custom_config_template` (
   `description` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '模板描述',
   `config` text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci COMMENT '配置内容',
   `create_time` timestamp NULL DEFAULT NULL COMMENT '创建时间',
+  `role` varchar(16) COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '节点类型',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='自定义配置模板表';
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -804,6 +838,7 @@ CREATE TABLE `middleware_param_top` (
   `namespace` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '分区',
   `name` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '名称',
   `param` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '参数名',
+  `role` varchar(16) COLLATE utf8_bin DEFAULT NULL COMMENT '节点类型',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -1205,7 +1240,7 @@ CREATE TABLE `resource_menu` (
   `parent_id` int DEFAULT NULL COMMENT '父菜单id',
   `module` varchar(0) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '模块',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='菜单资源表';
+) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='菜单资源表';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1229,12 +1264,11 @@ INSERT INTO `resource_menu` VALUES (12,'backupTask','备份任务','backupServic
 INSERT INTO `resource_menu` VALUES (13,'backupServer','备份服务器','backupService/backupServer',102,'icon-fuwutiaokuan',10,NULL);
 INSERT INTO `resource_menu` VALUES (14,'dataMonitor','数据监控','monitorAlarm/dataMonitor',111,NULL,11,NULL);
 INSERT INTO `resource_menu` VALUES (15,'logDetail','日志详情','monitorAlarm/logDetail',112,NULL,11,NULL);
-INSERT INTO `resource_menu` VALUES (16,'alarmCenter','服务告警','monitorAlarm/alarmCenter',113,NULL,11,NULL);
+INSERT INTO `resource_menu` VALUES (16,'alarmCenter','告警中心','monitorAlarm/alarmCenter/system',113,NULL,11,NULL);
 INSERT INTO `resource_menu` VALUES (17,'resourcePoolManagement','集群管理','systemManagement/resourcePoolManagement',131,NULL,13,NULL);
 INSERT INTO `resource_menu` VALUES (18,'userManagement','用户管理','systemManagement/userManagement',132,NULL,13,NULL);
 INSERT INTO `resource_menu` VALUES (19,'organizationManagement','组织管理','systemManagement/organizationManagement',133,NULL,13,NULL);
 INSERT INTO `resource_menu` VALUES (20,'roleManagement','角色管理','systemManagement/roleManagement',134,NULL,13,NULL);
-INSERT INTO `resource_menu` VALUES (21,'systemAlarm','系统告警','systemManagement/systemAlarm',135,NULL,13,NULL);
 INSERT INTO `resource_menu` VALUES (22,'operationAudit','操作审计','systemManagement/operationAudit',136,NULL,13,NULL);
 INSERT INTO `resource_menu` VALUES (23,'organUserManagement','成员管理','organUserManagement',5,'icon-zuzhichengyuanguanli1',0,NULL);
 INSERT INTO `resource_menu` VALUES (24,'myOrganizationManagement','组织概览','myOrganizationManagement',3,'icon-shuxiangjiegou',0,NULL);
@@ -1254,7 +1288,7 @@ CREATE TABLE `resource_menu_role` (
   `resource_menu_id` int DEFAULT NULL,
   `available` tinyint(1) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=116 DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='资源菜单角色关联表';
+) ENGINE=InnoDB AUTO_INCREMENT=121 DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='资源菜单角色关联表';
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1396,6 +1430,7 @@ DROP TABLE IF EXISTS `role`;
 CREATE TABLE `role` (
   `id` int NOT NULL AUTO_INCREMENT COMMENT '自增id',
   `name` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '名称',
+  `type` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '角色类型',
   `description` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '描述',
   `weight` int DEFAULT NULL COMMENT '权重',
   `status` tinyint(1) DEFAULT NULL COMMENT '是否已被删除',
@@ -1410,11 +1445,11 @@ CREATE TABLE `role` (
 
 LOCK TABLES `role` WRITE;
 /*!40000 ALTER TABLE `role` DISABLE KEYS */;
-INSERT INTO `role` VALUES (1,'超级管理员','拥有所有最高权限',1,NULL,NULL);
-INSERT INTO `role` VALUES (2,'项目管理员','拥有项目管理权限',3,NULL,NULL);
-INSERT INTO `role` VALUES (3,'运维人员','拥有中间件运维权限',4,NULL,NULL);
-INSERT INTO `role` VALUES (4,'普通用户','拥有平台查看权限',5,NULL,NULL);
-INSERT INTO `role` VALUES (5,'组织管理员','拥有组织管理权限',2,NULL,NULL);
+INSERT INTO `role` VALUES (1,'超级管理员','manager','拥有所有最高权限',1,NULL,NULL);
+INSERT INTO `role` VALUES (2,'项目管理员','manager','拥有项目管理权限',3,NULL,NULL);
+INSERT INTO `role` VALUES (3,'运维人员','normal','拥有中间件运维权限',4,NULL,NULL);
+INSERT INTO `role` VALUES (4,'普通用户','normal','拥有平台查看权限',5,NULL,NULL);
+INSERT INTO `role` VALUES (5,'组织管理员','manager','拥有组织管理权限',2,NULL,NULL);
 /*!40000 ALTER TABLE `role` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -1589,4 +1624,4 @@ INSERT INTO `user` VALUES (1,'admin','超级管理员','6DA05F9A0ED31ABEEFD41C76
 UNLOCK TABLES;
 
 
--- Dump completed on 2023-03-22 20:22:35
+-- Dump completed on 2023-05-15 16:25:53

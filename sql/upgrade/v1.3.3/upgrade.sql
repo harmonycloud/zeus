@@ -37,10 +37,6 @@ CREATE TABLE `alert_user`(
     PRIMARY KEY (`id`)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT ='告警用户表';
 
--- 移除无用库表
-drop table 'alert_setting';
-drop table 'mail_to_user';
-
 -- alert_record表添加字段
 alter table alert_record add alias_name varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL COMMENT '别名' after name;
 
