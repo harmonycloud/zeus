@@ -3,6 +3,7 @@ package com.middleware.zeus.service.system.impl;
 import static com.middleware.zeus.common.constants.AlertConstant.*;
 import static com.middleware.zeus.common.constants.CommonConstant.ASC;
 import static com.middleware.zeus.common.constants.CommonConstant.DESC;
+import static com.middleware.zeus.common.constants.NameConstant.ZEUS;
 
 import java.util.*;
 import java.util.function.Function;
@@ -284,23 +285,26 @@ public class AlertServiceImpl implements AlertService {
         // 检查告警规则中的标识字段
         checkPlatformLabels(clusterId, prometheusRuleList);
         // 根据告警对象名称转化为map结构
-        Map<String, PrometheusRule> prometheusRuleMap = prometheusRuleList.stream()
-            .filter(prometheusRule -> prometheusRule.getMetadata().getAnnotations() != null
-                || prometheusRule.getMetadata().getAnnotations().containsKey("target_name"))
-            .collect(
-                Collectors.toMap(prometheusRule -> prometheusRule.getMetadata().getAnnotations().get("target_name"),
-                    Function.identity()));
+        Map<String,
+            List<PrometheusRule>> prometheusRuleMap = prometheusRuleList.stream()
+                .filter(prometheusRule -> prometheusRule.getMetadata().getAnnotations() != null
+                    || prometheusRule.getMetadata().getAnnotations().containsKey("target_name"))
+                .collect(Collectors
+                    .groupingBy(prometheusRule -> prometheusRule.getMetadata().getAnnotations().get("target_name")));
 
         // 完善alertTargetDtoList数据
         for (AlertTargetDto alertTargetDto : alertTargetDtoList) {
             if (prometheusRuleMap.containsKey(alertTargetDto.getName())) {
                 // 封装数据
-                PrometheusRule prometheusRule = prometheusRuleMap.get(alertTargetDto.getName());
-                alertTargetDto.setNamespace(prometheusRule.getMetadata().getNamespace());
-                alertTargetDto.setPrometheusRuleName(prometheusRule.getMetadata().getName());
-                alertTargetDto.setExist(true);
-                // 从map中移除该条数据
-                prometheusRuleMap.remove(alertTargetDto.getName());
+                List<PrometheusRule> prList = prometheusRuleMap.get(alertTargetDto.getName());
+                if (!CollectionUtils.isEmpty(prList)) {
+                    PrometheusRule prometheusRule = prList.get(0);
+                    alertTargetDto.setNamespace(prometheusRule.getMetadata().getNamespace());
+                    alertTargetDto.setPrometheusRuleName(prometheusRule.getMetadata().getName());
+                    alertTargetDto.setExist(true);
+                    // 从map中移除该条数据
+                    prometheusRuleMap.remove(alertTargetDto.getName());
+                }
             }
         }
 
@@ -309,21 +313,25 @@ public class AlertServiceImpl implements AlertService {
             for (String key : prometheusRuleMap.keySet()) {
                 AlertTargetDto alertTargetDto = new AlertTargetDto();
                 // 获取prometheus数据对象
-                PrometheusRule prometheusRule = prometheusRuleMap.get(key);
-                // 设置集群id
-                alertTargetDto.setClusterId(clusterId);
-                // 设置告警类型
-                alertTargetDto.setAlertType(CLUSTER);
-                // 通过annotations获取别名
-                if (!CollectionUtils.isEmpty(prometheusRule.getMetadata().getAnnotations())) {
-                    alertTargetDto.setName(prometheusRule.getMetadata().getAnnotations().get("target_name"));
-                    alertTargetDto.setAliasName(prometheusRule.getMetadata().getAnnotations().get("target_alias_name"));
-                }
-                // 设置分区和prometheusRule名称
-                alertTargetDto.setNamespace(prometheusRule.getMetadata().getNamespace());
-                alertTargetDto.setPrometheusRuleName(prometheusRule.getMetadata().getName());
+                List<PrometheusRule> prList = prometheusRuleMap.get(key);
+                if (!CollectionUtils.isEmpty(prList)) {
+                    PrometheusRule prometheusRule = prList.get(0);
+                    // 设置集群id
+                    alertTargetDto.setClusterId(clusterId);
+                    // 设置告警类型
+                    alertTargetDto.setAlertType(CLUSTER);
+                    // 通过annotations获取别名
+                    if (!CollectionUtils.isEmpty(prometheusRule.getMetadata().getAnnotations())) {
+                        alertTargetDto.setName(prometheusRule.getMetadata().getAnnotations().get("target_name"));
+                        alertTargetDto
+                            .setAliasName(prometheusRule.getMetadata().getAnnotations().get("target_alias_name"));
+                    }
+                    // 设置分区和prometheusRule名称
+                    alertTargetDto.setNamespace(prometheusRule.getMetadata().getNamespace());
+                    alertTargetDto.setPrometheusRuleName(prometheusRule.getMetadata().getName());
 
-                alertTargetDtoList.add(alertTargetDto);
+                    alertTargetDtoList.add(alertTargetDto);
+                }
             }
         }
 
@@ -331,13 +339,23 @@ public class AlertServiceImpl implements AlertService {
     }
 
     @Override
-    public List<MiddlewareAlertsDTO> alertRule(String targetName, String clusterId, String namespace, String prometheusRuleName) {
+    public List<MiddlewareAlertsDTO> alertRule(String targetName, String clusterId, String namespace,
+        String prometheusRuleName) {
+        // 构建查询labels
+        Map<String, String> labels = new HashMap<>();
+        labels.put(PLATFORM, ZEUS);
+        labels.put("target_name", targetName);
         // 查询 prometheusRule文件
-        PrometheusRule prometheusRule = prometheusRuleService.get(clusterId, namespace, prometheusRuleName);
-        if (prometheusRule == null){
+        List<PrometheusRule> prometheusRuleList = prometheusRuleService.list(clusterId, null, labels);
+        if (CollectionUtils.isEmpty(prometheusRuleList)) {
             throw new BusinessException(ErrorMessage.PROMETHEUS_RULES_NOT_EXIST);
         }
-        return convertPrometheusRule(prometheusRule);
+        // 封装返回数据
+        List<MiddlewareAlertsDTO> middlewareAlertsDTOList = new ArrayList<>();
+        for (PrometheusRule prometheusRule : prometheusRuleList) {
+            middlewareAlertsDTOList.addAll(convertPrometheusRule(prometheusRule));
+        }
+        return middlewareAlertsDTOList;
     }
 
     @Override
