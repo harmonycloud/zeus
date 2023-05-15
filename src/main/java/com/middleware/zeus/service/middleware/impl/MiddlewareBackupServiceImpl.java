@@ -677,7 +677,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         String activeArea = restoreDto.getActiveArea();
         String restoreTime = restoreDto.getRestoreTime();
 
-        if (StringUtils.isAnyEmpty(clusterId, namespace, type, middlewareName, backupName, sourceName, backupId, restoreTime)) {
+        if (StringUtils.isAnyEmpty(clusterId, namespace, type, middlewareName, backupName, sourceName, backupId)) {
             throw new BusinessException(ErrorMessage.PARAMETER_NOT_COMPLETE);
         }
         // 等待中间件状态正常
