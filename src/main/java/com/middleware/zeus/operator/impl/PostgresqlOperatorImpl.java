@@ -274,15 +274,21 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         String patroniName = middleware.getName() + "-patroni";
         Integer patroniPort = getPatroniPort(middleware.getClusterId(), middleware.getNamespace(), patroniName);
         String podName = null;
-        JSONArray dataArray = postgresqlClientWrapper.cluster(middleware.getNamespace(), patroniName, patroniPort);
-        for (int i = 0; i < dataArray.size(); ++i){
-            String role = dataArray.getJSONObject(i).getString("role");
-            if(StringUtils.isNotEmpty(role) && "sync_standby".equals(role)){
-                podName = dataArray.getJSONObject(i).getString("name");
-            }
-        }
         SwitchInfo switchInfo = new SwitchInfo().setStatus(true);
-        if (StringUtils.isEmpty(podName)){
+        try {
+            JSONArray dataArray = postgresqlClientWrapper.cluster(middleware.getNamespace(), patroniName, patroniPort);
+            for (int i = 0; i < dataArray.size(); ++i) {
+                String role = dataArray.getJSONObject(i).getString("role");
+                if (StringUtils.isNotEmpty(role) && "sync_standby".equals(role)) {
+                    podName = dataArray.getJSONObject(i).getString("name");
+                }
+            }
+            if (StringUtils.isEmpty(podName)) {
+                switchInfo.setStatus(false);
+            }
+        } catch (Exception e) {
+            log.error("查询postgresql: {} 是否可以手动切换失败", middleware.getName());
+            log.debug("查询手动切换状态失败", e);
             switchInfo.setStatus(false);
         }
         return switchInfo;
