@@ -1,7 +1,6 @@
 package com.middleware.zeus.service.middleware;
 
 import com.middleware.zeus.common.model.BackupPositionDTO;
-import com.middleware.zeus.common.model.BackupServerDTO;
 import com.middleware.zeus.bean.BeanBackupPosition;
 import com.middleware.zeus.bean.BeanBackupServer;
 import com.middleware.zeus.integration.cluster.bean.Minio;
@@ -31,9 +30,11 @@ public interface BackupPositionService {
      * @param clusterId  集群id
      * @param namespace 分区
      *
+     * @param middlewareName
+     * @param type
      * @return List<BackupPositionDTO>
      */
-    List<BackupPositionDTO> usable(String organId, String projectId, String clusterId, String namespace);
+    List<BackupPositionDTO> list(String organId, String projectId, String clusterId, String namespace, String middlewareName, String type);
 
     /**
      * 创建备份位置
