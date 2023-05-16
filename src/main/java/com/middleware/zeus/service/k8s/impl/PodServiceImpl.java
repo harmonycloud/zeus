@@ -654,7 +654,10 @@ public class PodServiceImpl implements PodService {
     }
 
     public List<PodInfo> listMiddlewarePods(MiddlewareCR mw, String clusterId, String namespace, String middlewareName, String type) {
-        List<MiddlewareInfo> pods = mw.getStatus().getInclude().get(PODS);
+        List<MiddlewareInfo> pods = new ArrayList<>();
+        if (mw != null && mw.getStatus() != null && mw.getStatus().getInclude() != null && mw.getStatus().getInclude().containsKey(PODS)){
+            pods = mw.getStatus().getInclude().get(PODS);
+        }
         List<PodInfo> podInfoList = new ArrayList<>();
         if(!CollectionUtils.isEmpty(pods)){
             for (MiddlewareInfo po : pods) {
