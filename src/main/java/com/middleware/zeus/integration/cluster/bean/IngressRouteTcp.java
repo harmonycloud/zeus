@@ -7,6 +7,9 @@ import io.fabric8.kubernetes.model.annotation.Group;
 import io.fabric8.kubernetes.model.annotation.Kind;
 import io.fabric8.kubernetes.model.annotation.Plural;
 import io.fabric8.kubernetes.model.annotation.Version;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
+import lombok.experimental.Accessors;
 
 import java.util.Map;
 
@@ -17,16 +20,18 @@ import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant
  * @author  liyinlong
  * @since 2022/8/26 3:10 下午
  */
+@Accessors(chain = true)
+@NoArgsConstructor
 @Group(TRAEFIC_GROUP)
 @Version(V1_ALPHA1)
 @Plural(TRAEFIC_PLURAL)
 @Kind(TRAEFIC_KIND)
-public class IngressRouteTCPCR extends CustomResource<IngressRouteTCPSpec, Void> implements Namespaced {
+public class IngressRouteTcp extends CustomResource<IngressRouteTcpSpec, Void> implements Namespaced {
 
-    public IngressRouteTCPCR(String name, String namespace, String entryPoint, String serviceName, Integer servicePort,
-        Map<String, String> labels) {
+    public IngressRouteTcp(String name, String namespace, String entryPoint, String serviceName, Integer servicePort,
+                           Map<String, String> labels) {
         setMetadata(new ObjectMetaBuilder().withName(name).withNamespace(namespace).withLabels(labels).build());
-        setSpec(new IngressRouteTCPSpec(entryPoint, serviceName, servicePort));
+        setSpec(new IngressRouteTcpSpec(entryPoint, serviceName, servicePort));
     }
 
 }

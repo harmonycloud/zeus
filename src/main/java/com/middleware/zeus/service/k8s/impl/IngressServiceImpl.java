@@ -125,7 +125,7 @@ public class IngressServiceImpl implements IngressService {
                 } else {
                     Map<String, String> labels = new HashMap<>();
                     labels.put("ingressName", ingress.getName());
-                    IngressRouteTCPList routeTCPList = ingressRouteTCPWrapper.list(clusterId, namespace, labels);
+                    IngressRouteTcpList routeTCPList = ingressRouteTCPWrapper.list(clusterId, namespace, labels);
                     ingressDtoList.addAll(convertIngressDTOList(ingress, routeTCPList, null));
                 }
             }
@@ -460,7 +460,7 @@ public class IngressServiceImpl implements IngressService {
                             });
                         }
                     } else if (IngressEnum.TRAEFIK.getName().equals(ingress.getType())) {
-                        IngressRouteTCPList routeTCPList = ingressRouteTCPWrapper.list(clusterId, namespace,
+                        IngressRouteTcpList routeTCPList = ingressRouteTCPWrapper.list(clusterId, namespace,
                                 getIngressTCPLabels(middlewareName, type, ingress.getName()));
                         resList.addAll(convertIngressDTOList(ingress, routeTCPList, null));
                     }
@@ -636,7 +636,7 @@ public class IngressServiceImpl implements IngressService {
      */
     private Set<Integer> getTraefikUsedPort(MiddlewareClusterDTO cluster) {
         Set<Integer> traefikPortSet = new HashSet<>();
-        IngressRouteTCPList tcpList = ingressRouteTCPWrapper.list(cluster.getId(), null, null);
+        IngressRouteTcpList tcpList = ingressRouteTCPWrapper.list(cluster.getId(), null, null);
         if (tcpList != null && !CollectionUtils.isEmpty(tcpList.getItems())) {
             tcpList.getItems().forEach(tcpCR -> {
                 try {
@@ -1340,20 +1340,22 @@ public class IngressServiceImpl implements IngressService {
     }
 
 
-    private List<IngressRouteTCPCR> convertIngressRouteTCP(IngressDTO ingressDTO, String ingressName) {
+    private List<IngressRouteTcp> convertIngressRouteTCP(IngressDTO ingressDTO, String ingressName) {
         if (CollectionUtils.isEmpty(ingressDTO.getServiceList())) {
             throw new CaasRuntimeException(ErrorMessage.INGRESS_TCP_NOT_NULL);
         }
-        List<IngressRouteTCPCR> routeTCPCRList = new ArrayList<>();
+        List<IngressRouteTcp> routeTCPCRList = new ArrayList<>();
         for (ServiceDTO serviceDTO : ingressDTO.getServiceList()) {
             String ingressRouteTCPName = serviceDTO.getServiceName() + "-tcp-" + UUIDUtils.get8UUID();
             if (StringUtils.isNotBlank(ingressDTO.getName())) {
                 ingressRouteTCPName = ingressDTO.getName();
             }
             Map<String, String> labels = getIngressTCPLabels(ingressDTO.getMiddlewareName(), ingressDTO.getMiddlewareType(), ingressName);
-            IngressRouteTCPCR ingressRouteTCPCR = new IngressRouteTCPCR(ingressRouteTCPName, ingressDTO.getNamespace(),
+            IngressRouteTcp ingressRouteTcp = new IngressRouteTcp(ingressRouteTCPName, ingressDTO.getNamespace(),
                     ingressName + "-p" + serviceDTO.getExposePort(), serviceDTO.getServiceName(), Integer.parseInt(serviceDTO.getServicePort()), labels);
-            routeTCPCRList.add(ingressRouteTCPCR);
+
+
+            routeTCPCRList.add(ingressRouteTcp);
         }
         return routeTCPCRList;
     }
@@ -1556,7 +1558,7 @@ public class IngressServiceImpl implements IngressService {
         return resList;
     }
 
-    private List<IngressDTO> convertIngressDTOList(IngressComponentDto ingressDTO, IngressRouteTCPList ingressRouteTCPList, String aliasName) {
+    private List<IngressDTO> convertIngressDTOList(IngressComponentDto ingressDTO, IngressRouteTcpList ingressRouteTCPList, String aliasName) {
         if (ingressRouteTCPList == null || CollectionUtils.isEmpty(ingressRouteTCPList.getItems())) {
             return Collections.emptyList();
         }
@@ -1568,17 +1570,17 @@ public class IngressServiceImpl implements IngressService {
             address = null;
         }
         // 过滤掉不属于中间件的ingressRouteTCP CR
-        List<IngressRouteTCPCR> items = ingressRouteTCPList.getItems().stream().filter(ingressRouteTCPCR
-                -> ingressRouteTCPCR.getMetadata().getLabels() != null
-                && ingressRouteTCPCR.getMetadata().getLabels().containsKey("middlewareType")).collect(Collectors.toList());
+        List<IngressRouteTcp> items = ingressRouteTCPList.getItems().stream().filter(ingressRouteTcp
+                -> ingressRouteTcp.getMetadata().getLabels() != null
+                && ingressRouteTcp.getMetadata().getLabels().containsKey("middlewareType")).collect(Collectors.toList());
 
         String finalAddress = address;
-        items.forEach(ingressRouteTCPCR -> {
-            List<String> entryPoints = ingressRouteTCPCR.getSpec().getEntryPoints();
-            if (!CollectionUtils.isEmpty(entryPoints) && !CollectionUtils.isEmpty(ingressRouteTCPCR.getSpec().getRoutes()) && !CollectionUtils.isEmpty(ingressRouteTCPCR.getSpec().getRoutes().get(0).getServices())) {
+        items.forEach(ingressRouteTcp -> {
+            List<String> entryPoints = ingressRouteTcp.getSpec().getEntryPoints();
+            if (!CollectionUtils.isEmpty(entryPoints) && !CollectionUtils.isEmpty(ingressRouteTcp.getSpec().getRoutes()) && !CollectionUtils.isEmpty(ingressRouteTcp.getSpec().getRoutes().get(0).getServices())) {
                 String entryPoint = entryPoints.get(0);
-                IngressRouteTCPSpecRoute ingressRouteTCPSpecRoute = ingressRouteTCPCR.getSpec().getRoutes().get(0);
-                IngressRouteTCPSpecRouteService ingressRouteTCPSpecRouteService = ingressRouteTCPSpecRoute.getServices().get(0);
+                IngressRouteTcpSpecRoute ingressRouteTCPSpecRoute = ingressRouteTcp.getSpec().getRoutes().get(0);
+                IngressRouteTcpSpecRouteService ingressRouteTCPSpecRouteService = ingressRouteTCPSpecRoute.getServices().get(0);
                 String port = entryPoint.substring(entryPoint.lastIndexOf("p") + 1);
                 IngressDTO ingress = new IngressDTO();
                 List<ServiceDTO> serviceList = new ArrayList<>();
@@ -1589,11 +1591,11 @@ public class IngressServiceImpl implements IngressService {
                 serviceList.add(serviceDTO);
                 ingress.setServiceList(serviceList);
                 ingress.setExposeIP(finalAddress);
-                ingress.setMiddlewareName(ingressRouteTCPCR.getMetadata().getLabels().get("middlewareName"));
-                ingress.setMiddlewareType(ingressRouteTCPCR.getMetadata().getLabels().get("middlewareType"));
+                ingress.setMiddlewareName(ingressRouteTcp.getMetadata().getLabels().get("middlewareName"));
+                ingress.setMiddlewareType(ingressRouteTcp.getMetadata().getLabels().get("middlewareType"));
                 ingress.setMiddlewareNickName(aliasName);
-                ingress.setName(ingressRouteTCPCR.getMetadata().getName());
-                ingress.setNamespace(ingressRouteTCPCR.getMetadata().getNamespace());
+                ingress.setName(ingressRouteTcp.getMetadata().getName());
+                ingress.setNamespace(ingressRouteTcp.getMetadata().getNamespace());
                 ingress.setClusterId(ingress.getClusterId());
                 ingress.setProtocol(Protocol.TCP.getValue());
                 ingress.setIngressClassName(ingressDTO.getIngressClassName());

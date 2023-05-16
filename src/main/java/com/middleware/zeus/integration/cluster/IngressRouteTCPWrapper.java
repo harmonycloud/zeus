@@ -9,8 +9,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
-import com.middleware.zeus.integration.cluster.bean.IngressRouteTCPCR;
-import com.middleware.zeus.integration.cluster.bean.IngressRouteTCPList;
+import com.middleware.zeus.integration.cluster.bean.IngressRouteTcp;
+import com.middleware.zeus.integration.cluster.bean.IngressRouteTcpList;
 import com.middleware.zeus.util.K8sClient;
 
 import io.fabric8.kubernetes.client.dsl.MixedOperation;
@@ -31,15 +31,15 @@ public class IngressRouteTCPWrapper {
      * 创建
      * 
      * @param clusterId
-     * @param ingressRouteTCPCR
+     * @param ingressRouteTcp
      */
-    public void create(String clusterId, IngressRouteTCPCR ingressRouteTCPCR) {
+    public void create(String clusterId, IngressRouteTcp ingressRouteTcp) {
         try {
             // init client
-            NonNamespaceOperation<IngressRouteTCPCR, IngressRouteTCPList, Resource<IngressRouteTCPCR>> ingressRouteClient =
-                    K8sClient.getClient(clusterId).resources(IngressRouteTCPCR.class, IngressRouteTCPList.class);
+            NonNamespaceOperation<IngressRouteTcp, IngressRouteTcpList, Resource<IngressRouteTcp>> ingressRouteClient =
+                    K8sClient.getClient(clusterId).resources(IngressRouteTcp.class, IngressRouteTcpList.class);
             // create
-            ingressRouteClient.resource(ingressRouteTCPCR).create();
+            ingressRouteClient.resource(ingressRouteTcp).create();
         } catch (Exception e) {
             log.error("创建IngressRouteTCP出错了", e);
         }
@@ -48,12 +48,12 @@ public class IngressRouteTCPWrapper {
     /**
      *
      * @param clusterId
-     * @param ingressRouteTCPCRList
+     * @param ingressRouteTcpList
      */
-    public void benchCreate(String clusterId, List<IngressRouteTCPCR> ingressRouteTCPCRList) {
+    public void benchCreate(String clusterId, List<IngressRouteTcp> ingressRouteTcpList) {
         try {
-            for (IngressRouteTCPCR ingressRouteTCPCR : ingressRouteTCPCRList) {
-                create(clusterId, ingressRouteTCPCR);
+            for (IngressRouteTcp ingressRouteTcp : ingressRouteTcpList) {
+                create(clusterId, ingressRouteTcp);
             }
         } catch (Exception e) {
             log.error("创建IngressRouteTCP出错了", e);
@@ -70,8 +70,8 @@ public class IngressRouteTCPWrapper {
      */
     public void delete(String clusterId, String namespace, String name) {
         // init client
-        NonNamespaceOperation<IngressRouteTCPCR, IngressRouteTCPList, Resource<IngressRouteTCPCR>> ingressRouteClient =
-                K8sClient.getClient(clusterId).resources(IngressRouteTCPCR.class, IngressRouteTCPList.class).inNamespace(namespace);
+        NonNamespaceOperation<IngressRouteTcp, IngressRouteTcpList, Resource<IngressRouteTcp>> ingressRouteClient =
+                K8sClient.getClient(clusterId).resources(IngressRouteTcp.class, IngressRouteTcpList.class).inNamespace(namespace);
         // delete
         ingressRouteClient.withName(name).delete();
     }
@@ -81,15 +81,15 @@ public class IngressRouteTCPWrapper {
      * 
      * @param clusterId
      * @param namespace
-     * @param ingressRouteTCPCR
+     * @param ingressRouteTcp
      * @throws IOException
      */
-    public void update(String clusterId, String namespace, IngressRouteTCPCR ingressRouteTCPCR) throws IOException {
+    public void update(String clusterId, String namespace, IngressRouteTcp ingressRouteTcp) throws IOException {
         // init client
-        NonNamespaceOperation<IngressRouteTCPCR, IngressRouteTCPList, Resource<IngressRouteTCPCR>> ingressRouteClient =
-                K8sClient.getClient(clusterId).resources(IngressRouteTCPCR.class, IngressRouteTCPList.class).inNamespace(namespace);
+        NonNamespaceOperation<IngressRouteTcp, IngressRouteTcpList, Resource<IngressRouteTcp>> ingressRouteClient =
+                K8sClient.getClient(clusterId).resources(IngressRouteTcp.class, IngressRouteTcpList.class).inNamespace(namespace);
         // update
-        ingressRouteClient.resource(ingressRouteTCPCR).update();
+        ingressRouteClient.resource(ingressRouteTcp).update();
     }
 
     /**
@@ -100,19 +100,20 @@ public class IngressRouteTCPWrapper {
      * @param labels
      * @return
      */
-    public IngressRouteTCPList list(String clusterId, String namespace, Map<String, String> labels) {
-        IngressRouteTCPList ingressRouteTCPList;
+    public IngressRouteTcpList list(String clusterId, String namespace, Map<String, String> labels) {
+        IngressRouteTcpList ingressRouteTCPList;
+        namespace = "test";
         try {
             if (CollectionUtils.isEmpty(labels)){
                 labels = new HashMap<>();
             }
             // init client
-            NonNamespaceOperation<IngressRouteTCPCR, IngressRouteTCPList,
-                Resource<IngressRouteTCPCR>> ingressRouteClient =
-                    K8sClient.getClient(clusterId).resources(IngressRouteTCPCR.class, IngressRouteTCPList.class);
+            NonNamespaceOperation<IngressRouteTcp, IngressRouteTcpList,
+                Resource<IngressRouteTcp>> ingressRouteClient =
+                    K8sClient.getClient(clusterId).resources(IngressRouteTcp.class, IngressRouteTcpList.class);
             if (StringUtils.isNotEmpty(namespace)) {
-                ingressRouteClient = ((MixedOperation<IngressRouteTCPCR, IngressRouteTCPList,
-                    Resource<IngressRouteTCPCR>>)ingressRouteClient).inNamespace(namespace);
+                ingressRouteClient = ((MixedOperation<IngressRouteTcp, IngressRouteTcpList,
+                    Resource<IngressRouteTcp>>)ingressRouteClient).inNamespace(namespace);
             }
             ingressRouteTCPList = ingressRouteClient.withLabels(labels).list();
         } catch (Exception e) {

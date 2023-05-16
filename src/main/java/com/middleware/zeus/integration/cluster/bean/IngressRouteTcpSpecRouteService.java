@@ -1,13 +1,19 @@
 package com.middleware.zeus.integration.cluster.bean;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.experimental.Accessors;
 
 /**
  * @author liyinlong
  * @since 2022/8/26 3:23 下午
  */
 @Data
-public class IngressRouteTCPSpecRouteService {
+@Accessors(chain = true)
+@AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
+public class IngressRouteTcpSpecRouteService {
 
     private String name;
 
@@ -23,10 +29,10 @@ public class IngressRouteTCPSpecRouteService {
 
     private Integer weight;
 
-    public IngressRouteTCPSpecRouteService() {
+    public IngressRouteTcpSpecRouteService() {
     }
 
-    public IngressRouteTCPSpecRouteService(String name, Integer port) {
+    public IngressRouteTcpSpecRouteService(String name, Integer port) {
         this.name = name;
         this.port = port;
     }
