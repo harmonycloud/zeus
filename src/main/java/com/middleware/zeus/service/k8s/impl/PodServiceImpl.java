@@ -79,8 +79,7 @@ public class PodServiceImpl implements PodService {
     @Override
     public Middleware list(String clusterId, String namespace, String middlewareName, String type) {
         MiddlewareCR mw = middlewareCRService.getCR(clusterId, namespace, type, middlewareName);
-        Middleware middleware = listPodsWithMiddleware(mw, clusterId, namespace, middlewareName, type);
-        return middleware;
+        return listPodsWithMiddleware(mw, clusterId, namespace, middlewareName, type);
     }
 
     @Override
@@ -458,7 +457,7 @@ public class PodServiceImpl implements PodService {
         Map<String, StorageClassDTO> scMap = storageClassService.convertStorageClass(pvcInfos, clusterId, namespace);
         Map<String, String> scAliasNameMap = storageService.listStorageMap(clusterId, true);
         // 给pod设置存储
-        List<PodInfo> podInfoList = listMiddlewarePods(mw, clusterId, namespace, middlewareName, type);
+        List<PodInfo> podInfoList = listMiddlewarePods(mw, clusterId, namespace);
         for (PodInfo pi : podInfoList) {
             // storage
             List<StorageClassDTO> scDTOList = storageClassService.fuzzySearchStorageClass(scMap, pi.getPodName());
@@ -644,7 +643,7 @@ public class PodServiceImpl implements PodService {
     @Override
     public List<PodInfo> listMiddlewarePods(String clusterId, String namespace, String middlewareName, String type) {
         MiddlewareCR middlewareCR = middlewareCRService.getCR(clusterId, namespace, type, middlewareName);
-        return listMiddlewarePods(middlewareCR, clusterId, namespace, middlewareName, type);
+        return listMiddlewarePods(middlewareCR, clusterId, namespace);
     }
 
     @Override
@@ -654,11 +653,8 @@ public class PodServiceImpl implements PodService {
         return podInfos;
     }
 
-    public List<PodInfo> listMiddlewarePods(MiddlewareCR mw, String clusterId, String namespace, String middlewareName, String type) {
-        List<MiddlewareInfo> pods = new ArrayList<>();
-        if (mw != null && mw.getStatus() != null && mw.getStatus().getInclude() != null && mw.getStatus().getInclude().containsKey(PODS)){
-            pods = mw.getStatus().getInclude().get(PODS);
-        }
+    public List<PodInfo> listMiddlewarePods(MiddlewareCR mw, String clusterId, String namespace) {
+        List<MiddlewareInfo> pods = mw.getStatus().getInclude().get(PODS);
         List<PodInfo> podInfoList = new ArrayList<>();
         if(!CollectionUtils.isEmpty(pods)){
             for (MiddlewareInfo po : pods) {
