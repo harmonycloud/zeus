@@ -381,12 +381,12 @@ public class OrganizationServiceImpl extends AbstractOrganizationService impleme
 
     public List<BeanOrganization> filterByCurrentUser(List<BeanOrganization> list) {
         // 获取当前用户
-        CurrentUser currentUser = CurrentUserRepository.getUserExistNull();
+         CurrentUser currentUser = CurrentUserRepository.getUserExistNull();
         JSONObject user = JwtTokenComponent.checkToken(currentUser.getToken()).getValue();
         // 获取当前用户所在所有项目内的角色信息
         String username = user.getString(USERNAME);
         UserDto userDto = userService.getUserDto(username, true);
-        if (userDto.getIsAdmin() != null && !userDto.getIsAdmin()) {
+        if (userDto.getIsAdmin() != null && !userDto.getIsAdmin() && userDto.getManager() == null) {
             List<BeanOrganizationUser> currentUserOrganList = organizationUserService.listByUsername(username);
             list = list.stream()
                 .filter(beanOrganization -> currentUserOrganList.stream()
