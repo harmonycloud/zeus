@@ -130,8 +130,9 @@ public interface HelmChartService {
      * @param middleware    中间件信息
      * @param tgzFilePath   tgz文件的绝对路径（包含文件名）
      * @param cluster       集群信息
+     * @param param         后置参数
      */
-    void install(Middleware middleware, String tgzFilePath, MiddlewareClusterDTO cluster);
+    void install(Middleware middleware, String tgzFilePath, MiddlewareClusterDTO cluster, String param);
 
     /**
      * 发布helm chart包
@@ -142,8 +143,9 @@ public interface HelmChartService {
      * @param chartVersion  chart包版本
      * @param tgzFilePath   tgz文件的绝对路径（包含文件名）
      * @param cluster       集群信息
+     * @param param         后置参数
      */
-    void install(String name, String namespace, String chartName, String chartVersion, String tgzFilePath, MiddlewareClusterDTO cluster);
+    void install(String name, String namespace, String chartName, String chartVersion, String tgzFilePath, MiddlewareClusterDTO cluster, String param);
 
     /**
      * 更新已发布的helm chart
@@ -201,6 +203,18 @@ public interface HelmChartService {
      * @param cluster   集群信息
      */
     void installComponents(String name, String namespace, String setValues, String chartUrl, MiddlewareClusterDTO cluster);
+
+    /**
+     * 更新/发布 chart
+     *
+     * @param name      helm发布的实例名称
+     * @param namespace 命名空间
+     * @param setValues 设置的值
+     * @param chartUrl  远端chart文件地址
+     * @param cluster   集群信息
+     * @param param     后置参数
+     */
+    void installComponents(String name, String namespace, String setValues, String chartUrl, MiddlewareClusterDTO cluster, String param);
 
     /**
      * 卸载已发布的helm chart

@@ -209,7 +209,7 @@ public abstract class AbstractBaseOperator {
         // 3. helm package & install
         String tgzFilePath = helmChartService.packageChart(helmChart.getTarFileName(), middleware.getChartName(),
             middleware.getChartVersion());
-        helmChartService.install(middleware, tgzFilePath, cluster);
+        helmChartService.install(middleware, tgzFilePath, cluster, null);
 
         // 4. 创建对外访问
         ThreadPoolExecutorFactory.executor.execute(() -> {
@@ -1160,6 +1160,8 @@ public abstract class AbstractBaseOperator {
             log.error("集群{} 分区{} 中间件{}， 告警规则标签添加集群失败", middleware.getClusterId(), middleware.getNamespace(),
                 middleware.getName());
         }
+        // 开启备份通知
+        middlewareAlertsService.editBackupAlert(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), true);
 
     }
 

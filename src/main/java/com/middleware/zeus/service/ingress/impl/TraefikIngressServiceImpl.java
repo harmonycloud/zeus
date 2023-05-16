@@ -108,6 +108,9 @@ public class TraefikIngressServiceImpl extends AbstractBaseOperator implements T
         kubernetesIngress.put("ingressClass", ingressComponentDto.getIngressClassName());
         values.put("fullnameOverride", ingressComponentDto.getIngressClassName());
         values.put("install", "true");
+
+        // ingress class
+        values.getJSONObject("ingressClass").put("enabled", true);
         // node affinity
         if (!CollectionUtils.isEmpty(ingressComponentDto.getNodeAffinity())) {
             // convert to k8s model

@@ -337,17 +337,21 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
     }
 
     @Override
-    public void install(Middleware middleware, String tgzFilePath, MiddlewareClusterDTO cluster) {
+    public void install(Middleware middleware, String tgzFilePath, MiddlewareClusterDTO cluster, String param) {
         install(middleware.getName(), middleware.getNamespace(), middleware.getChartName(),
-            middleware.getChartVersion(), tgzFilePath, cluster);
+            middleware.getChartVersion(), tgzFilePath, cluster, param);
     }
 
     @Override
     public void install(String name, String namespace, String chartName, String chartVersion, String tgzFilePath,
-                        MiddlewareClusterDTO cluster) {
+                        MiddlewareClusterDTO cluster, String param) {
         String tarFileDir = getHelmChartFilePath(chartName, chartVersion);
-        String cmd = String.format("helm install %s %s --kube-apiserver %s --kubeconfig %s -n %s", name, tgzFilePath,
+        String cmd = String.format("helm install %s %s --kube-apiserver %s --kubeconfig %s -n %s ", name, tgzFilePath,
             cluster.getAddress(), clusterCertService.getKubeConfigFilePath(cluster.getId()), namespace);
+        // 添加结尾参数
+        if (StringUtils.isNotEmpty(param)){
+            cmd += param;
+        }
 
         // 先dry-run发布下，避免包不正确
         execCmd(cmd + " --dry-run", null);
@@ -630,6 +634,12 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
     @Override
     public void installComponents(String name, String namespace, String setValues, String chartUrl,
                                   MiddlewareClusterDTO cluster) {
+        installComponents(name, namespace, setValues, chartUrl, cluster, null);
+    }
+
+    @Override
+    public void installComponents(String name, String namespace, String setValues, String chartUrl,
+                                  MiddlewareClusterDTO cluster, String param) {
         String cmd = String.format("helm upgrade --install %s %s --set %s -n %s --kube-apiserver %s --kubeconfig %s ",
                 name, chartUrl, setValues, namespace, cluster.getAddress(),
                 clusterCertService.getKubeConfigFilePath(cluster.getId()));
@@ -637,6 +647,9 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
             cmd = String.format("helm upgrade --install %s %s --set %s --set imagePullSecrets[0].name=%s -n %s --kube-apiserver %s --kubeconfig %s ",
                     name, chartUrl, setValues, imagePullSecret, namespace, cluster.getAddress(),
                     clusterCertService.getKubeConfigFilePath(cluster.getId()));
+        }
+        if (StringUtils.isNotEmpty(param)){
+            cmd += param;
         }
         execCmd(cmd, null);
     }
@@ -711,10 +724,15 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
                 + helmChartFile.getDependency().get("repository").substring(8);
             File operatorDir = new File(path);
             if (operatorDir.exists()) {
+                // 设置末尾参数
+                String param = null;
+                if(helmChartFile.getChartName().equals(MiddlewareTypeEnum.POSTGRESQL.getType())){
+                    param = " --disable-openapi-validation";
+                }
                 // 创建operator
                 this.editOperatorChart(clusterId, path, type);
                 this.install(helmChartFile.getDependency().get("alias"), "middleware-operator",
-                    helmChartFile.getChartName(), helmChartFile.getChartVersion(), path, cluster);
+                    helmChartFile.getChartName(), helmChartFile.getChartVersion(), path, cluster, param);
             } else {
                 log.error("中间件{} operator包不存在", helmChartFile.getChartName());
                 throw new BusinessException(ErrorMessage.NOT_EXIST);

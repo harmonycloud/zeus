@@ -19,8 +19,8 @@ public enum AlertTargetEnum {
     backupController("backupController", "备份控制器"),
     middlewareController("middlewareController", "中间件控制器"),
     middlewareScheduler("middlewareScheduler", "扩展调度器"),
-    lvmController("lvmController", "lvm控制器"),
-    localPathController("localPathController", "local-path控制器"),
+    lvmController("lvmController", "LVM控制器"),
+    localPathController("localPathController", "Local-Path控制器"),
     cluster("luster", "集群监控"),
     ;
 
