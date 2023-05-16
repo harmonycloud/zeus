@@ -1510,6 +1510,7 @@ public class IngressServiceImpl implements IngressService {
                         }
                         HTTPIngressPath httpIngressPath = new HTTPIngressPath();
                         httpIngressPath.setPath(ingressHttpPath.getPath());
+                        httpIngressPath.setPathType("ImplementationSpecific");
                         
                         IngressServiceBackend ingressServiceBackend = new IngressServiceBackend();
                         ingressServiceBackend.setName(ingressHttpPath.getServiceName());
