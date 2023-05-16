@@ -240,13 +240,16 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
 
     @Override
     public List<BeanCustomConfig> updateConfig2MySQL(JSONObject data, String role, String chartName, String chartVersion) {
+        if (!data.containsKey("target")) {
+            data.put("target", "major");
+        }
         // 转换为对象
         CustomConfigParameters parameters =
                 JSONObject.parseObject(JSONObject.toJSONString(data), CustomConfigParameters.class);
         List<BeanCustomConfig> beanCustomConfigList = new ArrayList<>();
         parameters.getParameters().forEach(map -> {
             for (String key : map.keySet()) {
-                Map<String, String> param = map.get(key).stream()
+                Map<String, String> param = map.get(key).get(0).stream()
                         .collect(Collectors.toMap(CustomConfigParameter::getName, CustomConfigParameter::getValue));
                 // 封装数据库对象
                 BeanCustomConfig beanCustomConfig = new BeanCustomConfig();
