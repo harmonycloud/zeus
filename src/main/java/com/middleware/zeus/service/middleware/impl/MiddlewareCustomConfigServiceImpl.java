@@ -249,7 +249,7 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         List<BeanCustomConfig> beanCustomConfigList = new ArrayList<>();
         parameters.getParameters().forEach(map -> {
             for (String key : map.keySet()) {
-                Map<String, String> param = map.get(key).get(0).stream()
+                Map<String, String> param = map.get(key).stream()
                         .collect(Collectors.toMap(CustomConfigParameter::getName, CustomConfigParameter::getValue));
                 // 封装数据库对象
                 BeanCustomConfig beanCustomConfig = new BeanCustomConfig();
@@ -315,29 +315,10 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         if (CollectionUtils.isEmpty(resultList)) {
             throw new BusinessException(ErrorMessage.GET_CUSTOM_CONFIG_ROLE_FAILED);
         }
-        Set<String> roleSet = getMiddlewareCustomConfigRole(clusterId, namespace, middlewareName, type);
-        return resultList.stream().filter(roleSet::contains).collect(Collectors.toList());
-    }
-
-    public Set<String> getMiddlewareCustomConfigRole(String clusterId, String namespace, String name, String type) {
-        Middleware middleware = new Middleware(clusterId, namespace, name, type);
-        MiddlewareCR cr = middlewareCRService.getCR(clusterId, namespace, type, name);
-        BaseOperator operator = getOperator(BaseOperator.class, BaseOperator.class, middleware);
-        HashSet<String> resultSet = new HashSet<>();
-        if (cr.getStatus() != null && cr.getStatus().getInclude() != null
-                && cr.getStatus().getInclude().containsKey("pods")
-                && !CollectionUtils.isEmpty(cr.getStatus().getInclude().get("pods"))) {
-            cr.getStatus().getInclude().get("pods").forEach(pod -> {
-                if (pod.getType() == null) {
-                    return;
-                }
-                String role = operator.getCustomConfigRole(pod.getType());
-                if (role != null) {
-                    resultSet.add(role);
-                }
-            });
-        }
-        return resultSet;
+        Set<String> roleSet =
+            getOperator(BaseOperator.class, BaseOperator.class, middleware).getCustomConfigRole(values);
+        return roleSet == null ? resultList
+            : resultList.stream().filter(roleSet::contains).collect(Collectors.toList());
     }
 
     /**

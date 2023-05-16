@@ -950,4 +950,15 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         }
     }
 
+    @Override
+    public Set<String> getCustomConfigRole(JSONObject values) {
+        HashSet<String> result = new HashSet<>();
+        result.add("major");
+        if (values.containsKey("proxy") && values.getJSONObject("proxy").containsKey("enable")
+            && values.getJSONObject("proxy").getBoolean("enable")) {
+            result.add("proxy");
+        }
+        return result;
+    }
+
 }

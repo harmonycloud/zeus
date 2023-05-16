@@ -7,6 +7,7 @@ import io.fabric8.kubernetes.api.model.ConfigMap;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author dengyulong
@@ -212,5 +213,12 @@ public interface BaseOperator {
      * @return
      */
     String changeConfigRoleToValueArg(String customConfigRole, boolean reserve);
+
+    /**
+     * 获取服务支持修改的自定义参数类型
+     * @param values
+     * @return
+     */
+    Set<String> getCustomConfigRole(JSONObject values);
 
 }
