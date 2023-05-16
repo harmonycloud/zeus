@@ -235,8 +235,9 @@ public class MiddlewareBackupController {
                                      @RequestParam("middlewareName") String middlewareName,
                                      @RequestParam("type") String type,
                                      @RequestParam("backupId") String backupId,
-                                     @RequestParam("backupMode") String backupMode) {
-        return BaseResult.ok(middlewareBackupService.backupIncrRecords(clusterId, namespace, middlewareName, type, backupId, backupMode));
+                                     @RequestParam("backupMode") String backupMode,
+                                     @RequestParam(value = "orderBy", required = false, defaultValue = "time,desc") String orderBy) {
+        return BaseResult.ok(middlewareBackupService.backupIncrRecords(clusterId, namespace, middlewareName, type, backupId, backupMode, orderBy));
     }
 
     @ApiOperation(value = "查询备份任务对应的克隆记录", notes = "查询备份任务对应的克隆记录")

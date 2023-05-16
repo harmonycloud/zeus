@@ -678,7 +678,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         String activeArea = restoreDto.getActiveArea();
         String restoreTime = restoreDto.getRestoreTime();
 
-        if (StringUtils.isAnyEmpty(clusterId, namespace, type, middlewareName, backupName, sourceName, backupId, restoreTime)) {
+        if (StringUtils.isAnyEmpty(clusterId, namespace, type, middlewareName, backupName, sourceName, backupId)) {
             throw new BusinessException(ErrorMessage.PARAMETER_NOT_COMPLETE);
         }
         // 等待中间件状态正常
@@ -1151,7 +1151,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public List<MiddlewareBackupRecord> backupIncrRecords(String clusterId, String namespace, String middlewareName, String type, String backupId, String backupMode) {
+    public List<MiddlewareBackupRecord> backupIncrRecords(String clusterId, String namespace, String middlewareName, String type, String backupId, String backupMode, String orderBy) {
         Set<String> backupScheduleNames = listMiddlewareBackupScheduleNames(clusterId, namespace, backupId);
         Set<String> incrScheduleNames = new HashSet<>();
         backupScheduleNames.forEach(scheduleName -> {
@@ -1164,7 +1164,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         List<MiddlewareBackupRecord> recordList = listBackup(clusterId, namespace, null, null);
         recordList = recordList.stream().filter(record -> StringUtils.isNotEmpty(record.getOwner()) &&
                 incrScheduleNames.contains(record.getOwner())).collect(Collectors.toList());
-        return sortAndSetAliasName(recordList, null);
+        return sortAndSetAliasName(recordList, orderBy);
     }
 
     @Override

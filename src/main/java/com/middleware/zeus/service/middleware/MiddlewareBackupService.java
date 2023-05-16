@@ -240,9 +240,11 @@ public interface MiddlewareBackupService {
      * @param type
      * @param backupId
      * @param backupMode
+     * @param orderBy
      * @return
      */
-    List<MiddlewareBackupRecord> backupIncrRecords(String clusterId, String namespace, String middlewareName, String type, String backupId, String backupMode);
+    List<MiddlewareBackupRecord> backupIncrRecords(String clusterId, String namespace, String middlewareName, String type,
+                                                   String backupId, String backupMode, String orderBy);
 
 
     /**

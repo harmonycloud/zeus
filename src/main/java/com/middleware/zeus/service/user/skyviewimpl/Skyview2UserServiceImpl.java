@@ -39,8 +39,6 @@ public class Skyview2UserServiceImpl extends AbstractUserService implements User
     private RoleService roleService;
     @Autowired
     private V2UserService v2UserService;
-    @Autowired
-    private RoleAuthorityService roleAuthorityService;
 
     @Override
     public UserDto getUserDto(String userName, String projectId, boolean roleDetail) {
