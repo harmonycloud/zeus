@@ -131,6 +131,8 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     private CustomResourceDefinitionWrapper customResourceDefinitionWrapper;
     @Autowired
     private NamespaceService namespaceService;
+    @Autowired
+    private MiddlewareConfigYamlService middlewareConfigYamlService;
 
     @Override
     public List<Middleware> simpleList(String clusterId, String namespace, String type, String keyword) {
@@ -1101,6 +1103,10 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             String pluralName = customResourceDefinitionWrapper.getCRPluralName(clusterId, middlewareCrTypeService.findByType(type));
             resources.add(new K8sResource(pluralName, Arrays.asList(middlewareName)));
         }
+        // 添加configmap资源
+        List<String> cmNameList = middlewareConfigYamlService.nameList(clusterId, namespace, middlewareName, type, null);
+        resources.add(new K8sResource("configmaps", cmNameList));
+
         return resources;
     }
 

@@ -35,6 +35,9 @@ public class CommonResourceWrapper {
             case "ingresses":
                 res = ingressWrapper.get(clusterId, namespace, name);
                 break;
+            case "configmaps":
+                res = K8sClient.getClient(clusterId).configMaps().inNamespace(namespace).withName(name).get();
+                break;
             default:
                 res = "暂不支持查看该类型yaml";
         }
