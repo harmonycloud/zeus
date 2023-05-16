@@ -83,19 +83,23 @@ public class BackupPositionController {
         return BaseResult.ok(backupPositionService.list(organId, projectId, null));
     }
 
-    @ApiOperation(value = "查询集群分区可用备份位置列表", notes = "查询集群分区可用备份位置列表")
+    @ApiOperation(value = "查询中间件可用备份位置列表", notes = "查询中间件可用备份位置列表")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "organId", value = "组织id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "分区名称", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名字", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping("/usable")
-    public BaseResult<List<BackupPositionDTO>> listByNamespace(@PathVariable("organId") String organId,
-                                                               @PathVariable("projectId") String projectId,
-                                                               @RequestParam("clusterId") String clusterId,
-                                                               @RequestParam("namespace") String namespace) {
-        return BaseResult.ok(backupPositionService.usable(organId, projectId, clusterId, namespace));
+    public BaseResult<List<BackupPositionDTO>> list(@PathVariable("organId") String organId,
+                                                    @PathVariable("projectId") String projectId,
+                                                    @RequestParam("clusterId") String clusterId,
+                                                    @RequestParam("namespace") String namespace,
+                                                    @RequestParam("middlewareName") String middlewareName,
+                                                    @RequestParam("type") String type) {
+        return BaseResult.ok(backupPositionService.list(organId, projectId, clusterId, namespace, middlewareName, type));
     }
 
 }
