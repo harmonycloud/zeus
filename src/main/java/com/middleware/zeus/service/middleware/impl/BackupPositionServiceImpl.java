@@ -85,7 +85,7 @@ public class BackupPositionServiceImpl implements BackupPositionService {
 
             // 双活分区的双活中间件可以使用所有备份服务器
             if (openAvailableDomain && activeMiddleware) {
-                return activeMiddleware;
+                return true;
             }
             // 非双活分区的中间件只能使用普通备份服务器
             return 1 == beanBackupServer.getType();
