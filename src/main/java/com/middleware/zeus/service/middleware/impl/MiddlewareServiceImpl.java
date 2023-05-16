@@ -1178,10 +1178,10 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     public boolean activeActiveMiddlewareCheck(String clusterId, String namespace, String middlewareName, String type) {
         boolean openAvailableDomain = namespaceService.isOpenAvailableDomain(clusterId, namespace);
         List<PodInfo> podInfos = podService.listMiddlewarePodsWithArea(clusterId, namespace, middlewareName, type);
-        boolean activeActiveMiddleware = false;
+        boolean activeActiveMiddleware = true;
         for (PodInfo podInfo : podInfos) {
             if (StringUtils.isEmpty(podInfo.getNodeZone())) {
-                activeActiveMiddleware = true;
+                activeActiveMiddleware = false;
             }
         }
         return (openAvailableDomain) && activeActiveMiddleware;

@@ -703,4 +703,18 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
             }
         }
     }
+
+    @Override
+    public Set<String> getCustomConfigRole(JSONObject values) {
+        HashSet<String> result = new HashSet<>();
+        result.add("major");
+        if (values.containsKey("type") && "sentinel".equals(values.getString("type"))) {
+            result.add("sentinel");
+        }
+        if (values.containsKey("predixy") && values.getJSONObject("predixy").containsKey("enableProxy")
+            && values.getJSONObject("predixy").getBoolean("enableProxy")) {
+            result.add("proxy");
+        }
+        return result;
+    }
 }

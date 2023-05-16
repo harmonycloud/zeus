@@ -1561,4 +1561,8 @@ public abstract class AbstractBaseOperator {
         }
     }
 
+    public Set<String> getCustomConfigRole(JSONObject values) {
+        return null;
+    }
+
 }
