@@ -99,8 +99,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Autowired
     private RoleAuthorityService roleAuthorityService;
     @Autowired
-    private UserRoleService userRoleService;
-    @Autowired
     private ProjectService projectService;
     @Autowired
     private HelmChartService helmChartService;
@@ -536,7 +534,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         boolean activeActiveNamespace = namespaceService.isOpenAvailableDomain(clusterId, namespace);
         BeanBackupServer backupServer = backupPositionService.getBackupServer(backupDTO.getBackupPositionId());
 
-        if (activeActiveNamespace && (backupServer.getType() == 2) && checkActiveActiveMiddleware(clusterId, namespace, middlewareName)) {
+        if (activeActiveNamespace && (backupServer.getType() == 2) && checkActiveActiveMiddleware(clusterId, namespace, middlewareName, backupDTO.getType())) {
             String type = backupDTO.getType();
             return type.equals(MiddlewareTypeEnum.MYSQL.getType()) || type.equals(MiddlewareTypeEnum.POSTGRESQL.getType()) || type.equals(MiddlewareTypeEnum.REDIS.getType());
         }
@@ -550,8 +548,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
      * @param middlewareName
      * @return
      */
-    private boolean checkActiveActiveMiddleware(String clusterId,String namespace,String middlewareName){
-        List<PodInfo> podInfos = podService.list(clusterId, namespace, middlewareName);
+    private boolean checkActiveActiveMiddleware(String clusterId,String namespace,String middlewareName,String type){
+        List<PodInfo> podInfos = podService.listMiddlewarePodsWithArea(clusterId, namespace, middlewareName, type);
         for (PodInfo podInfo : podInfos) {
             if(StringUtils.isEmpty(podInfo.getNodeZone())){
                 return false;
