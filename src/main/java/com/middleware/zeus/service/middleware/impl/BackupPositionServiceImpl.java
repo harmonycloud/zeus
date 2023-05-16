@@ -6,6 +6,7 @@ import com.dtflys.forest.utils.StringUtils;
 import com.middleware.zeus.common.enums.ErrorMessage;
 import com.middleware.zeus.common.exception.BusinessException;
 import com.middleware.zeus.common.model.BackupPositionDTO;
+import com.middleware.zeus.common.model.middleware.PodInfo;
 import com.middleware.zeus.common.model.user.ProjectDto;
 import com.middleware.zeus.bean.BeanBackupPosition;
 import com.middleware.zeus.bean.BeanBackupServer;
@@ -14,10 +15,8 @@ import com.middleware.zeus.bean.BeanMiddlewareBackupName;
 import com.middleware.zeus.dao.BeanBackupPositionMapper;
 import com.middleware.zeus.integration.cluster.bean.Minio;
 import com.middleware.zeus.service.k8s.NamespaceService;
-import com.middleware.zeus.service.middleware.BackupPositionService;
-import com.middleware.zeus.service.middleware.BackupServerDetailService;
-import com.middleware.zeus.service.middleware.BackupServerService;
-import com.middleware.zeus.service.middleware.MiddlewareBackupNameService;
+import com.middleware.zeus.service.k8s.PodService;
+import com.middleware.zeus.service.middleware.*;
 import com.middleware.zeus.service.user.ProjectService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -48,6 +47,8 @@ public class BackupPositionServiceImpl implements BackupPositionService {
     private NamespaceService namespaceService;
     @Autowired
     private MiddlewareBackupNameService middlewareBackupNameService;
+    @Autowired
+    private MiddlewareService middlewareService;
 
     @Override
     public List<BackupPositionDTO> list(String organId, String projectId, Integer backupServerId) {
@@ -67,24 +68,27 @@ public class BackupPositionServiceImpl implements BackupPositionService {
     }
 
     @Override
-    public List<BackupPositionDTO> usable(String organId, String projectId, String clusterId, String namespace) {
+    public List<BackupPositionDTO> list(String organId, String projectId, String clusterId, String namespace, String middlewareName, String type) {
         List<BackupPositionDTO> backupPositionDTOList = this.list(organId, projectId, null);
         boolean openAvailableDomain = namespaceService.isOpenAvailableDomain(clusterId, namespace);
+        boolean activeMiddleware = middlewareService.activeActiveMiddlewareCheck(clusterId, namespace, middlewareName, type);
 
         return backupPositionDTOList.stream().filter(backupPositionDTO -> {
             BeanBackupServer beanBackupServer = backupServerService.get(backupPositionDTO.getBackupServerId());
             if (beanBackupServer == null) {
                 return false;
             }
-            if (!beanBackupServer.getClusterId().equals(clusterId)){
+            if (!beanBackupServer.getClusterId().equals(clusterId)) {
                 return false;
             }
             backupPositionDTO.setBackupServerName(beanBackupServer.getName());
-            // 过滤双活备份服务器
-            if (!openAvailableDomain) {
-                return beanBackupServer.getType() == 1;
+
+            // 双活分区的双活中间件可以使用所有备份服务器
+            if (openAvailableDomain && activeMiddleware) {
+                return activeMiddleware;
             }
-            return true;
+            // 非双活分区的中间件只能使用普通备份服务器
+            return 1 == beanBackupServer.getType();
         }).collect(Collectors.toList());
     }
 

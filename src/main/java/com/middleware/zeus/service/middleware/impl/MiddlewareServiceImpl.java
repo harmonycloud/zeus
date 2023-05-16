@@ -129,6 +129,8 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     private String wrongTypeKeys;
     @Autowired
     private CustomResourceDefinitionWrapper customResourceDefinitionWrapper;
+    @Autowired
+    private NamespaceService namespaceService;
 
     @Override
     public List<Middleware> simpleList(String clusterId, String namespace, String type, String keyword) {
@@ -1170,6 +1172,19 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             throw new BusinessException(ErrorMessage.MIDDLEWARE_NOT_EXIST);
         }
         return middlewareCR.getStatus().getInclude().get("services");
+    }
+
+    @Override
+    public boolean activeActiveMiddlewareCheck(String clusterId, String namespace, String middlewareName, String type) {
+        boolean openAvailableDomain = namespaceService.isOpenAvailableDomain(clusterId, namespace);
+        List<PodInfo> podInfos = podService.listMiddlewarePodsWithArea(clusterId, namespace, middlewareName, type);
+        boolean activeActiveMiddleware = false;
+        for (PodInfo podInfo : podInfos) {
+            if (StringUtils.isEmpty(podInfo.getNodeZone())) {
+                activeActiveMiddleware = true;
+            }
+        }
+        return (openAvailableDomain) && activeActiveMiddleware;
     }
 
     /**
