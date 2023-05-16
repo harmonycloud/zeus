@@ -130,11 +130,15 @@ public class UserServiceImpl extends AbstractUserService implements UserService 
         QueryWrapper<BeanUser> userWrapper = new QueryWrapper<>();
         // 非超级管理员角色用户 获取创建者为自身的用户
         List<BeanUser> beanUserList = beanUserMapper.selectList(userWrapper);
-        
+        // 获取超级管理员用户列表
+        Map<String, UserRole> adminMap = userRoleService.findByRoleId(NUM_ONE).stream().collect(Collectors.toMap(UserRole::getUserName, ur -> ur));
         // 封装数据
         List<UserDto> userDtoList = beanUserList.stream().map(beanUser -> {
             UserDto userDto = new UserDto();
             BeanUtils.copyProperties(beanUser, userDto, "password");
+            if (adminMap.containsKey(beanUser.getUserName())){
+                userDto.setIsAdmin(true);
+            }
             return userDto;
         }).collect(Collectors.toList());
         // 过滤

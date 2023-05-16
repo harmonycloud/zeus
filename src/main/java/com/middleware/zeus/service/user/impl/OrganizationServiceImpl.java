@@ -1,5 +1,6 @@
 package com.middleware.zeus.service.user.impl;
 
+import static com.middleware.zeus.common.constants.CommonConstant.NUM_ONE;
 import static com.middleware.zeus.common.constants.NameConstant.*;
 import static com.middleware.zeus.common.constants.user.UserConstant.USERNAME;
 
@@ -20,6 +21,7 @@ import com.middleware.zeus.service.user.abstractService.AbstractOrganizationServ
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -288,21 +290,26 @@ public class OrganizationServiceImpl extends AbstractOrganizationService impleme
 
     @Override
     public List<UserDto> listOrganUser(String organId, Boolean allocatable) {
+        // 获取组织下用户列表
         Map<String, BeanOrganizationUser> userMap = organizationUserService.list(organId).stream().collect(Collectors.toMap(BeanOrganizationUser::getUsername, u -> u));
+        // 获取所有用户列表
         List<UserDto> userDtoList = userService.list(null);
-        Map<String, UserRole> organizationUserRoleMap = organizationUserService.listUserRole(organId).stream().collect(Collectors.toMap(UserRole::getUserName, ur -> ur));
-        Map<String, UserRole> adminMap = userRoleService.findByRoleId(1).stream().collect(Collectors.toMap(UserRole::getUserName, ur -> ur));
+        // 获取超级管理员用户列表
+        Map<String, UserRole> adminMap = userRoleService.findByRoleId(NUM_ONE).stream().collect(Collectors.toMap(UserRole::getUserName, ur -> ur));
         return userDtoList.stream().filter(userDto -> {
             if (allocatable) {
                 return !userMap.containsKey(userDto.getUserName()) && !adminMap.containsKey(userDto.getUserName());
             } else {
-                UserRole userRole = organizationUserRoleMap.get(userDto.getUserName());
-                if (userRole == null) {
-                    userDto.setRoleName("普通用户");
-                } else {
-                    userDto.setRoleId(userRole.getRoleId()).setRoleName(userRole.getRoleName());
+                if (userMap.containsKey(userDto.getUserName())){
+                    BeanOrganizationUser organizationUser = userMap.get(userDto.getUserName());
+                    if (organizationUser.getRoleId() != null){
+                        userDto.setRoleName("普通用户");
+                    }else {
+                        userDto.setRoleId(organizationUser.getRoleId()).setRoleName("组织管理员");
+                    }
+                    return true;
                 }
-                return userMap.containsKey(userDto.getUserName());
+                return false;
             }
         }).collect(Collectors.toList());
     }
