@@ -66,6 +66,8 @@ public class MiddlewareRestoreSpec {
 
             private String backupPassword;
 
+            private String bucketSubPath;
+
         }
     }
 
