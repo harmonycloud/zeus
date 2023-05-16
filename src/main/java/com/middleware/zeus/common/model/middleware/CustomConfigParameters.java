@@ -19,5 +19,9 @@ import java.util.Map;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(value=JsonInclude.Include.NON_NULL)
 public class CustomConfigParameters {
-    private List<Map<String, List<CustomConfigParameter>>> parameters;
+
+    private List<Map<String, List<List<CustomConfigParameter>>>> parameters;
+
+    private String target;
+
 }
