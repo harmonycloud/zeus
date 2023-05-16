@@ -131,7 +131,6 @@ public class ResourceQuotaServiceImpl implements ResourceQuotaService {
         double usedMemory = 0.0;
         Map<String, Double> storageMap = new HashMap<>();
         Map<String, Double> usedStorageMap = new HashMap<>();
-        Map<String, String> storageIdMap = new HashMap<>();
         for (ResourceQuotaDo quota : resourceQuotaDoList){
             if (quota != null){
                 if (quota.getCpu() != null && quota.getCpu().getRequest() != null){
@@ -150,21 +149,19 @@ public class ResourceQuotaServiceImpl implements ResourceQuotaService {
                 if (!CollectionUtils.isEmpty(quota.getStorageList())){
                     for (StorageQuota storageQuota : quota.getStorageList()){
                         // 设置request
-                        if (storageMap.containsKey(storageQuota.getName())){
-                            Double request = storageMap.get(storageQuota.getName());
-                            storageMap.put(storageQuota.getName(), request + storageQuota.getStorage().getRequest());
+                        if (storageMap.containsKey(storageQuota.getStorageId())){
+                            Double request = storageMap.get(storageQuota.getStorageId());
+                            storageMap.put(storageQuota.getStorageId(), request + storageQuota.getStorage().getRequest());
                         }else {
-                            storageMap.put(storageQuota.getName(), storageQuota.getStorage().getRequest());
+                            storageMap.put(storageQuota.getStorageId(), storageQuota.getStorage().getRequest());
                         }
                         // 设置used
-                        if (usedStorageMap.containsKey(storageQuota.getName())){
-                            Double used = usedStorageMap.get(storageQuota.getName());
-                            usedStorageMap.put(storageQuota.getName(), used + storageQuota.getStorage().getUsed());
+                        if (usedStorageMap.containsKey(storageQuota.getStorageId())){
+                            Double used = usedStorageMap.get(storageQuota.getStorageId());
+                            usedStorageMap.put(storageQuota.getStorageId(), used + storageQuota.getStorage().getUsed());
                         }else {
-                            usedStorageMap.put(storageQuota.getName(), storageQuota.getStorage().getUsed());
+                            usedStorageMap.put(storageQuota.getStorageId(), storageQuota.getStorage().getUsed());
                         }
-                        
-                        storageIdMap.put(storageQuota.getName(), storageQuota.getStorageId());
                     }
                 }
             }
@@ -178,8 +175,7 @@ public class ResourceQuotaServiceImpl implements ResourceQuotaService {
         List<StorageQuota> storageList = new ArrayList<>();
         for (String key : storageMap.keySet()){
             StorageQuota storageQuota = new StorageQuota();
-            storageQuota.setName(key);
-            storageQuota.setStorageId(storageIdMap.get(key));
+            storageQuota.setStorageId(key);
             QuotaBase storage = new QuotaBase();
             storage.setRequest(storageMap.get(key));
             storage.setUsed(usedStorageMap.get(key));
