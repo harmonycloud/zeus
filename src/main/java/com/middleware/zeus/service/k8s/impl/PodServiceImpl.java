@@ -449,7 +449,8 @@ public class PodServiceImpl implements PodService {
             throw new BusinessException(DictEnum.MIDDLEWARE, middlewareName, ErrorMessage.NOT_EXIST);
         }
         Middleware middleware = middlewareCRService.simpleConvert(mw);
-        if (CollectionUtils.isEmpty(mw.getStatus().getInclude()) || CollectionUtils.isEmpty(mw.getStatus().getInclude().get(PODS))) {
+        if (mw.getStatus() == null || CollectionUtils.isEmpty(mw.getStatus().getInclude())
+            || CollectionUtils.isEmpty(mw.getStatus().getInclude().get(PODS))) {
             middleware.setPods(new ArrayList<>(0));
             return middleware;
         }
