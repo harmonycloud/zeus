@@ -95,7 +95,7 @@ public class StorageServiceImpl implements StorageService {
 
     @Override
     public StorageDto getById(String clusterId, String storageId) {
-        List<StorageDto> storageDtoList = this.list(clusterId, false);
+        List<StorageDto> storageDtoList = this.list(clusterId, null, null, false);
         if (CollectionUtils.isEmpty(storageDtoList)) {
             return null;
         }

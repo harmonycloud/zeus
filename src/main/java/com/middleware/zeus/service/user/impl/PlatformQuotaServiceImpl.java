@@ -230,7 +230,7 @@ public class PlatformQuotaServiceImpl implements PlatformQuotaService {
         for (ResourceQuotaDo quotaDo : resourceQuotaDoList) {
             // 封装获取包含storageClass 和 对应别名的map
 
-            List<StorageDto> storageDtoList = storageService.list(quotaDo.getClusterId(), false);
+            List<StorageDto> storageDtoList = storageService.list(quotaDo.getClusterId(), null, null, false);
             Map<String, String> storageNameMap =
                 storageDtoList.stream().collect(Collectors.toMap(StorageDto::getStorageId, StorageDto::getAliasName));
             Map<String, List<String>> storageTypeMap =
