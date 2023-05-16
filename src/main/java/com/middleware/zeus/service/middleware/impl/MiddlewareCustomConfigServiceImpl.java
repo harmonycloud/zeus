@@ -328,6 +328,9 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
                 && cr.getStatus().getInclude().containsKey("pods")
                 && !CollectionUtils.isEmpty(cr.getStatus().getInclude().get("pods"))) {
             cr.getStatus().getInclude().get("pods").forEach(pod -> {
+                if (pod.getType() == null) {
+                    return;
+                }
                 String role = operator.getCustomConfigRole(pod.getType());
                 if (role != null) {
                     resultSet.add(role);
