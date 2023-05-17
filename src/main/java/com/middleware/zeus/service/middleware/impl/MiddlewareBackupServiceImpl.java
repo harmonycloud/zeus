@@ -146,7 +146,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         if (BackupMode.PERIOD.getMode().equals(backupMode)) {
             List<MiddlewareBackupSchedule> scheduleCRList = listMiddlewareBackupSchedule(clusterId, namespace, backupId);
             records = convertBackupSchedulesToRecords(clusterId, scheduleCRList);
-            return MiddlewareBackupTrimUtil.trimScheduleBackup(records);
+            MiddlewareBackupTrimUtil.trimScheduleBackup(records);
+            return records;
         } else {
             List<MiddlewareBackup> backupCRList = listMiddlewareBackup(clusterId, namespace, backupId);
             records = convertBackupsToRecords(clusterId, backupCRList);
@@ -1061,6 +1062,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                     && incBackupInfoA.getPause().equals(incBackupInfoB.getPause())) {
                 incBackupInfoA.setSameActiveActiveBackup(true);
                 incBackupDtos.add(incBackupInfoA);
+                incBackupDtos.add(incBackupInfoB);
             } else {
                 incBackupInfoA.setSameActiveActiveBackup(true);
                 incBackupInfoB.setSameActiveActiveBackup(true);
