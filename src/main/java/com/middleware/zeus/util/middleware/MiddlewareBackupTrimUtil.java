@@ -40,10 +40,11 @@ public class MiddlewareBackupTrimUtil {
                 recordA.setSameActiveActiveBackup(false);
                 recordB.setSameActiveActiveBackup(false);
             }
+        } else {
+            records.forEach(middlewareBackupRecord -> {
+                middlewareBackupRecord.setSameActiveActiveBackup(false);
+            });
         }
-        records.forEach(middlewareBackupRecord -> {
-            middlewareBackupRecord.setSameActiveActiveBackup(false);
-        });
     }
 
 }
