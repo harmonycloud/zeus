@@ -1106,6 +1106,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             recordList = recordList.stream().filter(record ->
                     activeArea.equals(record.getActiveArea())).collect(Collectors.toList());
         }
+        setBackupPosition(recordList);
         return sortAndSetAliasName(recordList, orderBy);
     }
 
