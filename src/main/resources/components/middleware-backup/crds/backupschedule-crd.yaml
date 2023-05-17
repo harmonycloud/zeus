@@ -1,0 +1,242 @@
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  name: middlewarebackupschedules.harmonycloud.cn
+spec:
+  conversion:
+    strategy: None
+  group: harmonycloud.cn
+  names:
+    kind: MiddlewareBackupSchedule
+    listKind: MiddlewareBackupScheduleList
+    plural: middlewarebackupschedules
+    singular: middlewarebackupschedule
+    shortNames:
+      - baks
+  scope: Namespaced
+  versions:
+    - name: v1
+      schema:
+        openAPIV3Schema:
+          description: MiddlewareBackup is the Schema for the middlewarebackups API
+          properties:
+            apiVersion:
+              description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+              type: string
+            kind:
+              description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+              type: string
+            metadata:
+              type: object
+            spec:
+              description: MiddlewareBackupSpec defines the desired state of MiddlewareBackup
+              properties:
+                backendStorage:
+                  type: string
+                backupDestination:
+                  properties:
+                    destinationType:
+                      type: string
+                    parameters:
+                      properties:
+                        backupPassword:
+                          type: string
+                        bucket:
+                          type: string
+                        bucketSubPath:
+                          type: string
+                        url:
+                          type: string
+                        userId:
+                          type: string
+                        userKey:
+                          type: string
+                      type: object
+                  type: object
+                backupObjects:
+                  items:
+                    properties:
+                      pod:
+                        type: string
+                      pvcs:
+                        items:
+                          type: string
+                        type: array
+                    type: object
+                  type: array
+                customBackups:
+                  items:
+                    properties:
+                      args:
+                        items:
+                          type: string
+                        type: array
+                      backupObject:
+                        properties:
+                          pod:
+                            type: string
+                          pvcs:
+                            items:
+                              type: string
+                            type: array
+                        type: object
+                      commonPathBackupObjects:
+                        items:
+                          properties:
+                            pod:
+                              type: string
+                            pvcObjects:
+                              items:
+                                properties:
+                                  excludeFiles:
+                                    type: string
+                                  paths:
+                                    type: string
+                                  pvc:
+                                    type: string
+                                type: object
+                              type: array
+                          type: object
+                        type: array
+                      env:
+                        items:
+                          properties:
+                            name:
+                              type: string
+                            value:
+                              type: string
+                          type: object
+                        type: array
+                      image:
+                        type: string
+                    type: object
+                  type: array
+                name:
+                  type: string
+                pause:
+                  type: string
+                prefixHooks:
+                  items:
+                    properties:
+                      exec:
+                        properties:
+                          command:
+                            items:
+                              type: string
+                            type: array
+                        type: object
+                      httpGet:
+                        properties:
+                          host:
+                            type: string
+                          httpHeaders:
+                            items:
+                              properties:
+                                name:
+                                  type: string
+                                value:
+                                  type: string
+                              type: object
+                            type: array
+                          path:
+                            type: string
+                          port:
+                            format: int32
+                            type: integer
+                          scheme:
+                            type: string
+                        type: object
+                      tcpSocket:
+                        properties:
+                          host:
+                            type: string
+                          port:
+                            format: int32
+                            type: integer
+                        type: object
+                    type: object
+                  type: array
+                schedule:
+                  description: MiddlewareBackupSchedule defines the desired state of
+                    MiddlewareBackupSpec
+                  properties:
+                    cron:
+                      description: The Cron format, see https://en.wikipedia.org/wiki/Cron.
+                      type: string
+                    limitRecord:
+                      description: Defaults to 3.
+                      format: int32
+                      type: integer
+                    retentionTime:
+                      format: int32
+                      type: integer
+                    startTime:
+                      format: date-time
+                      type: string
+                  type: object
+                suffixHooks:
+                  items:
+                    properties:
+                      exec:
+                        properties:
+                          command:
+                            items:
+                              type: string
+                            type: array
+                        type: object
+                      httpGet:
+                        properties:
+                          host:
+                            type: string
+                          httpHeaders:
+                            items:
+                              properties:
+                                name:
+                                  type: string
+                                value:
+                                  type: string
+                              type: object
+                            type: array
+                          path:
+                            type: string
+                          port:
+                            format: int32
+                            type: integer
+                          scheme:
+                            type: string
+                        type: object
+                      tcpSocket:
+                        properties:
+                          host:
+                            type: string
+                          port:
+                            format: int32
+                            type: integer
+                        type: object
+                    type: object
+                  type: array
+                type:
+                  type: string
+              type: object
+            status:
+              description: MiddlewareBackupStatus defines the observed state of MiddlewareBackup
+              properties:
+                creationTimestamp:
+                  format: date-time
+                  type: string
+                phase:
+                  type: string
+                reason:
+                  type: string
+                storageProvider:
+                  x-kubernetes-preserve-unknown-fields: true
+              type: object
+          type: object
+      served: true
+      storage: true
+      subresources:
+        status: { }

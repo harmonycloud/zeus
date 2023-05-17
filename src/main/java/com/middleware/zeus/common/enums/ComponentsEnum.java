@@ -13,6 +13,7 @@ public enum ComponentsEnum {
     GRAFANA("grafana"),
     LOCAL_PATH("local-path"),
     MIDDLEWARE_CONTROLLER("middleware-controller"),
+    MIDDLEWAREBACKUP_CONTROLLER("middlewarebackup-controller"),
     MIDDLEWARE_SCHEDULER("middleware-scheduler"),
     LVM("lvm");
 

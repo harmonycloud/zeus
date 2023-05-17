@@ -18,10 +18,7 @@ jobs:
   # 主从切换
   - name: "主从切换"
     para:
-      cmd: "kubectl -n {{namespace}} exec  {{podName}} -c redis-cluster -- /bin/bash -c
-      'masterIP=$(redis-cli -h {{name}}-sentinel -p 26379 sentinel get-master-addr-by-name mymaster{{group}}|head -1)  &&  echo $masterIP  && if [ $masterIP != {{podIP}} ];
-      then echo \"OK\";
-      else echo \"master is diff, change\" && redis-cli -p 26379 -h {{name}}-sentinel sentinel failover mymaster{{group}}; fi'"
+      cmd: "port=$(kubectl -n $namespace get svc $name-sentinel -o json|jq '.spec.ports[0].port') && echo $port && kubectl -n $namespace exec  $podName -c redis-cluster -- redis-cli -p $port -h $name-sentinel sentinel failover mymaster"
       type: "master"
       containResult: "OK"
     func: SwitchOver

@@ -1,0 +1,155 @@
+{{- if  .Values.global.kubectl.installCRDs}}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "middleware-backup-controller.fullname" . }}-install-crds
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade,pre-rollback
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "1"
+  labels:
+    app.kubernetes.io/name: {{ include "middleware-backup-controller.fullname" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "middleware-backup-controller.fullname" . }}-install-crds
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade,pre-rollback
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "1"
+  labels:
+    app.kubernetes.io/name: {{ include "middleware-backup-controller.fullname" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "middleware-backup-controller.fullname" . }}-install-crds
+subjects:
+- kind: ServiceAccount
+  name: {{ include "middleware-backup-controller.fullname" . }}-install-crds
+  namespace: {{ .Release.Namespace }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "middleware-backup-controller.fullname" . }}-install-crds
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade,pre-rollback
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "1"
+  labels:
+    app.kubernetes.io/name: {{ include "middleware-backup-controller.fullname" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+rules:
+- apiGroups:
+    - "apiextensions.k8s.io"
+  resources:
+    - customresourcedefinitions
+  verbs:
+    - get
+    - list
+    - patch
+    - update
+    - create
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "middleware-backup-controller.fullname" . }}-install-crds
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade,pre-rollback
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    "helm.sh/hook-weight": "1"
+  labels:
+    app.kubernetes.io/name: {{ include "middleware-backup-controller.fullname" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+data:
+{{ (tpl (.Files.Glob "crds/*").AsConfig . ) | indent 2 }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-install-crds
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade,pre-rollback
+    "helm.sh/hook-delete-policy": before-hook-creation
+    "helm.sh/hook-weight": "2"
+  labels:
+    app.kubernetes.io/name: {{ include "middleware-backup-controller.fullname" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      name: {{ include "middleware-backup-controller.fullname" . }}-install-crds
+    spec:
+      serviceAccountName: {{ include "middleware-backup-controller.fullname" . }}-install-crds
+      containers:
+        - name: kubectl
+          image: "{{ .Values.global.repository }}/kubectl:{{ .Values.global.kubectl.tag | default .Chart.AppVersion }}"
+          command:
+            - /bin/sh
+            - -c
+            - kubectl apply -f /tmp/
+          {{- with .Values.global.kubectl.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - mountPath: /tmp
+              name: crds
+      volumes:
+        - name: crds
+          configMap:
+            name: {{ include "middleware-backup-controller.fullname" . }}-install-crds
+      restartPolicy: OnFailure
+      {{- with .Values.global.kubectl.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      affinity:
+        {{- if eq .Values.podAntiAffinity "hard"}}
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: control-plane
+                    operator: In
+                    values:
+                      - backup-controller
+              topologyKey: {{ .Values.podAntiAffinityTopologKey }}
+        {{- else if eq .Values.podAntiAffinity "soft"}}
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                topologyKey: {{ .Values.podAntiAffinityTopologKey }}
+                labelSelector:
+                  matchExpressions:
+                    - key: control-plane
+                      operator: In
+                      values:
+                        - backup-controller
+        {{- end}}
+        {{- with .Values.nodeAffinity }}
+        nodeAffinity:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}
+
