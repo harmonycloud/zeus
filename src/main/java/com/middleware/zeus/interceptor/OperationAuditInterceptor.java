@@ -325,7 +325,7 @@ public class OperationAuditInterceptor {
             return;
         }
         CurrentUser currentUser = CurrentUserRepository.getUser();
-        if (currentUser != null && currentUser.getRoleId() != null) {
+        if (currentUser != null && StringUtils.isNotEmpty(currentUser.getRoleId())) {
             Integer roleId = Integer.valueOf(currentUser.getRoleId());
             if (!ROLE_NAME_MAP.containsKey(roleId)) {
                 RoleDto roleDto = roleService.get(roleId);

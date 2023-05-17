@@ -43,7 +43,7 @@ public class ResourceMenuRoleServiceImpl implements ResourceMenuRoleService {
     public void init(Integer roleId, String type) {
         List<ResourceMenuDto> menuDtoList = resourceMenuService.list();
         menuDtoList.forEach(menu -> add(roleId, menu.getId(), false));
-        if (type.equals(NORMAL)){
+        if (StringUtils.isNotEmpty(type) && type.equals(NORMAL)){
             update(roleId, 3, true);
             update(roleId, 4, true);
         }
