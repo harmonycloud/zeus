@@ -16,7 +16,6 @@ public enum AlertTargetEnum {
     prometheus("prometheus", "数据监控"),
     alertmanager("alertmanager", "监控告警"),
     minio("minio", "备份存储"),
-    backupController("backupController", "备份控制器"),
     middlewareController("middlewareController", "中间件控制器"),
     middlewareScheduler("middlewareScheduler", "扩展调度器"),
     lvmController("lvmController", "LVM控制器"),
