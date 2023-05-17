@@ -160,6 +160,9 @@ public class Middleware implements Serializable {
     @ApiModelProperty("中间件关联实例信息")
     private Middleware relationMiddleware;
 
+    @ApiModelProperty("是否为备份克隆")
+    private Boolean isBackup;
+
     @ApiModelProperty("中间件实例数量")
     private Integer podNum;
 
