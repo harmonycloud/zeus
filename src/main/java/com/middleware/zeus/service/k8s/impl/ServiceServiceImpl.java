@@ -2,6 +2,7 @@ package com.middleware.zeus.service.k8s.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.middleware.zeus.common.enums.middleware.MiddlewareTypeEnum;
 import com.middleware.zeus.common.model.middleware.PortDetailDTO;
 import com.middleware.zeus.common.model.middleware.ServicePortDTO;
 import com.middleware.zeus.bean.BeanMiddlewareInfo;
@@ -14,6 +15,7 @@ import com.middleware.zeus.service.k8s.ClusterService;
 import com.middleware.zeus.service.k8s.MiddlewareCRService;
 import com.middleware.zeus.service.k8s.ServiceService;
 import com.middleware.zeus.service.registry.HelmChartService;
+import com.middleware.zeus.util.middleware.InternalServiceFilterUtil;
 import com.middleware.zeus.util.middleware.MiddlewareServicePurposeUtil;
 import io.fabric8.kubernetes.api.model.ServicePort;
 import io.fabric8.kubernetes.api.model.ServiceSpec;
@@ -142,10 +144,27 @@ public class ServiceServiceImpl implements ServiceService {
                 service.setInternalAddress(service.getServiceName() + "." + namespace + ":" + portDetailDTO.getPort());
             }
         });
+        // 过滤掉多余的服务
+        servicePortDTOList = filterUnusedService(name, namespace, clusterId, type, servicePortDTOList);
+
         List<ServicePortDTO> servicePortDTOS = servicePortDTOList.stream().
                 filter(servicePortDTO -> servicePortDTO.getServicePurpose() != null && !"null".equals(servicePortDTO.getServicePurpose())).
                 collect(Collectors.toList());
         return filterByMiddlewareType(clusterId, namespace, name, type, servicePortDTOS);
+    }
+
+    /**
+     * 过滤掉多余的服务
+     * @param middlewareName
+     * @param namespace
+     * @param clusterId
+     * @param type
+     * @param servicePortDTOList
+     * @return
+     */
+    private List<ServicePortDTO> filterUnusedService(String middlewareName, String namespace, String clusterId, String type, List<ServicePortDTO> servicePortDTOList) {
+        String mode = helmChartService.getMiddlewareMode(middlewareName, namespace, clusterId);
+        return InternalServiceFilterUtil.filterUnused(type, mode, servicePortDTOList);
     }
 
     private List<ServicePortDTO> filterByMiddlewareType(String clusterId, String namespace, String name, String type,

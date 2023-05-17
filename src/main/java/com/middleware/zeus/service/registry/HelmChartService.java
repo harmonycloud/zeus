@@ -285,4 +285,13 @@ public interface HelmChartService {
      */
     void updatePassword(String clusterId, String namespace, String middlewareName, String type, String password);
 
+    /**
+     * 获取中间件模式
+     * @param middlewareName
+     * @param namespace
+     * @param clusterId
+     * @return
+     */
+    String getMiddlewareMode(String middlewareName, String namespace, String clusterId);
+
 }

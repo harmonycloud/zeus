@@ -99,8 +99,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Autowired
     private RoleAuthorityService roleAuthorityService;
     @Autowired
-    private UserRoleService userRoleService;
-    @Autowired
     private ProjectService projectService;
     @Autowired
     private HelmChartService helmChartService;
@@ -122,7 +120,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     private DeploymenentWrapper deploymenentWrapper;
 
     // <可用区英文名,可用区别名>
-    private static final Map<String,String> activeAreaMap = new HashMap<>();
+    private static final Map<String, String> activeAreaMap = new HashMap<>();
 
     @Override
     public List<MiddlewareBackupRecord> listBackup(String clusterId, String namespace, String middlewareName,
@@ -536,7 +534,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         boolean activeActiveNamespace = namespaceService.isOpenAvailableDomain(clusterId, namespace);
         BeanBackupServer backupServer = backupPositionService.getBackupServer(backupDTO.getBackupPositionId());
 
-        if (activeActiveNamespace && (backupServer.getType() == 2) && checkActiveActiveMiddleware(clusterId, namespace, middlewareName)) {
+        if (activeActiveNamespace && (backupServer.getType() == 2) && checkActiveActiveMiddleware(clusterId, namespace, middlewareName, backupDTO.getType())) {
             String type = backupDTO.getType();
             return type.equals(MiddlewareTypeEnum.MYSQL.getType()) || type.equals(MiddlewareTypeEnum.POSTGRESQL.getType()) || type.equals(MiddlewareTypeEnum.REDIS.getType());
         }
@@ -545,15 +543,16 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     /**
      * 检查中间件是否是双活中间件，双活中间件：所有pod所在节点都是可用区
+     *
      * @param clusterId
      * @param namespace
      * @param middlewareName
      * @return
      */
-    private boolean checkActiveActiveMiddleware(String clusterId,String namespace,String middlewareName){
-        List<PodInfo> podInfos = podService.list(clusterId, namespace, middlewareName);
+    private boolean checkActiveActiveMiddleware(String clusterId, String namespace, String middlewareName, String type) {
+        List<PodInfo> podInfos = podService.listMiddlewarePodsWithArea(clusterId, namespace, middlewareName, type);
         for (PodInfo podInfo : podInfos) {
-            if(StringUtils.isEmpty(podInfo.getNodeZone())){
+            if (StringUtils.isEmpty(podInfo.getNodeZone())) {
                 return false;
             }
         }
@@ -1014,11 +1013,11 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Override
     public MiddlewareIncBackupDto getIncBackupInfo(String clusterId, String namespace, String backupName) {
         MiddlewareBackupSchedule cr = backupScheduleCRDService.get(clusterId, namespace, backupName + "-incr");
+        if (cr == null) {
+            return null;
+        }
         MiddlewareIncBackupDto middlewareIncBackupDto = new MiddlewareIncBackupDto();
         middlewareIncBackupDto.setBackupName(backupName + "-incr");
-        if (cr == null) {
-            return middlewareIncBackupDto;
-        }
         // 获取时间
         if (cr.getStatus() != null && cr.getStatus().getStorageProvider() != null) {
             JSONObject storageProvider = cr.getStatus().getStorageProvider();
@@ -1033,7 +1032,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         }
 
         // 设置可用区信息
-        if(cr.getMetadata() != null && cr.getMetadata().getLabels() != null && cr.getMetadata().getLabels().containsKey("activeArea")){
+        if (cr.getMetadata() != null && cr.getMetadata().getLabels() != null && cr.getMetadata().getLabels().containsKey("activeArea")) {
             String activeArea = cr.getMetadata().getLabels().get("activeArea");
             middlewareIncBackupDto.setActiveArea(activeArea);
             middlewareIncBackupDto.setAreaAliasName(getActiveAreaAliasName(clusterId, activeArea));
@@ -1055,6 +1054,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             MiddlewareBackupSchedule scheduleB = scheduleCRList.get(1);
             MiddlewareIncBackupDto incBackupInfoA = getIncBackupInfo(clusterId, namespace, scheduleA.getMetadata().getName());
             MiddlewareIncBackupDto incBackupInfoB = getIncBackupInfo(clusterId, namespace, scheduleB.getMetadata().getName());
+            if (incBackupInfoA == null || incBackupInfoB == null) {
+                return Collections.emptyList();
+            }
             if (incBackupInfoA.getTime().equals(incBackupInfoB.getTime())
                     && incBackupInfoA.getPause().equals(incBackupInfoB.getPause())) {
                 incBackupInfoA.setSameActiveActiveBackup(true);
@@ -1085,9 +1087,18 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             recordList = recordList.stream().filter(record -> backupId.equals(record.getBackupId())).collect(Collectors.toList());
         } else {
             // 查询周期备份记录：先查询周期备份任务名字列表，然后根据备份记录的owner过滤周期备份任务定时创建的备份记录
-            Set<String> backupScheduleNames = listMiddlewareBackupScheduleNames(clusterId, namespace, backupId);
-            recordList = recordList.stream().filter(record -> StringUtils.isNotEmpty(record.getOwner()) &&
-                    backupScheduleNames.contains(record.getOwner())).collect(Collectors.toList());
+            Map<String, MiddlewareBackupRecord> scheduleNamesMap = listMiddlewareBackupScheduleNamesMap(clusterId, namespace, backupId);
+            Set<String> scheduleNames = scheduleNamesMap.keySet();
+            recordList = recordList.stream().filter(record -> {
+                if (StringUtils.isNotEmpty(record.getOwner()) &&
+                        scheduleNames.contains(record.getOwner())) {
+                    MiddlewareBackupRecord schedule = scheduleNamesMap.get(record.getOwner());
+                    record.setActiveArea(schedule.getActiveArea());
+                    record.setAreaAliasName(schedule.getAreaAliasName());
+                    return true;
+                }
+                return false;
+            }).collect(Collectors.toList());
         }
         if (StringUtils.isNotEmpty(activeArea)) {
             recordList = recordList.stream().filter(record ->
@@ -1152,18 +1163,30 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public List<MiddlewareBackupRecord> backupIncrRecords(String clusterId, String namespace, String middlewareName, String type, String backupId, String backupMode, String orderBy) {
-        Set<String> backupScheduleNames = listMiddlewareBackupScheduleNames(clusterId, namespace, backupId);
+        Map<String, MiddlewareBackupRecord> scheduleNamesMap = listMiddlewareBackupScheduleNamesMap(clusterId, namespace, backupId);
+        Set<String> backupScheduleNames = scheduleNamesMap.keySet();
         Set<String> incrScheduleNames = new HashSet<>();
+        Map<String, MiddlewareBackupRecord> incrScheduleNamesMap = new HashMap<>();
         backupScheduleNames.forEach(scheduleName -> {
             String incrScheduleName = scheduleName + "-incr";
             MiddlewareBackupSchedule incrSchedule = backupScheduleCRDService.get(clusterId, namespace, incrScheduleName);
             if (incrSchedule != null) {
                 incrScheduleNames.add(incrSchedule.getMetadata().getName());
+                incrScheduleNamesMap.put(incrScheduleName, scheduleNamesMap.get(scheduleName));
             }
         });
         List<MiddlewareBackupRecord> recordList = listBackup(clusterId, namespace, null, null);
-        recordList = recordList.stream().filter(record -> StringUtils.isNotEmpty(record.getOwner()) &&
-                incrScheduleNames.contains(record.getOwner())).collect(Collectors.toList());
+        recordList = recordList.stream().filter(record -> {
+            if (StringUtils.isNotEmpty(record.getOwner()) && incrScheduleNames.contains(record.getOwner())) {
+                MiddlewareBackupRecord schedule = incrScheduleNamesMap.get(record.getOwner());
+                if (schedule != null) {
+                    record.setActiveArea(schedule.getActiveArea());
+                    record.setAreaAliasName(schedule.getAreaAliasName());
+                }
+                return true;
+            }
+            return false;
+        }).collect(Collectors.toList());
         return sortAndSetAliasName(recordList, orderBy);
     }
 
@@ -1261,6 +1284,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     /**
      * 获取备份组件状态
+     *
      * @param clusterId
      * @return 1：运行正常，0：运行异常
      */
@@ -1282,6 +1306,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     /**
      * 返回备份或恢复任务pod信息
+     *
      * @param clusterId
      * @param namespace
      * @param ownerName 备份或恢复的cr name
@@ -1376,6 +1401,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     /**
      * 根据备份任务id查询周期备份任务名字列表
+     *
      * @param clusterId
      * @param namespace
      * @param backupId
@@ -1387,7 +1413,45 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     /**
+     * 根据备份任务id查询周期备份任务名字列表
+     *
+     * @param scheduleList
+     * @return
+     */
+    private Set<String> listMiddlewareBackupScheduleNames(List<MiddlewareBackupSchedule> scheduleList) {
+        return scheduleList.stream().map(middlewareBackupSchedule ->
+                middlewareBackupSchedule.getMetadata().getName()).collect(Collectors.toSet());
+    }
+
+    /**
+     * 返回一个map，周期备份名称:可用区别名
+     *
+     * @param clusterId
+     * @param namespace
+     * @param backupId
+     * @return
+     */
+    private Map<String, MiddlewareBackupRecord> listMiddlewareBackupScheduleNamesMap(String clusterId, String namespace, String backupId) {
+        List<MiddlewareBackupSchedule> schedules = listMiddlewareBackupSchedule(clusterId, namespace, backupId);
+        Map<String, MiddlewareBackupRecord> scheduleMap = new HashMap<>();
+        for (MiddlewareBackupSchedule schedule : schedules) {
+            if (schedule.getMetadata().getLabels().containsKey("activeArea")) {
+                String activeArea = schedule.getMetadata().getLabels().get("activeArea");
+                String activeAreaAliasName = getActiveAreaAliasName(clusterId, activeArea);
+                MiddlewareBackupRecord record = new MiddlewareBackupRecord();
+                record.setActiveArea(schedule.getMetadata().getLabels().get("activeArea"));
+                record.setAreaAliasName(activeAreaAliasName);
+                scheduleMap.put(schedule.getMetadata().getName(), record);
+            } else {
+                scheduleMap.put(schedule.getMetadata().getName(), null);
+            }
+        }
+        return scheduleMap;
+    }
+
+    /**
      * 根据备份任务id查询周期备份任务列表
+     *
      * @param clusterId
      * @param namespace
      * @param backupId
@@ -1401,6 +1465,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     /**
      * 根据备份任务id查询周期备份任务列表
+     *
      * @param clusterId
      * @param namespace
      * @param backupId
@@ -1514,6 +1579,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     /**
      * 转换克隆记录 List<MiddlewareRestoreCR> restoreCRList ->List<MiddlewareBackupRestore>
+     *
      * @param restoreCRList
      * @param clusterId
      * @return
@@ -1620,6 +1686,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     /**
      * 对象封装 List<MiddlewareBackupSchedule> -> List<MiddlewareBackupRecord>
+     *
      * @param schedules
      * @return
      */
@@ -1728,6 +1795,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     /**
      * 对象封装 List<MiddlewareBackup> -> List<MiddlewareBackupRecord>
+     *
      * @param clusterId
      * @param backups
      * @return
@@ -1798,7 +1866,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         backupRecord.setSourceType(middlewareCrTypeService.findTypeByCrType(backup.getSpec().getType()));
         // 获取备份存储大小
         if (backupStatus != null && backupStatus.getStorageProvider() != null
-            && backupStatus.getStorageProvider().getJSONObject(backupRecord.getSourceType()) != null && backupStatus
+                && backupStatus.getStorageProvider().getJSONObject(backupRecord.getSourceType()) != null && backupStatus
                 .getStorageProvider().getJSONObject(backupRecord.getSourceType()).containsKey("compressedSize")) {
             JSONObject storageProvider = backupStatus.getStorageProvider();
             String compressedSize = storageProvider.getJSONObject(backupRecord.getSourceType()).getString("compressedSize");
@@ -1827,7 +1895,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     private String changeCompressedSizeUnit(String compressedSize) {
         List<MemoryUnitEnum> units = Arrays.asList(MemoryUnitEnum.TI, MemoryUnitEnum.GI, MemoryUnitEnum.MI, MemoryUnitEnum.KI);
         BigDecimal size = MemoryUnitEnum.toByte(compressedSize);
-        for (MemoryUnitEnum u: units) {
+        for (MemoryUnitEnum u : units) {
             if (size.divide(u.toByte).compareTo(new BigDecimal("1")) >= 0) {
                 return ResourceCalculationUtil.getResourceValue(compressedSize, DISK, u.unit) + u.name;
             }
@@ -1837,13 +1905,14 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     /**
      * 获取可用区别名
+     *
      * @param clusterId
      * @param activeArea 可用区英文名
-     * @return  可用区别名
+     * @return 可用区别名
      */
-    private String getActiveAreaAliasName(String clusterId, String activeArea){
+    private String getActiveAreaAliasName(String clusterId, String activeArea) {
         String activeAreaAliasName = activeAreaMap.get(activeArea);
-        if(StringUtils.isEmpty(activeAreaAliasName)){
+        if (StringUtils.isEmpty(activeAreaAliasName)) {
             BeanActiveArea beanActiveArea = activeAreaService.get(clusterId, activeArea);
             if (beanActiveArea != null) {
                 activeAreaMap.put(activeArea, beanActiveArea.getAliasName());
@@ -2100,7 +2169,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         // 查询用户在当前项目下所有可见的中间件类型
         String username = CurrentUserRepository.getUser().getUsername();
         // 写入组织id
-        if (StringUtils.isEmpty(organId)){
+        if (StringUtils.isEmpty(organId)) {
             organId = RequestUtil.getOrganId();
         }
         // 根据分区过滤

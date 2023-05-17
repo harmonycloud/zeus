@@ -772,6 +772,16 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
         }
     }
 
+    @Override
+    public String getMiddlewareMode(String middlewareName, String namespace, String clusterId) {
+        JSONObject values = getInstalledValues(middlewareName, namespace, clusterService.findById(clusterId));
+        String mode = values.getString("mode");
+        if (!StringUtils.isEmpty(mode)) {
+            return mode;
+        }
+        return "";
+    }
+
     private String getUploadPath() {
         return uploadPath + SUB_DIR;
     }

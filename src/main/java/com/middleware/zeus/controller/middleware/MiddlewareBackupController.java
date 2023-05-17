@@ -46,7 +46,7 @@ public class MiddlewareBackupController {
         return BaseResult.ok();
     }
 
-    @ApiOperation(value = "创建或更新增量备份", notes = "创建或更新增量备份")
+    @ApiOperation(value = "创建增量备份", notes = "创建增量备份")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
@@ -55,6 +55,22 @@ public class MiddlewareBackupController {
     })
     @PostMapping("{backupId}/inc")
     public BaseResult createInc(@PathVariable("clusterId") String clusterId,
+                                @PathVariable("namespace") String namespace,
+                                @PathVariable("backupId") String backupId,
+                                @RequestParam("time") String time) {
+        middlewareBackupService.createIncBackup(clusterId, namespace, backupId, time);
+        return BaseResult.ok();
+    }
+
+    @ApiOperation(value = "更新增量备份", notes = "更新增量备份")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "backupId", value = "备份任务id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "time", value = "间隔时间", paramType = "query", dataTypeClass = String.class),
+    })
+    @PutMapping("{backupId}/inc")
+    public BaseResult updateInc(@PathVariable("clusterId") String clusterId,
                                 @PathVariable("namespace") String namespace,
                                 @PathVariable("backupId") String backupId,
                                 @RequestParam("time") String time) {
