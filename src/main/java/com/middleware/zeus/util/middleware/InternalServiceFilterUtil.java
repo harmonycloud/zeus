@@ -23,10 +23,10 @@ public class InternalServiceFilterUtil {
         String keyword;
         switch (mode) {
             case "complex":
-            case "complex-cold":
             case "cold-complex":
                 keyword = "client";
                 break;
+            case "complex-cold":
             case "regular":
                 keyword = "data";
                 break;
