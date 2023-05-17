@@ -20,6 +20,7 @@ public enum StorageClassProvisionerEnum {
     LOCAL_PATH("LocalPath", "rancher.io/local-path"),
     JUICE_FS("juicefs", "csi.juicefs.com"),
     HITACHI("hitachi", "hspc.csi.hitachi.com"),
+    GLUSTERFS("GlusterFS", "kubernetes.io/glusterfs")
     ;
     
     private static final Map<String, StorageClassProvisionerEnum> PROVISIONER_MAP = new HashMap<>();
