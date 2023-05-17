@@ -198,11 +198,15 @@ public class UserRoleServiceImpl implements UserRoleService {
         String organId = userRole.getOrganId();
         String projectId = userRole.getProjectId();
         QueryWrapper<BeanUserRole> wrapper = new QueryWrapper<BeanUserRole>().eq("username", userRole.getUserName());
-        if (StringUtils.isNotEmpty(organId)){
+        if (StringUtils.isNotEmpty(organId)) {
             wrapper.eq("organ_id", organId);
+        } else {
+            wrapper.isNull("organ_id");
         }
-        if (StringUtils.isNotEmpty(projectId)){
+        if (StringUtils.isNotEmpty(projectId)) {
             wrapper.eq("project_id", projectId);
+        } else {
+            wrapper.isNull("project_id");
         }
         List<BeanUserRole> beanUserRoleList = beanUserRoleMapper.selectList(wrapper);
         BeanUserRole beanUserRole = new BeanUserRole();
