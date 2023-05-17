@@ -16,7 +16,7 @@ public interface UserRoleService {
      * @param userName 账户
      * @return BeanSysRole
      */
-    List<UserRole> get(String userName);
+    List<UserRole> get(String userName, String organId, String projectId);
 
     /**
      * 获取角色id

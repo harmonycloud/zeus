@@ -265,7 +265,7 @@ public class UserServiceImpl extends AbstractUserService implements UserService 
             List<BeanMailToUser> beanMailToUsers = beanMailToUserMapper.selectList(mailToUserQueryWrapper);
             userDtoList = beanMailToUsers.stream().map(mailToUser -> {
                 BeanUser beanUser = beanUserMapper.selectOne(new QueryWrapper<BeanUser>().eq("id", mailToUser.getUserId()));
-                List<UserRole> userRoleList = userRoleService.get(beanUser.getUserName());
+                List<UserRole> userRoleList = userRoleService.get(beanUser.getUserName(), null, null);
                 UserDto userDto = new UserDto();
                 BeanUtils.copyProperties(beanUser, userDto);
                 userDto.setUserRoleList(userRoleList);
@@ -341,7 +341,7 @@ public class UserServiceImpl extends AbstractUserService implements UserService 
      */
     public void bindManager(UserDto userDto) {
         // 查询该用户是否存在管理类型角色
-        List<UserRole> userRoleList = userRoleService.get(userDto.getUserName()).stream()
+        List<UserRole> userRoleList = userRoleService.get(userDto.getUserName(), null, null).stream()
             .filter(
                 userRole -> StringUtils.isEmpty(userRole.getOrganId()) && StringUtils.isEmpty(userRole.getProjectId()))
             .collect(Collectors.toList());
@@ -387,7 +387,7 @@ public class UserServiceImpl extends AbstractUserService implements UserService 
         Map<String, String> projectMap = beanProjectMapper.selectList(new QueryWrapper<>()).stream()
                 .collect(Collectors.toMap(BeanProject::getProjectId, BeanProject::getName));
         // 获取项目下角色
-        List<UserRole> userRoleList = userRoleService.get(userName);
+        List<UserRole> userRoleList = userRoleService.get(userName, null, null);
         // 获取用户组织下角色
         userRoleList.addAll(organizationUserService.listByUsername(userName).stream()
             .filter(organizationUser -> organizationUser.getRoleId() != null).map(organizationUser -> {

@@ -42,10 +42,16 @@ public class UserRoleServiceImpl implements UserRoleService {
     private BeanOrganizationMapper beanOrganizationMapper;
 
     @Override
-    public List<UserRole> get(String userName) {
+    public List<UserRole> get(String userName, String organId, String projectId) {
         // 获取角色用户对应关系
-        QueryWrapper<BeanUserRole> roleUserWrapper = new QueryWrapper<BeanUserRole>().eq("username", userName);
-        List<BeanUserRole> beanUserRoleList = beanUserRoleMapper.selectList(roleUserWrapper);
+        QueryWrapper<BeanUserRole> wrapper = new QueryWrapper<BeanUserRole>().eq("username", userName);
+        if (StringUtils.isNotEmpty(organId)){
+            wrapper.eq("organ_id", organId);
+        }
+        if (StringUtils.isNotEmpty(projectId)){
+            wrapper.eq("project_id", projectId);
+        }
+        List<BeanUserRole> beanUserRoleList = beanUserRoleMapper.selectList(wrapper);
         // 获取角色信息
         Map<Integer,
             RoleDto> roleDtoMap = roleService.list(null).stream()

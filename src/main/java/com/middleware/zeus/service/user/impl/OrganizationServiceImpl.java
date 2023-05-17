@@ -340,9 +340,9 @@ public class OrganizationServiceImpl extends AbstractOrganizationService impleme
         // 查询组织下项目
         List<ProjectDto> projectDtoList = projectService.list(organId);
         // 查询该用户所拥有角色信息
-        List<UserRole> userRoleList = userRoleService.get(username);
+        List<UserRole> userRoleList = userRoleService.get(username, organId, null);
         if (userRoleList.stream().anyMatch(userRole -> projectDtoList.stream()
-            .anyMatch(projectDto -> userRole.getProjectId().equals(projectDto.getProjectId())))) {
+            .anyMatch(projectDto -> StringUtils.isNotEmpty(userRole.getProjectId()) && userRole.getProjectId().equals(projectDto.getProjectId())))) {
             throw new BusinessException(ErrorMessage.ORGANIZATION_USER_USED_IN_PROJECT);
         }
         organizationUserService.delete(organId, username);
