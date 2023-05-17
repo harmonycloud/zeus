@@ -731,8 +731,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         }
     }
 
-    }
-
     @Override
     public void deleteMiddlewareBackupInfo(String clusterId, String namespace, String type, String middlewareName) {
         Map<String, String> labels = getBackupLabel(middlewareName, type);
