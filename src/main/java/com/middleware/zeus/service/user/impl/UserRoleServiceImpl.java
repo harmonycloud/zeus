@@ -64,6 +64,7 @@ public class UserRoleServiceImpl implements UserRoleService {
             userRole.setRoleName(roleDtoMap.get(beanUserRole.getRoleId()).getName());
             userRole.setWeight(roleDtoMap.get(beanUserRole.getRoleId()).getWeight());
             userRole.setPower(roleDtoMap.get(beanUserRole.getRoleId()).getPower());
+            userRole.setRoleType(roleDtoMap.get(beanUserRole.getRoleId()).getType());
             return userRole;
         }).collect(Collectors.toList());
     }

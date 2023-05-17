@@ -25,6 +25,8 @@ public class UserRole {
 
     private String roleName;
 
+    private String roleType;
+
     private Integer weight;
 
     private Map<String, String> power;

@@ -1,6 +1,7 @@
 package com.middleware.zeus.service.user.impl;
 
 import static com.middleware.zeus.common.constants.CommonConstant.NUM_ONE;
+import static com.middleware.zeus.common.constants.NameConstant.MANAGER;
 import static com.middleware.zeus.common.constants.user.UserConstant.ADMIN;
 import static com.middleware.zeus.common.constants.user.UserConstant.USERNAME;
 import static com.middleware.caas.filters.base.GlobalKey.NUM_ROLE_ADMIN;
@@ -397,6 +398,7 @@ public class UserServiceImpl extends AbstractUserService implements UserService 
                 userRole.setOrganId(organizationUser.getOrganId());
                 userRole.setRoleId(organizationUser.getRoleId());
                 userRole.setWeight(2);
+                userRole.setRoleType(MANAGER);
                 if (organizationUser.getOrganId() != null) {
                     userRole.setOrganName(organizationMap.get(organizationUser.getOrganId()));
                 }
