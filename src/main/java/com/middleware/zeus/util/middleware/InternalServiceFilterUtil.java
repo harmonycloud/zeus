@@ -33,7 +33,8 @@ public class InternalServiceFilterUtil {
             default:
                 keyword = "master";
         }
-        return servicePortDTOList.stream().filter(servicePortDTO -> servicePortDTO.getServiceName().endsWith(keyword)).collect(Collectors.toList());
+        return servicePortDTOList.stream().filter(servicePortDTO -> servicePortDTO.getServiceName().endsWith(keyword)
+                || servicePortDTO.getServiceName().endsWith("kibana")).collect(Collectors.toList());
     }
 
 }

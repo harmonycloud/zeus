@@ -146,12 +146,14 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         if (BackupMode.PERIOD.getMode().equals(backupMode)) {
             List<MiddlewareBackupSchedule> scheduleCRList = listMiddlewareBackupSchedule(clusterId, namespace, backupId);
             records = convertBackupSchedulesToRecords(clusterId, scheduleCRList);
-            return MiddlewareBackupTrimUtil.trimScheduleBackup(records);
+            MiddlewareBackupTrimUtil.trimScheduleBackup(records);
         } else {
             List<MiddlewareBackup> backupCRList = listMiddlewareBackup(clusterId, namespace, backupId);
             records = convertBackupsToRecords(clusterId, backupCRList);
-            return MiddlewareBackupTrimUtil.trimBackup(records);
+            MiddlewareBackupTrimUtil.trimBackup(records);
         }
+        setBackupPosition(records);
+        return records;
     }
 
     @Override
@@ -1061,6 +1063,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                     && incBackupInfoA.getPause().equals(incBackupInfoB.getPause())) {
                 incBackupInfoA.setSameActiveActiveBackup(true);
                 incBackupDtos.add(incBackupInfoA);
+                incBackupDtos.add(incBackupInfoB);
             } else {
                 incBackupInfoA.setSameActiveActiveBackup(true);
                 incBackupInfoB.setSameActiveActiveBackup(true);
@@ -1104,6 +1107,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             recordList = recordList.stream().filter(record ->
                     activeArea.equals(record.getActiveArea())).collect(Collectors.toList());
         }
+        setBackupPosition(recordList);
         return sortAndSetAliasName(recordList, orderBy);
     }
 

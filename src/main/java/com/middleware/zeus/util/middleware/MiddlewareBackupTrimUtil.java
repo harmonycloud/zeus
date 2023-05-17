@@ -28,23 +28,22 @@ public class MiddlewareBackupTrimUtil {
         return records;
     }
 
-    public static List<MiddlewareBackupRecord> trimScheduleBackup(List<MiddlewareBackupRecord> records) {
-        List<MiddlewareBackupRecord> filteredRecords = new ArrayList<>();
+    public static void trimScheduleBackup(List<MiddlewareBackupRecord> records) {
         if (records.size() == 2) {
             MiddlewareBackupRecord recordA = records.get(0);
             MiddlewareBackupRecord recordB = records.get(1);
-            if (recordA.getPosition().equals(recordB.getPosition())
-                    && recordA.getCron().equals(recordB.getCron())
-                    && (recordA.getLimitRecord().equals(recordB.getLimitRecord()))) {
+            if (recordA.getCron().equals(recordB.getCron())
+                    && (recordA.getRetentionTime().equals(recordB.getRetentionTime()))) {
                 recordA.setSameActiveActiveBackup(true);
-                filteredRecords.add(recordA);
-                return filteredRecords;
+                recordB.setSameActiveActiveBackup(true);
+            } else {
+                recordA.setSameActiveActiveBackup(false);
+                recordB.setSameActiveActiveBackup(false);
             }
         }
         records.forEach(middlewareBackupRecord -> {
             middlewareBackupRecord.setSameActiveActiveBackup(false);
         });
-        return records;
     }
 
 }
