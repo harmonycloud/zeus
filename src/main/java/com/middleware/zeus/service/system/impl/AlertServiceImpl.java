@@ -454,6 +454,7 @@ public class AlertServiceImpl implements AlertService {
         return userDtoList.stream().map(userDto -> {
             AlertUserDto alertUserDto = new AlertUserDto();
             BeanUtils.copyProperties(userDto, alertUserDto);
+            alertUserDto.setMail(userDto.getEmail());
             alertUserDto.setUsername(userDto.getUserName());
             return alertUserDto;
         }).collect(Collectors.toList());

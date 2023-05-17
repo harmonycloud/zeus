@@ -819,7 +819,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
     public List<AlertUserDto> listAllocatableAlertUser(String clusterId, String namespace, String middlewareName,
                                                        String organId, String projectId) {
         // 获取告警用户列表
-        List<AlertUserDo> alertUserDoList = alertUserService.listWithUserInfo(clusterId, namespace, middlewareName, SERVICE);
+        List<AlertUserDo> alertUserDoList = alertUserService.list(clusterId, namespace, middlewareName, SERVICE);
         // 获取用户集，并过滤掉已分配的用户和普通用户
         List<UserDto> userDtoList = projectService.getUser(organId, projectId, false).stream()
                 .filter(userDto -> alertUserDoList.stream()
@@ -833,6 +833,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         return userDtoList.stream().map(userDto -> {
             AlertUserDto alertUserDto = new AlertUserDto();
             BeanUtils.copyProperties(userDto, alertUserDto);
+            alertUserDto.setMail(userDto.getEmail());
             alertUserDto.setUsername(userDto.getUserName());
             return alertUserDto;
         }).collect(Collectors.toList());
