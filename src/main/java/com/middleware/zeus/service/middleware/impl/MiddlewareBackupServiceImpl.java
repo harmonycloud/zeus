@@ -729,84 +729,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             log.error("集群{} 中间件{} 克隆实例失败", clusterId, middlewareName, e);
             throw new BusinessException(ErrorMessage.BACKUP_RESTORE_FAILED);
         }
-        Middleware sourceMiddleware = new Middleware(clusterId, namespace, sourceName, type).setChartName(type);
-        Middleware bakMiddleware = new Middleware(clusterId, namespace, middlewareName, type).setChartName(type);
-
-        // 更新自定义参数
-        restoreCustomConfig(sourceMiddleware, bakMiddleware);
-        // 重启资源
-        MiddlewareCR bakCR = middlewareCRService.getCR(clusterId, namespace, type, middlewareName);
-        if (bakCR.getStatus() != null && !CollectionUtils.isEmpty(bakCR.getStatus().getInclude())) {
-            Map<String, List<MiddlewareInfo>> include = bakCR.getStatus().getInclude();
-            List<MiddlewareInfo> deploys = include.get("deploys");
-            if (!CollectionUtils.isEmpty(deploys)) {
-                deploys.forEach(deploy -> {
-                    deploymenentWrapper.delete(clusterId, namespace, deploy.getName());
-                });
-            }
-            List<MiddlewareInfo> statefulsets = include.get("statefulsets");
-            if (!CollectionUtils.isEmpty(statefulsets)) {
-                statefulsets.forEach(statefulset -> {
-                    statefulSetWrapper.delete(clusterId, namespace, statefulset.getName());
-                });
-            }
-        }
-    }
-
-    private void restoreCustomConfig(Middleware sourceMiddleware, Middleware bakMiddleware) {
-        BaseOperator operator = middlewareService.getOperator(BaseOperator.class, BaseOperator.class, sourceMiddleware);
-        MiddlewareClusterDTO cluster = clusterService.findById(sourceMiddleware.getClusterId());
-        JSONObject sourceValues = helmChartService.getInstalledValues(sourceMiddleware.getName(), sourceMiddleware.getNamespace(), cluster);
-        // todo 判断chart-version为空的场景
-        sourceMiddleware.setChartVersion(sourceValues.getString("chart-version"));
-        JSONObject bakValues = helmChartService.getInstalledValues(bakMiddleware.getName(), bakMiddleware.getNamespace(), cluster);
-        bakMiddleware.setChartVersion(bakValues.getString("chart-version"));
-        JSONObject newBakValues = JSONObject.parseObject(bakValues.toJSONString());
-        // 获取数据库数据
-        QueryWrapper<BeanCustomConfig> wrapper = new QueryWrapper<>();
-        wrapper.eq("chart_name", sourceMiddleware.getType()).eq("chart_version", sourceMiddleware.getChartVersion());
-        List<BeanCustomConfig> beanCustomConfigs = beanCustomConfigMapper.selectList(wrapper);
-        beanCustomConfigs.forEach(config -> {
-            String valuesType = operator.changeConfigRoleToValueArg(config.getRole(), false);
-            // 获取源服务参数
-            JSONObject sourceArgs;
-            if ("Master".equalsIgnoreCase(valuesType) && sourceValues.containsKey("args")) {
-                sourceArgs = sourceValues.getJSONObject("args");
-            } else if (sourceValues.containsKey(valuesType) && sourceValues.getJSONObject(valuesType).containsKey("args")) {
-                sourceArgs = sourceValues.getJSONObject(valuesType).getJSONObject("args");
-            } else {
-                return;
-            }
-            if (!sourceArgs.containsKey(config.getName())) {
-                return;
-            }
-            // 加入克隆服务values
-            JSONObject bakArgs;
-            if ("Master".equalsIgnoreCase(valuesType)) {
-                JSONObject args = newBakValues.getJSONObject("args");
-                if (args == null) {
-                    args = new JSONObject();
-                    newBakValues.put("args", args);
-                }
-                bakArgs = args;
-            } else {
-                JSONObject valuesTypeJSON = newBakValues.getJSONObject(valuesType);
-                if (valuesTypeJSON == null) {
-                    valuesTypeJSON = new JSONObject();
-                    newBakValues.put(valuesType, valuesTypeJSON);
-                }
-                JSONObject args = valuesTypeJSON.getJSONObject("args");
-                if (args == null) {
-                    args = new JSONObject();
-                    valuesTypeJSON.put("args", args);
-                }
-                bakArgs = args;
-            }
-            bakArgs.put(config.getName(), sourceArgs.get(config.getName()));
-        });
-        // helm upgrade
-        helmChartService.upgrade(bakMiddleware, bakValues, newBakValues, cluster);
-
     }
 
     @Override
@@ -1092,8 +1014,10 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 if (StringUtils.isNotEmpty(record.getOwner()) &&
                         scheduleNames.contains(record.getOwner())) {
                     MiddlewareBackupRecord schedule = scheduleNamesMap.get(record.getOwner());
-                    record.setActiveArea(schedule.getActiveArea());
-                    record.setAreaAliasName(schedule.getAreaAliasName());
+                    if (schedule != null) {
+                        record.setActiveArea(schedule.getActiveArea());
+                        record.setAreaAliasName(schedule.getAreaAliasName());
+                    }
                     return true;
                 }
                 return false;

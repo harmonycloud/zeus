@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import com.middleware.zeus.common.constants.NameConstant;
 import com.middleware.zeus.common.enums.middleware.ResourceUnitEnum;
+import com.middleware.zeus.service.k8s.ActiveAreaService;
 import com.middleware.zeus.util.date.DateUtils;
 import com.middleware.zeus.util.numeric.ResourceCalculationUtil;
 import com.middleware.zeus.common.model.*;
@@ -17,6 +18,7 @@ import com.middleware.zeus.integration.cluster.NodeWrapper;
 import io.fabric8.kubernetes.api.model.NodeAddress;
 import io.fabric8.kubernetes.api.model.NodeCondition;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -45,6 +47,8 @@ public class NodeServiceImpl implements NodeService {
     protected PrometheusWrapper prometheusWrapper;
     @Autowired
     private PrometheusResourceMonitorService prometheusResourceMonitorService;
+    @Autowired
+    private ActiveAreaService activeAreaService;
 
     @Override
     public List<Node> list(String clusterId) {
@@ -72,7 +76,7 @@ public class NodeServiceImpl implements NodeService {
     public List<Node> listActive(String clusterId, String zone) {
         HashMap<String, String> label = new HashMap<>();
         if (!StringUtils.isEmpty(zone) && !zone.equalsIgnoreCase("none")) {
-            label.put(ZONE, zone);
+            label.put(activeAreaService.getZoneKey(), zone);
         }
         List<io.fabric8.kubernetes.api.model.Node> nodes = nodeWrapper.list(clusterId, label);
         return simpleConvertToDto(nodes);

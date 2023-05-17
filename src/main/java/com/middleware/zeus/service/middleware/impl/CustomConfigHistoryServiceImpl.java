@@ -1,18 +1,23 @@
 package com.middleware.zeus.service.middleware.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.middleware.zeus.common.model.CustomConfigHistoryDo;
 import com.middleware.zeus.common.model.middleware.CustomConfig;
+import com.middleware.zeus.common.model.middleware.Middleware;
 import com.middleware.zeus.common.model.middleware.MiddlewareCustomConfig;
 import com.middleware.zeus.bean.BeanCustomConfigHistory;
 import com.middleware.zeus.dao.BeanCustomConfigHistoryMapper;
 import com.middleware.zeus.service.middleware.CustomConfigHistoryService;
+import com.middleware.zeus.service.middleware.MiddlewareCustomConfigService;
+import com.middleware.zeus.service.middleware.MiddlewareService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author xutianhong
@@ -72,6 +77,30 @@ public class CustomConfigHistoryServiceImpl implements CustomConfigHistoryServic
         QueryWrapper<BeanCustomConfigHistory> wrapper =
                 new QueryWrapper<BeanCustomConfigHistory>().eq("id", beanCustomConfigHistory.getId());
         beanCustomConfigHistoryMapper.update(beanCustomConfigHistory, wrapper);
+    }
+
+    @Override
+    public List<CustomConfigHistoryDo> listLatestConfig(Middleware middleware) {
+        QueryWrapper<BeanCustomConfigHistory> wrapper = new QueryWrapper<>();
+        wrapper.eq("cluster_id", middleware.getClusterId()).eq("namespace", middleware.getNamespace())
+            .eq("name", middleware.getName());
+        HashMap<String, BeanCustomConfigHistory> historyMap = new HashMap<>();
+        beanCustomConfigHistoryMapper.selectList(wrapper).forEach(cch -> {
+            if (cch.getDate() == null) {
+                return;
+            }
+            if (historyMap.containsKey(cch.getItem()) && historyMap.get(cch.getItem()).getDate() != null && historyMap.get(cch.getItem()).getDate().after(cch.getDate())) {
+                return;
+            }
+            historyMap.put(cch.getItem(), cch);
+        });
+        ArrayList<CustomConfigHistoryDo> resultList = new ArrayList<>();
+        for (BeanCustomConfigHistory history : historyMap.values()) {
+            CustomConfigHistoryDo historyDo = new CustomConfigHistoryDo();
+            BeanUtils.copyProperties(history, historyDo);
+            resultList.add(historyDo);
+        }
+        return resultList;
     }
 
 

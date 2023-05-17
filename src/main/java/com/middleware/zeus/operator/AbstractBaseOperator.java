@@ -15,12 +15,11 @@ import com.middleware.zeus.common.enums.middleware.MiddlewareTypeEnum;
 import com.middleware.zeus.common.enums.middleware.ResourceUnitEnum;
 import com.middleware.zeus.common.enums.middleware.StorageClassProvisionerEnum;
 import com.middleware.zeus.common.exception.BusinessException;
-import com.middleware.zeus.common.model.ActiveAreaAnnotationDto;
-import com.middleware.zeus.common.model.AffinityDTO;
-import com.middleware.zeus.common.model.MiddlewareServiceNameIndex;
-import com.middleware.zeus.common.model.StorageDto;
+import com.middleware.zeus.common.model.*;
 import com.middleware.zeus.common.model.middleware.*;
 import com.middleware.zeus.common.model.registry.HelmChartFile;
+import com.middleware.zeus.service.k8s.IngressService;
+import com.middleware.zeus.service.middleware.impl.MiddlewareServiceImpl;
 import com.middleware.zeus.util.ThreadPoolExecutorFactory;
 import com.middleware.zeus.util.collection.JsonUtils;
 import com.middleware.zeus.util.numeric.ResourceCalculationUtil;
@@ -106,7 +105,7 @@ public abstract class AbstractBaseOperator {
     @Autowired
     private MiddlewareCustomConfigService middlewareCustomConfigService;
     @Autowired
-    private MiddlewareService middlewareService;
+    private MiddlewareServiceImpl middlewareService;
     @Autowired
     private ServiceService serviceService;
     @Autowired
@@ -147,6 +146,8 @@ public abstract class AbstractBaseOperator {
     private ImageRepositoryService imageRepositoryService;
     @Autowired
     protected SystemConfigService systemConfigService;
+    @Autowired
+    private CustomConfigHistoryService customConfigHistoryService;
 
     /**
      * 是否支持该中间件
@@ -194,6 +195,8 @@ public abstract class AbstractBaseOperator {
         // load values.yaml to map
         Yaml yaml = new Yaml();
         JSONObject values = yaml.loadAs(helmChart.getValueYaml(), JSONObject.class);
+        // synchronize the backup source service custom config to the backup service
+        syncBackupSourceConfig(middleware, values);
         // deal with values.yaml file
         replaceValues(middleware, cluster, values);
         // deal with Charts.yaml file
@@ -232,6 +235,36 @@ public abstract class AbstractBaseOperator {
         deleteRecord(middleware.getClusterId(), middleware.getNamespace(), middleware.getType(), middleware.getName());
         // license资源计算
         licenseService.addMiddlewareResource(cluster.getType(), calculateCpuRequest(values));
+    }
+
+    protected void syncBackupSourceConfig(Middleware middleware, JSONObject values) {
+        if (middleware.getIsBackup() != null && middleware.getIsBackup() && middleware.getRelationMiddleware() != null) {
+            BaseOperator operator = middlewareService.getOperator(BaseOperator.class, BaseOperator.class, middleware.getRelationMiddleware());
+            customConfigHistoryService.listLatestConfig(middleware.getRelationMiddleware()).forEach(ccDo -> {
+                String valuesType = operator.changeConfigRoleToValueArg(ccDo.getRole(), false);
+                JSONObject args;
+                if ("master".equalsIgnoreCase(valuesType)) {
+                    args = values.getJSONObject("args");
+                    if (args == null) {
+                        args = new JSONObject();
+                        values.put("args", args);
+                    }
+                } else {
+                    JSONObject valuesTypeJSON = values.getJSONObject(valuesType);
+                    if (valuesTypeJSON == null) {
+                        valuesTypeJSON = new JSONObject();
+                        values.put(valuesType, valuesTypeJSON);
+                    }
+                    args = valuesTypeJSON.getJSONObject("args");
+                    if (args == null) {
+                        args = new JSONObject();
+                        valuesTypeJSON.put("args", args);
+                    }
+                }
+                args.put(ccDo.getItem(), ccDo.getAfter());
+            });
+
+        }
     }
 
     public void delete(Middleware middleware) {

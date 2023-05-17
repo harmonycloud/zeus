@@ -1,5 +1,7 @@
 package com.middleware.zeus.service.middleware;
 
+import com.middleware.zeus.common.model.CustomConfigHistoryDo;
+import com.middleware.zeus.common.model.middleware.Middleware;
 import com.middleware.zeus.common.model.middleware.MiddlewareCustomConfig;
 import com.middleware.zeus.bean.BeanCustomConfigHistory;
 
@@ -47,5 +49,12 @@ public interface CustomConfigHistoryService {
      * @param beanCustomConfigHistory 数据对象
      */
     void update(BeanCustomConfigHistory beanCustomConfigHistory);
+
+    /**
+     * 获取中间件最新参数修改历史
+     * @param middleware
+     * @return
+     */
+    List<CustomConfigHistoryDo> listLatestConfig(Middleware middleware);
 
 }
