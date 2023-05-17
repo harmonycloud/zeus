@@ -33,7 +33,7 @@ public class MiddlewareBackupTrimUtil {
             MiddlewareBackupRecord recordA = records.get(0);
             MiddlewareBackupRecord recordB = records.get(1);
             if (recordA.getCron().equals(recordB.getCron())
-                    && (recordA.getLimitRecord().equals(recordB.getLimitRecord()))) {
+                    && (recordA.getRetentionTime().equals(recordB.getRetentionTime()))) {
                 recordA.setSameActiveActiveBackup(true);
                 recordB.setSameActiveActiveBackup(true);
             } else {
