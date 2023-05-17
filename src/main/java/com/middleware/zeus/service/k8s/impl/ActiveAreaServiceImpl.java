@@ -312,6 +312,10 @@ public class ActiveAreaServiceImpl implements ActiveAreaService {
         return beanActiveAreaList;
     }
 
+    @Override
+    public String getZoneKey() {
+        return zoneKey;
+    }
 
 
     @Override

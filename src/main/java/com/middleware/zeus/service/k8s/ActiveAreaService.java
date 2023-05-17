@@ -108,4 +108,10 @@ public interface ActiveAreaService {
      * @return
      */
     List<BeanActiveArea> initBeanActiveArea(String clusterId);
+
+    /**
+     * 获取可用区标签
+     * @return
+     */
+    String getZoneKey();
 }
