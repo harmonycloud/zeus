@@ -344,12 +344,18 @@ public class AlertServiceImpl implements AlertService {
         // 构建查询labels
         Map<String, String> labels = new HashMap<>();
         labels.put(PLATFORM, ZEUS);
-        labels.put("target_name", targetName);
         // 查询 prometheusRule文件
         List<PrometheusRule> prometheusRuleList = prometheusRuleService.list(clusterId, null, labels);
+        // 获取指定prometheusRule
+        prometheusRuleList = prometheusRuleList.stream()
+            .filter(prometheusRule -> prometheusRule.getMetadata().getAnnotations() != null
+                && prometheusRule.getMetadata().getAnnotations().containsKey("target_name")
+                && prometheusRule.getMetadata().getAnnotations().get("target_name").equals(targetName))
+            .collect(Collectors.toList());
         if (CollectionUtils.isEmpty(prometheusRuleList)) {
             throw new BusinessException(ErrorMessage.PROMETHEUS_RULES_NOT_EXIST);
         }
+
         // 封装返回数据
         List<MiddlewareAlertsDTO> middlewareAlertsDTOList = new ArrayList<>();
         for (PrometheusRule prometheusRule : prometheusRuleList) {
