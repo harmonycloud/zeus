@@ -827,7 +827,8 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
                 .filter(userDto -> !userDto.getRoleId().equals(NUM_FOUR))
                 .collect(Collectors.toList());
         // 获取超级管理员用户
-        userDtoList.addAll(userService.list(null).stream().filter(UserDto::getIsAdmin).collect(Collectors.toList()));
+        userDtoList.addAll(userService.list(null).stream()
+            .filter(userDto -> userDto.getIsAdmin() != null && userDto.getIsAdmin()).collect(Collectors.toList()));
         // 返回封装数据
         return userDtoList.stream().map(userDto -> {
             AlertUserDto alertUserDto = new AlertUserDto();
