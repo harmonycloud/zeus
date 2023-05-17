@@ -144,4 +144,7 @@ public class NameConstant {
 
     public static final String AUTH_TYPE = "authType";
 
+    public static final String MANAGER = "manager";
+    public static final String NORMAL = "normal";
+
 }

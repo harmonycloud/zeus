@@ -17,6 +17,8 @@ import org.springframework.util.CollectionUtils;
 import java.util.Arrays;
 import java.util.List;
 
+import static com.middleware.zeus.common.constants.NameConstant.NORMAL;
+
 /**
  * @author xutianhong
  * @Date 2021/7/29 9:38 上午
@@ -38,9 +40,13 @@ public class ResourceMenuRoleServiceImpl implements ResourceMenuRoleService {
     private RoleAuthorityService roleAuthorityService;
 
     @Override
-    public void init(Integer roleId) {
+    public void init(Integer roleId, String type) {
         List<ResourceMenuDto> menuDtoList = resourceMenuService.list();
         menuDtoList.forEach(menu -> add(roleId, menu.getId(), false));
+        if (type.equals(NORMAL)){
+            update(roleId, 3, true);
+            update(roleId, 4, true);
+        }
     }
 
     @Override
@@ -58,7 +64,7 @@ public class ResourceMenuRoleServiceImpl implements ResourceMenuRoleService {
         List<BeanResourceMenuRole> list = beanResourceMenuRoleMapper.selectList(rmRoleWrapper);
         if (CollectionUtils.isEmpty(list)){
             Integer intRoleId = Integer.parseInt(roleId);
-            init(intRoleId);
+            init(intRoleId, null);
             updateOpsMenu(intRoleId, roleAuthorityService.checkOps(roleId, null));
         }
         return beanResourceMenuRoleMapper.selectList(rmRoleWrapper);

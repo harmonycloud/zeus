@@ -194,9 +194,6 @@ public class RoleServiceImpl implements RoleService {
                     set.addAll(resourceMenuRoleService.list(String.valueOf(userRoleList.get(0).getRoleId())));
                 }
             }
-            if(CollectionUtils.isEmpty(set)){
-                set.add(new BeanResourceMenuRole().setResourceMenuId(3));
-            }
         }
         // 过滤是否开启灾备服务和双活
         LicenseInfo features = new LicenseInfo();
@@ -322,6 +319,6 @@ public class RoleServiceImpl implements RoleService {
     }
 
     public void initResourceMenuRole(RoleDto roleDto){
-        resourceMenuRoleService.init(roleDto.getId());
+        resourceMenuRoleService.init(roleDto.getId(), roleDto.getType());
     }
 }

@@ -16,7 +16,7 @@ public interface ResourceMenuRoleService {
      * @param roleId 角色id
      *
      */
-    void init(Integer roleId);
+    void init(Integer roleId, String type);
 
     /**
      * 获取admin角色菜单映照列表

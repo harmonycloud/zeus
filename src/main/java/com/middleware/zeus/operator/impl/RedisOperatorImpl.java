@@ -684,6 +684,7 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         redisClusterWrapper.update(clusterId, namespace, rediscluster);
     }
 
+    @Override
     public String changeConfigRoleToValueArg(String customConfigRole, boolean reserve) {
         if (!reserve) {
             switch (customConfigRole) {
