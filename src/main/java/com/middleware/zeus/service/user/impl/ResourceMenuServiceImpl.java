@@ -10,7 +10,9 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -62,6 +64,10 @@ public class ResourceMenuServiceImpl implements ResourceMenuService {
         Map<Integer, List<ResourceMenuDto>> resourceMenuDtoMap =
                 resourceMenuDtoList.stream().collect(Collectors.groupingBy(ResourceMenuDto::getParentId));
         List<ResourceMenuDto> firstMenuList = resourceMenuDtoMap.get(0);
+        // 空菜单返回
+        if (CollectionUtils.isEmpty(resourceMenuDtoList) || CollectionUtils.isEmpty(firstMenuList)) {
+            return new ArrayList<>();
+        }
         resourceMenuDtoMap.remove(0);
         firstMenuList.forEach(firstMenu -> {
             if (!resourceMenuDtoMap.containsKey(firstMenu.getWeight())) {
