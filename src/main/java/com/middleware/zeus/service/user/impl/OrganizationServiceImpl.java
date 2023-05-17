@@ -302,7 +302,7 @@ public class OrganizationServiceImpl extends AbstractOrganizationService impleme
             } else {
                 if (userMap.containsKey(userDto.getUserName())){
                     BeanOrganizationUser organizationUser = userMap.get(userDto.getUserName());
-                    if (organizationUser.getRoleId() != null){
+                    if (organizationUser.getRoleId() == null){
                         userDto.setRoleName("普通用户");
                     }else {
                         userDto.setRoleId(organizationUser.getRoleId()).setRoleName("组织管理员");
