@@ -15,6 +15,7 @@ import com.middleware.zeus.common.model.middleware.Middleware;
 import com.middleware.zeus.common.model.middleware.MiddlewareAlertsDTO;
 import com.middleware.zeus.common.model.registry.HelmChartFile;
 import com.middleware.zeus.common.model.user.UserDto;
+import com.middleware.zeus.service.user.UserService;
 import com.middleware.zeus.util.date.DateUtils;
 import com.middleware.zeus.util.uuid.UUIDUtils;
 import com.middleware.zeus.bean.AlertRuleId;
@@ -53,6 +54,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.middleware.zeus.common.constants.AlertConstant.*;
+import static com.middleware.zeus.common.constants.CommonConstant.NUM_FOUR;
 
 /**
  * @author xutianhong
@@ -86,6 +88,8 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
     private AlertUserService alertUserService;
     @Autowired
     private ProjectService projectService;
+    @Autowired
+    private UserService userService;
 
     private final String SYSTEM_ALERT = "system_alert";
     @Override
@@ -815,12 +819,15 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
     public List<AlertUserDto> listAllocatableAlertUser(String clusterId, String namespace, String middlewareName,
                                                        String organId, String projectId) {
         // 获取告警用户列表
-        List<AlertUserDo> alertUserDoList = alertUserService.list(clusterId, namespace, middlewareName, SERVICE);
-        // 获取用户集，并过滤掉已分配的用户
+        List<AlertUserDo> alertUserDoList = alertUserService.listWithUserInfo(clusterId, namespace, middlewareName, SERVICE);
+        // 获取用户集，并过滤掉已分配的用户和普通用户
         List<UserDto> userDtoList = projectService.getUser(organId, projectId, false).stream()
                 .filter(userDto -> alertUserDoList.stream()
                         .noneMatch(alertUserDo -> alertUserDo.getUsername().equals(userDto.getUserName())))
+                .filter(userDto -> !userDto.getRoleId().equals(NUM_FOUR))
                 .collect(Collectors.toList());
+        // 获取超级管理员用户
+        userDtoList.addAll(userService.list(null).stream().filter(UserDto::getIsAdmin).collect(Collectors.toList()));
         // 返回封装数据
         return userDtoList.stream().map(userDto -> {
             AlertUserDto alertUserDto = new AlertUserDto();
