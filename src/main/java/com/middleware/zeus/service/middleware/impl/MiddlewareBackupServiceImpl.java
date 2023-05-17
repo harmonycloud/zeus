@@ -1013,11 +1013,11 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Override
     public MiddlewareIncBackupDto getIncBackupInfo(String clusterId, String namespace, String backupName) {
         MiddlewareBackupSchedule cr = backupScheduleCRDService.get(clusterId, namespace, backupName + "-incr");
+        if (cr == null) {
+            return null;
+        }
         MiddlewareIncBackupDto middlewareIncBackupDto = new MiddlewareIncBackupDto();
         middlewareIncBackupDto.setBackupName(backupName + "-incr");
-        if (cr == null) {
-            return middlewareIncBackupDto;
-        }
         // 获取时间
         if (cr.getStatus() != null && cr.getStatus().getStorageProvider() != null) {
             JSONObject storageProvider = cr.getStatus().getStorageProvider();
@@ -1054,6 +1054,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             MiddlewareBackupSchedule scheduleB = scheduleCRList.get(1);
             MiddlewareIncBackupDto incBackupInfoA = getIncBackupInfo(clusterId, namespace, scheduleA.getMetadata().getName());
             MiddlewareIncBackupDto incBackupInfoB = getIncBackupInfo(clusterId, namespace, scheduleB.getMetadata().getName());
+            if (incBackupInfoA == null || incBackupInfoB == null) {
+                return Collections.emptyList();
+            }
             if (incBackupInfoA.getTime().equals(incBackupInfoB.getTime())
                     && incBackupInfoA.getPause().equals(incBackupInfoB.getPause())) {
                 incBackupInfoA.setSameActiveActiveBackup(true);
@@ -1160,18 +1163,29 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public List<MiddlewareBackupRecord> backupIncrRecords(String clusterId, String namespace, String middlewareName, String type, String backupId, String backupMode, String orderBy) {
-        Set<String> backupScheduleNames = listMiddlewareBackupScheduleNames(clusterId, namespace, backupId);
+        Map<String, MiddlewareBackupRecord> scheduleNamesMap = listMiddlewareBackupScheduleNamesMap(clusterId, namespace, backupId);
+        Set<String> backupScheduleNames = scheduleNamesMap.keySet();
         Set<String> incrScheduleNames = new HashSet<>();
         backupScheduleNames.forEach(scheduleName -> {
             String incrScheduleName = scheduleName + "-incr";
             MiddlewareBackupSchedule incrSchedule = backupScheduleCRDService.get(clusterId, namespace, incrScheduleName);
             if (incrSchedule != null) {
                 incrScheduleNames.add(incrSchedule.getMetadata().getName());
+                scheduleNamesMap.put(incrScheduleName, scheduleNamesMap.get(scheduleName));
             }
         });
         List<MiddlewareBackupRecord> recordList = listBackup(clusterId, namespace, null, null);
-        recordList = recordList.stream().filter(record -> StringUtils.isNotEmpty(record.getOwner()) &&
-                incrScheduleNames.contains(record.getOwner())).collect(Collectors.toList());
+        recordList = recordList.stream().filter(record -> {
+            if (StringUtils.isNotEmpty(record.getOwner()) && incrScheduleNames.contains(record.getOwner())) {
+                MiddlewareBackupRecord schedule = scheduleNamesMap.get(record.getOwner());
+                if (schedule != null) {
+                    record.setActiveArea(schedule.getActiveArea());
+                    record.setAreaAliasName(schedule.getAreaAliasName());
+                }
+                return true;
+            }
+            return false;
+        }).collect(Collectors.toList());
         return sortAndSetAliasName(recordList, orderBy);
     }
 
