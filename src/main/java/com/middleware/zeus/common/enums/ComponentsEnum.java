@@ -15,6 +15,7 @@ public enum ComponentsEnum {
     MIDDLEWARE_CONTROLLER("middleware-controller"),
     MIDDLEWAREBACKUP_CONTROLLER("middlewarebackup-controller"),
     MIDDLEWARE_SCHEDULER("middleware-scheduler"),
+    MIDDLEWARE_WEBHOOK("middleware-admission-webhook"),
     LVM("lvm");
 
     private String name;

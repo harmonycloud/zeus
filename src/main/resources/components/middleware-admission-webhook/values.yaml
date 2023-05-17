@@ -1,0 +1,34 @@
+replicaCount: 3
+
+image:
+  repository: harbor.middleware.com/middleware
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: 172c46ff
+
+resources:
+  limits:
+    cpu: 200m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi
+
+nodeSelector:
+  node-role.kubernetes.io/master: ""
+
+tolerations:
+    - effect: NoSchedule
+      key: harm.cn/system
+    - effect: NoSchedule
+      key: harm.cn/type
+      value: active-active
+    - effect: NoSchedule
+      key: node-role.kubernetes.io/master
+
+affinity: {}
+
+podAntiAffinityTopologKey: "kubernetes.io/hostname"
+
+#取值[hard|soft] hard:强制反亲和 soft:非强制反亲和
+podAntiAffinity: "soft"

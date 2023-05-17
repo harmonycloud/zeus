@@ -1,0 +1,30 @@
+apiVersion: admissionregistration.k8s.io/v1
+kind: MutatingWebhookConfiguration
+metadata:
+  name: middleware-admission-webhook-cfg
+  labels:
+    app: middleware-admission-webhook
+webhooks:
+  - name: middleware-admission-webhook.hc.com
+    admissionReviewVersions: ["v1"]
+    failurePolicy: Ignore
+    sideEffects: None
+    clientConfig:
+      service:
+        name: middleware-admission-webhook-svc
+        namespace: kube-system
+        path: "/mutate"
+      caBundle: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURvakNDQW9xZ0F3SUJBZ0lVQjIxRXkyWGdnTFlNNmtDRUNrMGNtV2lzVDV3d0RRWUpLb1pJaHZjTkFRRUwKQlFBd2FERUxNQWtHQTFVRUJoTUNWVk14RHpBTkJnTlZCQWdUQms5eVpXZHZiakVSTUE4R0ExVUVCeE1JVUc5eQpkR3hoYm1ReEV6QVJCZ05WQkFvVENrdDFZbVZ5Ym1WMFpYTXhDekFKQmdOVkJBc1RBa05CTVJNd0VRWURWUVFECkV3cExkV0psY201bGRHVnpNQ0FYRFRJek1EVXhOakEwTURVd01Gb1lEekl4TWpNd05ESXlNRFF3TlRBd1dqQm8KTVFzd0NRWURWUVFHRXdKVlV6RVBNQTBHQTFVRUNCTUdUM0psWjI5dU1SRXdEd1lEVlFRSEV3aFFiM0owYkdGdQpaREVUTUJFR0ExVUVDaE1LUzNWaVpYSnVaWFJsY3pFTE1Ba0dBMVVFQ3hNQ1EwRXhFekFSQmdOVkJBTVRDa3QxClltVnlibVYwWlhNd2dnRWlNQTBHQ1NxR1NJYjNEUUVCQVFVQUE0SUJEd0F3Z2dFS0FvSUJBUUNzN1lTSU9BV1gKNFZsazNVcE0vemlDYjFqT05SS213eWl4aUpUS0tDTE5CTDNsVGcxdk5JNmRIVkVGR0FITHRmcjEvMm82ZURsMwpWeUNJRHJ0cmkvSk01ZHdGc2ZYdHNpY1Iva09MaFdXMEd6UG45UzUrdmV2RTFCb01wb3dxV082QUtzUWZBckgxCk9YTWVJcDBRazBrbnpveGV3NkxxODdweTBrS1hiTkpEd1VhVHNITnpMOEhhQUE3VEx3eFdmb20xUTYrTXhjM3MKTzRPaHVLLytmMGk0c2NJcHBEdzJFeWMzYktMdWdWdkFtYXZhcXRRZUxYUFZwTE12amMvRmVoaDBqN3hDZWVyQQp0cFdzQUh2V2U5dnprbm95TDEyTnZMcDN1ZExmcis5amV0RnB2MzJUUVpUWUp1NTJLaDYzWXlvSXFVd3NvYi9zCk5jQTlnV2FXbEVNRkFnTUJBQUdqUWpCQU1BNEdBMVVkRHdFQi93UUVBd0lCQmpBUEJnTlZIUk1CQWY4RUJUQUQKQVFIL01CMEdBMVVkRGdRV0JCUURiRkFFTGVQSmdnaEdJMlJCejlZcTdremNGekFOQmdrcWhraUc5dzBCQVFzRgpBQU9DQVFFQUJEWW9POVZUNXFFdGlkazJtdmlFZHR5OHl6U25vRm1tTWUzYmprc0JsVURyZ1NhUWFWbTRnN1IvCmppN082VHRway9Sa0RxdDI3clBvYVVlMDhjclZMb1k1MFZVQ1N1QUM4ejk5S2ozZnFENU9udkI0SVdYWEtqM28KWkNYOXBCMktWTHZLeFZObGxNVWEwNnM1U0ZDL210d2dzNzVRZWlkWjRLV1RhaSt3U1B1OGkybDgzcGdkcEJ4VQpaNWN6bGNyeHlzNGsvb0dXZ0JQMVFPU0pMekJMUDhjOFF6bmRyd0pLczlMcy84emRhcG5jZ05ZK3JzZGlmUVpxCjBvTlhZWkpibFhCb1IwVjArWTNNSFpMU3FRWEt3eTBqMis3eWphVTFvNUxudEhpTW4yWTYvcXdmYWNSSXZMeW8KUmVJVXhtSU01YWZvSm4rWVRYeTNod0JxWUxIQ3JnPT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
+    rules:
+      - operations: ["CREATE"]
+        apiGroups: [""]
+        apiVersions: ["v1"]
+        resources: ["persistentvolumeclaims"]
+      - operations: ["CREATE"]
+        apiGroups: [""]
+        apiVersions: ["v1"]
+        resources: ["pods"]
+      - operations: [ "CREATE" ]
+        apiGroups: [ "apps" ]
+        apiVersions: [ "v1" ]
+        resources: [ "statefulsets" ]
