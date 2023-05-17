@@ -1092,8 +1092,10 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 if (StringUtils.isNotEmpty(record.getOwner()) &&
                         scheduleNames.contains(record.getOwner())) {
                     MiddlewareBackupRecord schedule = scheduleNamesMap.get(record.getOwner());
-                    record.setActiveArea(schedule.getActiveArea());
-                    record.setAreaAliasName(schedule.getAreaAliasName());
+                    if (schedule != null) {
+                        record.setActiveArea(schedule.getActiveArea());
+                        record.setAreaAliasName(schedule.getAreaAliasName());
+                    }
                     return true;
                 }
                 return false;
