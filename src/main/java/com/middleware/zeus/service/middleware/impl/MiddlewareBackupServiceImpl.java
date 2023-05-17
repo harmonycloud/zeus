@@ -147,12 +147,13 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             List<MiddlewareBackupSchedule> scheduleCRList = listMiddlewareBackupSchedule(clusterId, namespace, backupId);
             records = convertBackupSchedulesToRecords(clusterId, scheduleCRList);
             MiddlewareBackupTrimUtil.trimScheduleBackup(records);
-            return records;
         } else {
             List<MiddlewareBackup> backupCRList = listMiddlewareBackup(clusterId, namespace, backupId);
             records = convertBackupsToRecords(clusterId, backupCRList);
-            return MiddlewareBackupTrimUtil.trimBackup(records);
+            MiddlewareBackupTrimUtil.trimBackup(records);
         }
+        setBackupPosition(records);
+        return records;
     }
 
     @Override
