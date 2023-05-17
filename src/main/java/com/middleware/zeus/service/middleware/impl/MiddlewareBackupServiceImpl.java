@@ -1166,18 +1166,19 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         Map<String, MiddlewareBackupRecord> scheduleNamesMap = listMiddlewareBackupScheduleNamesMap(clusterId, namespace, backupId);
         Set<String> backupScheduleNames = scheduleNamesMap.keySet();
         Set<String> incrScheduleNames = new HashSet<>();
+        Map<String, MiddlewareBackupRecord> incrScheduleNamesMap = new HashMap<>();
         backupScheduleNames.forEach(scheduleName -> {
             String incrScheduleName = scheduleName + "-incr";
             MiddlewareBackupSchedule incrSchedule = backupScheduleCRDService.get(clusterId, namespace, incrScheduleName);
             if (incrSchedule != null) {
                 incrScheduleNames.add(incrSchedule.getMetadata().getName());
-                scheduleNamesMap.put(incrScheduleName, scheduleNamesMap.get(scheduleName));
+                incrScheduleNamesMap.put(incrScheduleName, scheduleNamesMap.get(scheduleName));
             }
         });
         List<MiddlewareBackupRecord> recordList = listBackup(clusterId, namespace, null, null);
         recordList = recordList.stream().filter(record -> {
             if (StringUtils.isNotEmpty(record.getOwner()) && incrScheduleNames.contains(record.getOwner())) {
-                MiddlewareBackupRecord schedule = scheduleNamesMap.get(record.getOwner());
+                MiddlewareBackupRecord schedule = incrScheduleNamesMap.get(record.getOwner());
                 if (schedule != null) {
                     record.setActiveArea(schedule.getActiveArea());
                     record.setAreaAliasName(schedule.getAreaAliasName());
