@@ -5,6 +5,7 @@ import static com.middleware.zeus.common.constants.CommonConstant.SIMPLE;
 import java.io.File;
 import java.util.List;
 
+import com.middleware.zeus.annotation.Operator;
 import org.springframework.stereotype.Service;
 
 import com.middleware.zeus.common.enums.ComponentsEnum;
@@ -22,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 @Service
+@Operator(paramTypes4One = String.class)
 public class MiddlewareWebhookServiceImpl extends AbstractBaseOperator implements MiddlewareWebhookService {
 
     @Override

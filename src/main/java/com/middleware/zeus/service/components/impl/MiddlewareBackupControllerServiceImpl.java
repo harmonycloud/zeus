@@ -1,5 +1,6 @@
 package com.middleware.zeus.service.components.impl;
 
+import com.middleware.zeus.annotation.Operator;
 import com.middleware.zeus.common.enums.ComponentsEnum;
 import com.middleware.zeus.common.model.ClusterComponentsDto;
 import com.middleware.zeus.common.model.middleware.MiddlewareClusterDTO;
@@ -21,6 +22,7 @@ import static com.middleware.zeus.common.constants.CommonConstant.SIMPLE;
  */
 @Service
 @Slf4j
+@Operator(paramTypes4One = String.class)
 public class MiddlewareBackupControllerServiceImpl extends AbstractBaseOperator implements MiddlewareBackupControllerService {
 
     @Override
