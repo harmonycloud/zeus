@@ -186,15 +186,22 @@ public class AlertServiceImpl implements AlertService {
         List<BeanAlertRecord> alertRecordList = beanAlertRecordMapper.selectList(wrapper);
         // 封装数据
         PageInfo<AlertDTO> alertDtoPageInfo = new PageInfo<>();
-        
+
         PageInfo<BeanAlertRecord> alertRecordPageInfo = new PageInfo<>(alertRecordList);
         BeanUtils.copyProperties(alertRecordPageInfo, alertDtoPageInfo);
-        // 处理告警信息为空的告警记录
+
+        // 获取集群别名
+        Map<String, String> clusterAliasNameMap = clusterService.getClusterAliasName();
+        // 处理告警信息为空的告警记录,并添加集群别名
         alertDtoPageInfo.setList(alertRecordPageInfo.getList().stream().map(beanAlertRecord -> {
             AlertDTO alertDTO = new AlertDTO();
             BeanUtils.copyProperties(beanAlertRecord, alertDTO);
             if (StringUtils.isEmpty(alertDTO.getMessage())) {
                 alertDTO.setMessage(alertDTO.getSummary());
+            }
+            if (StringUtils.isNotEmpty(alertDTO.getClusterId())
+                && clusterAliasNameMap.containsKey(alertDTO.getClusterId())) {
+                alertDTO.setNickname(clusterAliasNameMap.get(alertDTO.getClusterId()));
             }
             return alertDTO;
         }).collect(Collectors.toList()));
