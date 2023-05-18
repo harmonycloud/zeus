@@ -16,6 +16,7 @@ import com.middleware.zeus.bean.user.BeanOrganization;
 import com.middleware.zeus.bean.user.BeanProject;
 import com.middleware.zeus.dao.user.BeanOrganizationMapper;
 import com.middleware.zeus.dao.user.BeanProjectMapper;
+import com.middleware.zeus.service.system.AlertUserService;
 import com.middleware.zeus.service.user.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -82,6 +83,8 @@ public class UserServiceImpl extends AbstractUserService implements UserService 
     private BeanOrganizationMapper beanOrganizationMapper;
     @Autowired
     private BeanProjectMapper beanProjectMapper;
+    @Autowired
+    private AlertUserService alertUserService;
 
     @Value("${system.user.passwordExpiredDate:90}")
     private Integer defaultPasswordExpiredDate;
@@ -204,6 +207,8 @@ public class UserServiceImpl extends AbstractUserService implements UserService 
         userRoleService.delete(userName, null, null, null);
         // 从项目中移除
         projectService.unbindUser(null, null, userName);
+        // 删除用户告警通知
+        alertUserService.delete(userName, null, null, null, null);
         return true;
     }
 

@@ -58,9 +58,6 @@ public class AuthManager4LdapImpl implements AuthManager4Ldap {
             ldapConfigDto.setSearchAttribute(searchType);
         }
         Map<String, String> userAttributes = this.getUserFromLdap(userName, password, ldapConfigDto);
-        if (userAttributes == null) {
-            throw new BusinessException(ErrorMessage.USERNAME_SHOULD_NOT_BE_NULL);
-        }
         // 对ldap认证通过的用户,判断是否已经记录,如果没有，则记录用户,并返回该用户
         return saveUserInfo(userName, password, ldapConfigDto, userAttributes);
     }
@@ -73,7 +70,7 @@ public class AuthManager4LdapImpl implements AuthManager4Ldap {
         if (authenticated) {
             return userAttribute;
         } else {
-            throw new BusinessException(ErrorMessage.WRONG_PASSWORD);
+            throw new BusinessException(ErrorMessage.LOGIN_FAILED);
         }
     }
 

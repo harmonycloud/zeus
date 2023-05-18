@@ -29,6 +29,7 @@ import java.util.Date;
 
 import static com.middleware.caas.filters.base.GlobalKey.SET_TOKEN;
 import static com.middleware.caas.filters.base.GlobalKey.USER_TOKEN;
+import static com.middleware.zeus.common.constants.user.UserConstant.ADMIN;
 
 /**
  * @author dengyulong
@@ -67,7 +68,7 @@ public class AuthServiceImpl extends AbstractAuthService implements AuthService 
         LdapConfigDto ldapConfigDto = ldapService.queryLdapDetail();
 
         UserDto userDto;
-        if (userName.equals("admin")) {
+        if (userName.equals(ADMIN)) {
             userDto = userService.getUserDto(userName, true);
         } else if (isLdapOn(ldapConfigDto)) {
             userDto = authManager4Ldap.auth(userName, decryptPassword, ldapConfigDto);
