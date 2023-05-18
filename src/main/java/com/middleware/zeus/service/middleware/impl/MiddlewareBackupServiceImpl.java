@@ -1106,6 +1106,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             if (StringUtils.isNotEmpty(record.getOwner()) && incrScheduleNames.contains(record.getOwner())) {
                 MiddlewareBackupRecord schedule = incrScheduleNamesMap.get(record.getOwner());
                 if (schedule != null) {
+                    record.setTaskName(schedule.getTaskName());
                     record.setActiveArea(schedule.getActiveArea());
                     record.setAreaAliasName(schedule.getAreaAliasName());
                 }
@@ -1361,16 +1362,19 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         List<MiddlewareBackupSchedule> schedules = listMiddlewareBackupSchedule(clusterId, namespace, backupId);
         Map<String, MiddlewareBackupRecord> scheduleMap = new HashMap<>();
         for (MiddlewareBackupSchedule schedule : schedules) {
+            MiddlewareBackupRecord record = new MiddlewareBackupRecord();
+            if (schedule.getMetadata().getLabels().containsKey("backupId")) {
+                BeanMiddlewareBackupName backupName = backupNameService.getByBackupId(schedule.getMetadata().getLabels().get("backupId"));
+                record.setTaskName(backupName.getBackupName());
+            }
             if (schedule.getMetadata().getLabels().containsKey("activeArea")) {
                 String activeArea = schedule.getMetadata().getLabels().get("activeArea");
                 String activeAreaAliasName = getActiveAreaAliasName(clusterId, activeArea);
-                MiddlewareBackupRecord record = new MiddlewareBackupRecord();
                 record.setActiveArea(schedule.getMetadata().getLabels().get("activeArea"));
                 record.setAreaAliasName(activeAreaAliasName);
                 scheduleMap.put(schedule.getMetadata().getName(), record);
-            } else {
-                scheduleMap.put(schedule.getMetadata().getName(), null);
             }
+            scheduleMap.put(schedule.getMetadata().getName(), record);
         }
         return scheduleMap;
     }
