@@ -150,7 +150,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         } else {
             List<MiddlewareBackup> backupCRList = listMiddlewareBackup(clusterId, namespace, backupId);
             records = convertBackupsToRecords(clusterId, backupCRList);
-            MiddlewareBackupTrimUtil.trimBackup(records);
+            records.forEach(middlewareBackupRecord -> {
+                middlewareBackupRecord.setSameActiveActiveBackup(true);
+            });
         }
         setBackupPosition(records);
         return records;
