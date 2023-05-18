@@ -687,7 +687,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         MiddlewareRestoreCR crd = new MiddlewareRestoreCR();
         ObjectMeta meta = new ObjectMeta();
         meta.setNamespace(namespace);
-        meta.setName(middlewareName + "-restore");
+        meta.setName(middlewareName + "-restore-" + UUIDUtils.get8UUID());
         // 设置对应label
         Map<String, String> backupLabel = getBackupLabel(sourceName, type);
         backupLabel.put("backupId", backupId);
