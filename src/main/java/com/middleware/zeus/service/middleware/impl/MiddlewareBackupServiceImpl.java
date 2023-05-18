@@ -687,7 +687,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         meta.setNamespace(namespace);
         meta.setName(middlewareName + "-restore");
         // 设置对应label
-        Map<String, String> backupLabel = getBackupLabel(middlewareName, type);
+        Map<String, String> backupLabel = getBackupLabel(sourceName, type);
         backupLabel.put("backupId", backupId);
         backupLabel.put("activeArea", activeArea);
         backupLabel.put("sourceName", sourceName);
