@@ -44,13 +44,13 @@ public class MiddlewareWebhookServiceImpl extends AbstractBaseOperator implement
 
     @Override
     protected void install(String setValues, MiddlewareClusterDTO cluster) {
-        helmChartService.installComponents(ComponentsEnum.MIDDLEWARE_WEBHOOK.getName(), "middleware-operator", setValues,
+        helmChartService.installComponents(ComponentsEnum.MIDDLEWARE_WEBHOOK.getName(), "kube-system", setValues,
                 componentsPath + File.separator + "middleware-admission-webhook", cluster);
     }
 
     @Override
     public void delete(MiddlewareClusterDTO cluster, Integer status) {
-        helmChartService.uninstall(cluster, "middleware-operator", ComponentsEnum.MIDDLEWARE_WEBHOOK.getName());
+        helmChartService.uninstall(cluster, "kube-system", ComponentsEnum.MIDDLEWARE_WEBHOOK.getName());
     }
 
     @Override
@@ -60,7 +60,7 @@ public class MiddlewareWebhookServiceImpl extends AbstractBaseOperator implement
 
     @Override
     protected List<PodInfo> getPodInfoList(String clusterId) {
-        return podService.list(clusterId, "middleware-operator", ComponentsEnum.MIDDLEWARE_WEBHOOK.getName());
+        return podService.list(clusterId, "kube-system", ComponentsEnum.MIDDLEWARE_WEBHOOK.getName());
     }
 
 }
