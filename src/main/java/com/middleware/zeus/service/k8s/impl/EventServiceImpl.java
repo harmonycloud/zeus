@@ -41,10 +41,7 @@ public class EventServiceImpl implements EventService {
     public List<EventDetail> getEvents(String clusterId, String namespace, String middlewareName, String middlewareType,
                                        String eventType, String kind) {
         MiddlewareCR mw = middlewareCRService.getCR(clusterId, namespace, middlewareType, middlewareName);
-        if (mw == null) {
-            return new ArrayList<>(0);
-        }
-        if (ObjectUtils.isEmpty(mw.getStatus().getInclude())) {
+        if (mw == null || mw.getStatus() == null || mw.getStatus().getInclude() == null) {
             return new ArrayList<>(0);
         }
         Set<String> nameSet = new HashSet<>();
