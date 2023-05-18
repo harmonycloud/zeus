@@ -4,6 +4,7 @@ import static com.middleware.zeus.common.constants.AlertConstant.*;
 import static com.middleware.zeus.common.constants.CommonConstant.ASC;
 import static com.middleware.zeus.common.constants.CommonConstant.DESC;
 import static com.middleware.zeus.common.constants.NameConstant.ZEUS;
+import static com.middleware.zeus.common.constants.user.UserConstant.ADMIN;
 
 import java.util.*;
 import java.util.function.Function;
@@ -442,7 +443,7 @@ public class AlertServiceImpl implements AlertService {
         List<UserDto> userDtoList = userService.list(null).stream()
             .filter(userDto -> alertUserDoList.stream()
                 .noneMatch(alertUserDo -> alertUserDo.getUsername().equals(userDto.getUserName())))
-            .collect(Collectors.toList());
+            .filter(userDto -> !userDto.getUserName().equals(ADMIN)).collect(Collectors.toList());
         if (roleId != null) {
             userDtoList = userService.getUserRole(userDtoList);
             userDtoList = userDtoList.stream()

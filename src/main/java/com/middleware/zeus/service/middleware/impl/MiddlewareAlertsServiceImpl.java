@@ -55,6 +55,7 @@ import java.util.stream.Collectors;
 
 import static com.middleware.zeus.common.constants.AlertConstant.*;
 import static com.middleware.zeus.common.constants.CommonConstant.NUM_FOUR;
+import static com.middleware.zeus.common.constants.user.UserConstant.ADMIN;
 
 /**
  * @author xutianhong
@@ -828,7 +829,9 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
                 .collect(Collectors.toList());
         // 获取超级管理员用户
         userDtoList.addAll(userService.list(null).stream()
-            .filter(userDto -> userDto.getIsAdmin() != null && userDto.getIsAdmin()).collect(Collectors.toList()));
+            .filter(
+                userDto -> userDto.getIsAdmin() != null && userDto.getIsAdmin() && !userDto.getUserName().equals(ADMIN))
+            .collect(Collectors.toList()));
         // 返回封装数据
         return userDtoList.stream().map(userDto -> {
             AlertUserDto alertUserDto = new AlertUserDto();
