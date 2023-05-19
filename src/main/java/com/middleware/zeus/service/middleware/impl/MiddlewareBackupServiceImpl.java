@@ -1086,7 +1086,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         if (annotations.containsKey("middleware.maintenance.step")) {
             String currentStep = annotations.get("middleware.maintenance.step");
             int currentStepNum = (Integer.parseInt(currentStep) + 1);
-            String stepDescription = currentStepNum + "/3 " + RestoreStepEnum.findStepDescriptionByStep(annotations.get("middleware.maintenance.step.str"));
+            String stepDescription = currentStepNum + "/5 " + RestoreStepEnum.findStepDescriptionByStep(annotations.get("middleware.maintenance.step.str"));
             progressInfo.setProgressDescription(stepDescription);
             Float currentProgress = currentStepNum / 3f;
             progressInfo.setCurrentProgress(currentProgress);
@@ -1289,6 +1289,22 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         QueryWrapper<BeanMiddlewareBackupName> wrapper = new QueryWrapper<>();
         wrapper.eq("cluster_id", clusterId).eq("backup_id", backupId);
         middlewareBackupNameMapper.delete(wrapper);
+    }
+
+    /**
+     * 对克隆记录进行排序
+     * @param restoreList
+     */
+    private void sortMiddlewareRestore(List<MiddlewareBackupRestore> restoreList) {
+        // 创建一个Comparator对象
+        Comparator<MiddlewareBackupRestore> comparator = new Comparator<MiddlewareBackupRestore>() {
+            @Override
+            public int compare(MiddlewareBackupRestore restore1, MiddlewareBackupRestore restore2) {
+                return restore2.getCreationTime().compareTo(restore1.getCreationTime());
+            }
+        };
+        // 使用Collections类的sort方法对List<User>进行排序
+        Collections.sort(restoreList, comparator);
     }
 
     // 排序并设置记录别名
@@ -1533,7 +1549,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
      * @return
      */
     private List<MiddlewareBackupRestore> convertMiddlewareRestore(List<MiddlewareRestoreCR> restoreCRList, String clusterId) {
-        return restoreCRList.stream().map(restoreCR -> {
+        List<MiddlewareBackupRestore> restoreList = restoreCRList.stream().map(restoreCR -> {
             MiddlewareBackupRestore backupRestore = new MiddlewareBackupRestore();
             backupRestore.setRestoreName(restoreCR.getMetadata().getName());
             backupRestore.setNamespace(restoreCR.getMetadata().getNamespace());
@@ -1551,6 +1567,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             }
             return backupRestore;
         }).collect(Collectors.toList());
+        sortMiddlewareRestore(restoreList);
+        return restoreList;
     }
 
     /**
