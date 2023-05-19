@@ -654,21 +654,23 @@ public class PodServiceImpl implements PodService {
     }
 
     public List<PodInfo> listMiddlewarePods(MiddlewareCR mw, String clusterId, String namespace) {
-        List<MiddlewareInfo> pods = mw.getStatus().getInclude().get(PODS);
         List<PodInfo> podInfoList = new ArrayList<>();
-        if(!CollectionUtils.isEmpty(pods)){
-            for (MiddlewareInfo po : pods) {
-                Pod pod = podWrapper.get(clusterId, namespace, po.getName());
-                if (pod == null) {
-                    continue;
+        if (mw.getStatus() != null && !CollectionUtils.isEmpty(mw.getStatus().getInclude())){
+            List<MiddlewareInfo> pods = mw.getStatus().getInclude().get(PODS);
+            if(!CollectionUtils.isEmpty(pods)){
+                for (MiddlewareInfo po : pods) {
+                    Pod pod = podWrapper.get(clusterId, namespace, po.getName());
+                    if (pod == null) {
+                        continue;
+                    }
+                    PodInfo pi = convertPodInfo(clusterId, pod)
+                            .setRole(StringUtils.isBlank(po.getType()) ? null : po.getType().toLowerCase());
+                    podInfoList.add(pi);
                 }
-                PodInfo pi = convertPodInfo(clusterId, pod)
-                        .setRole(StringUtils.isBlank(po.getType()) ? null : po.getType().toLowerCase());
-                podInfoList.add(pi);
             }
+            // 设置pod所在可用区
+            setPodArea(clusterId, podInfoList);
         }
-        // 设置pod所在可用区
-        setPodArea(clusterId, podInfoList);
         return podInfoList;
     }
 }
