@@ -15,8 +15,10 @@ public class InternalServiceFilterUtil {
     public static List<ServicePortDTO> filterUnused(String type, String mode, List<ServicePortDTO> servicePortDTOList) {
         if (MiddlewareTypeEnum.ELASTIC_SEARCH.getType().equals(type)) {
             return filterEs(mode, servicePortDTOList);
-        }else if(MiddlewareTypeEnum.REDIS.getType().equals(type)){
+        } else if (MiddlewareTypeEnum.REDIS.getType().equals(type)) {
             return filterRedis(mode, servicePortDTOList);
+        } else if (MiddlewareTypeEnum.POSTGRESQL.getType().equals(type)) {
+            return filterPG(mode, servicePortDTOList);
         }
         return servicePortDTOList;
     }
@@ -49,6 +51,17 @@ public class InternalServiceFilterUtil {
         }
         if (proxy) {
             return servicePortDTOList.stream().filter(servicePortDTO -> servicePortDTO.getServiceName().endsWith("predixy")
+            ).collect(Collectors.toList());
+        }
+        return servicePortDTOList;
+    }
+
+    private static List<ServicePortDTO> filterPG(String mode, List<ServicePortDTO> servicePortDTOList) {
+        if ("1m-0s".equals(mode)) {
+            return servicePortDTOList.stream().filter(servicePortDTO ->
+                    !servicePortDTO.getServiceName().endsWith("patroni") &&
+                            !servicePortDTO.getServiceName().endsWith("repl") &&
+                            !servicePortDTO.getServiceName().endsWith("svc-metrics")
             ).collect(Collectors.toList());
         }
         return servicePortDTOList;

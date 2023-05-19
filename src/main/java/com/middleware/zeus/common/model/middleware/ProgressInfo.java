@@ -31,7 +31,10 @@ public class ProgressInfo {
     private String phrase;
 
     @ApiModelProperty("存储大小")
-    private String storageSize;
+    private String size;
+
+    @ApiModelProperty("存储大小")
+    private String byteSize;
 
     @ApiModelProperty("备份控制器状态（1：正常，0：异常）")
     private Integer backupControllerStatus;

@@ -1060,6 +1060,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         if (backup.getStatus() != null) {
             progressInfo.setPhrase(backup.getStatus().getPhase());
         }
+        // 设置备份存储大小
+        setBackupSize(backup.getStatus(), progressInfo, backup.getSpec().getType());
         // 查询backup任务pods
         progressInfo.setTaskPods(getTaskPods(clusterId, namespace, backupName));
         // 查询备份控制器状态
@@ -1799,17 +1801,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
 
         backupRecord.setSourceType(middlewareCrTypeService.findTypeByCrType(backup.getSpec().getType()));
-        // 获取备份存储大小
-        if (backupStatus != null && backupStatus.getStorageProvider() != null
-                && backupStatus.getStorageProvider().getJSONObject(backupRecord.getSourceType()) != null && backupStatus
-                .getStorageProvider().getJSONObject(backupRecord.getSourceType()).containsKey("compressedSize")) {
-            JSONObject storageProvider = backupStatus.getStorageProvider();
-            String compressedSize = storageProvider.getJSONObject(backupRecord.getSourceType()).getString("compressedSize");
-            if (compressedSize != null) {
-                backupRecord.setSize(changeCompressedSizeUnit(compressedSize));
-                backupRecord.setByteSize(compressedSize);
-            }
-        }
+        // 设置备份存储大小
+        setBackupSize(backupStatus, backupRecord);
 
         backupRecord.setAddressId(labels.get("addressId"));
         backupRecord.setSourceName(backup.getSpec().getName());
@@ -1826,6 +1819,52 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             backupRecord.setActiveActive(false);
         }
     }
+
+    /**
+     * 返回备份存储大小
+     * @param backupStatus
+     * @param type
+     * @return
+     */
+    private String getBackupSize(MiddlewareBackupStatus backupStatus, String type) {
+        String compressedSize;
+        if (backupStatus != null && backupStatus.getStorageProvider() != null
+                && backupStatus.getStorageProvider().getJSONObject(type) != null && backupStatus
+                .getStorageProvider().getJSONObject(type).containsKey("compressedSize")) {
+            JSONObject storageProvider = backupStatus.getStorageProvider();
+            compressedSize = storageProvider.getJSONObject(type).getString("compressedSize");
+            return compressedSize;
+        }
+        return null;
+    }
+
+    /**
+     * 设置备份存储大小
+     * @param backupStatus
+     * @param backupRecord
+     */
+    private void setBackupSize(MiddlewareBackupStatus backupStatus, MiddlewareBackupRecord backupRecord) {
+        String compressedSize = getBackupSize(backupStatus, backupRecord.getSourceType());
+        if (compressedSize != null) {
+            backupRecord.setSize(changeCompressedSizeUnit(compressedSize));
+            backupRecord.setByteSize(compressedSize);
+        }
+    }
+
+    /**
+     * 设置备份存储大小
+     * @param backupStatus
+     * @param progressInfo
+     * @param type
+     */
+    private void setBackupSize(MiddlewareBackupStatus backupStatus, ProgressInfo progressInfo, String type) {
+        String compressedSize = getBackupSize(backupStatus, type);
+        if (compressedSize != null) {
+            progressInfo.setSize(changeCompressedSizeUnit(compressedSize));
+            progressInfo.setByteSize(compressedSize);
+        }
+    }
+
 
     private String changeCompressedSizeUnit(String compressedSize) {
         List<MemoryUnitEnum> units = Arrays.asList(MemoryUnitEnum.TI, MemoryUnitEnum.GI, MemoryUnitEnum.MI, MemoryUnitEnum.KI);
