@@ -57,7 +57,7 @@ public class MiddlewareBackupController {
                                 @PathVariable("namespace") String namespace,
                                 @PathVariable("backupId") String backupId,
                                 @RequestParam("time") String time) {
-        middlewareBackupService.createOrReplaceIncBackup(clusterId, namespace, backupId, time);
+        middlewareBackupService.createOrReplaceIncBackup(clusterId, namespace, backupId, time, "off");
         return BaseResult.ok();
     }
 
@@ -67,15 +67,15 @@ public class MiddlewareBackupController {
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "backupId", value = "备份任务id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "time", value = "间隔时间", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "pause", value = "状态(on: 开启，off：关闭)", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "pause", value = "状态(on: 关闭增量，off：开启增量)", paramType = "query", dataTypeClass = String.class),
     })
     @PutMapping("{backupId}/inc")
     public BaseResult updateInc(@PathVariable("clusterId") String clusterId,
                                 @PathVariable("namespace") String namespace,
                                 @PathVariable("backupId") String backupId,
                                 @RequestParam("time") String time,
-                                @RequestParam(value = "pause", defaultValue = "on") String pause) {
-        middlewareBackupService.createOrReplaceIncBackup(clusterId, namespace, backupId, time);
+                                @RequestParam(value = "pause", defaultValue = "off") String pause) {
+        middlewareBackupService.createOrReplaceIncBackup(clusterId, namespace, backupId, time, pause);
         return BaseResult.ok();
     }
 

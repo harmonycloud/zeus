@@ -196,7 +196,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public void createOrReplaceIncBackup(String clusterId, String namespace, String backupId, String time) {
+    public void createOrReplaceIncBackup(String clusterId, String namespace, String backupId, String time, String pause) {
         List<MiddlewareBackupSchedule> scheduleCRList = listMiddlewareBackupSchedule(clusterId, namespace, backupId);
         for (MiddlewareBackupSchedule middlewareBackupSchedule : scheduleCRList) {
             String backupName = middlewareBackupSchedule.getMetadata().getName();
@@ -210,17 +210,18 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             if ("day".equalsIgnoreCase(baks.getMetadata().getLabels().get("unit"))) {
                 checkTimeLawful(cron, retentionTime);
             }
-            createOrReplaceIncBackup(clusterId, namespace, backupName, time, baks);
+            createOrReplaceIncBackup(clusterId, namespace, backupName, time, pause, baks);
         }
     }
 
     @Override
-    public void createOrReplaceIncBackup(String clusterId, String namespace, String backupName, String time, MiddlewareBackupSchedule scheduleCR) {
+    public void createOrReplaceIncBackup(String clusterId, String namespace, String backupName, String time, String pause, MiddlewareBackupSchedule scheduleCR) {
         MiddlewareIncBackup incBackup = new MiddlewareIncBackup();
         incBackup.setClusterId(clusterId);
         incBackup.setNamespace(namespace);
         incBackup.setBackupName(backupName);
         incBackup.setTime(time);
+        incBackup.setPause(pause);
         ObjectMeta meta = new ObjectMeta();
         if (namespaceService.isOpenAvailableDomain(clusterId, namespace)) {
             //如果是双活分区，则从middlewarebackupschedule cr里获取选择器annotation和labels
@@ -363,7 +364,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         }
         // 创建增量备份
         if (backupDTO.getIncrement() != null && StringUtils.isNotEmpty(backupDTO.getTime()) && backupDTO.getIncrement()) {
-            createOrReplaceIncBackup(backupDTO.getClusterId(), backupDTO.getNamespace(), meta.getName(), backupDTO.getTime(), crd);
+            createOrReplaceIncBackup(backupDTO.getClusterId(), backupDTO.getNamespace(), meta.getName(), backupDTO.getTime(), "off", crd);
         }
     }
 
