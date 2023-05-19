@@ -102,7 +102,6 @@ public class IngressRouteTCPWrapper {
      */
     public IngressRouteTcpList list(String clusterId, String namespace, Map<String, String> labels) {
         IngressRouteTcpList ingressRouteTCPList;
-        namespace = "test";
         try {
             if (CollectionUtils.isEmpty(labels)){
                 labels = new HashMap<>();
