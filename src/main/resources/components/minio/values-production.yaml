@@ -8,5 +8,5 @@ resources:
      cpu: 500m
      memory: 1024Mi
 
-persistence:
-  size: 50Gi
+storageSize: 50Gi
+#storageClassName: default

@@ -13,6 +13,10 @@
 {{ $accessMode := .Values.persistence.accessMode }}
 {{ $storageClass := .Values.persistence.storageClass }}
 {{ $psize := .Values.persistence.size }}
+{{- if or .Values.storageClassName .Values.storageSize }}
+  {{ $storageClass = .Values.storageClassName }}
+  {{ $psize = .Values.storageSize }}
+{{- end }}
 ---
 apiVersion: v1
 kind: Service
@@ -74,20 +78,12 @@ spec:
                   values:
                   - {{ include "minio.fullname" . }}
         {{- end}}
-        {{- with .Values.nodeAffinity }}
-        nodeAffinity:
-          {{- toYaml . | nindent 10 }}
-        {{- end }}
       {{- with .Values.tolerations }}
       tolerations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.imagePullSecrets }}
-      imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       containers:
@@ -149,7 +145,7 @@ spec:
             {{- end }}
           {{- end }}
           {{- end }}
-
+          
   # These are converted to volume claims by the controller
   # and mounted at the paths mentioned above.
   volumeClaimTemplates:
@@ -191,15 +187,6 @@ spec:
     metadata:
       name: {{ include "minio.fullname" . }}-setup
     spec:
-      affinity:
-        {{- with .Values.nodeAffinity }}
-        nodeAffinity:
-          {{- toYaml . | nindent 10 }}
-        {{- end }}
-      {{- with .Values.tolerations }}
-      tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
       restartPolicy: OnFailure
       volumes:
       - name: config
@@ -218,7 +205,8 @@ spec:
         command:
         - /bin/sh
         - -c
-        - mc --config-dir=/config config host add minio http://{{ include "minio.fullname" . }}-svc.{{ .Release.Namespace }}.svc.{{ $.Values.clusterDomain }}:9000 {{ .Values.accessKey }} {{ .Values.secretKey }} && mc --config-dir=/config mb --region={{ .Values.minioArgs.regionName }} -p minio/{{ .Values.minioArgs.bucketName }}
+        args:
+        - while true;do mc --config-dir=/config config host add minio http://{{ include "minio.fullname" . }}-svc.{{ .Release.Namespace }}.svc.{{ $.Values.clusterDomain }}:9000 {{ .Values.accessKey }} {{ .Values.secretKey }} && mc --config-dir=/config mb --region={{ .Values.minioArgs.regionName }} -p minio/{{ .Values.minioArgs.bucketName }};if [ $? -ne 0 ];then sleep 5;else break;fi;done
         volumeMounts:
         - name: config
           mountPath: "/config"

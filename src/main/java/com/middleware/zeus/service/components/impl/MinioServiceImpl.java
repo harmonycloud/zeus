@@ -60,7 +60,7 @@ public class MinioServiceImpl extends AbstractBaseOperator implements MinioServi
     @Override
     protected void install(String setValues, MiddlewareClusterDTO cluster) {
         helmChartService.installComponents(ComponentsEnum.MINIO.getName(), "minio", setValues,
-                componentsPath + File.separator + "minio/charts/minio", cluster);
+                componentsPath + File.separator + "minio", cluster);
     }
 
     @Override
