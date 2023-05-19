@@ -9,6 +9,7 @@ import com.middleware.zeus.dao.*;
 import com.middleware.zeus.dao.BeanAlertRecordMapper;
 import com.middleware.zeus.service.middleware.MiddlewareAlertsService;
 import com.middleware.zeus.bean.BeanAlertRecord;
+import com.middleware.zeus.service.system.AlertNotifierService;
 import com.middleware.zeus.service.system.AlertService;
 import com.middleware.zeus.service.system.AlertUserService;
 import org.apache.commons.lang3.StringUtils;
@@ -61,6 +62,8 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
     private BeanSystemConfigMapper beanSystemConfigMapper;
     @Autowired
     private AlertUserService alertUserService;
+    @Autowired
+    private AlertNotifierService alertNotifierService;
 
     @Override
     public void alert(String json) throws Exception {
@@ -145,6 +148,7 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
             }
 
             // todo 短信通知
+            alertNotifierService.sendSMSAlertMessage(alertRecordDo, alertUserDoList);
         }
 
     }
