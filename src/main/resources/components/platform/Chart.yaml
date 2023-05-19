@@ -2,4 +2,4 @@ apiVersion: v1
 appVersion: 2.2.27
 description: A Helm chart for harmonycloud middleware platform
 name: middleware
-version: 2.2.27
+version: 2.2.27-beta.1

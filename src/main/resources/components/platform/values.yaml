@@ -6,7 +6,7 @@ global:
       pvTopology: false
       gracefulRestart: true
     image: middleware-controller
-    tag: v1.2.18
+    tag: 7d48966a
     resources:
       limits:
         cpu: 200m
@@ -15,36 +15,6 @@ global:
         cpu: 200m
         memory: 512Mi
     nodeSelector: {}
-  middlewarebackup_controller:
-    image: middlewarebackup-controller
-    removeBinlog: "no"
-    tag: v1.3.10
-    resources:
-      limits:
-        cpu: 200m
-        memory: 512Mi
-      requests:
-        cpu: 200m
-        memory: 512Mi
-    nodeSelector: {}
-    job_creator:
-      jobTolerations: harm.cn/type
-      jobNamespace: ""
-      jobServiceAccount: job-creator
-      # jobSecondsAfterFinished: 60
-      # jobActiveDeadlineSeconds: 86400
-      image: backup-job-creator
-      tag: v1.0.4
-    common_path_backup:
-      image: middleware-backup-operator
-      tag: v1.0.5-common
-    job_pgsql_backup:
-      image: middleware-backup-operator
-      tag: v1.0.11-pgsql
-    job_mysql_backup:
-      image: middleware-backup-operator
-      tag: v1.0.14-mysql
-      mysql8tag: v1.0.14-mysql8
   kubectl:
     installCRDs: true
     tag: 1.21
