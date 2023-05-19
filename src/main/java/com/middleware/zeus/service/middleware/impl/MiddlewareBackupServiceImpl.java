@@ -1053,7 +1053,12 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             Float currentProgress = currentStepNum / 3f;
             progressInfo.setCurrentProgress(currentProgress);
         }
-
+        try {
+            Date creationTime = DateUtils.parseUTCDate(backup.getMetadata().getCreationTimestamp());
+            progressInfo.setCreateTime(creationTime);
+        } catch (Exception e) {
+            log.error("设置时间失败", e);
+        }
         progressInfo.setClusterId(clusterId);
         progressInfo.setNamespace(namespace);
         progressInfo.setBackupSourceName(middlewareName);
@@ -1085,6 +1090,12 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             progressInfo.setProgressDescription(stepDescription);
             Float currentProgress = currentStepNum / 3f;
             progressInfo.setCurrentProgress(currentProgress);
+        }
+        try {
+            Date creationTime = DateUtils.parseUTCDate(restoreCR.getMetadata().getCreationTimestamp());
+            progressInfo.setCreateTime(creationTime);
+        } catch (Exception e) {
+            log.error("设置时间失败", e);
         }
         // 查询restore进程pods
         progressInfo.setTaskPods(getTaskPods(clusterId, namespace, restoreName));

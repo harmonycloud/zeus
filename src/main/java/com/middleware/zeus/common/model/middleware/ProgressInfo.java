@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -46,7 +47,7 @@ public class ProgressInfo {
     private String progressDescription;
 
     @ApiModelProperty("备份或恢复创建时间")
-    private String createTime;
+    private Date createTime;
 
     @ApiModelProperty("备份进程")
     private List<PodInfo> taskPods;
