@@ -323,7 +323,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         // 查询配置文件
         ConfigMap configMap;
         try {
-            configMap = configMapService.get(clusterId, namespace, dashboardName);
+            configMap = configMapService.get(clusterId, "middleware-operator", dashboardName);
         } catch (Exception e){
             log.error("集群{} 分区{} 中间件{} 查询监控面板失败", clusterId, namespace, name, e);
             throw new BusinessException(ErrorMessage.GRAFANA_DASHBOARD_NOT_FOUND);
