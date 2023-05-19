@@ -48,7 +48,7 @@ metadata:
 subjects:
 - kind: ServiceAccount
   name: middleware-admission-webhook-sa
-  namespace: kube-system
+  namespace: middleware-operator
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
