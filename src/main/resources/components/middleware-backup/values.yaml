@@ -4,7 +4,7 @@ global:
   middlewarebackup_controller:
     image: middlewarebackup-controller
     removeBinlog: "yes"
-    tag: dbb43bd2
+    tag: v1.3.11
     resources:
       limits:
         cpu: 200m
@@ -44,29 +44,6 @@ global:
     nodeSelector: {}
     tolerations: []
     affinity: {}
-  middleware_api:
-    image: middleware-api
-    tag: v0.1.0
-    pullPolicy: Always
-    replicaCount: 1
-    podAnnotations: {}
-    podSecurityContext: {}
-    securityContext: {}
-    resources:
-      limits:
-        cpu: 100m
-        memory: 128Mi
-      requests:
-        cpu: 100m
-        memory: 128Mi
-    serviceAccount:
-      create: true
-      annotations: {}
-      name: ""
-    service:
-      type: ClusterIP
-      port: 8080
-    nodeSelector: {}
 
 podAntiAffinityTopologKey: "kubernetes.io/hostname"
 

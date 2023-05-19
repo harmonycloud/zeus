@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: middlewarebackup-controller
+  labels:
+    micrometer-prometheus-discovery: 'true'
+    control-plane: backup-controller
+spec:
+  selector:
+    control-plane: backup-controller
+  ports:
+    - protocol: TCP
+      port: 8086
+      targetPort: 8086
+      name: metrics
+---
+{{- if  .Capabilities.APIVersions.Has "monitoring.coreos.com/v1" }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: middlewarebackup-controller
+spec:
+  endpoints:
+    - interval: 15s
+      port: metrics
+  selector:
+    matchLabels:
+      control-plane: backup-controller
+{{- end }}
