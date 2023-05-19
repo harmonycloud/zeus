@@ -933,7 +933,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     public void reboot(String clusterId, String namespace, String name, String type, String podType) {
         MysqlCluster mysqlCluster = mysqlClusterWrapper.get(clusterId, namespace, name);
         Integer replicas = mysqlCluster.getSpec().getReplicas();
-        if (replicas == 1 || !podType.equalsIgnoreCase("Master")) {
+        if (replicas == 1) {
             super.reboot(clusterId, namespace, name, type, podType);
             return;
         }
@@ -942,6 +942,9 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         for (String param : params) {
             String[] kv = param.split(":");
             annotations.put(kv[0], kv[1]);
+        }
+        if (PROXY.equals(podType)){
+            annotations.put("middleware.maintenance.component", "proxysql");
         }
         try {
             mysqlClusterWrapper.update(clusterId, namespace, mysqlCluster);

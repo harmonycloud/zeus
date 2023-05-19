@@ -320,6 +320,7 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         middleware.setRedisParam(redisParam);
     }
 
+    @Override
     public void convertSecurityContext(Middleware middleware, JSONObject values) {
         JSONObject redis = values.getJSONObject("redis");
         if (redis != null && redis.containsKey(ContainerConstant.SECURITY_CONTEXT)) {
@@ -670,16 +671,15 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
 
     @Override
     public void reboot(String clusterId, String namespace, String name, String type, String podType) {
-        if (!podType.equalsIgnoreCase("Master")) {
-            super.reboot(clusterId, namespace, name, type, podType);
-            return;
-        }
         RedisCluster rediscluster = redisClusterWrapper.get(clusterId, namespace, name);
         Map<String, String> annotations = rediscluster.getMetadata().getAnnotations();
         String[] params = gracefulRestartParam.split(",");
         for (String param : params) {
             String[] pair = param.split(":");
             annotations.put(pair[0], pair[1]);
+        }
+        if (PROXY.equals(podType)){
+            annotations.put("middleware.maintenance.component", "predixy");
         }
         redisClusterWrapper.update(clusterId, namespace, rediscluster);
     }
