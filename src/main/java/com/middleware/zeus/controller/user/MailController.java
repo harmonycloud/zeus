@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @Api(tags = {"邮件发送","邮件发送"}, value = "邮件发送")
 @RestController
-@RequestMapping(value = {"/mail/{ding}","/mail"})
+@RequestMapping("/mail")
 public class MailController {
 
     @Autowired
@@ -35,7 +35,7 @@ public class MailController {
     }
 
     @ApiOperation(value = "获取邮箱信息", notes = "获取邮箱信息")
-    @GetMapping("/getMailInfo")
+    @GetMapping()
     public BaseResult get() {
         return BaseResult.ok(mailService.select());
     }
