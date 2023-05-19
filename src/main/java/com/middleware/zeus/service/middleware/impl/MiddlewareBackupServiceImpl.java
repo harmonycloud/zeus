@@ -27,14 +27,12 @@ import com.middleware.zeus.dao.BeanCustomConfigMapper;
 import com.middleware.zeus.integration.cluster.DeploymenentWrapper;
 import com.middleware.zeus.integration.cluster.StatefulSetWrapper;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareBackup;
-import com.middleware.zeus.operator.BaseOperator;
 import com.middleware.zeus.service.k8s.*;
 import com.middleware.zeus.service.middleware.*;
 import com.middleware.zeus.integration.cluster.bean.*;
 import com.middleware.zeus.service.registry.HelmChartService;
 import com.middleware.zeus.service.user.ProjectService;
 import com.middleware.zeus.service.user.RoleAuthorityService;
-import com.middleware.zeus.service.user.UserRoleService;
 import com.middleware.zeus.service.user.UserService;
 import com.middleware.zeus.util.numeric.MathUtil;
 import com.middleware.zeus.util.middleware.MiddlewareBackupTrimUtil;
@@ -198,7 +196,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public void createIncBackup(String clusterId, String namespace, String backupId, String time) {
+    public void createOrReplaceIncBackup(String clusterId, String namespace, String backupId, String time, String pause) {
         List<MiddlewareBackupSchedule> scheduleCRList = listMiddlewareBackupSchedule(clusterId, namespace, backupId);
         for (MiddlewareBackupSchedule middlewareBackupSchedule : scheduleCRList) {
             String backupName = middlewareBackupSchedule.getMetadata().getName();
@@ -212,17 +210,18 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             if ("day".equalsIgnoreCase(baks.getMetadata().getLabels().get("unit"))) {
                 checkTimeLawful(cron, retentionTime);
             }
-            createIncBackup(clusterId, namespace, backupName, time, baks);
+            createOrReplaceIncBackup(clusterId, namespace, backupName, time, pause, baks);
         }
     }
 
     @Override
-    public void createIncBackup(String clusterId, String namespace, String backupName, String time, MiddlewareBackupSchedule scheduleCR) {
+    public void createOrReplaceIncBackup(String clusterId, String namespace, String backupName, String time, String pause, MiddlewareBackupSchedule scheduleCR) {
         MiddlewareIncBackup incBackup = new MiddlewareIncBackup();
         incBackup.setClusterId(clusterId);
         incBackup.setNamespace(namespace);
         incBackup.setBackupName(backupName);
         incBackup.setTime(time);
+        incBackup.setPause(pause);
         ObjectMeta meta = new ObjectMeta();
         if (namespaceService.isOpenAvailableDomain(clusterId, namespace)) {
             //如果是双活分区，则从middlewarebackupschedule cr里获取选择器annotation和labels
@@ -234,7 +233,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             meta.setAnnotations(annotations);
             meta.setLabels(areaLabels);
         }
-        createIncBackupSchedule(incBackup, meta);
+        createOrReplaceIncBackupSchedule(incBackup, meta);
     }
 
     @Override
@@ -365,7 +364,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         }
         // 创建增量备份
         if (backupDTO.getIncrement() != null && StringUtils.isNotEmpty(backupDTO.getTime()) && backupDTO.getIncrement()) {
-            createIncBackup(backupDTO.getClusterId(), backupDTO.getNamespace(), meta.getName(), backupDTO.getTime(), crd);
+            createOrReplaceIncBackup(backupDTO.getClusterId(), backupDTO.getNamespace(), meta.getName(), backupDTO.getTime(), "off", crd);
         }
     }
 
@@ -418,11 +417,15 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
      * @param objectMeta
      */
     @Override
-    public void createIncBackupSchedule(MiddlewareIncBackup middlewareIncBackup, ObjectMeta objectMeta) {
+    public void createOrReplaceIncBackupSchedule(MiddlewareIncBackup middlewareIncBackup, ObjectMeta objectMeta) {
         String clusterId = middlewareIncBackup.getClusterId();
         String namespace = middlewareIncBackup.getNamespace();
         String backupName = middlewareIncBackup.getBackupName();
         String time = middlewareIncBackup.getTime();
+        String pause = middlewareIncBackup.getPause();
+        if (StringUtils.isEmpty(pause)) {
+            pause = "on";
+        }
         Map<String, String> annotations = middlewareIncBackup.getAnnotations();
         MiddlewareBackupSchedule cr = backupScheduleCRDService.get(clusterId, namespace, backupName);
         objectMeta.setName(backupName + "-" + INCR);
@@ -455,6 +458,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 });
             }
         });
+        // 设置增量备份开关
+        cr.getSpec().setPause(pause);
         // 转换时间单位
         cr.getSpec().getSchedule().setCron(CronUtils.convertTimeToCron(time));
         try {
@@ -687,7 +692,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         MiddlewareRestoreCR crd = new MiddlewareRestoreCR();
         ObjectMeta meta = new ObjectMeta();
         meta.setNamespace(namespace);
-        meta.setName(middlewareName + "-restore");
+        meta.setName(middlewareName + "-restore-" + UUIDUtils.get8UUID());
         // 设置对应label
         Map<String, String> backupLabel = getBackupLabel(sourceName, type);
         backupLabel.put("backupId", backupId);
@@ -1106,6 +1111,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             if (StringUtils.isNotEmpty(record.getOwner()) && incrScheduleNames.contains(record.getOwner())) {
                 MiddlewareBackupRecord schedule = incrScheduleNamesMap.get(record.getOwner());
                 if (schedule != null) {
+                    record.setTaskName(schedule.getTaskName());
                     record.setActiveArea(schedule.getActiveArea());
                     record.setAreaAliasName(schedule.getAreaAliasName());
                 }
@@ -1296,11 +1302,11 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 return 0;
             }
         });
-        // TODO 设置备份记录名称
+
         for (int i = 0; i < recordList.size(); i++) {
             MiddlewareBackupRecord bak = recordList.get(i);
             String[] bakNameSplit = bak.getBackupName().split("-");
-            bak.setRecordName(bak.getTaskName() + "-" + bakNameSplit[bakNameSplit.length - 1]);
+            bak.setRecordName(bak.getTaskName() + "-" + bakNameSplit[bakNameSplit.length - 2] + "-" + bakNameSplit[bakNameSplit.length - 1]);
         }
         return recordList;
     }
@@ -1361,16 +1367,19 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         List<MiddlewareBackupSchedule> schedules = listMiddlewareBackupSchedule(clusterId, namespace, backupId);
         Map<String, MiddlewareBackupRecord> scheduleMap = new HashMap<>();
         for (MiddlewareBackupSchedule schedule : schedules) {
+            MiddlewareBackupRecord record = new MiddlewareBackupRecord();
+            if (schedule.getMetadata().getLabels().containsKey("backupId")) {
+                BeanMiddlewareBackupName backupName = backupNameService.getByBackupId(schedule.getMetadata().getLabels().get("backupId"));
+                record.setTaskName(backupName.getBackupName());
+            }
             if (schedule.getMetadata().getLabels().containsKey("activeArea")) {
                 String activeArea = schedule.getMetadata().getLabels().get("activeArea");
                 String activeAreaAliasName = getActiveAreaAliasName(clusterId, activeArea);
-                MiddlewareBackupRecord record = new MiddlewareBackupRecord();
                 record.setActiveArea(schedule.getMetadata().getLabels().get("activeArea"));
                 record.setAreaAliasName(activeAreaAliasName);
                 scheduleMap.put(schedule.getMetadata().getName(), record);
-            } else {
-                scheduleMap.put(schedule.getMetadata().getName(), null);
             }
+            scheduleMap.put(schedule.getMetadata().getName(), record);
         }
         return scheduleMap;
     }
