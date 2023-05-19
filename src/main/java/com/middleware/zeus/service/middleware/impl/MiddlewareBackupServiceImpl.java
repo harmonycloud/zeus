@@ -1053,13 +1053,20 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             Float currentProgress = currentStepNum / 3f;
             progressInfo.setCurrentProgress(currentProgress);
         }
-
+        try {
+            Date creationTime = DateUtils.parseUTCDate(backup.getMetadata().getCreationTimestamp());
+            progressInfo.setCreateTime(creationTime);
+        } catch (Exception e) {
+            log.error("设置时间失败", e);
+        }
         progressInfo.setClusterId(clusterId);
         progressInfo.setNamespace(namespace);
         progressInfo.setBackupSourceName(middlewareName);
         if (backup.getStatus() != null) {
             progressInfo.setPhrase(backup.getStatus().getPhase());
         }
+        // 设置备份存储大小
+        setBackupSize(backup.getStatus(), progressInfo, backup.getSpec().getType());
         // 查询backup任务pods
         progressInfo.setTaskPods(getTaskPods(clusterId, namespace, backupName));
         // 查询备份控制器状态
@@ -1079,10 +1086,16 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         if (annotations.containsKey("middleware.maintenance.step")) {
             String currentStep = annotations.get("middleware.maintenance.step");
             int currentStepNum = (Integer.parseInt(currentStep) + 1);
-            String stepDescription = currentStepNum + "/3 " + RestoreStepEnum.findStepDescriptionByStep(annotations.get("middleware.maintenance.step.str"));
+            String stepDescription = currentStepNum + "/5 " + RestoreStepEnum.findStepDescriptionByStep(annotations.get("middleware.maintenance.step.str"));
             progressInfo.setProgressDescription(stepDescription);
             Float currentProgress = currentStepNum / 3f;
             progressInfo.setCurrentProgress(currentProgress);
+        }
+        try {
+            Date creationTime = DateUtils.parseUTCDate(restoreCR.getMetadata().getCreationTimestamp());
+            progressInfo.setCreateTime(creationTime);
+        } catch (Exception e) {
+            log.error("设置时间失败", e);
         }
         // 查询restore进程pods
         progressInfo.setTaskPods(getTaskPods(clusterId, namespace, restoreName));
@@ -1276,6 +1289,22 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         QueryWrapper<BeanMiddlewareBackupName> wrapper = new QueryWrapper<>();
         wrapper.eq("cluster_id", clusterId).eq("backup_id", backupId);
         middlewareBackupNameMapper.delete(wrapper);
+    }
+
+    /**
+     * 对克隆记录进行排序
+     * @param restoreList
+     */
+    private void sortMiddlewareRestore(List<MiddlewareBackupRestore> restoreList) {
+        // 创建一个Comparator对象
+        Comparator<MiddlewareBackupRestore> comparator = new Comparator<MiddlewareBackupRestore>() {
+            @Override
+            public int compare(MiddlewareBackupRestore restore1, MiddlewareBackupRestore restore2) {
+                return restore2.getCreationTime().compareTo(restore1.getCreationTime());
+            }
+        };
+        // 使用Collections类的sort方法对List<User>进行排序
+        Collections.sort(restoreList, comparator);
     }
 
     // 排序并设置记录别名
@@ -1520,7 +1549,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
      * @return
      */
     private List<MiddlewareBackupRestore> convertMiddlewareRestore(List<MiddlewareRestoreCR> restoreCRList, String clusterId) {
-        return restoreCRList.stream().map(restoreCR -> {
+        List<MiddlewareBackupRestore> restoreList = restoreCRList.stream().map(restoreCR -> {
             MiddlewareBackupRestore backupRestore = new MiddlewareBackupRestore();
             backupRestore.setRestoreName(restoreCR.getMetadata().getName());
             backupRestore.setNamespace(restoreCR.getMetadata().getNamespace());
@@ -1538,6 +1567,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             }
             return backupRestore;
         }).collect(Collectors.toList());
+        sortMiddlewareRestore(restoreList);
+        return restoreList;
     }
 
     /**
@@ -1799,17 +1830,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
 
         backupRecord.setSourceType(middlewareCrTypeService.findTypeByCrType(backup.getSpec().getType()));
-        // 获取备份存储大小
-        if (backupStatus != null && backupStatus.getStorageProvider() != null
-                && backupStatus.getStorageProvider().getJSONObject(backupRecord.getSourceType()) != null && backupStatus
-                .getStorageProvider().getJSONObject(backupRecord.getSourceType()).containsKey("compressedSize")) {
-            JSONObject storageProvider = backupStatus.getStorageProvider();
-            String compressedSize = storageProvider.getJSONObject(backupRecord.getSourceType()).getString("compressedSize");
-            if (compressedSize != null) {
-                backupRecord.setSize(changeCompressedSizeUnit(compressedSize));
-                backupRecord.setByteSize(compressedSize);
-            }
-        }
+        // 设置备份存储大小
+        setBackupSize(backupStatus, backupRecord);
 
         backupRecord.setAddressId(labels.get("addressId"));
         backupRecord.setSourceName(backup.getSpec().getName());
@@ -1826,6 +1848,52 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             backupRecord.setActiveActive(false);
         }
     }
+
+    /**
+     * 返回备份存储大小
+     * @param backupStatus
+     * @param type
+     * @return
+     */
+    private String getBackupSize(MiddlewareBackupStatus backupStatus, String type) {
+        String compressedSize;
+        if (backupStatus != null && backupStatus.getStorageProvider() != null
+                && backupStatus.getStorageProvider().getJSONObject(type) != null && backupStatus
+                .getStorageProvider().getJSONObject(type).containsKey("compressedSize")) {
+            JSONObject storageProvider = backupStatus.getStorageProvider();
+            compressedSize = storageProvider.getJSONObject(type).getString("compressedSize");
+            return compressedSize;
+        }
+        return null;
+    }
+
+    /**
+     * 设置备份存储大小
+     * @param backupStatus
+     * @param backupRecord
+     */
+    private void setBackupSize(MiddlewareBackupStatus backupStatus, MiddlewareBackupRecord backupRecord) {
+        String compressedSize = getBackupSize(backupStatus, backupRecord.getSourceType());
+        if (compressedSize != null) {
+            backupRecord.setSize(changeCompressedSizeUnit(compressedSize));
+            backupRecord.setByteSize(compressedSize);
+        }
+    }
+
+    /**
+     * 设置备份存储大小
+     * @param backupStatus
+     * @param progressInfo
+     * @param type
+     */
+    private void setBackupSize(MiddlewareBackupStatus backupStatus, ProgressInfo progressInfo, String type) {
+        String compressedSize = getBackupSize(backupStatus, type);
+        if (compressedSize != null) {
+            progressInfo.setSize(changeCompressedSizeUnit(compressedSize));
+            progressInfo.setByteSize(compressedSize);
+        }
+    }
+
 
     private String changeCompressedSizeUnit(String compressedSize) {
         List<MemoryUnitEnum> units = Arrays.asList(MemoryUnitEnum.TI, MemoryUnitEnum.GI, MemoryUnitEnum.MI, MemoryUnitEnum.KI);

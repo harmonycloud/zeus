@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -31,7 +32,10 @@ public class ProgressInfo {
     private String phrase;
 
     @ApiModelProperty("存储大小")
-    private String storageSize;
+    private String size;
+
+    @ApiModelProperty("存储大小")
+    private String byteSize;
 
     @ApiModelProperty("备份控制器状态（1：正常，0：异常）")
     private Integer backupControllerStatus;
@@ -43,7 +47,7 @@ public class ProgressInfo {
     private String progressDescription;
 
     @ApiModelProperty("备份或恢复创建时间")
-    private String createTime;
+    private Date createTime;
 
     @ApiModelProperty("备份进程")
     private List<PodInfo> taskPods;
