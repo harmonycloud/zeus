@@ -1300,7 +1300,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
         for (int i = 0; i < recordList.size(); i++) {
             MiddlewareBackupRecord bak = recordList.get(i);
-            bak.setRecordName(bak.getTaskName() + "-" + bak.getBackupName());
+            String[] bakNameSplit = bak.getBackupName().split("-");
+            bak.setRecordName(bak.getTaskName() + "-" + bakNameSplit[bakNameSplit.length - 2] + "-" + bakNameSplit[bakNameSplit.length - 1]);
         }
         return recordList;
     }
