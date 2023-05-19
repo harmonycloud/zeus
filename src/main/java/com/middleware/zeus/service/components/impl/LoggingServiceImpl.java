@@ -167,15 +167,22 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
     @Override
     public void logPilot(MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto) {
         String repository = getRepository(cluster);
-        String setValues = "image.logpilotRepository=" + repository + "/log-pilot" +
-                ",image.logstashRepository=" + repository + "/logstash";
+        String setValues = "image.repository=" + repository;
+        helmChartService.installComponents("log-pilot", "logging", setValues,
+                componentsPath + File.separator + "log-pilot", cluster);
+    }
+
+    @Override
+    public void logStash(MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto) {
+        String repository = getRepository(cluster);
+        String setValues = "image=" + repository + "/logstash";
         if (SIMPLE.equals(clusterComponentsDto.getType())) {
-            setValues = setValues + ",logstashReplacesCount=1";
+            setValues = setValues + ",replicas=1";
         } else {
-            setValues = setValues + ",logstashReplacesCount=2";
+            setValues = setValues + ",replicas=2";
         }
-        helmChartService.installComponents("log", "logging", setValues,
-                componentsPath + File.separator + "logging", cluster);
+        helmChartService.installComponents("logstash", "logging", setValues,
+                componentsPath + File.separator + "logstash", cluster);
     }
 
     public void tryCreateEsTemplate(MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto) {
@@ -190,6 +197,7 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
                         // 发布logPilot
                         log.info("es发布成功,开始安装logPilot");
                         logPilot(cluster, clusterComponentsDto);
+                        logStash(cluster, clusterComponentsDto);
                         return;
                     }
                 }

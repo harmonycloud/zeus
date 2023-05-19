@@ -1,0 +1,80 @@
+capabilities:
+  - basic
+  - high
+  - ingress
+  - config
+questions:
+  - variable: nodeAffinity
+    description: "主机亲和"
+    label: "主机亲和"
+    default: false
+    type: nodeAffinity
+    group: "调度策略"
+  - variable: image
+    default: "middleware.harmonycloud.cn:38080/middleware/logstash"
+    label: 镜像地址
+    detail: true
+    type: string
+    required: true
+    group: "Logstash 配置"
+  - variable: logstashPipeline
+    label: pipeline files
+    default: "logstash.conf: |\n  input {\n    exec {\n      command => \"uptime\"\n      interval => 30\n    }\n  }\n  output { stdout { } }"
+    type: multiline
+    required: true
+    group: "Logstash 配置"
+  - variable: replicas
+    default: 1
+    label: 副本数
+    pattern: ^[0-9]$
+    message: "请输入大于0小于9的数字"
+    type: int
+    group: "规格配置"
+  - variable: resources.requests.cpu
+    default: "1000m"
+    pattern: ^[1-9]m$|^[1-9][0-9]m$|^[1-9][0-9][0-9]m$|^1000m$
+    message: "请输入单位为m的1-1000之间的字符串"
+    label: CPU Requests
+    group: "规格配置"
+    type: string
+    required: true
+  - variable: resources.requests.memory
+    default: "2048M"
+    label: 内存 Requests
+    pattern: ^[1-9][0-9][0-9]M$|^[1-9][0-9][0-9][0-9]M$|^10000M$
+    message: "请输入单位为M的100-10000之间的字符串"
+    type: string
+    group: "规格配置"
+    required: true
+  - variable: resources.limits.cpu
+    default: "1000m"
+    pattern: ^[1-9]m$|^[1-9][0-9]m$|^[1-9][0-9][0-9]m$|^1000m$
+    label: CPU Limits
+    group: "规格配置"
+    type: string
+    required: true
+  - variable: resources.limits.memory
+    default: "2048M"
+    label: 内存 Limits
+    pattern: ^[1-9][0-9][0-9]M$|^[1-9][0-9][0-9][0-9]M$|^10000M$
+    type: string
+    group: "规格配置"
+    required: true
+  - variable: logstashJavaOpts
+    default: "-Xmx1g -Xms1g"
+    label: 堆大小
+    type: string
+    group: "规格配置"
+    required: true
+  - variable: storageClassName
+    default: ""
+    label: 存储类型
+    type: storageclass
+    required: true
+    group: "存储配额"
+  - variable: volumeClaimTemplate.resources.requests.storage
+    default: "1Gi"
+    label: 存储大小
+    type: string
+    required: true
+    group: "存储配额"

@@ -196,4 +196,4 @@ data:
     esac
 kind: ConfigMap
 metadata:
-  name: filebeat-config
+  name: {{ include "log-pilot.fullname" . }}-config

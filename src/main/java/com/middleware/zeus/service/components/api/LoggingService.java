@@ -18,4 +18,12 @@ public interface LoggingService extends BaseComponentsService {
      */
     void logPilot(MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto);
 
+    /**
+     * 安装log-pilot组件
+     *
+     * @param cluster  集群对象
+     * @param clusterComponentsDto  集群组件对象
+     */
+    void logStash(MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto);
+
 }

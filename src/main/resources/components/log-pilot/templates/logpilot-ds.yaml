@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: log-pilot
+  name: {{ include "log-pilot.fullname" . }}
   labels:
     k8s-app: log-pilot
     node-pool: ignore
@@ -21,25 +21,28 @@ spec:
       - operator: Exists
       containers:
       - name: log-pilot
-        image: "{{ .Values.image.logpilotRepository }}:{{ .Values.image.logpilotImageTag }}"
+        image: {{ .Values.image.repository }}/log-pilot:{{ .Values.runtime.imageTag | default .Chart.AppVersion }}
         resources:
-          limits:
-            cpu: 500m
-            memory: 512Mi
-          requests:
-            cpu: 100m
-            memory: 128Mi
+{{ toYaml .Values.resources | indent 10 }}
         env:
+        {{- if eq .Values.logging_output.type "logstash"}}
         - name: "LOGGING_OUTPUT"
           value: "logstash"
         - name: "LOGSTASH_HOST"
-          value: "logstash"
+          value: "{{ .Values.logging_output.address }}"
         - name: "LOGSTASH_PORT"
           value: "5044"
         - name: LOGSTASH_BULK_MAX_SIZE
           value: "3500"
         - name: "LOGSTASH_LOADBALANCE"
           value: "true"
+        {{- end}}
+        {{- if eq .Values.logging_output.type "kafka"}}
+        - name: "LOGGING_OUTPUT"
+          value: "kafka"
+        - name: "KAFKA_BROKERS"
+          value: "{{ .Values.logging_output.address }}"
+        {{- end}}
         - name: "NODE_NAME"
           valueFrom:
             fieldRef:
@@ -47,8 +50,13 @@ spec:
         - name: PILOT_LOG_PREFIX
           value: aliyun
         volumeMounts:
+        {{- if eq .Values.runtime.type "containerd"}}
+        - name: sock
+          mountPath: /var/run/containerd/containerd.sock
+        {{- else }}
         - name: sock
           mountPath: /var/run/docker.sock
+        {{- end}}
         - name: logs
           mountPath: /var/log/filebeat
         - name: state
@@ -71,9 +79,15 @@ spec:
       terminationGracePeriodSeconds: 30
       hostNetwork: false
       volumes:
+      {{- if eq .Values.runtime.type "containerd"}}
+      - name: sock
+        hostPath:
+          path: /var/run/containerd/containerd.sock
+      {{- else }}
       - name: sock
         hostPath:
           path: /var/run/docker.sock
+      {{- end}}
       - name: logs
         hostPath:
           path: /var/log/filebeat
@@ -89,9 +103,9 @@ spec:
       - name: filebeat-config
         configMap:
           defaultMode: 511
-          name: filebeat-config
+          name: {{ include "log-pilot.fullname" . }}-config
       - configMap:
           defaultMode: 511
-          name: filebeat-tpl
+          name: {{ include "log-pilot.fullname" . }}-tpl
         name: filebeat-tpl
 

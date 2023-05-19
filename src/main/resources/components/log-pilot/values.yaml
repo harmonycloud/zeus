@@ -1,0 +1,27 @@
+image:
+  repository: harbor.middleware.com/middleware
+  pullPolicy: IfNotPresent
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+# 日志可选择输出到logstash 或者kafka
+logging_output:
+  # type: kafka
+  type: logstash
+  address: logstash.logging
+
+# docker or containerd
+runtime:
+  type: docker
+  imageTag: 0.9.7-filebeat-hc.4
+#  type: containerd
+#  imageTag: 0.9.7-filebeat-hc.5
+
+
+

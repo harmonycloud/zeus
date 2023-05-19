@@ -240,7 +240,8 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
     @Override
     public Boolean logCollect(String clusterId) {
         List<HelmListInfo> list = helmChartService.listHelm("logging", null, clusterService.findById(clusterId));
-        return list.stream().anyMatch(helmListInfo -> "log".equals(helmListInfo.getName()));
+        return list.stream().anyMatch(helmListInfo -> "log-pilot".equals(helmListInfo.getName()))
+            && list.stream().anyMatch(helmListInfo -> "logstash".equals(helmListInfo.getName()));
     }
 
     /**
@@ -333,6 +334,7 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
         MiddlewareClusterDTO cluster = clusterService.findById(clusterComponentsDto.getClusterId());
         if (clusterComponentsDto.getLogCollect()){
             loggingService.logPilot(cluster, clusterComponentsDto);
+            loggingService.logStash(cluster, clusterComponentsDto);
         }else {
             helmChartService.uninstall(cluster, MIDDLEWARE_OPERATOR, "log");
         }
