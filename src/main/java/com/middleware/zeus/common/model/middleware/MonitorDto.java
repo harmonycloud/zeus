@@ -14,6 +14,10 @@ import lombok.experimental.Accessors;
 @ApiModel("实时监控接口")
 public class MonitorDto {
 
+    @ApiModelProperty("标题")
+    private String title;
+    @ApiModelProperty("面板uid")
+    private String uid;
     @ApiModelProperty("链接")
     private String url;
     @ApiModelProperty("token")

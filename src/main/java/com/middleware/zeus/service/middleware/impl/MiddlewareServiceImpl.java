@@ -315,47 +315,42 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     }
 
     @Override
-    public MonitorDto monitor(String clusterId, String namespace, String name, String type, String chartVersion) {
+    public List<MonitorDto> monitor(String clusterId, String namespace, String name, String type, String chartVersion) {
+        // 构建middleware对象
         Middleware middleware = new Middleware(clusterId, namespace, name, type).setChartVersion(chartVersion);
-        List<BeanMiddlewareInfo> middlewareInfoList = middlewareInfoService.list(true);
-        Map<String, BeanMiddlewareInfo> middlewareInfoMap  = new HashMap<>();
-        for (BeanMiddlewareInfo beanMiddlewareInfo : middlewareInfoList) {
-            middlewareInfoMap.put(beanMiddlewareInfo.getChartName() + ":" + beanMiddlewareInfo.getChartVersion(), beanMiddlewareInfo);
-        }
-        BeanMiddlewareInfo mwInfo = middlewareInfoMap.get(middleware.getType() + ":" + middleware.getChartVersion());
-        if (mwInfo == null) {
-            throw new BusinessException(ErrorMessage.MIDDLEWARE_NOT_EXIST);
-        }
-        if (StringUtils.isEmpty(mwInfo.getGrafanaId())){
-            updateGrafanaId(mwInfo, middleware);
-        }
-        if (StringUtils.isEmpty(mwInfo.getGrafanaId())){
-            throw new BusinessException(ErrorMessage.GRAFANA_ID_NOT_FOUND);
+        // 获取面板配置文件名称
+        String dashboardName = getDashboardName(middleware);
+        // 查询配置文件
+        ConfigMap configMap;
+        try {
+            configMap = configMapService.get(clusterId, namespace, dashboardName);
+        } catch (Exception e){
+            log.error("集群{} 分区{} 中间件{} 查询监控面板失败", clusterId, namespace, name, e);
+            throw new BusinessException(ErrorMessage.GRAFANA_DASHBOARD_NOT_FOUND);
         }
 
         //获取组件信息
         ClusterComponentsDto grafana = clusterComponentService.get(clusterId, "grafana");
-        if (grafana == null) {
-            throw new BusinessException(ErrorMessage.CLUSTER_MONITOR_INFO_NOT_FOUND);
-        }
-        MiddlewareClusterMonitorInfo monitorInfo = new MiddlewareClusterMonitorInfo();
-        BeanUtils.copyProperties(grafana,monitorInfo);
-        if (monitorInfo == null
-                || StringUtils.isAnyEmpty(monitorInfo.getProtocol(), monitorInfo.getHost(), monitorInfo.getPort())) {
-            throw new BusinessException(ErrorMessage.CLUSTER_MONITOR_INFO_NOT_FOUND);
-        }
-        // 生成token
-        if (StringUtils.isEmpty(monitorInfo.getToken()) && StringUtils.isNotEmpty(monitorInfo.getUsername())
-                && StringUtils.isNotEmpty(monitorInfo.getPassword())) {
-            grafanaService.setToken(monitorInfo);
-        }
 
-        MonitorDto monitorDto = new MonitorDto();
-        monitorDto.setUrl(monitorInfo.getAddress() + "/d/" + mwInfo.getGrafanaId() + "/" + middleware.getType()
-            + "?var-namespace=" + middleware.getNamespace() + "&"
-            + MiddlewareGrafanaNameEnum.findByType(middleware.getType()).getName() + "=" + middleware.getName());
-        monitorDto.setAuthorization("Bearer " + monitorInfo.getToken());
-        return monitorDto;
+        // 封装数据
+        List<MonitorDto> monitorDtoList = new ArrayList<>();
+        for (String key : configMap.getData().keySet()) {
+            // 初始化数据结构
+            MonitorDto monitorDto = new MonitorDto();
+            // 将面板转换为json
+            JSONObject dashboard = JSONObject.parseObject(configMap.getData().get(key));
+            // 获取title
+            monitorDto.setTitle(dashboard.getString("title"));
+            // 获取uid
+            monitorDto.setUid(dashboard.getString("uid"));
+            // 获取url
+            String url = grafana.getAddress() + "/d/" + monitorDto.getUid() + "/" + middleware.getType()
+                    + "?var-namespace=" + middleware.getNamespace() + "&"
+                    + MiddlewareGrafanaNameEnum.findByType(middleware.getType()).getName() + "=" + middleware.getName();
+            monitorDto.setUrl(url);
+            monitorDtoList.add(monitorDto);
+        }
+        return monitorDtoList;
     }
 
     @Override
@@ -659,7 +654,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     /**
      * 更新grafanaid
      */
-    public void updateGrafanaId(BeanMiddlewareInfo mwInfo, Middleware middleware) {
+    public String getDashboardName(Middleware middleware) {
         HelmChartFile helm = helmChartService.getHelmChartFromMysql(middleware.getType(), middleware.getChartVersion());
         String alias;
         if (!CollectionUtils.isEmpty(helm.getDependency())) {
@@ -673,19 +668,11 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             // 获取configmap
             HelmListInfo helmInfo = helmInfos.get(0);
             // 特殊处理pg
-            if ("postgresql".equals(mwInfo.getChartName())){
+            if ("postgresql".equals(middleware.getType())){
                 alias = alias + "-postgresql";
             }
-            ConfigMap configMap =
-                    configMapService.get(middleware.getClusterId(), helmInfo.getNamespace(), alias + "-dashboard");
-            if (!ObjectUtils.isEmpty(configMap)) {
-                for (String key : configMap.getData().keySet()) {
-                    JSONObject object = JSONObject.parseObject(configMap.getData().get(key));
-                    mwInfo.setGrafanaId(object.get("uid").toString());
-                    middlewareInfoService.update(mwInfo);
-                }
-            }
         }
+        return alias + "-dashboard";
     }
 
     /**

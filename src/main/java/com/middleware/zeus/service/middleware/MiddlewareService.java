@@ -129,7 +129,7 @@ public interface MiddlewareService {
      * @param chartVersion chart包版本
      * @return string
      */
-    MonitorDto monitor(String clusterId, String namespace, String name, String type, String chartVersion);
+    List<MonitorDto> monitor(String clusterId, String namespace, String name, String type, String chartVersion);
 
     /**
      * 查询服务版本

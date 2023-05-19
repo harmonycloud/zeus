@@ -184,6 +184,7 @@ public enum ErrorMessage {
     STORAGE_NOT_ENOUGH(300036, "storage not enough", "存储不足"),
     UPDATE_MAXIMUM_LOG_RETENTION_TIME_FAILED(300037,"update the maximum log retention time failed","更新日志最大保留时间失败"),
     EMPTY_CLUSTER_ID(300038, "cluster id can't be empty", "集群id不能为空"),
+    CONFIGMAP_NOT_EXIST(300039, "configmap not exist", "查询配置文件失败，未找到该配置文件"),
 
     // node 301xxx
     EDGE_NODE_PACKAGE_NOT_FOUND(301001, "Install package not found", "安装包未找到，请先生成"),
@@ -305,6 +306,7 @@ public enum ErrorMessage {
 
     //monitor
     GRAFANA_ID_NOT_FOUND(660001, "Failed to find grafana id", "更新granafa id 失败"),
+    GRAFANA_DASHBOARD_NOT_FOUND(660002, "grafana dashboard not found", "监控面板查询失败"),
 
     // middleware
     RESTART_POD_FAIL(700001, "The restart pod is not assign to the middleware cluster, please refresh browser and try again.", "重启pod不属于该中间件，请刷新重试"),
