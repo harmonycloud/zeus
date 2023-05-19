@@ -194,7 +194,7 @@ public class IngressServiceImpl implements IngressService {
             try {
                 IngressComponentDto ingressComponentDto = ingressComponentService.get(clusterId, ingressDTO.getIngressClassName());
                 if (ingressDTO.getProtocol().equals(Protocol.HTTP.getValue())) {
-                    Ingress ingress = convertK8sIngress(namespace, ingressDTO);
+                    Ingress ingress = convertK8sIngress(namespace, ingressDTO, ingressComponentDto.getType());
                     ingressWrapper.create(clusterId, namespace, ingress);
                 } else if (ingressDTO.getProtocol().equals(Protocol.TCP.getValue())) {
                     if (IngressEnum.TRAEFIK.getName().equals(ingressComponentDto.getType())) {
@@ -1470,7 +1470,7 @@ public class IngressServiceImpl implements IngressService {
      * @param ingressDTO
      * @return
      */
-    private Ingress convertK8sIngress(String namespace, IngressDTO ingressDTO) {
+    private Ingress convertK8sIngress(String namespace, IngressDTO ingressDTO, String ingressType) {
         Ingress ingress = new Ingress();
         ObjectMeta metadata = new ObjectMeta();
 
@@ -1489,6 +1489,9 @@ public class IngressServiceImpl implements IngressService {
         String ingressClassName = ingressDTO.getIngressClassName();
         annotations.put("kubernetes.io/ingress.class",
                 StringUtils.isBlank(ingressClassName) ? defaultIngressName : ingressClassName);
+        if (ingressType.equals(IngressEnum.TRAEFIK.getName())){
+            annotations.put("traefik.ingress.kubernetes.io/router.entrypoints", "web");
+        }
         metadata.setAnnotations(annotations);
         ingress.setMetadata(metadata);
 
@@ -1533,6 +1536,7 @@ public class IngressServiceImpl implements IngressService {
         }
 
         spec.setRules(rules);
+        spec.setIngressClassName(ingressClassName);
 
         if (ingressDTO.getProtocol().equals(Protocol.HTTPS.getValue())) {
             List<IngressTLS> tls = new ArrayList<>(1);
