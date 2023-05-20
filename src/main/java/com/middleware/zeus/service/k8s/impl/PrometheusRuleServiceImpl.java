@@ -1,6 +1,9 @@
 package com.middleware.zeus.service.k8s.impl;
 
+import com.middleware.zeus.common.model.middleware.MiddlewareAlertsDTO;
 import com.middleware.zeus.service.k8s.PrometheusRuleService;
+import com.middleware.zeus.util.date.DateUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -11,8 +14,11 @@ import com.middleware.zeus.integration.cluster.bean.prometheus.PrometheusRule;
 
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import static com.middleware.zeus.common.constants.AlertConstant.SILENCE;
 
 /**
  * @author xutianhong
@@ -53,5 +59,36 @@ public class PrometheusRuleServiceImpl implements PrometheusRuleService {
             log.error("集群{} 分区{} 告警规则更新失败", clusterId, prometheusRule.getMetadata().getNamespace());
             throw new CaasRuntimeException(ErrorMessage.UPDATE_RULES_FAILED);
         }
+    }
+
+    @Override
+    public List<MiddlewareAlertsDTO> convertPrometheusRule(PrometheusRule prometheusRule) {
+        List<MiddlewareAlertsDTO> middlewareAlertsDTOList = new ArrayList<>();
+        prometheusRule.getSpec().getGroups().forEach(prometheusRuleGroups -> {
+            prometheusRuleGroups.getRules().forEach(prometheusRules -> {
+                if (StringUtils.isEmpty(prometheusRules.getAlert())){
+                    return;
+                }
+                MiddlewareAlertsDTO middlewareAlertsDTO = new MiddlewareAlertsDTO();
+                middlewareAlertsDTO.setLabels(middlewareAlertsDTO.getLabels());
+                middlewareAlertsDTO.setAnnotations(middlewareAlertsDTO.getAnnotations());
+                middlewareAlertsDTO.setExpr(prometheusRules.getExpr());
+                middlewareAlertsDTO.setTime(prometheusRules.getTime());
+                middlewareAlertsDTO.setName(prometheusRules.getAlert());
+                middlewareAlertsDTO.setDescription(prometheusRules.getAlert());
+                middlewareAlertsDTO.setLevel(prometheusRules.getLabels().get("severity"));
+                if(prometheusRules.getAnnotations() != null){
+                    if(prometheusRules.getAnnotations().containsKey(SILENCE)){
+                        middlewareAlertsDTO.setSilence(prometheusRules.getAnnotations().get(SILENCE));
+                    }
+                    middlewareAlertsDTO.setUnit(prometheusRules.getAnnotations().getOrDefault("unit", ""));
+                }
+                // 将文件创建时间设置为告警规则时间
+                middlewareAlertsDTO.setCreateTime(DateUtils.parseUTCDate(prometheusRule.getMetadata().getCreationTimestamp()));
+
+                middlewareAlertsDTOList.add(middlewareAlertsDTO);
+            });
+        });
+        return middlewareAlertsDTOList;
     }
 }

@@ -365,7 +365,7 @@ public class AlertServiceImpl implements AlertService {
         // 封装返回数据
         List<MiddlewareAlertsDTO> middlewareAlertsDTOList = new ArrayList<>();
         for (PrometheusRule prometheusRule : prometheusRuleList) {
-            middlewareAlertsDTOList.addAll(convertPrometheusRule(prometheusRule));
+            middlewareAlertsDTOList.addAll(prometheusRuleService.convertPrometheusRule(prometheusRule));
         }
         return middlewareAlertsDTOList;
     }
@@ -401,31 +401,6 @@ public class AlertServiceImpl implements AlertService {
         alertUserService.delete(username, clusterId, null, null, SYSTEM);
         // 删除集群告警规则绑定的告警用户
         alertUserService.delete(username, clusterId, null, null, CLUSTER);
-    }
-
-    public List<MiddlewareAlertsDTO> convertPrometheusRule(PrometheusRule prometheusRule){
-        List<MiddlewareAlertsDTO> middlewareAlertsDTOList = new ArrayList<>();
-        prometheusRule.getSpec().getGroups().forEach(prometheusRuleGroups -> {
-            prometheusRuleGroups.getRules().forEach(prometheusRules -> {
-                MiddlewareAlertsDTO middlewareAlertsDTO = new MiddlewareAlertsDTO();
-                middlewareAlertsDTO.setLabels(middlewareAlertsDTO.getLabels());
-                middlewareAlertsDTO.setAnnotations(middlewareAlertsDTO.getAnnotations());
-                middlewareAlertsDTO.setExpr(prometheusRules.getExpr());
-                middlewareAlertsDTO.setTime(prometheusRules.getTime());
-                middlewareAlertsDTO.setName(prometheusRules.getAlert());
-                middlewareAlertsDTO.setLevel(prometheusRules.getLabels().get("severity"));
-                if(prometheusRules.getAnnotations() != null){
-                    if(prometheusRules.getAnnotations().containsKey(SILENCE)){
-                        middlewareAlertsDTO.setSilence(prometheusRules.getAnnotations().get(SILENCE));
-                    }
-                }
-                // 将文件创建时间设置为告警规则时间
-                middlewareAlertsDTO.setCreateTime(DateUtils.parseUTCDate(prometheusRule.getMetadata().getCreationTimestamp()));
-
-                middlewareAlertsDTOList.add(middlewareAlertsDTO);
-            });
-        });
-        return middlewareAlertsDTOList;
     }
 
     public List<AlertUserDto> listAlertUser(String clusterId){

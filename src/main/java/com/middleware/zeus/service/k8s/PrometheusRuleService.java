@@ -1,5 +1,6 @@
 package com.middleware.zeus.service.k8s;
 
+import com.middleware.zeus.common.model.middleware.MiddlewareAlertsDTO;
 import com.middleware.zeus.integration.cluster.bean.prometheus.PrometheusRule;
 
 import java.util.List;
@@ -38,5 +39,13 @@ public interface PrometheusRuleService {
      * @param prometheusRule cr
      */
     void update(String clusterId, PrometheusRule prometheusRule);
+
+    /***
+     * 封装prometheus对象
+     *
+     * @param prometheusRule 告警规则文件
+     * @return
+     */
+    List<MiddlewareAlertsDTO> convertPrometheusRule(PrometheusRule prometheusRule);
 
 }

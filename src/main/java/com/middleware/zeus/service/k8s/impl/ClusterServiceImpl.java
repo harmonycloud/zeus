@@ -270,8 +270,6 @@ public class ClusterServiceImpl extends AbstractClusterService implements Cluste
         projectService.unBindNamespace(null ,null, cluster.getId(), null);
         // 删除集群和备份服务器的关联关系
         backupServerService.unbinding(cluster.getId());
-        // 移除系统告警规则
-        middlewareAlertsService.deleteSystemRules(cluster.getId(), null, null);
         // 删除组织、项目下的资源分配
         organizationService.clear(cluster.getId());
     }

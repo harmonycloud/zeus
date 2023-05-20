@@ -33,7 +33,6 @@ public class MiddlewareAlertsController {
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "lay",value = "告警层面",paramType = "query",dataTypeClass = String .class),
             @ApiImplicitParam(name = "keyword", value = "关键字", paramType = "query", dataTypeClass = String.class)
     })
     @GetMapping("/rules/used")
@@ -41,9 +40,8 @@ public class MiddlewareAlertsController {
     public BaseResult<List<MiddlewareAlertsDTO>> listUsedRules(@PathVariable(value = "clusterId",required = false) String clusterId,
                                                                @PathVariable(value = "namespace", required = false) String namespace,
                                                                @PathVariable(value = "middlewareName", required = false) String middlewareName,
-                                                               @RequestParam(value = "lay") String lay,
                                                                @RequestParam(value = "keyword", required = false) String keyword) throws Exception {
-        return BaseResult.ok(middlewareAlertsService.listUsedRules(clusterId, namespace, middlewareName, lay, keyword));
+        return BaseResult.ok(middlewareAlertsService.listUsedRules(clusterId, namespace, middlewareName, keyword));
     }
 
     @ApiOperation(value = "查询告警规则", notes = "查询告警规则")
