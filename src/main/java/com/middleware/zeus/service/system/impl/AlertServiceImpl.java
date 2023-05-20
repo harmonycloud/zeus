@@ -171,12 +171,10 @@ public class AlertServiceImpl implements AlertService {
             }
         }
         // 根据告警接收时间排序
-        if (StringUtils.isNotEmpty(query.getReceiveTime())) {
-            if (query.getReceiveTime().equals(ASC)) {
-                wrapper.orderByAsc("alert_receive_time");
-            } else if (query.getReceiveTime().equals(DESC)) {
-                wrapper.orderByDesc("alert_receive_time");
-            }
+        if (StringUtils.isNotEmpty(query.getReceiveTime()) && query.getReceiveTime().equals(ASC)) {
+            wrapper.orderByAsc("alert_receive_time");
+        } else {
+            wrapper.orderByDesc("alert_receive_time");
         }
         // keyword根据告警信息进行查询
         if (StringUtils.isNotEmpty(query.getKeyword())){

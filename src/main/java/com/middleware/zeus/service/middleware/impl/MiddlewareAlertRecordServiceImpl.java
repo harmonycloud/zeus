@@ -50,12 +50,10 @@ public class MiddlewareAlertRecordServiceImpl implements MiddlewareAlertRecordSe
             }
         }
         // 根据告警接收时间排序
-        if (StringUtils.isNotEmpty(queryDto.getReceiveTime())) {
-            if (queryDto.getReceiveTime().equals(ASC)) {
-                wrapper.orderByAsc("alert_receive_time");
-            } else if (queryDto.getReceiveTime().equals(DESC)) {
-                wrapper.orderByDesc("alert_receive_time");
-            }
+        if (StringUtils.isNotEmpty(queryDto.getReceiveTime()) && queryDto.getReceiveTime().equals(ASC)) {
+            wrapper.orderByAsc("alert_receive_time");
+        } else {
+            wrapper.orderByDesc("alert_receive_time");
         }
         // keyword根据告警信息进行查询
         if (StringUtils.isNotEmpty(queryDto.getKeyword())){
