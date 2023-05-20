@@ -1086,7 +1086,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         if (annotations.containsKey("middleware.maintenance.step")) {
             String currentStep = annotations.get("middleware.maintenance.step");
             int currentStepNum = (Integer.parseInt(currentStep) + 1);
-            String stepDescription = currentStepNum + "/5 " + RestoreStepEnum.findStepDescriptionByStep(annotations.get("middleware.maintenance.step.str"));
+            String stepDescription = currentStepNum + "/7 " + RestoreStepEnum.findStepDescriptionByStep(annotations.get("middleware.maintenance.step.str"));
             progressInfo.setProgressDescription(stepDescription);
             Float currentProgress = currentStepNum / 3f;
             progressInfo.setCurrentProgress(currentProgress);

@@ -211,6 +211,9 @@ public class RedisUtil {
         if (values.containsKey("redis") && values.getJSONObject("redis").containsKey("port")){
             return values.getJSONObject("redis").getString("port");
         }
+        if (StringUtils.isEmpty(podType) || "null".equals(podType)) {
+            return "";
+        }
         return "6379";
     }
 
