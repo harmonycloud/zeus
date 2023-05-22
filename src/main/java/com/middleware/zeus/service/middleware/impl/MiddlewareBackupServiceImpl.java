@@ -196,22 +196,18 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public void createOrReplaceIncBackup(String clusterId, String namespace, String backupId, String time, String pause) {
-        List<MiddlewareBackupSchedule> scheduleCRList = listMiddlewareBackupSchedule(clusterId, namespace, backupId);
-        for (MiddlewareBackupSchedule middlewareBackupSchedule : scheduleCRList) {
-            String backupName = middlewareBackupSchedule.getMetadata().getName();
-            // 校验备份周期和保留时间
-            MiddlewareBackupSchedule baks = backupScheduleCRDService.get(clusterId, namespace, backupName);
-            if (baks == null || baks.getSpec() == null || baks.getSpec().getSchedule() == null) {
-                throw new BusinessException(ErrorMessage.FIND_BACKUP_SCHEDULE_CRON_FAILED);
-            }
-            String cron = baks.getSpec().getSchedule().getCron();
-            Integer retentionTime = baks.getSpec().getSchedule().getRetentionTime();
-            if ("day".equalsIgnoreCase(baks.getMetadata().getLabels().get("unit"))) {
-                checkTimeLawful(cron, retentionTime);
-            }
-            createOrReplaceIncBackup(clusterId, namespace, backupName, time, pause, baks);
+    public void createOrReplaceIncBackup(String clusterId, String namespace, String backupName, String time, String pause) {
+        // 校验备份周期和保留时间
+        MiddlewareBackupSchedule baks = backupScheduleCRDService.get(clusterId, namespace, backupName);
+        if (baks == null || baks.getSpec() == null || baks.getSpec().getSchedule() == null) {
+            throw new BusinessException(ErrorMessage.FIND_BACKUP_SCHEDULE_CRON_FAILED);
         }
+        String cron = baks.getSpec().getSchedule().getCron();
+        Integer retentionTime = baks.getSpec().getSchedule().getRetentionTime();
+        if ("day".equalsIgnoreCase(baks.getMetadata().getLabels().get("unit"))) {
+            checkTimeLawful(cron, retentionTime);
+        }
+        createOrReplaceIncBackup(clusterId, namespace, backupName, time, pause, baks);
     }
 
     @Override
