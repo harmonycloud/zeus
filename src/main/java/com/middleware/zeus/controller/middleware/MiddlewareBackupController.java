@@ -90,7 +90,7 @@ public class MiddlewareBackupController {
                              @PathVariable("namespace") String namespace,
                              @RequestBody MiddlewareBackupDTO middlewareBackupDTO) {
         middlewareBackupDTO.setClusterId(clusterId).setNamespace(namespace);
-        middlewareBackupService.updateBackupSchedule(middlewareBackupDTO);
+        middlewareBackupService.updateBackupSchedule(middlewareBackupDTO.getBackupName(), middlewareBackupDTO);
         return BaseResult.ok();
     }
 
@@ -216,7 +216,7 @@ public class MiddlewareBackupController {
                                                                    @RequestParam("type") String type,
                                                                    @RequestParam("backupId") String backupId,
                                                                    @RequestParam("backupMode") String backupMode,
-                                                                   @RequestParam(value = "orderBy", required = false) String orderBy,
+                                                                   @RequestParam(value = "orderBy", required = false, defaultValue = "time,desc") String orderBy,
                                                                    @RequestParam(value = "activeArea", required = false) String activeArea) {
         return BaseResult.ok(middlewareBackupService.backupRecords(clusterId, namespace, middlewareName, type, backupId, backupMode, orderBy, activeArea));
     }
