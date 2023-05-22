@@ -220,6 +220,8 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         // pre check
         operator.createPreCheck(middleware, cluster);
         updateRegistry(middleware,cluster);
+        // set default uid、gid
+        setDefaultSecurityContext(middleware);
         // create
         operator.create(middleware, cluster);
         // 查看middleware有没有创建出来
@@ -365,6 +367,22 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     public void updateStorage(Middleware middleware) {
         BaseOperator operator = getOperator(BaseOperator.class, BaseOperator.class, middleware);
         operator.updateStorage(middleware);
+    }
+
+    /**
+     * 设置默认uid、gid
+     * @param middleware
+     */
+    private void setDefaultSecurityContext(Middleware middleware) {
+        Namespace ns = namespaceService.get(middleware.getClusterId(), middleware.getNamespace());
+        ContainerIdentityRange uidRange = ns.getContainerUIDRange();
+        if ((middleware.getContainerUID() == null) && (uidRange != null) && (uidRange.getMin() != null)) {
+            middleware.setContainerUID(uidRange.getMin());
+            ContainerIdentityRange gidRange = ns.getContainerGIDRange();
+            if ((gidRange != null) && (gidRange.getMin() != null)) {
+                middleware.setContainerGID(gidRange.getMin());
+            }
+        }
     }
 
     private void checkBaseParam(Middleware mw) {
