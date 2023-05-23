@@ -183,7 +183,7 @@ public class MiddlewareBackupController {
             @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "backupName", value = "备份名称", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "backupId", value = "备份任务ID", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "forceDelete", value = "是否强制删除", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "forceDelete", value = "是否强制删除", paramType = "query", dataTypeClass = Boolean.class),
     })
     @DeleteMapping("/record")
     @Authority(power = 1)
