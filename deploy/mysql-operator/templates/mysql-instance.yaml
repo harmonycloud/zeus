@@ -17,6 +17,10 @@ spec:
     strategy:
     {{- toYaml . | nindent 6 }}
     {{- end }}
+    {{- with .Values.proxy.securityContext }}
+    securityContext:
+    {{- toYaml . | nindent 6 }}
+    {{- end }}
     image:
       repository: {{ .Values.image.repository }}/proxysql
       tag: {{ .Values.image.proxyImageTag}}

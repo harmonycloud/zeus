@@ -1,0 +1,315 @@
+target: proxy
+parameters:
+- mysql-auto_increment_delay_multiplex_timeout_ms:
+    - name: default
+      value: '10000'
+    - name: isReboot
+      value: y
+    - name: range
+      value: '[0-3600000 (1 hour)]'
+    - name: describe
+      value: 'Several applications rely, explicitly or implicitly, on the value returned'
+- mysql-binlog_reader_connect_retry_msec:
+    - name: default
+      value: '3000'
+    - name: isReboot
+      value: y
+    - name: range
+      value: '[200-120000]'
+    - name: describe
+      value: 'When set to '
+- mysql-connect_retries_delay:
+    - name: default
+      value: '1'
+    - name: isReboot
+      value: y
+    - name: range
+      value: '[0-10000]'
+    - name: describe
+      value: Enable per-command MySQL query statistics.
+- mysql-connect_retries_on_failure:
+    - name: default
+      value: '10'
+    - name: isReboot
+      value: y
+    - name: range
+      value: '[0-1000]'
+    - name: describe
+      value: 'The delay (in milliseconds) before trying to reconnect after a failed
+        attempt to a backend MySQL server. Failed attempts can take place due to numerous
+        reasons: too busy backend, timed out for the current attempt, etc. Connections
+        will be retried for '
+- mysql-connect_timeout_client:
+    - name: default
+      value: Default
+    - name: isReboot
+      value: y
+    - name: range
+      value: '[Minimum-Maximum]'
+    - name: describe
+      value: "The number of times for which a reconnect should be attempted in case\
+        \ of an error, timeout, or any other event that led to an unsuccessful connection\
+        \ to a backend MySQL server. After the number of attempts is depleted, if\
+        \ a connection still couldn\u2019t be established, an error is returned. The\
+        \ error returned is either the last connection attempt error or a generic\
+        \ error (\u201CMax connect failure while reaching hostgroup\u201D with error\
+        \ code 28000)."
+- mysql-connect_timeout_server:
+    - name: default
+      value: '1000'
+    - name: isReboot
+      value: y
+    - name: range
+      value: '[10-120000]'
+    - name: describe
+      value: Maximum time to wait for a client connection to be established before
+        closing it.
+- mysql-connect_timeout_server_max:
+    - name: default
+      value: '10000'
+    - name: isReboot
+      value: y
+    - name: range
+      value: '[10-3600000]'
+    - name: describe
+      value: 'The timeout for a single attempt at connecting to a backend server from
+        proxysql. If this fails, proxysql will try to reconnect according to parameters '
+- mysql-connection_delay_multiplex_ms:
+    - name: default
+      value: '0'
+    - name: isReboot
+      value: y
+    - name: range
+      value: '[0-300000]'
+    - name: describe
+      value: The maximum timeout for connecting from proxysql to a backend in a hostgroup.
+- mysql-connection_max_age_ms:
+    - name: default
+      value: '0'
+    - name: isReboot
+      value: y
+    - name: range
+      value: '[0-86400000]'
+    - name: describe
+      value: After executing a query on a backend connection, if ProxySQL determines
+        that the same backend connection can be safely assigned to another client
+        (
+- mysql-connection_warming:
+    - name: default
+      value: Default
+    - name: isReboot
+      value: y
+    - name: range
+      value: '[true|false]'
+    - name: describe
+      value: 'When '
+- mysql-connpoll_reset_queue_length:
+    - name: default
+      value: '50'
+    - name: isReboot
+      value: y
+    - name: range
+      value: '[0-1000]'
+    - name: describe
+      value: 'PoxySQL 1.4.0 introduced a background thread (HGCU_thread_run()) responsible
+        for resetting connections instead of dropping them when MySQL_HostGroups_Manager::destroy_MyConn_from_pool()
+        is called. There could be cases in which this behavior is not beneficial.
+        In ProxySQL 1.4.4 '
+- mysql-default_collation_connection:
+    - name: default
+      value: 'NULL'
+    - name: isReboot
+      value: y
+    - name: range
+      value: ''
+    - name: describe
+      value: The default server charset to be used in the communication with the MySQL
+        clients.
+- mysql-default_query_timeout:
+    - name: default
+      value: '86400000'
+    - name: isReboot
+      value: y
+    - name: range
+      value: '[1000-1728000000]'
+    - name: describe
+      value: This variable allows to create a simple throttling mechanism, delaying
+        the excution of queries to the backends. Setting this variable to a non-zero
+        value (in miliseconds) will delay the execution of all queries, globally.
+- mysql-free_connections_pct:
+    - name: default
+      value: '10'
+    - name: isReboot
+      value: y
+    - name: range
+      value: '[0-100]'
+    - name: describe
+      value: ProxySQL uses a connection pool to connect to backend servers.
+- mysql-init_connect:
+    - name: default
+      value: empty string, not set
+    - name: isReboot
+      value: y
+    - name: range
+      value: ''
+    - name: describe
+      value: 'String containing one or more SQL statements, separated by semicolons,
+        that will be executed by the ProxySQL for each backend connection when created
+        or initialised e.g. '
+- mysql-kill_backend_connection_when_disconnect:
+    - name: default
+      value: 'true'
+    - name: isReboot
+      value: y
+    - name: range
+      value: '[true|false]'
+    - name: describe
+      value: When enabled the backend connection for a client connection is killed
+        when the client disconnects (introduced in ProxySQL v2.0).
+- mysql-log_unhealthy_connections:
+    - name: default
+      value: 'true'
+    - name: isReboot
+      value: y
+    - name: range
+      value: '[true|false]'
+    - name: describe
+      value: 'If a client disconnects in a not graceful way and if '
+- mysql-max_connections:
+    - name: default
+      value: '2048'
+    - name: isReboot
+      value: y
+    - name: range
+      value: '[1-1000000]'
+    - name: describe
+      value: 'The maximum number of client connections that the proxy can handle.
+        After this number is reached, new connections will be rejected with the '
+- mysql-max_stmts_per_connection:
+    - name: default
+      value: '20'
+    - name: isReboot
+      value: y
+    - name: range
+      value: '[1-1024]'
+    - name: describe
+      value: The threshold for the number of statements that can be prepared on a
+        backend connection before that connection is closed (prior to version 1.4.3)
+        or reset (starting version 1.4.4). This is evaluated when a connection is
+        returned to the connection pool.
+- mysql-mirror_max_queue_length:
+    - name: default
+      value: '32000'
+    - name: isReboot
+      value: y
+    - name: range
+      value: '[0-1048576]'
+    - name: describe
+      value: ToDo
+- mysql-ping_interval_server_msec:
+    - name: default
+      value: '10000'
+    - name: isReboot
+      value: y
+    - name: range
+      value: '[1000-604800000]'
+    - name: describe
+      value: The interval at which the proxy should ping backend connections in order
+        to maintain them alive, even though there is no outgoing traffic. The purpose
+        here is to keep some connections alive in order to reduce the latency of new
+        queries towards a less frequently used destination backend server.
+- mysql-ping_timeout_server:
+    - name: default
+      value: '200'
+    - name: isReboot
+      value: y
+    - name: range
+      value: '[10-600000]'
+    - name: describe
+      value: The proxy internally pings the connections it has opened in order to
+        keep them alive. This eliminates the cost of opening a new connection towards
+        a hostgroup when a query needs to be routed, at the cost of additional memory
+        footprint inside the proxy and some extra traffic. This is the timeout allowed
+        for those pings to succeed.
+- mysql-poll_timeout:
+    - name: default
+      value: '2000'
+    - name: isReboot
+      value: y
+    - name: range
+      value: '[10-20000]'
+    - name: describe
+      value: 'The minimal timeout used by the proxy in order to detect incoming/outgoing
+        traffic via the '
+- mysql-poll_timeout_on_failure:
+    - name: default
+      value: '100'
+    - name: isReboot
+      value: y
+    - name: range
+      value: '[10-20000]'
+    - name: describe
+      value: The timeout used in order to detect incoming/outgoing traffic after a
+        connection error has occured. The proxy automatically tweaks its timeout to
+        a lower value in such an event in order to be able to quickly respond with
+        a valid connection.
+- mysql-query_digests_max_digest_length:
+    - name: default
+      value: '2048'
+    - name: isReboot
+      value: y
+    - name: range
+      value: '[16-65000]'
+    - name: describe
+      value: 'Defines the maximum length of '
+- mysql-query_digests_max_query_length:
+    - name: default
+      value: '65000'
+    - name: isReboot
+      value: y
+    - name: range
+      value: '[16-65000]'
+    - name: describe
+      value: "Defines the maximum size of the buffer being used when computing query\u2019\
+        s "
+- mysql-reset_connection_algorithm:
+    - name: default
+      value: '2'
+    - name: isReboot
+      value: y
+    - name: range
+      value: '[1-2]'
+    - name: describe
+      value: 'When '
+- mysql-threshold_query_length:
+    - name: default
+      value: '524288'
+    - name: isReboot
+      value: y
+    - name: range
+      value: '[1024-1073741824]'
+    - name: describe
+      value: The maximal size of an incoming SQL query to the proxy that will mark
+        the background MySQL connection as non-reusable. This will force the proxy
+        to open a new connection to the backend server, in order to make sure that
+        the memory footprint of the server stays within reasonable limits.
+- mysql-throttle_connections_per_sec_to_hostgroup:
+    - name: default
+      value: '1000000'
+    - name: isReboot
+      value: y
+    - name: range
+      value: '[0-9999999]'
+    - name: describe
+      value: 'Default value: '
+- mysql-wait_timeout:
+    - name: default
+      value: 28800000 (8 hours)
+    - name: isReboot
+      value: y
+    - name: range
+      value: '[0-1728000000]'
+    - name: describe
+      value: If a proxy session (which is a conversation between a MySQL client and
+        a ProxySQL) has been idle for more than this threshold, the proxy will kill
+        the session.

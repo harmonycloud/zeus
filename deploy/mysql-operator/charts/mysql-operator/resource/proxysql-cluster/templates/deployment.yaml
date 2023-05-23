@@ -20,6 +20,10 @@ spec:
         app.kubernetes.io/name: {{ include "proxysql.name" . }}
         app.kubernetes.io/instance: {{ .Release.Name }}
     spec:
+    {{- with .Values.securityContext}}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
     {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
@@ -49,14 +53,12 @@ spec:
             cpu: "100m"
       containers:
         - name: {{ .Chart.Name }}
-          command: ["/bin/sh","-c","env > envdump.sh && proxysql -f --idle-threads --reload -D  /var/lib/proxysql -c /etc/proxysql/proxysql.cnf"]
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
-          workingDir: /root/proxysql-admin-tool
           lifecycle:
             postStart:
               exec:
-                command: [ "/bin/sh", "-c", "sleep 5 && /root/proxysql-admin-tool/sync-user.sh" ]
+                command: [ "/bin/sh", "-c", "sleep 5 &&/tmp/proxysql/sync-user.sh" ]
           ports:
             - name: proxysql
               containerPort: 6033
@@ -80,13 +82,12 @@ spec:
             - name: TZ
               value: "Asia/Shanghai"
           volumeMounts:
-#            - name: {{ .Release.Name }}-config
-#              mountPath: /usr/local/bin/probe-proxysql.bash
-#              subPath: probe-proxysql.bash
             - name: {{ .Release.Name }}-config
               mountPath: /etc/proxysql
-#              mountPath: /etc/proxysql.cnf
-#              subPath: proxysql.cnf
+            - name: {{ .Release.Name }}-shell
+              mountPath: /tmp/proxysql
+            - mountPath: /var/lib/proxysql
+              name: cache-volume
           livenessProbe:
             tcpSocket:
               port: 6032
@@ -115,3 +116,9 @@ spec:
         - name: {{ .Release.Name }}-config
           configMap:
             name: {{ .Release.Name }}-cm
+        - name: {{ .Release.Name }}-shell
+          configMap:
+            defaultMode: 493
+            name: {{ .Release.Name }}-shell
+        - name: cache-volume
+          emptyDir: {}

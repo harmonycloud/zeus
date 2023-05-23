@@ -275,4 +275,68 @@ spec:
         summary: "{{`{{ $labels.persistentvolumeclaim }}`}} MySQL volume pressure"
         message: "{{`{{ $labels.persistentvolumeclaim }}`}} MySQL volume pressure"
         description: "{{`{{ $labels.persistentvolumeclaim }}`}} MySQL data capacity is insufficient by 30%.\n  current_value={{ `{{ $value }}` }}"
+{{- if .Values.proxy.enable }}
+  - name: proxysql
+    rules:
+    - alert: ProxySqlInstanceDown
+      annotations:
+        alertLevel: critical
+        message: PROXYSQL is down, This requires immediate action.
+        metric: up
+        product: harmonycloud
+        service: metrics
+        summary: PROXYSQL is down
+      expr: up{service='{{ include "mysql.fullname" . }}'}== 0
+      for: 2m
+      labels:
+        severity: critical
+    - alert: ProxySqlConnectCheckErr
+      annotations:
+        alertLevel: critical
+        message: PROXYSQL connect check err, This requires immediate action.
+        metric: up
+        product: harmonycloud
+        service: metrics
+        summary: PROXYSQL connect check err
+      expr: irate(proxysql_mysql_monitor_connect_check_total{service='{{ include "mysql.fullname" . }}', status="err"}[5m]) > 0
+      for: 2m
+      labels:
+        severity: critical
+    - alert: ProxySqlPinCheckErr
+      annotations:
+        alertLevel: critical
+        message: PROXYSQL ping check err, This requires immediate action.
+        metric: up
+        product: harmonycloud
+        service: metrics
+        summary: PROXYSQL ping check err
+      expr: irate(proxysql_mysql_monitor_ping_check_total{service='{{ include "mysql.fullname" . }}',status="err"}[5m]) > 0
+      for: 2m
+      labels:
+        severity: critical
+    - alert: ProxySqlReadOnlyCheckErr
+      annotations:
+        alertLevel: critical
+        message: PROXYSQL read only check err, This requires immediate action.
+        metric: up
+        product: harmonycloud
+        service: metrics
+        summary: PROXYSQL read only check err
+      expr: irate(proxysql_mysql_monitor_read_only_check_total{service='{{ include "mysql.fullname" . }}',status="err"}[5m]) > 0
+      for: 2m
+      labels:
+        severity: critical
+    - alert: ProxySqlReplicationLagCheckErr
+      annotations:
+        alertLevel: critical
+        message: PROXYSQL replication lag check err, This requires immediate action.
+        metric: up
+        product: harmonycloud
+        service: metrics
+        summary: PROXYSQL replication lag check err
+      expr: irate(proxysql_mysql_monitor_replication_lag_check_total{service='{{ include "mysql.fullname" . }}', status="err"}[5m]) >0
+      for: 2m
+      labels:
+        severity: critical
+{{- end }}
 {{- end }}

@@ -11,6 +11,10 @@ spec:
       targetPort: 6033
       protocol: TCP
       name: proxysql
+    - port: 6070
+      targetPort: 6070
+      protocol: TCP
+      name: metrics
   selector:
     app.kubernetes.io/name: {{ include "proxysql.name" . }}
     app.kubernetes.io/instance: {{ .Release.Name }}

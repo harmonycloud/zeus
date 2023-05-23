@@ -4,13 +4,15 @@ admin_variables=
 {
   admin_credentials="{{ .Values.proxy.args.adminUser | default "proxy_harmonycloud" }}:{{ .Values.proxy.args.adminPassword | default "Ab123456" }}"
   mysql_ifaces="0.0.0.0:6032"
+  restapi_enabled=true
+  restapi_port=6070
+  prometheus_memory_metrics_interval=60
 }
 
 mysql_variables=
 {
   monitor_slave_lag_when_null=0
   threads=2
-  max_connections={{ .Values.proxy.args.max_connections | default 16384 }}
   default_query_delay=0
   default_query_timeout=36000000
   have_compress=true
@@ -33,6 +35,11 @@ mysql_variables=
   sessions_sort=true
   connect_retries_on_failure=10
   auto_increment_delay_multiplex=0
+  {{- range $k, $v := .Values.proxy.args }}
+  {{- if regexMatch "^mysql-" $k }}
+  {{ regexReplaceAll "mysql-" $k ""}}={{$v}}
+  {{- end }}
+  {{- end }}
 }
 
 {{ $name := include "mysql.fullname" . }}

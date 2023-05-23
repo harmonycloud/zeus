@@ -16,8 +16,8 @@
   "editable": true,
   "gnetId": 7362,
   "graphTooltip": 1,
-  "id": 54,
-  "iteration": 1668244933400,
+  "id": 10,
+  "iteration": 1684720190758,
   "links": [],
   "panels": [
     {
@@ -32,7 +32,7 @@
       "id": 382,
       "panels": [],
       "repeat": null,
-      "title": "",
+      "title": "Gereral",
       "type": "row"
     },
     {
@@ -78,12 +78,10 @@
       "mappingType": 1,
       "mappingTypes": [
         {
-          "$$hashKey": "object:1941",
           "name": "value to text",
           "value": 1
         },
         {
-          "$$hashKey": "object:1942",
           "name": "range to text",
           "value": 2
         }
@@ -441,13 +439,437 @@
       "valueName": "current"
     },
     {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 5
+      },
+      "hiddenSeries": false,
+      "id": 407,
+      "legend": {
+        "alignAsTable": true,
+        "avg": true,
+        "current": true,
+        "max": true,
+        "min": true,
+        "show": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.5",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "sum(rate (container_cpu_usage_seconds_total{namespace=\"$namespace\",pod=\"$pod\", container=\"mysql\"}[3m]) )  / sum(kube_pod_container_resource_requests_cpu_cores{namespace=\"$namespace\",pod=\"$pod\", container=\"mysql\"})  * 100",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "CPU usage",
+          "refId": "A"
+        },
+        {
+          "exemplar": true,
+          "expr": "sum(rate(container_cpu_user_seconds_total{namespace=\"$namespace\",pod=\"$pod\", container=\"mysql\"}[5m]))",
+          "hide": true,
+          "interval": "",
+          "legendFormat": "CPU User Total",
+          "refId": "B"
+        },
+        {
+          "exemplar": true,
+          "expr": "sum(rate(container_cpu_system_seconds_total{namespace=\"$namespace\",pod=\"$pod\", container=\"mysql\"}[5m]))",
+          "hide": true,
+          "interval": "",
+          "legendFormat": "CPU System Total",
+          "refId": "C"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "CPU Usage(%)",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "%",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "Prometheus",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 5
+      },
+      "hiddenSeries": false,
+      "id": 24,
+      "legend": {
+        "alignAsTable": true,
+        "avg": true,
+        "current": true,
+        "max": true,
+        "min": true,
+        "show": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.5",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "sum(container_memory_working_set_bytes{namespace=\"$namespace\",pod=\"$pod\", container=\"mysql\"}) / sum(kube_pod_container_resource_requests_memory_bytes{namespace=\"$namespace\",pod=\"$pod\", container=\"mysql\"}) * 100",
+          "interval": "",
+          "legendFormat": "Mem",
+          "refId": "B"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Memory Usage(%)",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "decimals": null,
+          "format": "%",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 0,
+        "y": 12
+      },
+      "hiddenSeries": false,
+      "id": 405,
+      "legend": {
+        "avg": true,
+        "current": true,
+        "max": true,
+        "min": true,
+        "show": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.5",
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "used_size_kb{pv=\"$pv\"}*100/total_size_kb{pv=\"$pv\"}",
+          "instant": false,
+          "interval": "",
+          "intervalFactor": 2,
+          "legendFormat": "Volume Usage-Common",
+          "refId": "B"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Volume Capacity Usage(%)",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "%",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "Prometheus",
+      "description": "",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "links": []
+        },
+        "overrides": []
+      },
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 7,
+        "w": 12,
+        "x": 12,
+        "y": 12
+      },
+      "hiddenSeries": false,
+      "id": 26,
+      "legend": {
+        "alignAsTable": true,
+        "avg": true,
+        "current": true,
+        "max": true,
+        "min": true,
+        "show": true,
+        "total": false,
+        "values": true
+      },
+      "lines": true,
+      "linewidth": 1,
+      "links": [],
+      "nullPointMode": "null",
+      "options": {
+        "alertThreshold": true
+      },
+      "percentage": false,
+      "pluginVersion": "7.3.5",
+      "pointradius": 5,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "exemplar": true,
+          "expr": "sum(rate(container_network_receive_bytes_total{namespace=\"$namespace\",pod=\"$pod\"}[1m]))",
+          "format": "time_series",
+          "interval": "",
+          "intervalFactor": 2,
+          "legendFormat": "Network Receive",
+          "refId": "A"
+        },
+        {
+          "exemplar": true,
+          "expr": "sum(rate(container_network_transmit_bytes_total{namespace=\"$namespace\",pod=\"$pod\"}[1m]))",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "Network Transmit",
+          "refId": "B"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Network",
+      "tooltip": {
+        "shared": true,
+        "sort": 0,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "decimals": null,
+          "format": "bytes",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
       "collapsed": false,
       "datasource": null,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 5
+        "y": 19
       },
       "id": 403,
       "panels": [],
@@ -484,7 +906,7 @@
         "h": 4,
         "w": 6,
         "x": 0,
-        "y": 6
+        "y": 20
       },
       "id": 401,
       "interval": null,
@@ -492,12 +914,10 @@
       "mappingType": 1,
       "mappingTypes": [
         {
-          "$$hashKey": "object:181",
           "name": "value to text",
           "value": 1
         },
         {
-          "$$hashKey": "object:182",
           "name": "range to text",
           "value": 2
         }
@@ -541,7 +961,6 @@
       "valueFontSize": "80%",
       "valueMaps": [
         {
-          "$$hashKey": "object:184",
           "op": "=",
           "text": "N/A",
           "value": "null"
@@ -577,7 +996,7 @@
         "h": 4,
         "w": 6,
         "x": 6,
-        "y": 6
+        "y": 20
       },
       "id": 399,
       "interval": null,
@@ -585,12 +1004,10 @@
       "mappingType": 1,
       "mappingTypes": [
         {
-          "$$hashKey": "object:2208",
           "name": "value to text",
           "value": 1
         },
         {
-          "$$hashKey": "object:2209",
           "name": "range to text",
           "value": 2
         }
@@ -634,13 +1051,11 @@
       "valueFontSize": "80%",
       "valueMaps": [
         {
-          "$$hashKey": "object:2211",
           "op": "=",
           "text": "Yes",
           "value": "1"
         },
         {
-          "$$hashKey": "object:2212",
           "op": "=",
           "text": "No",
           "value": "0"
@@ -678,7 +1093,7 @@
         "h": 4,
         "w": 6,
         "x": 12,
-        "y": 6
+        "y": 20
       },
       "id": 397,
       "interval": null,
@@ -751,7 +1166,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 10
+        "y": 24
       },
       "id": 383,
       "panels": [],
@@ -783,7 +1198,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 11
+        "y": 25
       },
       "height": "250px",
       "hiddenSeries": false,
@@ -936,7 +1351,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 11
+        "y": 25
       },
       "hiddenSeries": false,
       "id": 10,
@@ -1073,7 +1488,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 18
+        "y": 32
       },
       "id": 384,
       "panels": [],
@@ -1105,7 +1520,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 19
+        "y": 33
       },
       "hiddenSeries": false,
       "id": 53,
@@ -1221,7 +1636,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 19
+        "y": 33
       },
       "hiddenSeries": false,
       "id": 11,
@@ -1352,7 +1767,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 26
+        "y": 40
       },
       "id": 385,
       "panels": [],
@@ -1383,7 +1798,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 27
+        "y": 41
       },
       "hiddenSeries": false,
       "id": 22,
@@ -1518,7 +1933,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 27
+        "y": 41
       },
       "height": "250px",
       "hiddenSeries": false,
@@ -1667,7 +2082,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 34
+        "y": 48
       },
       "id": 386,
       "panels": [],
@@ -1699,7 +2114,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 35
+        "y": 49
       },
       "hiddenSeries": false,
       "id": 30,
@@ -1851,7 +2266,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 35
+        "y": 49
       },
       "hiddenSeries": false,
       "id": 48,
@@ -1945,7 +2360,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 42
+        "y": 56
       },
       "id": 387,
       "panels": [],
@@ -1977,7 +2392,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 43
+        "y": 57
       },
       "hiddenSeries": false,
       "id": 47,
@@ -2104,7 +2519,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 43
+        "y": 57
       },
       "hiddenSeries": false,
       "id": 32,
@@ -2212,7 +2627,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 50
+        "y": 64
       },
       "id": 388,
       "panels": [],
@@ -2244,7 +2659,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 51
+        "y": 65
       },
       "hiddenSeries": false,
       "id": 9,
@@ -2369,7 +2784,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 51
+        "y": 65
       },
       "height": "250px",
       "hiddenSeries": false,
@@ -2478,7 +2893,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 58
+        "y": 72
       },
       "id": 389,
       "panels": [],
@@ -2510,7 +2925,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 59
+        "y": 73
       },
       "hiddenSeries": false,
       "id": 50,
@@ -2688,7 +3103,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 66
+        "y": 80
       },
       "id": 390,
       "panels": [],
@@ -2703,7 +3118,7 @@
       "dashes": false,
       "datasource": null,
       "decimals": 2,
-      "description": "**Top Command Counters**\n\nThe Com_{{xxx}} statement counter variables indicate the number of times each xxx statement has been executed. There is one status variable for each type of statement. For example, Com_delete and Com_update count [``DELETE``](https://dev.mysql.com/doc/refman/5.7/en/delete.html) and [``UPDATE``](https://dev.mysql.com/doc/refman/5.7/en/update.html) statements, respectively. Com_delete_multi and Com_update_multi are similar but apply to [``DELETE``](https://dev.mysql.com/doc/refman/5.7/en/delete.html) and [``UPDATE``](https://dev.mysql.com/doc/refman/5.7/en/update.html) statements that use multiple-table syntax.",
+      "description": "**Top Command Counters**\n\nThe  statement counter variables indicate the number of times each xxx statement has been executed. There is one status variable for each type of statement. For example, Com_delete and Com_update count [``DELETE``](https://dev.mysql.com/doc/refman/5.7/en/delete.html) and [``UPDATE``](https://dev.mysql.com/doc/refman/5.7/en/update.html) statements, respectively. Com_delete_multi and Com_update_multi are similar but apply to [``DELETE``](https://dev.mysql.com/doc/refman/5.7/en/delete.html) and [``UPDATE``](https://dev.mysql.com/doc/refman/5.7/en/update.html) statements that use multiple-table syntax.",
       "editable": true,
       "error": false,
       "fieldConfig": {
@@ -2720,7 +3135,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 67
+        "y": 81
       },
       "hiddenSeries": false,
       "id": 14,
@@ -2840,7 +3255,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 74
+        "y": 88
       },
       "hiddenSeries": false,
       "id": 39,
@@ -2957,7 +3372,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 81
+        "y": 95
       },
       "hiddenSeries": false,
       "id": 8,
@@ -3069,7 +3484,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 88
+        "y": 102
       },
       "hiddenSeries": false,
       "id": 28,
@@ -3164,7 +3579,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 95
+        "y": 109
       },
       "id": 391,
       "panels": [],
@@ -3179,7 +3594,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 96
+        "y": 110
       },
       "id": 392,
       "panels": [],
@@ -3210,7 +3625,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 97
+        "y": 111
       },
       "hiddenSeries": false,
       "id": 43,
@@ -3318,7 +3733,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 97
+        "y": 111
       },
       "hiddenSeries": false,
       "id": 41,
@@ -3431,7 +3846,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 104
+        "y": 118
       },
       "id": 393,
       "panels": [],
@@ -3463,7 +3878,7 @@
         "h": 7,
         "w": 12,
         "x": 0,
-        "y": 105
+        "y": 119
       },
       "hiddenSeries": false,
       "id": 44,
@@ -3621,7 +4036,7 @@
         "h": 7,
         "w": 12,
         "x": 12,
-        "y": 105
+        "y": 119
       },
       "hiddenSeries": false,
       "id": 42,
@@ -3734,7 +4149,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 112
+        "y": 126
       },
       "id": 394,
       "panels": [],
@@ -3766,7 +4181,7 @@
         "h": 7,
         "w": 24,
         "x": 0,
-        "y": 113
+        "y": 127
       },
       "hiddenSeries": false,
       "id": 54,
@@ -3893,7 +4308,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 120
+        "y": 134
       },
       "id": 395,
       "panels": [],
@@ -3924,7 +4339,7 @@
         "h": 7,
         "w": 8,
         "x": 0,
-        "y": 121
+        "y": 135
       },
       "hiddenSeries": false,
       "id": 31,
@@ -4008,7 +4423,6 @@
       },
       "yaxes": [
         {
-          "$$hashKey": "object:296",
           "format": "Bps",
           "label": "",
           "logBase": 1,
@@ -4017,7 +4431,6 @@
           "show": true
         },
         {
-          "$$hashKey": "object:297",
           "format": "bytes",
           "logBase": 1,
           "max": null,
@@ -4053,7 +4466,7 @@
         "h": 7,
         "w": 8,
         "x": 8,
-        "y": 121
+        "y": 135
       },
       "height": "250px",
       "hiddenSeries": false,
@@ -4163,7 +4576,6 @@
       },
       "yaxes": [
         {
-          "$$hashKey": "object:936",
           "format": "bytes",
           "label": "",
           "logBase": 1,
@@ -4172,7 +4584,6 @@
           "show": true
         },
         {
-          "$$hashKey": "object:937",
           "format": "bytes",
           "logBase": 1,
           "max": null,
@@ -4216,7 +4627,7 @@
         "h": 7,
         "w": 8,
         "x": 16,
-        "y": 121
+        "y": 135
       },
       "height": "",
       "hiddenSeries": false,
@@ -4250,7 +4661,6 @@
       "renderer": "flot",
       "seriesOverrides": [
         {
-          "$$hashKey": "object:374",
           "alias": "Max Core Utilization",
           "lines": false,
           "pointradius": 1,
@@ -4258,7 +4668,6 @@
           "stack": false
         },
         {
-          "$$hashKey": "object:375",
           "alias": "Load 1m",
           "color": "#58140C",
           "fill": 2,
@@ -4313,7 +4722,6 @@
       },
       "yaxes": [
         {
-          "$$hashKey": "object:400",
           "decimals": 1,
           "format": "percent",
           "label": "",
@@ -4323,7 +4731,6 @@
           "show": true
         },
         {
-          "$$hashKey": "object:401",
           "format": "none",
           "logBase": 1,
           "max": null,
@@ -4359,7 +4766,7 @@
         "h": 7,
         "w": 8,
         "x": 0,
-        "y": 128
+        "y": 142
       },
       "height": "250px",
       "hiddenSeries": false,
@@ -4445,7 +4852,6 @@
       },
       "yaxes": [
         {
-          "$$hashKey": "object:1016",
           "format": "ms",
           "label": "",
           "logBase": 2,
@@ -4454,7 +4860,6 @@
           "show": true
         },
         {
-          "$$hashKey": "object:1017",
           "format": "ms",
           "label": "",
           "logBase": 1,
@@ -4491,7 +4896,7 @@
         "h": 7,
         "w": 8,
         "x": 8,
-        "y": 128
+        "y": 142
       },
       "height": "250px",
       "hiddenSeries": false,
@@ -4524,7 +4929,6 @@
       "renderer": "flot",
       "seriesOverrides": [
         {
-          "$$hashKey": "object:1169",
           "alias": "Outbound",
           "transform": "negative-Y"
         }
@@ -4583,7 +4987,6 @@
       },
       "yaxes": [
         {
-          "$$hashKey": "object:1176",
           "format": "Bps",
           "label": "",
           "logBase": 1,
@@ -4592,7 +4995,6 @@
           "show": true
         },
         {
-          "$$hashKey": "object:1177",
           "format": "bytes",
           "logBase": 1,
           "max": null,
@@ -4628,7 +5030,7 @@
         "h": 7,
         "w": 8,
         "x": 16,
-        "y": 128
+        "y": 142
       },
       "hiddenSeries": false,
       "id": 38,
@@ -4711,7 +5113,6 @@
       },
       "yaxes": [
         {
-          "$$hashKey": "object:1254",
           "format": "Bps",
           "label": "",
           "logBase": 1,
@@ -4720,7 +5121,6 @@
           "show": true
         },
         {
-          "$$hashKey": "object:1255",
           "format": "bytes",
           "logBase": 1,
           "max": null,
@@ -4734,7 +5134,7 @@
       }
     }
   ],
-  "refresh": "30s",
+  "refresh": "5s",
   "schemaVersion": 26,
   "style": "dark",
   "tags": [
@@ -4813,8 +5213,8 @@
         "allValue": null,
         "current": {
           "selected": false,
-          "text": "test",
-          "value": "test"
+          "text": "zeus",
+          "value": "zeus"
         },
         "datasource": null,
         "definition": "label_values(mysql_up, namespace)",
@@ -4840,8 +5240,8 @@
         "allValue": null,
         "current": {
           "selected": false,
-          "text": "by-sc01",
-          "value": "by-sc01"
+          "text": "zeus-mysql",
+          "value": "zeus-mysql"
         },
         "datasource": null,
         "definition": "query_result(kube_statefulset_labels{namespace=\"$namespace\", label_operatorname=\"mysql-operator\"})",
@@ -4868,8 +5268,8 @@
         "allValue": null,
         "current": {
           "selected": false,
-          "text": "by-sc01-0",
-          "value": "by-sc01-0"
+          "text": "zeus-mysql-0",
+          "value": "zeus-mysql-0"
         },
         "datasource": null,
         "definition": "label_values(kube_pod_info{namespace=\"$namespace\", created_by_name=\"$mc\"}, pod) ",
@@ -4894,12 +5294,50 @@
         "useTags": false
       },
       {
+        "allValue": null,
+        "current": {
+          "selected": false,
+          "text": "All",
+          "value": "$__all"
+        },
+        "datasource": "Prometheus",
+        "definition": "query_result(kube_pod_spec_volumes_persistentvolumeclaims_info{namespace=\"$namespace\", pod=\"$pod\"})",
+        "error": null,
+        "hide": 2,
+        "includeAll": true,
+        "label": "pvc",
+        "multi": true,
+        "name": "pvc",
+        "options": [
+          {
+            "selected": true,
+            "text": "All",
+            "value": "$__all"
+          },
+          {
+            "selected": false,
+            "text": "mysql-data-zeus-mysql-0",
+            "value": "mysql-data-zeus-mysql-0"
+          }
+        ],
+        "query": "query_result(kube_pod_spec_volumes_persistentvolumeclaims_info{namespace=\"$namespace\", pod=\"$pod\"})",
+        "refresh": 0,
+        "regex": "/.*persistentvolumeclaim=\"([^\"]+).*/",
+        "skipUrlSync": false,
+        "sort": 1,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
         "allFormat": "glob",
         "allValue": null,
         "current": {
           "selected": false,
-          "text": "mw-worker1",
-          "value": "mw-worker1"
+          "text": "openshift311-0",
+          "value": "openshift311-0"
         },
         "datasource": null,
         "definition": "label_values(kube_pod_info{namespace=\"$namespace\", pod=\"$pod\"}, node)",
@@ -4920,6 +5358,48 @@
         "tagValuesQuery": null,
         "tags": [],
         "tagsQuery": null,
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": null,
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "datasource": "Prometheus",
+        "definition": "query_result(kube_persistentvolumeclaim_info{namespace=\"$namespace\", persistentvolumeclaim=\"$pvc\"})",
+        "error": null,
+        "hide": 0,
+        "includeAll": true,
+        "label": "pv",
+        "multi": true,
+        "name": "pv",
+        "options": [
+          {
+            "selected": true,
+            "text": "All",
+            "value": "$__all"
+          },
+          {
+            "selected": false,
+            "text": "disk-da320ece-5d55-4819-96ff-056d98bac160",
+            "value": "disk-da320ece-5d55-4819-96ff-056d98bac160"
+          }
+        ],
+        "query": "query_result(kube_persistentvolumeclaim_info{namespace=\"$namespace\", persistentvolumeclaim=\"$pvc\"})",
+        "refresh": 0,
+        "regex": "/.*volumename=\"([^\"]+).*/",
+        "skipUrlSync": false,
+        "sort": 1,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
         "type": "query",
         "useTags": false
       }
@@ -4963,6 +5443,6 @@
   },
   "timezone": "browser",
   "title": "MySQL Overview",
-  "uid": "uaKUl7_Mk",
-  "version": 1
+  "uid": "uaKUl7_Mk1",
+  "version": 2
 }

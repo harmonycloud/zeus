@@ -39,7 +39,7 @@ spec:
           - --v=5
           - --enable-leader-election=true
           - --health-addr=:10880
-          - --operatorpwd=abcd!@#$
+          - --operatorpwd={{ .Values.operatorpwd }}
           - --replicapwd=abcd!@#$
           - --sshpwd=abcd!@#$
           - --mysqlUserHost=%

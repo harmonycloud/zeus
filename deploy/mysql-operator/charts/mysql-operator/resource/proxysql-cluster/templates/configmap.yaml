@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-shell
+data:
+  sync-user.sh: |
+      #!/bin/bash
+      set -x
+      source /tmp/envdump.sh
+      ./proxysql-admin --proxysql-username=$ADMIN_USER --proxysql-password=$ADMIN_PASSWORD --proxysql-port=6032 --server=$MYSQL_HOST:$MYSQL_PORT --cluster-username=$MYSQL_USER --cluster-password=$MYSQL_PASSWORD --writer-hg=1 --debug --syncusers
+  proxysql-connect.sh: |
+      #!/bin/bash
+      mysql -u $ADMIN_USER -p$ADMIN_PASSWORD -h 127.0.0.1  -P6032 --prompt 'ProxySQL Admin> '

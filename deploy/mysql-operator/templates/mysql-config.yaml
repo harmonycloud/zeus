@@ -209,6 +209,14 @@ data:
     loose-audit_json_log_file       =/data/mysql/DBNAME/elog/mysql-audit.json
     loose-audit_whitelist_users     =operator,healthchecker,replic,zabbixjk,boot,skip-grants user
     loose-audit_json_file           =ON
+
+    {{- if .Values.args.audit_record_cmds }}
+    loose-audit_record_cmds         =  {{ .Values.args.audit_record_cmds }}
+    {{- end}}
+    {{- if  .Values.args.audit_whitelist_cmds }}
+    loose-audit_whitelist_cmds      =  {{ .Values.args.audit_whitelist_cmds }}
+    {{- end}}
+
     {{- end}}
     {{- end }}
 

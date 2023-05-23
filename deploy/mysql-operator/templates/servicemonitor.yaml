@@ -21,3 +21,29 @@ spec:
     matchLabels:
       k8s-app: {{ include "mysql.fullname" . }}-exporter
 {{- end }}
+---
+{{- if  .Capabilities.APIVersions.Has "monitoring.coreos.com/v1" }}
+{{- if .Values.proxy.enable }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  generation: 1
+  labels:
+    k8s-app: {{ include "mysql.fullname" . }}-proxy-exporter
+  name: {{ include "mysql.fullname" . }}-proxy-exporter
+spec:
+  endpoints:
+    - interval: 30s
+      port: metrics
+      scheme: http
+      relabelings:
+      - replacement: mysql
+        targetLabel: middleware
+      - sourceLabels: [service]
+        replacement: {{ include "mysql.fullname" . }}
+        targetLabel: service
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ include "mysql.fullname" . }}-proxy
+{{- end }}
+{{- end }}

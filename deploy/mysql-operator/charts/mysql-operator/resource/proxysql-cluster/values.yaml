@@ -1,0 +1,62 @@
+# Default values for proxysql.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 3
+image:
+  repository: proxysql/proxysql
+  tag: 2.3.2
+  pullPolicy: IfNotPresent
+
+mysql:
+  mysqlCount: 2
+  mysqlName: mysql
+  mysqlPort: 3306
+  user: root
+  password: Ab123456
+  monitorUser: root
+  monitorPassword: Ab123456
+
+securityContext: {}
+  #  fsGroup: 0
+  #  runAsUser: 1000
+  #  runAsGroup: 0
+
+
+args:
+  sync_user_period: 600000
+  max_connections: 16384
+
+adminUser: proxy_harmonycloud
+adminPassword: Ab123456
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+service:
+  type: ClusterIP
+  port: 3306
+
+ingress:
+  enabled: false
+
+resources: {}
+  # limits:
+  #   cpu: 100m
+  #   memory: 1024Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 1024Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+topologySpreadConstraints: []
+
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 1

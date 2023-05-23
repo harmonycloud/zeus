@@ -93,6 +93,7 @@ metadata:
     app.kubernetes.io/managed-by: {{ .Release.Service }}
 spec:
   backoffLimit: 3
+  ttlSecondsAfterFinished: 60
   template:
     metadata:
       name: {{ include "mysql-operator.fullname" . }}-install-crds

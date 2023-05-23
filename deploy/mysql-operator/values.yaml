@@ -8,6 +8,10 @@ args:
   server_port: 3306
   slow_query_log: "ON"
   skip_ssl: false
+  # 审计日志：允许记录
+  audit_record_cmds: "create_db,create_table,create_user,create_index,drop_db,drop_table,drop_user,drop_index,alter_user,alert_table,truncate,revoke,rename_table,insert,update,delete,lock_tables,unlock_tables"
+  # 审计日志：排除记录
+  audit_whitelist_cmds: "select"
   #max_connections: 600
   #innodb_buffer_pool_size: 1G
   #slave_parallel_workers: 8
@@ -35,8 +39,8 @@ service: {}
 
 businessDeploy: []
 # - database: db01
-  # pwd: "yourpassword"
-  # user: user01
+# pwd: "yourpassword"
+# user: user01
 
 init_at_setup:
   enabled: true
@@ -47,20 +51,20 @@ replicaCount: 2
 
 image:
   repository: harbor.middleware.com/middleware
-  middlewareImageTag_5_7_35: v5.7.35-hc.4
+  middlewareImageTag_5_7_35: v5.7.35-hc.5
   middlewareImageTag_5_7_39: v5.7.39-hc.2
-  middlewareImageTag_8_0_26: v8.0.26-hc.4
+  middlewareImageTag_8_0_26: v8.0.26-hc.6
   middlewareImageTag_8_0_31: v8.0.31-hc.1
   initImageTag: 1.1.2
   initImageTag_8: 1.0.6-8.0
-  monitorImageTag: v0.12.1
-  backupRestoreImageTag: v1.2.0-hc.7
-  backupRestoreImageTag_8: v8.0-2
+  monitorImageTag: v0.12.1-1.0.0
+  backupRestoreImageTag: v1.2.0-hc.8
+  backupRestoreImageTag_8: v8.0-4
   helmtestImageTag: v1.0.0
   pullPolicy: IfNotPresent
   testImageTag: v0.3
-  logrotateImageTag: 1.3
-  proxyImageTag: 2.3.2-1.0.0
+  logrotateImageTag: 1.3-1.0.0
+  proxyImageTag: 2.3.2-1.0.1
 
 nameOverride: ""
 fullnameOverride: ""
@@ -72,7 +76,6 @@ resources:
   requests:
     cpu: "1"
     memory: 2Gi
-
 
 storageProvider: {}
 #  minio:
@@ -87,7 +90,10 @@ nodeAffinity: {}
 updateStrategy: RollingUpdate
 
 # 支持扩展Spec
-statefulSetConfiguration: {}
+statefulSetConfiguration:
+  securityContext:
+    fsGroup: 0
+
   # tolerations:
   # - key: "example-key1"
   #   operator: "Exists"
@@ -115,7 +121,9 @@ labels: {}
 proxy:
   enable: false
   podAntiAffinity: "soft"
-  replicaCount: 4
+  replicaCount: 1
+  securityContext:
+    fsGroup: 0
   resources:
     limits:
       cpu: 1000m
@@ -129,6 +137,8 @@ proxy:
       maxUnavailable: 1
   args:
     sync_user_period: 600000
+    mysql-max_connections: 2048
+    mysql-max_allowed_packet: 4194304
     mysql_query_rules: |
       (
         {
