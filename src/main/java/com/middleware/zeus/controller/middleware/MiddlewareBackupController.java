@@ -307,12 +307,14 @@ public class MiddlewareBackupController {
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "restoreName", value = "克隆记录名称", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "forceDelete", value = "是否强制删除", paramType = "query", dataTypeClass = boolean.class),
     })
     @DeleteMapping("/restore")
     @Authority(power = 1)
     public BaseResult deleteRestoreRecord(@PathVariable("clusterId") String clusterId,
                                           @PathVariable("namespace") String namespace,
-                                          @RequestParam("restoreName") String restoreName) {
+                                          @RequestParam("restoreName") String restoreName,
+                                          @RequestParam(value = "forceDelete", required = false, defaultValue = "false") String forceDelete) {
         middlewareBackupService.deleteRestoreRecord(clusterId, namespace, restoreName);
         return BaseResult.ok();
     }
