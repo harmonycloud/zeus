@@ -98,7 +98,7 @@ public class ConfigTemplateServiceImpl implements ConfigTemplateService {
         for (String s : config) {
             String[] temp = s.split("###");
             if (customConfigMap.containsKey(temp[0])) {
-                customConfigMap.get(temp[0]).setValue(temp[1]);
+                customConfigMap.get(temp[0]).setValue(temp.length == 1 ? "" : temp[1]);
             }
         }
         customConfigTemplateDTO.setCustomConfigList(new ArrayList<>(customConfigMap.values()));
