@@ -195,10 +195,10 @@ public abstract class AbstractBaseOperator {
         // load values.yaml to map
         Yaml yaml = new Yaml();
         JSONObject values = yaml.loadAs(helmChart.getValueYaml(), JSONObject.class);
-        // synchronize the backup source service custom config to the backup service
-        syncBackupSourceConfig(middleware, values);
         // deal with values.yaml file
         replaceValues(middleware, cluster, values);
+        // synchronize the backup source service custom config to the backup service
+        syncBackupSourceConfig(middleware, values);
         // deal with Charts.yaml file
         replaceChart(helmChart, values);
         // deal with dynamic
