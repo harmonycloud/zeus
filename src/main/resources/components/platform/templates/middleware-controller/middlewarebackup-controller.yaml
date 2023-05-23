@@ -1,0 +1,241 @@
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: middlewarebackup-controller
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: middlewarebackup-controller
+rules:
+- apiGroups:
+  - '*'
+  resources:
+  - '*'
+  verbs:
+  - get
+  - list
+  - patch
+  - update
+  - watch
+  - create
+- apiGroups:
+  - batch
+  resources:
+  - jobs
+  - cronjobs
+  verbs:
+  - delete
+- apiGroups:
+  - harmonycloud.cn
+  resources:
+  - middlewarebackups
+  - middlewarebackupschedules
+  - middlewarerestores
+  - middlewarerestoreresults
+  - middlewarebackupresults
+  verbs:
+  - delete
+  - get
+  - create
+  - update
+- apiGroups:
+  - harmonycloud.cn
+  resources:
+  - middlewarebackups/status
+  - middlewarebackupschedules/status
+  - middlewarerestores/status
+  verbs:
+  - update
+  - watch
+  - create
+  - update
+- apiGroups:
+  - ""
+  resources:
+  - persistentvolumeclaims
+  - persistentvolumes
+  - pods
+  - configmaps
+  - secrets
+  verbs:
+  - delete
+- apiGroups:
+  - "snapshot.storage.k8s.io"
+  resources:
+  - "volumesnapshotcontents"
+  - "volumesnapshots"
+  verbs:
+  - delete
+- apiGroups:
+  - "snapshot.storage.k8s.io"
+  resources:
+  - "volumesnapshots/status"
+  - "volumesnapshotcontents/status"
+  verbs:
+  - update
+- apiGroups: [ "mysql.middleware.harmonycloud.cn" ]
+  resources: [ "mysqlclusters"]
+  verbs: [ "update","patch","get" ]
+- apiGroups: [ "apps" ]
+  resources: [ "statefulsets" ]
+  verbs: [ "get", "update" ]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: middlewarebackup-controller
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: middlewarebackup-controller
+subjects:
+- kind: ServiceAccount
+  name: middlewarebackup-controller
+  namespace: {{ .Release.Namespace | quote }}
+---
+apiVersion: v1
+data:
+  lock-tables.sql: set global read_only=1;
+  unlock-tables.sql: set global read_only=0;
+kind: ConfigMap
+metadata:
+  name: backup-operation
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    control-plane: backup-controller
+  name: middlewarebackup-controller
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      control-plane: backup-controller
+  strategy:
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    type: RollingUpdate
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        control-plane: backup-controller
+    spec:
+      containers:
+      - args:
+        - --leader-elect
+        - --job-namespace={{ .Values.global.middlewarebackup_controller.job_creator.jobNamespace }}
+        - --job-service-account={{ .Values.global.middlewarebackup_controller.job_creator.jobServiceAccount }}
+        {{- if .Values.global.middlewarebackup_controller.job_creator.jobSecondsAfterFinished }}
+        - --jobSecondsAfterFinished={{ .Values.global.middlewarebackup_controller.job_creator.jobSecondsAfterFinished }}
+        {{- end }}
+        {{- if .Values.global.middlewarebackup_controller.job_creator.jobActiveDeadlineSeconds }}
+        - --jobActiveDeadlineSeconds={{ .Values.global.middlewarebackup_controller.job_creator.jobActiveDeadlineSeconds }}
+        {{- end }}
+        {{- if .Values.global.middlewarebackup_controller.job_creator.jobTolerations }}
+        - --tolerations={{ .Values.global.middlewarebackup_controller.job_creator.jobTolerations }}
+        {{- end }}
+        - --job-creator-image={{ .Values.global.repository }}/{{ .Values.global.middlewarebackup_controller.job_creator.image }}:{{ .Values.global.middlewarebackup_controller.job_creator.tag }}
+        - --backupJobImage={{ .Values.global.repository }}/{{ .Values.global.middlewarebackup_controller.common_path_backup.image }}:{{ .Values.global.middlewarebackup_controller.common_path_backup.tag }}
+        - --job-pgsql-backup-image={{ .Values.global.repository }}/{{ .Values.global.middlewarebackup_controller.job_pgsql_backup.image }}:{{ .Values.global.middlewarebackup_controller.job_pgsql_backup.tag }}
+        - --job-mysql-backup-image={{ .Values.global.repository }}/{{ .Values.global.middlewarebackup_controller.job_mysql_backup.image }}:{{ .Values.global.middlewarebackup_controller.job_mysql_backup.tag }}
+        - --job-mysql8-backup-image={{ .Values.global.repository }}/{{ .Values.global.middlewarebackup_controller.job_mysql_backup.image }}:{{ .Values.global.middlewarebackup_controller.job_mysql_backup.mysql8tag }}
+        env:
+        - name: CRD_GROUP
+          value: "{{ .Values.global.crdGroup }}.cn"
+        command:
+        - /manager
+        image: "{{ .Values.global.repository }}/{{ .Values.global.middlewarebackup_controller.image }}:{{ .Values.global.middlewarebackup_controller.tag }}"
+        imagePullPolicy: Always
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /healthz
+            port: 8087
+            scheme: HTTP
+          initialDelaySeconds: 15
+          periodSeconds: 20
+          successThreshold: 1
+          timeoutSeconds: 1
+        name: manager
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /readyz
+            port: 8087
+            scheme: HTTP
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        resources:
+          {{- toYaml .Values.global.middlewarebackup_controller.resources | nindent 12 }}
+        securityContext:
+          allowPrivilegeEscalation: false
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /operation
+          name: operation
+      volumes:
+      - configMap:
+          defaultMode: 420
+          items:
+            - key: lock-tables.sql
+              path: lock-tables.sql
+            - key: unlock-tables.sql
+              path: unlock-tables.sql
+          name: backup-operation
+        name: operation
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      {{- with .Values.global.middlewarebackup_controller.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      affinity:
+        {{- if eq .Values.podAntiAffinity "hard"}}
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            - labelSelector:
+                matchExpressions:
+                  - key: control-plane
+                    operator: In
+                    values:
+                      - backup-controller
+              topologyKey: {{ .Values.podAntiAffinityTopologKey }}
+        {{- else if eq .Values.podAntiAffinity "soft"}}
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                topologyKey: {{ .Values.podAntiAffinityTopologKey }}
+                labelSelector:
+                  matchExpressions:
+                    - key: control-plane
+                      operator: In
+                      values:
+                        - backup-controller
+        {{- end}}
+        {{- with .Values.nodeAffinity }}
+        nodeAffinity:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+      serviceAccount: middlewarebackup-controller
+      serviceAccountName: middlewarebackup-controller
+      terminationGracePeriodSeconds: 10
