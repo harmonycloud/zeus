@@ -30,6 +30,7 @@ public class MysqlClusterSpec {
     private DeployStrategy deployStrategy;
     private Map<String, Object> migratePolicy;
     private Map<String, Object> _statefulset;
+    private Map<String, Object> proxy;
     private Integer replicas;
     private String repository;
     private String secretName;
