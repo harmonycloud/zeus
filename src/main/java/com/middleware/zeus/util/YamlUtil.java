@@ -4,6 +4,7 @@ import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.middleware.zeus.common.model.ClusterCert;
+import com.middleware.zeus.common.model.middleware.MiddlewareClusterDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -149,6 +150,63 @@ public class YamlUtil {
         return normalJsonObj;
     }
 
+    public static String generateAdminConf(MiddlewareClusterDTO cluster, String apiServer) {
+        ClusterCert clusterCert = cluster.getCert();
+        String accessToken = cluster.getAccessToken();
+        if (StringUtils.isEmpty(accessToken)) {
+            // check cert info
+            if (StringUtils.isEmpty(accessToken) || clusterCert == null || StringUtils.isAnyEmpty(clusterCert.getCertificateAuthorityData(),
+                    clusterCert.getClientCertificateData(), clusterCert.getClientKeyData())) {
+                throw new IllegalArgumentException("cert is null, please check MiddlewareCluster resource");
+            }
+        }
+
+        // clusters
+        ArrayList<Object> clusters = new ArrayList<>(1);
+        Map<String, Object> clusterMap = new HashMap<>(2);
+        Map<String, Object> map1 = new HashMap<>(2);
+        if (StringUtils.isNotEmpty(accessToken)) {
+            map1.put("insecure-skip-tls-verify", true);
+        } else {
+            map1.put("certificate-authority-data", clusterCert.getCertificateAuthorityData());
+        }
+        map1.put("server", apiServer);
+        clusterMap.put("cluster", map1);
+        clusterMap.put("name", "kubernetes");
+        clusters.add(clusterMap);
+
+        // contexts
+        ArrayList<Object> contexts = new ArrayList<>(1);
+        Map<String, Object> contextMap = new HashMap<>(2);
+        Map<String, Object> map2 = new HashMap<>(2);
+        map2.put("cluster", "kubernetes");
+        map2.put("user", "kubernetes-admin");
+        contextMap.put("context", map2);
+        contextMap.put("name", "kubernetes-admin@kubernetes");
+        contexts.add(contextMap);
+
+        // users
+        ArrayList<Object> users = new ArrayList<>(1);
+        Map<String, Object> userMap = new HashMap<>(2);
+        Map<String, String> map3 = new HashMap<>(2);
+        map3.put("client-certificate-data", clusterCert.getClientCertificateData());
+        map3.put("client-key-data", clusterCert.getClientKeyData());
+        userMap.put("user", map3);
+        userMap.put("name", "kubernetes-admin");
+        users.add(userMap);
+
+        Map<String, Object> kubeConfig = new LinkedHashMap<>();
+        kubeConfig.put("apiVersion", "v1");
+        kubeConfig.put("clusters", clusters);
+        kubeConfig.put("contexts", contexts);
+        kubeConfig.put("current-context", "kubernetes-admin@kubernetes");
+        kubeConfig.put("kind", "Config");
+        kubeConfig.put("preferences", new HashMap<>());
+        kubeConfig.put("users", users);
+        Yaml yaml = new Yaml();
+        return yaml.dumpAsMap(kubeConfig);
+    }
+
     /**
      * 构建admin.conf证书文件
      */
@@ -163,6 +221,7 @@ public class YamlUtil {
         ArrayList<Object> clusters = new ArrayList<>(1);
         Map<String, Object> clusterMap = new HashMap<>(2);
         Map<String, Object> map1 = new HashMap<>(2);
+
         map1.put("certificate-authority-data", clusterCert.getCertificateAuthorityData());
         map1.put("server", apiServer);
         clusterMap.put("cluster", map1);

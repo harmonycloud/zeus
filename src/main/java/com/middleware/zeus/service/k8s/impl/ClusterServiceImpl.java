@@ -137,8 +137,9 @@ public class ClusterServiceImpl extends AbstractClusterService implements Cluste
         checkClusterExistent(cluster, false);
         cluster.setId(K8sClient.getClusterId(cluster));
         // 设置证书信息
-        clusterCertService.setCertByAdminConf(cluster.getCert());
-
+        if (StringUtils.isEmpty(cluster.getAccessToken())) {
+            clusterCertService.setCertByAdminConf(cluster.getCert());
+        }
         try {
             // 先添加fabric8客户端，否则无法用fabric8调用APIServer
             k8sClient.addK8sClient(cluster, false);

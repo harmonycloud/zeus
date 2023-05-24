@@ -60,7 +60,7 @@ public class ClusterCertServiceImpl implements ClusterCertService {
     @Override
     public void saveCert(MiddlewareClusterDTO cluster) {
         // 生成admin.conf内容
-        String adminConfYaml = YamlUtil.generateAdminConf(cluster.getCert(), cluster.getAddress());
+        String adminConfYaml = YamlUtil.generateAdminConf(cluster, cluster.getAddress());
         cluster.getCert().setCertificate(adminConfYaml);
 
         // 如果token为空，需要根据证书生成token
