@@ -137,7 +137,7 @@ public class ClusterServiceImpl extends AbstractClusterService implements Cluste
         checkClusterExistent(cluster, false);
         cluster.setId(K8sClient.getClusterId(cluster));
         // 设置证书信息
-        if (StringUtils.isEmpty(cluster.getAccessToken())) {
+        if (StringUtils.isEmpty(cluster.getCert().getAccessToken())) {
             clusterCertService.setCertByAdminConf(cluster.getCert());
         }
         try {
