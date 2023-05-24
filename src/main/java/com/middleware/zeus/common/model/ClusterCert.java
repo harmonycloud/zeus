@@ -28,4 +28,8 @@ public class ClusterCert implements Serializable {
     @ApiModelProperty("用户的客户端key")
     private String clientKeyData;
 
+    // token方式添加集群时使用
+    @ApiModelProperty("accessToken")
+    private String accessToken;
+
 }
