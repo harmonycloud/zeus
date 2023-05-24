@@ -1001,14 +1001,15 @@ public abstract class AbstractBaseOperator {
      * @param target
      * @return
      */
-    public void setSecurityContext(Middleware middleware, JSONObject target){
-        JSONObject securityContext = new JSONObject();
+    public void setSecurityContext(Middleware middleware, JSONObject target) {
+        JSONObject securityContext = target.containsKey(ContainerConstant.SECURITY_CONTEXT)
+            ? target.getJSONObject(ContainerConstant.SECURITY_CONTEXT) : new JSONObject();
         // 设置uid
-        if(middleware.getContainerUID() != null){
+        if (middleware.getContainerUID() != null) {
             securityContext.put(ContainerConstant.UID, middleware.getContainerUID());
         }
         // 设置gid
-        if(middleware.getContainerGID() != null){
+        if (middleware.getContainerGID() != null) {
             securityContext.put(ContainerConstant.GID, middleware.getContainerGID());
         }
         target.put(ContainerConstant.SECURITY_CONTEXT, securityContext);
