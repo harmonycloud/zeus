@@ -152,7 +152,7 @@ public class YamlUtil {
 
     public static String generateAdminConf(MiddlewareClusterDTO cluster, String apiServer) {
         ClusterCert clusterCert = cluster.getCert();
-        String accessToken = cluster.getAccessToken();
+        String accessToken = clusterCert.getAccessToken();
         if (StringUtils.isEmpty(accessToken)) {
             // check cert info
             if (StringUtils.isEmpty(accessToken) || clusterCert == null || StringUtils.isAnyEmpty(clusterCert.getCertificateAuthorityData(),
