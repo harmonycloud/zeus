@@ -31,6 +31,12 @@ public class ProgressInfo {
     @ApiModelProperty("状态")
     private String phrase;
 
+    @ApiModelProperty("可用区英文名称(zoneA或zoneB)")
+    private String activeArea;
+
+    @ApiModelProperty("可用区别名")
+    private String areaAliasName;
+
     @ApiModelProperty("存储大小")
     private String size;
 
