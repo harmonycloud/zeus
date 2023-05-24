@@ -1852,13 +1852,13 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
      * @return
      */
     private String getBackupSize(MiddlewareBackupStatus backupStatus, String type) {
-        String compressedSize;
-        if (backupStatus != null && backupStatus.getStorageProvider() != null
-                && backupStatus.getStorageProvider().getJSONObject(type) != null && backupStatus
-                .getStorageProvider().getJSONObject(type).containsKey("compressedSize")) {
-            JSONObject storageProvider = backupStatus.getStorageProvider();
-            compressedSize = storageProvider.getJSONObject(type).getString("compressedSize");
-            return compressedSize;
+        if (backupStatus != null && backupStatus.getStorageProvider() != null) {
+            for (String key : backupStatus.getStorageProvider().keySet()) {
+                JSONObject json = backupStatus.getStorageProvider().getJSONObject(key);
+                if (json != null && json.containsKey("compressedSize")) {
+                    return json.getString("compressedSize");
+                }
+            }
         }
         return null;
     }
