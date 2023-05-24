@@ -1067,6 +1067,10 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         progressInfo.setTaskPods(getTaskPods(clusterId, namespace, backupName));
         // 查询备份控制器状态
         progressInfo.setBackupControllerStatus(getBackupComponentStatus(clusterId));
+
+        if (backup != null && backup.getMetadata() != null && !CollectionUtils.isEmpty(backup.getMetadata().getLabels()) && backup.getMetadata().getLabels().containsKey("activeArea")) {
+            progressInfo.setActiveArea(backup.getMetadata().getLabels().get("activeArea"));
+        }
         return progressInfo;
     }
 
