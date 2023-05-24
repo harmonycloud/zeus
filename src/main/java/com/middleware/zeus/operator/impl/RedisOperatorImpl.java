@@ -486,7 +486,7 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
     @Override
     public void replaceReadWriteProxyValues(Middleware middleware, JSONObject values) {
         ReadWriteProxy readWriteProxy = middleware.getReadWriteProxy();
-        JSONObject predixy = new JSONObject();
+        JSONObject predixy = values.containsKey("predixy") ? values.getJSONObject("predixy") : new JSONObject();
         predixy.put("enableProxy", readWriteProxy.getEnabled());
 
         JSONObject requests = new JSONObject();
