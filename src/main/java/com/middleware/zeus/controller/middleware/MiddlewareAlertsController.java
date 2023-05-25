@@ -40,7 +40,7 @@ public class MiddlewareAlertsController {
     public BaseResult<List<MiddlewareAlertsDTO>> listUsedRules(@PathVariable(value = "clusterId",required = false) String clusterId,
                                                                @PathVariable(value = "namespace", required = false) String namespace,
                                                                @PathVariable(value = "middlewareName", required = false) String middlewareName,
-                                                               @RequestParam(value = "keyword", required = false) String keyword) throws Exception {
+                                                               @RequestParam(value = "keyword", required = false) String keyword) {
         return BaseResult.ok(middlewareAlertsService.listUsedRules(clusterId, namespace, middlewareName, keyword));
     }
 

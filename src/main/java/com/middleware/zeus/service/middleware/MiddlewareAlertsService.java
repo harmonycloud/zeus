@@ -29,8 +29,7 @@ public interface MiddlewareAlertsService {
      *            关键字
      * @return List<MiddlewareAlertsDTO>
      */
-    PageInfo<MiddlewareAlertsDTO> listUsedRules(String clusterId, String namespace, String middlewareName,
-        String keyword) throws Exception;
+    List<MiddlewareAlertsDTO> listUsedRules(String clusterId, String namespace, String middlewareName, String keyword);
 
     /**
      * 获取可添加告警规则列表

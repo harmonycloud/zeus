@@ -81,17 +81,16 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
     private final String SYSTEM_ALERT = "system_alert";
 
     @Override
-    public PageInfo<MiddlewareAlertsDTO> listUsedRules(String clusterId, String namespace, String middlewareName,
+    public List<MiddlewareAlertsDTO> listUsedRules(String clusterId, String namespace, String middlewareName,
         String keyword) {
         // 查询prometheus文件
         PrometheusRule prometheusRule = prometheusRuleService.get(clusterId, namespace, middlewareName);
         // 封装告警规则文件
         List<MiddlewareAlertsDTO> middlewareAlertsDTOList = prometheusRuleService.convertPrometheusRule(prometheusRule);
-        PageInfo<MiddlewareAlertsDTO> alertsDtoPageInfo = new PageInfo<>(middlewareAlertsDTOList);
         // 根据创建时间排序
-        alertsDtoPageInfo.getList().sort((o1, o2) -> o1.getCreateTime() == null ? -1
+        middlewareAlertsDTOList.sort((o1, o2) -> o1.getCreateTime() == null ? -1
             : o2.getCreateTime() == null ? -1 : o2.getCreateTime().compareTo(o1.getCreateTime()));
-        return alertsDtoPageInfo;
+        return middlewareAlertsDTOList;
     }
 
     @Override
