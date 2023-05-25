@@ -196,12 +196,14 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public void createOrReplaceIncBackup(String clusterId, String namespace, String backupId, String backupName, String time, String pause) {
-        if(StringUtils.isEmpty(backupName)){
+    public void createOrReplaceIncBackup(String clusterId, String namespace, String backupId, String backupName, String time, String pause, Boolean sameActiveActiveBackup) {
+        if (sameActiveActiveBackup) {
             List<MiddlewareBackupSchedule> schedules = listMiddlewareBackupSchedule(clusterId, namespace, backupId);
             for (MiddlewareBackupSchedule backupSchedule : schedules) {
                 createOrReplaceIncBackup(clusterId, namespace, backupSchedule.getMetadata().getName(), time, pause);
             }
+        } else {
+            createOrReplaceIncBackup(clusterId, namespace, backupName, time, pause);
         }
     }
 
@@ -244,7 +246,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public void updateBackupSchedule(MiddlewareBackupDTO backupDTO) {
-        if (StringUtils.isEmpty(backupDTO.getBackupName())) {
+        if (backupDTO.getSameActiveActiveBackup()) {
             List<MiddlewareBackupSchedule> schedules = listMiddlewareBackupSchedule(backupDTO.getClusterId(), backupDTO.getNamespace(), backupDTO.getBackupId());
             for (MiddlewareBackupSchedule schedule : schedules) {
                 updateBackupSchedule(schedule.getMetadata().getName(), backupDTO);

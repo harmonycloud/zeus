@@ -84,4 +84,8 @@ public class MiddlewareBackupDTO {
 
     @ApiModelProperty("n分钟周期")
     private String time;
+
+    @ApiModelProperty("双活可用区备份信息是否相同")
+    private Boolean sameActiveActiveBackup;
+
 }
