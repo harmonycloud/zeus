@@ -50,28 +50,24 @@ public class PrometheusServiceImpl extends AbstractBaseOperator implements Prome
 
     @Override
     protected String getValues(String repository, MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto) {
-       String setValues = "image.prometheus.repository=" + repository + "/prometheus" +
-                ",image.configmapReload.repository=" + repository + "/configmap-reload" +
-                ",image.nodeExporter.repository=" + repository + "/node-exporter" +
-                ",image.kubeRbacProxy.repository=" + repository + "/kube-rbac-proxy" +
-                ",image.prometheusAdapter.repository=" + repository + "/k8s-prometheus-adapter-amd64" +
-                ",image.prometheusOperator.repository=" + repository + "/prometheus-operator" +
-                ",image.prometheusConfigReloader.repository=" + repository + "/prometheus-config-reloader" +
-                ",image.kubeStateMetrics.repository=" + repository + "/kube-state-metrics" +
-                ",image.nodeExporter.repository=" + repository + "/node-exporter" +
-                ",image.grafana.repository=" + repository + "/grafana" +
-                ",storage.storageClass=" + "local-path";
+       String setValues = "prometheus.prometheusSpec.image.repository=" + repository + "/prometheus" +
+                ",kube-state-metrics.image.repository=" + repository + "/kube-state-metrics" +
+                ",prometheus-node-exporter.image.repository=" + repository + "/node-exporter" +
+                ",prometheusOperator.image.repository=" + repository + "/prometheus-operator" +
+                ",prometheusOperator.prometheusConfigReloader.image.repository=" + repository + "/prometheus-config-reloader" +
+                ",prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.storageClassName=" + "local-path" +
+                ",prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.resources.requests.storage=" + "10Gi";
        if (SIMPLE.equals(clusterComponentsDto.getType())) {
-           setValues = setValues + ",replicas.prometheus=1";
+           setValues = setValues + ",prometheus.prometheusSpec.replicas=1";
        } else {
-           setValues = setValues + ",replicas.prometheus=3";
+           setValues = setValues + ",prometheus.prometheusSpec.replicas=3";
        }
        return setValues;
     }
 
     @Override
     protected void install(String setValues, MiddlewareClusterDTO cluster) {
-        helmChartService.installComponents(ComponentsEnum.PROMETHEUS.getName(), "default", setValues,
+        helmChartService.installComponents(ComponentsEnum.PROMETHEUS.getName(), "monitoring", setValues,
                 componentsPath + File.separator + "prometheus", cluster);
     }
 
@@ -79,7 +75,7 @@ public class PrometheusServiceImpl extends AbstractBaseOperator implements Prome
     public void delete(MiddlewareClusterDTO cluster, Integer status) {
         if (status != 1){
             // uninstall
-            helmChartService.uninstall(cluster, "default", ComponentsEnum.PROMETHEUS.getName());
+            helmChartService.uninstall(cluster, "monitoring", ComponentsEnum.PROMETHEUS.getName());
         }
     }
 
