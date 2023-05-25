@@ -16,6 +16,9 @@ import java.util.Date;
 @ApiModel(description = "增量备份业务对象")
 public class MiddlewareIncBackupDto {
 
+    @ApiModelProperty("所属备份任务id")
+    private String backupId;
+
     @ApiModelProperty("备份名称")
     private String backupName;
 
