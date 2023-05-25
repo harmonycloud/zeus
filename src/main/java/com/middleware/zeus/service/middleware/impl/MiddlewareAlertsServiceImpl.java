@@ -532,6 +532,8 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         userDtoList.addAll(userService.list(null).stream()
             .filter(
                 userDto -> userDto.getIsAdmin() != null && userDto.getIsAdmin() && !userDto.getUserName().equals(ADMIN))
+            .filter(userDto -> alertUserDoList.stream()
+                .noneMatch(alertUserDo -> alertUserDo.getUsername().equals(userDto.getUserName())))
             .collect(Collectors.toList()));
         // 返回封装数据
         return userDtoList.stream().map(userDto -> {
