@@ -951,6 +951,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public MiddlewareIncBackupDto getIncBackupInfo(String clusterId, String namespace, String backupName) {
+        MiddlewareBackupSchedule owner = backupScheduleCRDService.get(clusterId, namespace, backupName);
         MiddlewareBackupSchedule cr = backupScheduleCRDService.get(clusterId, namespace, backupName + "-incr");
         if (cr == null) {
             return null;
@@ -976,7 +977,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             middlewareIncBackupDto.setActiveArea(activeArea);
             middlewareIncBackupDto.setAreaAliasName(getActiveAreaAliasName(clusterId, activeArea));
         }
-
+        if (owner != null && owner.getMetadata() != null && owner.getMetadata().getLabels() != null && owner.getMetadata().getLabels().containsKey("backupId")) {
+            middlewareIncBackupDto.setBackupId(owner.getMetadata().getLabels().get("backupId"));
+        }
         // 封装数据
         middlewareIncBackupDto.setPause(cr.getSpec().getPause())
                 .setTime(CronUtils.convertCronToTime(cr.getSpec().getSchedule().getCron()))
