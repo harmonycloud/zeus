@@ -196,6 +196,16 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
+    public void createOrReplaceIncBackup(String clusterId, String namespace, String backupId, String backupName, String time, String pause) {
+        if(StringUtils.isEmpty(backupName)){
+            List<MiddlewareBackupSchedule> schedules = listMiddlewareBackupSchedule(clusterId, namespace, backupId);
+            for (MiddlewareBackupSchedule backupSchedule : schedules) {
+                createOrReplaceIncBackup(clusterId, namespace, backupSchedule.getMetadata().getName(), time, pause);
+            }
+        }
+    }
+
+    @Override
     public void createOrReplaceIncBackup(String clusterId, String namespace, String backupName, String time, String pause) {
         // 校验备份周期和保留时间
         MiddlewareBackupSchedule baks = backupScheduleCRDService.get(clusterId, namespace, backupName);
@@ -234,9 +244,13 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public void updateBackupSchedule(MiddlewareBackupDTO backupDTO) {
-        List<MiddlewareBackupSchedule> schedules = listMiddlewareBackupSchedule(backupDTO.getClusterId(), backupDTO.getNamespace(), backupDTO.getBackupId());
-        for (MiddlewareBackupSchedule schedule : schedules) {
-            updateBackupSchedule(schedule.getMetadata().getName(), backupDTO);
+        if (StringUtils.isEmpty(backupDTO.getBackupName())) {
+            List<MiddlewareBackupSchedule> schedules = listMiddlewareBackupSchedule(backupDTO.getClusterId(), backupDTO.getNamespace(), backupDTO.getBackupId());
+            for (MiddlewareBackupSchedule schedule : schedules) {
+                updateBackupSchedule(schedule.getMetadata().getName(), backupDTO);
+            }
+        } else {
+            updateBackupSchedule(backupDTO.getBackupName(), backupDTO);
         }
     }
 

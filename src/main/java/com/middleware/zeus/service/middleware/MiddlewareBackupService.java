@@ -27,13 +27,19 @@ public interface MiddlewareBackupService {
     void createBackup(MiddlewareBackupDTO middlewareBackupDTO);
 
     /**
-     * 创建增量备份
+     * 保存增量备份
+     *
+     */
+    void createOrReplaceIncBackup(String clusterId, String namespace, String backupId, String backupName,String time, String pause);
+
+    /**
+     * 保存增量备份
      *
      */
     void createOrReplaceIncBackup(String clusterId, String namespace, String backupName, String time, String pause);
 
     /**
-     * 创建增量备份
+     * 保存增量备份
      *
      */
     void createOrReplaceIncBackup(String clusterId, String namespace, String backupName, String time, String pause, MiddlewareBackupSchedule scheduleCR);
