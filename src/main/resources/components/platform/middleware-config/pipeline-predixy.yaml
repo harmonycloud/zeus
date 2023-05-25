@@ -1,0 +1,9 @@
+name: "无状态应用优雅重启"
+jobs:
+  - name: "初始化状态检查"
+    cmd: "kubectl -n $namespace get $kind $name -o json |jq -r '.status.phase'"
+    result: "Running"
+  - name: "正在滚动重启"
+    func: DeleteDeployPod
+    para:
+      labelFormat: "component=%s-predixy"
