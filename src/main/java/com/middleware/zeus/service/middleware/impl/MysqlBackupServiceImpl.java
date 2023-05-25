@@ -135,6 +135,11 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
+    public void createOrReplaceIncBackup(String clusterId, String namespace, String backupId, String backupName, String time, String pause) {
+
+    }
+
+    @Override
     public void createOrReplaceIncBackup(String clusterId, String namespace, String backupName, String time, String pause) {
 
     }
