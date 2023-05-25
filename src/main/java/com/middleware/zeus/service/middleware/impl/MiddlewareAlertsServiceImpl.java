@@ -527,7 +527,6 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         List<UserDto> userDtoList = projectService.getUser(organId, projectId, false).stream()
                 .filter(userDto -> alertUserDoList.stream()
                         .noneMatch(alertUserDo -> alertUserDo.getUsername().equals(userDto.getUserName())))
-                .filter(userDto -> !userDto.getRoleId().equals(NUM_FOUR))
                 .collect(Collectors.toList());
         // 获取超级管理员用户
         userDtoList.addAll(userService.list(null).stream()
