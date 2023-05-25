@@ -95,7 +95,7 @@ public class PrometheusServiceImpl extends AbstractBaseOperator implements Prome
     @Override
     protected List<PodInfo> getPodInfoList(String clusterId) {
         Map<String, String> labels = new HashMap<>();
-        labels.put("app", ComponentsEnum.PROMETHEUS.getName());
+        labels.put("app.kubernetes.io/name", ComponentsEnum.PROMETHEUS.getName());
         return podService.list(clusterId, "monitoring", labels);
     }
 

@@ -116,7 +116,7 @@ public class AlertManagerServiceImpl extends AbstractBaseOperator implements Ale
     @Override
     protected List<PodInfo> getPodInfoList(String clusterId) {
         Map<String, String> labels = new HashMap<>();
-        labels.put("app", ComponentsEnum.ALERTMANAGER.getName());
+        labels.put("app.kubernetes.io/name", ComponentsEnum.ALERTMANAGER.getName());
         return podService.list(clusterId, "monitoring", labels);
     }
 
