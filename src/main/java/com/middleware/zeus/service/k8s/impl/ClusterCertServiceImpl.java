@@ -1,5 +1,6 @@
 package com.middleware.zeus.service.k8s.impl;
 
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.middleware.zeus.common.enums.DictEnum;
 import com.middleware.zeus.common.enums.ErrorMessage;
@@ -189,8 +190,7 @@ public class ClusterCertServiceImpl implements ClusterCertService {
                 throw new BusinessException(DictEnum.CERTIFICATE, ErrorMessage.CERTIFICATE_AUTH_FAILED);
             }
             Cluster c = KubeConfigUtils.getCluster(config, currentContext.getContext());
-            if (c == null || StringUtils.isEmpty(c.getCertificateAuthorityData())
-                && StringUtils.isEmpty(c.getCertificateAuthority())) {
+            if (c == null) {
                 throw new BusinessException(DictEnum.CERTIFICATE, ErrorMessage.CERTIFICATE_AUTH_FAILED);
             }
             AuthInfo user = KubeConfigUtils.getUserAuthInfo(config, currentContext.getContext());
@@ -202,16 +202,73 @@ public class ClusterCertServiceImpl implements ClusterCertService {
             }
 
             // 设置证书信息
-            cert.setCertificateAuthorityData(StringUtils.isNotEmpty(c.getCertificateAuthorityData())
-                ? c.getCertificateAuthorityData() : c.getCertificateAuthority())
-                .setClientCertificateData(StringUtils.isNotEmpty(user.getClientCertificateData())
+            String accessToken = getAccessToken(cert);
+            if (StringUtils.isNotEmpty(accessToken)) {
+                cert.setAccessToken(accessToken);
+            } else {
+                cert.setCertificateAuthorityData(StringUtils.isNotEmpty(c.getCertificateAuthorityData())
+                        ? c.getCertificateAuthorityData() : c.getCertificateAuthority());
+            }
+            cert.setClientCertificateData(StringUtils.isNotEmpty(user.getClientCertificateData())
                     ? user.getClientCertificateData() : user.getClientCertificate())
-                .setClientKeyData(
-                    StringUtils.isNotEmpty(user.getClientKeyData()) ? user.getClientKeyData() : user.getClientKey());
+                    .setClientKeyData(
+                            StringUtils.isNotEmpty(user.getClientKeyData()) ? user.getClientKeyData() : user.getClientKey());
         } catch (IOException e) {
             log.error("读取admin.conf内容io异常，内容如下：{}", cert.getCertificate(), e);
             throw new BusinessException(ErrorMessage.IO_FAILED);
         }
+    }
+
+    @Override
+    public void setCertByAdminConf(MiddlewareClusterDTO cluster) {
+        ClusterCert cert = cluster.getCert();
+        try {
+            Config config = KubeConfigUtils.parseConfigFromString(cert.getCertificate());
+
+            if (config == null) {
+                throw new BusinessException(DictEnum.CERTIFICATE, ErrorMessage.CERTIFICATE_AUTH_FAILED);
+            }
+            NamedContext currentContext = KubeConfigUtils.getCurrentContext(config);
+            if (currentContext == null) {
+                throw new BusinessException(DictEnum.CERTIFICATE, ErrorMessage.CERTIFICATE_AUTH_FAILED);
+            }
+            Cluster c = KubeConfigUtils.getCluster(config, currentContext.getContext());
+            if (c == null) {
+                throw new BusinessException(DictEnum.CERTIFICATE, ErrorMessage.CERTIFICATE_AUTH_FAILED);
+            }
+            AuthInfo user = KubeConfigUtils.getUserAuthInfo(config, currentContext.getContext());
+            if (user == null
+                    || StringUtils.isEmpty(user.getClientCertificateData())
+                    && StringUtils.isEmpty(user.getClientCertificate())
+                    || StringUtils.isEmpty(user.getClientKeyData()) && StringUtils.isEmpty(user.getClientKey())) {
+                throw new BusinessException(DictEnum.CERTIFICATE, ErrorMessage.CERTIFICATE_AUTH_FAILED);
+            }
+
+            // 设置证书信息
+            String accessToken = getAccessToken(cert);
+            if (StringUtils.isNotEmpty(accessToken)) {
+                cert.setAccessToken(accessToken);
+                cluster.setAccessToken(accessToken);
+            } else {
+                cert.setCertificateAuthorityData(StringUtils.isNotEmpty(c.getCertificateAuthorityData())
+                        ? c.getCertificateAuthorityData() : c.getCertificateAuthority());
+            }
+            cert.setClientCertificateData(StringUtils.isNotEmpty(user.getClientCertificateData())
+                    ? user.getClientCertificateData() : user.getClientCertificate())
+                    .setClientKeyData(
+                            StringUtils.isNotEmpty(user.getClientKeyData()) ? user.getClientKeyData() : user.getClientKey());
+        } catch (IOException e) {
+            log.error("读取admin.conf内容io异常，内容如下：{}", cert.getCertificate(), e);
+            throw new BusinessException(ErrorMessage.IO_FAILED);
+        }
+    }
+
+    private String getAccessToken(ClusterCert cert) {
+        JSONObject certJson = YamlUtil.convertYamlAsNormalJsonObject(cert.getCertificate());
+        if (certJson.containsKey("accessToken")) {
+            return certJson.getString("accessToken");
+        }
+        return null;
     }
 
 }

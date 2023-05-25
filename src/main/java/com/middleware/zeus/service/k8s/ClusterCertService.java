@@ -48,4 +48,5 @@ public interface ClusterCertService {
      */
     void setCertByAdminConf(ClusterCert cert);
 
+    void setCertByAdminConf(MiddlewareClusterDTO cluster);
 }
