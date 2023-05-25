@@ -16,11 +16,11 @@ public class MiddlewareModeUtil {
      */
     public static Boolean activeActiveModeCheck(String type,String mode){
         if(MiddlewareTypeEnum.MYSQL.getType().equals(type)){
-            return "1m-0s".equals(mode);
+            return !"1m-0s".equals(mode);
         }else if(MiddlewareTypeEnum.POSTGRESQL.getType().equals(type)){
-            return "1m-0s".equals(mode);
+            return !"1m-0s".equals(mode);
         }else if(MiddlewareTypeEnum.REDIS.getType().equals(type)){
-            return "cluster".equals(mode);
+            return "sentinel".equals(mode);
         }
         return false;
     }
