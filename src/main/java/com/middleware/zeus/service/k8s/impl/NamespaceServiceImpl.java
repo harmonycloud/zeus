@@ -301,10 +301,19 @@ public class NamespaceServiceImpl implements NamespaceService {
                 if (storageQuotaMap.containsKey(sc.getName())) {
                     QuotaBase quotaBase = storageQuotaMap.get(sc.getName());
                     if (quotaBase.getRequest() != null) {
-                        requestStorage += quotaBase.getRequest();
+                        if (requestStorage == 0.0) {
+                            requestStorage += quotaBase.getRequest();
+                        } else {
+                            requestStorage =
+                                requestStorage < quotaBase.getRequest() ? requestStorage : quotaBase.getRequest();
+                        }
                     }
                     if (quotaBase.getUsed() != null) {
-                        usedStorage += storageQuotaMap.get(sc.getName()).getUsed();
+                        if (usedStorage == 0.0) {
+                            usedStorage += quotaBase.getUsed();
+                        } else {
+                            usedStorage = usedStorage > quotaBase.getUsed() ? usedStorage : quotaBase.getUsed();
+                        }
                     }
                 }
             }
