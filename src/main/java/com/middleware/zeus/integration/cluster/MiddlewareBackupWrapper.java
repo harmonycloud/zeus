@@ -62,9 +62,11 @@ public class MiddlewareBackupWrapper {
                 .resources(MiddlewareBackup.class, MiddlewareBackupList.class).inNamespace(namespace);
         // delete
         if (forceDelete) {
-            middlewareBackupClient.withName(name).delete();
+            MiddlewareBackup middlewareBackup = get(clusterId, namespace, name);
+            middlewareBackup.getMetadata().setFinalizers(Collections.emptyList());
+            middlewareBackupClient.resource(middlewareBackup).update();
         } else {
-            middlewareBackupClient.withName(name).withPropagationPolicy(DeletionPropagation.FOREGROUND).withGracePeriod(0).delete();
+            middlewareBackupClient.withName(name).delete();
         }
     }
 
