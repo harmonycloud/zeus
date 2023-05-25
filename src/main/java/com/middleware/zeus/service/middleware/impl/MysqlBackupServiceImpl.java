@@ -348,6 +348,11 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
+    public void deleteRestoreRecord(String clusterId, String namespace, String restoreName, Boolean forceDelete) {
+
+    }
+
+    @Override
     public void deleteBackUpTask(MiddlewareTaskDTO taskDTO) {
 
     }

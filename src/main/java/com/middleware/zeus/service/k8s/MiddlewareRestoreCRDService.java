@@ -41,6 +41,16 @@ public interface MiddlewareRestoreCRDService {
     void delete(String clusterId, String namespace,String name)  throws IOException;
 
     /**
+     * 删除恢复
+     * @param clusterId
+     * @param namespace
+     * @param name
+     * @param forceDelete 是否强制删除
+     * @throws IOException
+     */
+    void delete(String clusterId, String namespace,String name,Boolean forceDelete)  throws IOException;
+
+    /**
      * 查询恢复列表
      * @param clusterId
      * @param namespace

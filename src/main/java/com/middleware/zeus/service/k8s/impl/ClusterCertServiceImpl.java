@@ -223,8 +223,8 @@ public class ClusterCertServiceImpl implements ClusterCertService {
     public void setCertByAdminConf(MiddlewareClusterDTO cluster) {
         ClusterCert cert = cluster.getCert();
         try {
+            String accessToken = getAccessToken(cert);
             Config config = KubeConfigUtils.parseConfigFromString(cert.getCertificate());
-
             if (config == null) {
                 throw new BusinessException(DictEnum.CERTIFICATE, ErrorMessage.CERTIFICATE_AUTH_FAILED);
             }
@@ -233,7 +233,9 @@ public class ClusterCertServiceImpl implements ClusterCertService {
                 throw new BusinessException(DictEnum.CERTIFICATE, ErrorMessage.CERTIFICATE_AUTH_FAILED);
             }
             Cluster c = KubeConfigUtils.getCluster(config, currentContext.getContext());
-            if (c == null) {
+            // 如果没有accessToken，则必须设置服务端证书信息certificate-authority-data
+            if (StringUtils.isEmpty(accessToken) && (c == null || StringUtils.isEmpty(c.getCertificateAuthorityData())
+                    && StringUtils.isEmpty(c.getCertificateAuthority()))) {
                 throw new BusinessException(DictEnum.CERTIFICATE, ErrorMessage.CERTIFICATE_AUTH_FAILED);
             }
             AuthInfo user = KubeConfigUtils.getUserAuthInfo(config, currentContext.getContext());
@@ -243,9 +245,7 @@ public class ClusterCertServiceImpl implements ClusterCertService {
                     || StringUtils.isEmpty(user.getClientKeyData()) && StringUtils.isEmpty(user.getClientKey())) {
                 throw new BusinessException(DictEnum.CERTIFICATE, ErrorMessage.CERTIFICATE_AUTH_FAILED);
             }
-
             // 设置证书信息
-            String accessToken = getAccessToken(cert);
             if (StringUtils.isNotEmpty(accessToken)) {
                 cert.setAccessToken(accessToken);
                 cluster.setAccessToken(accessToken);

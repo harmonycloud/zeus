@@ -1,6 +1,7 @@
 package com.middleware.zeus.integration.cluster;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -67,6 +68,21 @@ public class MiddlewareRestoreWrapper {
                 .resources(MiddlewareRestoreCR.class, MiddlewareRestoreList.class).inNamespace(namespace);
         // delete
         middlewareRestoreClient.withName(name).delete();
+    }
+
+    public void delete(String clusterId, String namespace, String name, Boolean forceDelete) throws IOException {
+        // init client
+        NonNamespaceOperation<MiddlewareRestoreCR, MiddlewareRestoreList,
+                Resource<MiddlewareRestoreCR>> middlewareRestoreClient = K8sClient.getClient(clusterId)
+                .resources(MiddlewareRestoreCR.class, MiddlewareRestoreList.class).inNamespace(namespace);
+        // delete
+        if (forceDelete) {
+            MiddlewareRestoreCR restoreCR = get(clusterId, namespace, name);
+            restoreCR.getMetadata().setFinalizers(Collections.emptyList());
+            middlewareRestoreClient.resource(restoreCR).update();
+        } else {
+            middlewareRestoreClient.withName(name).delete();
+        }
     }
 
     public MiddlewareRestoreList list(String clusterId, String namespace, Map<String, String> labels) {

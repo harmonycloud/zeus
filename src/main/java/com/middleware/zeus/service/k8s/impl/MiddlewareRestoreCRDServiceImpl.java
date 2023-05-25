@@ -38,6 +38,11 @@ public class MiddlewareRestoreCRDServiceImpl implements MiddlewareRestoreCRDServ
     }
 
     @Override
+    public void delete(String clusterId, String namespace, String name, Boolean forceDelete) throws IOException {
+        middlewareRestoreWrapper.delete(clusterId, namespace, name, forceDelete);
+    }
+
+    @Override
     public MiddlewareRestoreList list(String clusterId, String namespace, Map<String, String> labels) {
         return middlewareRestoreWrapper.list(clusterId, namespace, labels);
     }
