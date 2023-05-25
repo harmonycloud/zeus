@@ -1838,17 +1838,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         backupRecord.setPosition(position);
 
         // 获取备份状态
-        if (StringUtils.isNotEmpty(backup.getMetadata().getDeletionTimestamp())) {
-            backupRecord.setPhrase("Deleting");
-        } else if (!ObjectUtils.isEmpty(backupStatus)) {
-            backupRecord.setPhrase(backupStatus.getPhase());
-            if ("Failed".equals(backupStatus.getPhase())) {
-                backupRecord.setReason(backupStatus.getReason());
-            }
-        } else {
-            backupRecord.setPhrase("Unknown");
-        }
-
+        setMiddlewareBackupStatus(backup, backupRecord);
 
         backupRecord.setSourceType(middlewareCrTypeService.findTypeByCrType(backup.getSpec().getType()));
         // 设置备份存储大小
@@ -1867,6 +1857,32 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             backupRecord.setActiveActive(true);
         } else {
             backupRecord.setActiveActive(false);
+        }
+    }
+
+    /**
+     * 设置备份记录状态
+     * @param backup
+     * @param backupRecord
+     */
+    private void setMiddlewareBackupStatus(MiddlewareBackup backup, MiddlewareBackupRecord backupRecord) {
+        MiddlewareBackupStatus backupStatus = backup.getStatus();
+        if("RecycleFailed".equals(backupStatus.getPhase())){
+            backupRecord.setPhrase(backupStatus.getPhase());
+            backupRecord.setReason(backupStatus.getReason());
+            return;
+        }
+        if (StringUtils.isNotEmpty(backup.getMetadata().getDeletionTimestamp())) {
+            backupRecord.setPhrase("Deleting");
+            return;
+        }
+        if (!ObjectUtils.isEmpty(backupStatus)) {
+            backupRecord.setPhrase(backupStatus.getPhase());
+            if ("Failed".equals(backupStatus.getPhase())) {
+                backupRecord.setReason(backupStatus.getReason());
+            }
+        } else {
+            backupRecord.setPhrase("Unknown");
         }
     }
 
