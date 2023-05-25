@@ -21,6 +21,25 @@ public interface PvcService {
     List<PersistentVolumeClaim> list(String clusterId, String namespace);
 
     /**
+     * 查询pvc
+     *
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param name pvc名称
+     * @return PersistentVolumeClaim
+     */
+    io.fabric8.kubernetes.api.model.PersistentVolumeClaim get(String clusterId, String namespace, String name);
+
+    /**
+     * 更新pvc
+     *
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param pvc pvc对象
+     */
+    void update(String clusterId, String namespace, io.fabric8.kubernetes.api.model.PersistentVolumeClaim pvc);
+
+    /**
      * 查询存储列表
      *
      * @param clusterId 集群id

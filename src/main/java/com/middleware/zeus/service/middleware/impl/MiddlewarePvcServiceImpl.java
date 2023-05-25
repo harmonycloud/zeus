@@ -11,6 +11,7 @@ import com.middleware.zeus.service.k8s.*;
 import com.middleware.zeus.service.middleware.MiddlewarePvcService;
 import com.middleware.zeus.service.prometheus.PrometheusResourceMonitorService;
 import com.middleware.zeus.util.PrometheusQueryUtil;
+import io.fabric8.kubernetes.api.model.Quantity;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -66,8 +67,7 @@ public class MiddlewarePvcServiceImpl implements MiddlewarePvcService {
             dto.setReclaimPolicy(reclaimPolicyMap.getOrDefault(dto.getPvcName(), null));
         }
 
-        // check scale up
-        checkScaleUp(clusterId, namespace, middlewareName, middlewarePvcDtoList);
+        // todo check scale up
         return middlewarePvcDtoList;
     }
 
@@ -86,7 +86,9 @@ public class MiddlewarePvcServiceImpl implements MiddlewarePvcService {
         // 校验存储大小
         checkStorage(clusterId, storageClass, targetStorage - storage);
         // 扩容
-        createMaintenance(clusterId, namespace, middlewareName, type, pvcName, storage, targetStorage, SCALE_UP_PV);
+        io.fabric8.kubernetes.api.model.PersistentVolumeClaim pvc = pvcService.get(clusterId, namespace, pvcName);
+        pvc.getSpec().getResources().getRequests().put(STORAGE, new Quantity(targetStorage + "GI"));
+        pvcService.update(clusterId, namespace, pvc);
     }
 
     @Override

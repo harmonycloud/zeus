@@ -33,6 +33,16 @@ public class PvcServiceImpl implements PvcService {
     }
 
     @Override
+    public io.fabric8.kubernetes.api.model.PersistentVolumeClaim get(String clusterId, String namespace, String name) {
+        return pvcWrapper.get(clusterId, namespace, name);
+    }
+
+    @Override
+    public void update(String clusterId, String namespace, io.fabric8.kubernetes.api.model.PersistentVolumeClaim pvc) {
+        pvcWrapper.update(clusterId, namespace, pvc);
+    }
+
+    @Override
     public boolean checkPvcExist(String clusterId, String namespace, String... pvcs) {
         for (int i = 0; i < pvcs.length; ++i) {
             io.fabric8.kubernetes.api.model.PersistentVolumeClaim pvc = pvcWrapper.get(clusterId, namespace, pvcs[i]);
