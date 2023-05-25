@@ -281,6 +281,15 @@ public interface MiddlewareBackupService {
     void deleteRestoreRecord(String clusterId, String namespace, String restoreName);
 
     /**
+     * 删除恢复记录
+     * @param clusterId
+     * @param namespace
+     * @param restoreName
+     * @param forceDelete 是否强制删除
+     */
+    void deleteRestoreRecord(String clusterId, String namespace, String restoreName, Boolean forceDelete);
+
+    /**
      * 删除备份任务
      * @param taskDTO
      */

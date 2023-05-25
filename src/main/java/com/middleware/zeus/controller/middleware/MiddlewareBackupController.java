@@ -318,8 +318,8 @@ public class MiddlewareBackupController {
     public BaseResult deleteRestoreRecord(@PathVariable("clusterId") String clusterId,
                                           @PathVariable("namespace") String namespace,
                                           @RequestParam("restoreName") String restoreName,
-                                          @RequestParam(value = "forceDelete", required = false, defaultValue = "false") String forceDelete) {
-        middlewareBackupService.deleteRestoreRecord(clusterId, namespace, restoreName);
+                                          @RequestParam(value = "forceDelete", required = false, defaultValue = "false") Boolean forceDelete) {
+        middlewareBackupService.deleteRestoreRecord(clusterId, namespace, restoreName, forceDelete);
         return BaseResult.ok();
     }
 

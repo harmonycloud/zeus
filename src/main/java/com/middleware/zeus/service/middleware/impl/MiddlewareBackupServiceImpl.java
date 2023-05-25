@@ -1182,6 +1182,16 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
+    public void deleteRestoreRecord(String clusterId, String namespace, String restoreName, Boolean forceDelete) {
+        try {
+            restoreCRDService.delete(clusterId, namespace, restoreName, forceDelete);
+        } catch (Exception e) {
+            log.error("强制删除克隆记录失败", e);
+            throw new BusinessException(ErrorMessage.FAILED_TO_DELETE_BACKUP_POSITION);
+        }
+    }
+
+    @Override
     public void deleteBackUpTask(MiddlewareTaskDTO taskDTO) {
         String clusterId = taskDTO.getClusterId();
         String namespace = taskDTO.getNamespace();
