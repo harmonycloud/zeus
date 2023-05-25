@@ -1016,7 +1016,8 @@ public abstract class AbstractBaseOperator {
     }
 
     public void convertSecurityContext(Middleware middleware, JSONObject values) {
-        if (!values.containsKey(ContainerConstant.SECURITY_CONTEXT)) {
+        if (!values.containsKey(ContainerConstant.SECURITY_CONTEXT)
+            || values.getJSONObject(ContainerConstant.SECURITY_CONTEXT) == null) {
             return;
         }
         JSONObject securityContext = values.getJSONObject(ContainerConstant.SECURITY_CONTEXT);
