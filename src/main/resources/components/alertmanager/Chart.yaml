@@ -1,6 +1,7 @@
 apiVersion: v2
-appVersion: 1.5.1
-description: Alertmanager by Harmonycloud
+appVersion: 0.23.0
+home: https://github.com/prometheus-operator/kube-prometheus
+kubeVersion: '>=1.16.0-0'
 name: alertmanager
 type: application
-version: 1.5.1
+version: 0.23.0

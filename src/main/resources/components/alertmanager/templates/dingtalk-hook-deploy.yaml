@@ -1,0 +1,54 @@
+{{if .Values.alertmanager.dingtalk.enabled}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alertmanager-webhook-dingtalk
+  namespace: {{ template "kube-prometheus-stack.namespace" . }}
+  labels:
+    app: {{ template "kube-prometheus-stack.name" . }}-alertmanager
+spec:
+  selector:
+    matchLabels:
+      app: dingtalk-hook
+  template:
+    metadata:
+      labels:
+        app: dingtalk-hook
+    spec:
+      containers:
+        - name: alertmanager-webhook-dingtalk
+          image: k8s-deploy/prometheus-webhook-dingtalk:latest
+          args:
+            - --web.listen-address=0.0.0.0:8060
+            - --config.file=/config/config.yaml
+            - --web.enable-lifecycle
+          volumeMounts:
+            - name: config
+              mountPath: /config/config.yaml
+              subPath: config.yaml
+            - name: template
+              mountPath: /config/template.tmpl
+              subPath: template.tmpl 
+          resources:
+            limits:
+              cpu: 100m
+              memory: 100Mi
+          ports:
+            - name: http
+              containerPort: 8060
+      volumes:
+        - name: config
+          configMap:
+            defaultMode: 420
+            items:
+            - key: config.yaml
+              path: config.yaml
+            name: alertmanager-webhook-dingtalk
+        - name: template
+          configMap:
+            defaultMode: 420
+            items:
+            - key: template.tmpl
+              path: template.tmpl
+            name: alertmanager-webhook-dingtalk
+{{end}}

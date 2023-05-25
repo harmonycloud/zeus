@@ -1,0 +1,17 @@
+{{if .Values.alertmanager.dingtalk.enabled}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: alertmanager-webhook-dingtalk
+  namespace: {{ template "kube-prometheus-stack.namespace" . }}
+  labels:
+    app: {{ template "kube-prometheus-stack.name" . }}-alertmanager
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+  selector:
+    app: dingtalk-hook
+  type: ClusterIP
+{{end}}

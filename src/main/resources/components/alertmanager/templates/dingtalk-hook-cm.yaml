@@ -1,0 +1,85 @@
+{{if .Values.alertmanager.dingtalk.enabled}}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-webhook-dingtalk
+  namespace: {{ template "kube-prometheus-stack.namespace" . }}
+  labels:
+    app: {{ template "kube-prometheus-stack.name" . }}-alertmanager
+data:
+  config.yaml: |
+    ##
+    # This config is for prometheus-webhook-dingtalk instead of Kubernetes!
+    ##
+  
+    ## Request timeout
+    # timeout: 5s
+    
+    ## Customizable templates path
+    templates:
+      - /config/template.tmpl
+    
+    ## You can also override default template using `default_message`
+    ## The following example to use the 'legacy' template from v0.3.0
+    # default_message:
+    #   title: '{{`{{ template "legacy.title" . }}`}}'
+    #   text: '{{`{{ template "legacy.content" . }}`}}'
+    targets:
+      webhook:
+        url: https://oapi.dingtalk.com/robot/send?access_token=b9ac6503a75b5ae2c8f59da1287db57d8f5fa9c3d8cf57c78bb8aea267e97c04
+        # Customize template content
+        message:
+          # Use legacy template
+          title: '{{`{{ template "legacy.title" . }}`}}'
+          text: '{{`{{ template "legacy.content" . }}`}}'
+  template.tmpl: |
+    {{`{{ define "__subject" }}`}}[{{`{{ .Status | toUpper }}`}}{{`{{ if eq .Status "firing" }}`}}:{{`{{ .Alerts.Firing | len }}`}}{{`{{ end }}`}}] {{`{{ .GroupLabels.SortedPairs.Values | join " " }}`}} {{`{{ if gt (len .CommonLabels) (len .GroupLabels) }}`}}({{`{{ with .CommonLabels.Remove .GroupLabels.Names }}`}}{{`{{ .Values | join " " }}`}}{{`{{ end }}`}}){{`{{ end }}`}}{{`{{ end }}`}}
+    {{`{{ define "__alertmanagerURL" }}`}}{{`{{ .ExternalURL }}`}}/#/alerts?receiver={{`{{ .Receiver }}`}}{{`{{ end }}`}}
+    
+    {{`{{ define "__text_alert_list" }}`}}{{`{{ range . }}`}}
+    **Labels**
+    {{`{{ range .Labels.SortedPairs }}`}}> - {{`{{ .Name }}`}}: {{`{{ .Value | markdown | html }}`}}
+    {{`{{ end }}`}}
+    **Annotations**
+    {{`{{ range .Annotations.SortedPairs }}`}}> - {{`{{ .Name }}`}}: {{`{{ .Value | markdown | html }}`}}
+    {{`{{ end }}`}}
+    **Source:** [{{`{{ .GeneratorURL }}`}}]({{`{{ .GeneratorURL }}`}})
+    {{`{{ end }}`}}{{`{{ end }}`}}
+    
+    {{`{{ define "default.__text_alert_list" }}`}}{{`{{ range . }}`}}
+    #### \[{{`{{ .Labels.severity | upper }}`}}\] {{`{{ .Annotations.summary }}`}}
+    
+    **Description:** {{`{{ .Annotations.description }}`}}
+    
+    **Graph:** []({{`{{ .GeneratorURL }}`}})
+    
+    **Details:**
+    {{`{{ range .Labels.SortedPairs }}`}}{{`{{ if and (ne (.Name) "severity") (ne (.Name) "summary") }}`}}> - {{`{{ .Name }}`}}: {{`{{ .Value | markdown | html }}`}}
+    {{`{{ end }}`}}{{`{{ end }}`}}
+    {{`{{ end }}`}}{{`{{ end }}`}}
+    
+    {{`{{/* Default */}}`}}
+    {{`{{ define "default.title" }}`}}{{`{{ template "__subject" . }}`}}{{`{{ end }}`}}
+    {{`{{ define "default.content" }}`}}#### \[{{`{{ .Status | toUpper }}`}}{{`{{ if eq .Status "firing" }}`}}:{{`{{ .Alerts.Firing | len }}`}}{{`{{ end }}`}}\] **[{{`{{ index .GroupLabels "alertname" }}`}}]({{`{{ template "__alertmanagerURL" . }}`}})**
+    {{`{{ if gt (len .Alerts.Firing) 0 -}}`}}
+    **Alerts Firing**
+    {{`{{ template "default.__text_alert_list" .Alerts.Firing }}`}}
+    {{`{{ range .AtMobiles }}`}}@{{`{{ . }}`}}{{`{{ end }}`}}
+    {{`{{- end }}`}}
+    {{`{{ if gt (len .Alerts.Resolved) 0 -}}`}}
+    **Alerts Resolved**
+    {{`{{ template "default.__text_alert_list" .Alerts.Resolved }}`}}
+    {{`{{ range .AtMobiles }}`}}@{{`{{ . }}`}}{{`{{ end }}`}}
+    {{`{{- end }}`}}
+    {{`{{- end }}`}}
+    
+    {{`{{/* Legacy */}}`}}
+    {{`{{ define "legacy.title" }}`}}{{`{{ template "__subject" . }}`}}{{`{{ end }}`}}
+    {{`{{ define "legacy.content" }}`}}#### \[{{`{{ .Status | toUpper }}`}}{{`{{ if eq .Status "firing" }}`}}:{{`{{ .Alerts.Firing | len }}`}}{{`{{ end }}`}}\] **[{{`{{ index .GroupLabels "alertname" }}`}}]({{`{{ template "__alertmanagerURL" . }}`}})**
+    {{`{{ template "__text_alert_list" .Alerts.Firing }}`}}
+    {{`{{- end }}`}}
+    
+    {{`{{/* Following names for compatibility */}}`}}
+    {{`{{ define "ding.link.title" }}`}}{{`{{ template "default.title" . }}`}}{{`{{ end }}`}}
+    {{`{{ define "ding.link.content" }}`}}{{`{{ template "default.content" . }}`}}{{`{{ end }}`}}
+{{end}}
