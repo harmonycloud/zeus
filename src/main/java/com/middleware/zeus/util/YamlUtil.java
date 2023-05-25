@@ -152,20 +152,15 @@ public class YamlUtil {
 
     public static String generateAdminConf(MiddlewareClusterDTO cluster, String apiServer) {
         ClusterCert clusterCert = cluster.getCert();
-        String accessToken = clusterCert.getAccessToken();
-        if (StringUtils.isEmpty(accessToken)) {
-            // check cert info
-            if (StringUtils.isEmpty(accessToken) || clusterCert == null || StringUtils.isAnyEmpty(clusterCert.getCertificateAuthorityData(),
-                    clusterCert.getClientCertificateData(), clusterCert.getClientKeyData())) {
-                throw new IllegalArgumentException("cert is null, please check MiddlewareCluster resource");
-            }
+        if (clusterCert == null) {
+            throw new IllegalArgumentException("cert is null, please check MiddlewareCluster resource");
         }
 
         // clusters
         ArrayList<Object> clusters = new ArrayList<>(1);
         Map<String, Object> clusterMap = new HashMap<>(2);
         Map<String, Object> map1 = new HashMap<>(2);
-        if (StringUtils.isNotEmpty(accessToken)) {
+        if (StringUtils.isEmpty(clusterCert.getCertificateAuthorityData())) {
             map1.put("insecure-skip-tls-verify", true);
         } else {
             map1.put("certificate-authority-data", clusterCert.getCertificateAuthorityData());
