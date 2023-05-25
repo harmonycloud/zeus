@@ -1067,6 +1067,10 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         progressInfo.setTaskPods(getTaskPods(clusterId, namespace, backupName));
         // 查询备份控制器状态
         progressInfo.setBackupControllerStatus(getBackupComponentStatus(clusterId));
+
+        if (backup != null && backup.getMetadata() != null && !CollectionUtils.isEmpty(backup.getMetadata().getLabels()) && backup.getMetadata().getLabels().containsKey("activeArea")) {
+            progressInfo.setActiveArea(backup.getMetadata().getLabels().get("activeArea"));
+        }
         return progressInfo;
     }
 
@@ -1852,13 +1856,13 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
      * @return
      */
     private String getBackupSize(MiddlewareBackupStatus backupStatus, String type) {
-        String compressedSize;
-        if (backupStatus != null && backupStatus.getStorageProvider() != null
-                && backupStatus.getStorageProvider().getJSONObject(type) != null && backupStatus
-                .getStorageProvider().getJSONObject(type).containsKey("compressedSize")) {
-            JSONObject storageProvider = backupStatus.getStorageProvider();
-            compressedSize = storageProvider.getJSONObject(type).getString("compressedSize");
-            return compressedSize;
+        if (backupStatus != null && backupStatus.getStorageProvider() != null) {
+            for (String key : backupStatus.getStorageProvider().keySet()) {
+                JSONObject json = backupStatus.getStorageProvider().getJSONObject(key);
+                if (json != null && json.containsKey("compressedSize")) {
+                    return json.getString("compressedSize");
+                }
+            }
         }
         return null;
     }
