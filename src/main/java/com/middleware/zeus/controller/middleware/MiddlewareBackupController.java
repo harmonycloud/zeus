@@ -66,16 +66,20 @@ public class MiddlewareBackupController {
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "backupName", value = "备份任务名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "backupId", value = "备份任务id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "time", value = "间隔时间", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "pause", value = "状态(on: 关闭增量，off：开启增量)", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "sameActiveActiveBackup", value = "双活可用区备份信息是否相同", paramType = "query", dataTypeClass = String.class),
     })
-    @PutMapping("{backupName}/inc")
+    @PutMapping("{backupId}/inc")
     public BaseResult updateInc(@PathVariable("clusterId") String clusterId,
                                 @PathVariable("namespace") String namespace,
-                                @PathVariable("backupName") String backupName,
+                                @PathVariable("backupId") String backupId,
+                                @RequestParam(value = "backupName", required = false) String backupName,
                                 @RequestParam("time") String time,
-                                @RequestParam(value = "pause", defaultValue = "off") String pause) {
-        middlewareBackupService.createOrReplaceIncBackup(clusterId, namespace, backupName, time, pause);
+                                @RequestParam(value = "pause", defaultValue = "off") String pause,
+                                @RequestParam(value = "sameActiveActiveBackup", required = false, defaultValue = "false") Boolean sameActiveActiveBackup) {
+        middlewareBackupService.createOrReplaceIncBackup(clusterId, namespace, backupId, backupName, time, pause, sameActiveActiveBackup);
         return BaseResult.ok();
     }
 
@@ -90,7 +94,7 @@ public class MiddlewareBackupController {
                              @PathVariable("namespace") String namespace,
                              @RequestBody MiddlewareBackupDTO middlewareBackupDTO) {
         middlewareBackupDTO.setClusterId(clusterId).setNamespace(namespace);
-        middlewareBackupService.updateBackupSchedule(middlewareBackupDTO.getBackupName(), middlewareBackupDTO);
+        middlewareBackupService.updateBackupSchedule(middlewareBackupDTO);
         return BaseResult.ok();
     }
 

@@ -15,6 +15,7 @@ import com.middleware.zeus.common.model.user.UserRole;
 import com.middleware.zeus.util.ThreadPoolExecutorFactory;
 import com.middleware.caas.filters.user.CurrentUserRepository;
 import com.middleware.zeus.util.date.DateUtils;
+import com.middleware.zeus.util.middleware.MiddlewareModeUtil;
 import com.middleware.zeus.util.numeric.ResourceCalculationUtil;
 import com.middleware.zeus.bean.BeanCacheMiddleware;
 import com.middleware.zeus.bean.BeanClusterMiddlewareInfo;
@@ -1188,6 +1189,11 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     @Override
     public boolean activeActiveMiddlewareCheck(String clusterId, String namespace, String middlewareName, String type) {
         boolean openAvailableDomain = namespaceService.isOpenAvailableDomain(clusterId, namespace);
+        String mode = helmChartService.getMiddlewareMode(middlewareName, namespace, clusterId);
+        Boolean activeMode = MiddlewareModeUtil.activeActiveModeCheck(type, mode);
+        if (!activeMode) {
+            return false;
+        }
         List<PodInfo> podInfos = podService.listMiddlewarePodsWithArea(clusterId, namespace, middlewareName, type);
         boolean activeActiveMiddleware = true;
         for (PodInfo podInfo : podInfos) {
@@ -1195,7 +1201,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 activeActiveMiddleware = false;
             }
         }
-        return (openAvailableDomain) && activeActiveMiddleware;
+        return activeMode && openAvailableDomain && activeActiveMiddleware;
     }
 
     /**
