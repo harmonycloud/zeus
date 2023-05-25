@@ -1069,7 +1069,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         progressInfo.setBackupControllerStatus(getBackupComponentStatus(clusterId));
 
         if (backup != null && backup.getMetadata() != null && !CollectionUtils.isEmpty(backup.getMetadata().getLabels()) && backup.getMetadata().getLabels().containsKey("activeArea")) {
-            progressInfo.setActiveArea(backup.getMetadata().getLabels().get("activeArea"));
+            String activeArea = backup.getMetadata().getLabels().get("activeArea");
+            progressInfo.setActiveArea(activeArea);
+            progressInfo.setAreaAliasName(getActiveAreaAliasName(clusterId, activeArea));
         }
         return progressInfo;
     }
