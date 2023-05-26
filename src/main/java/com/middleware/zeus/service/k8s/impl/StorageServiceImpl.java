@@ -256,9 +256,9 @@ public class StorageServiceImpl implements StorageService {
                 }
                 String aliasName = annotations.get(ALIAS_NAME);
                 if (aliasPvcMap.containsKey(aliasName)) {
-                    aliasPvcMap.get(aliasName).append("|").append(pvc.getName());
+                    aliasPvcMap.get(aliasName).append("|").append(pvc.getVolumeName());
                 } else {
-                    aliasPvcMap.put(aliasName, new StringBuilder().append(pvc));
+                    aliasPvcMap.put(aliasName, new StringBuilder().append(pvc.getVolumeName()));
                 }
             }
             Map<String, QuotaBase> aliasQuotaMap = new HashMap<>();
@@ -266,13 +266,11 @@ public class StorageServiceImpl implements StorageService {
             for (String aliasName : aliasPvcMap.keySet()) {
                 StringBuilder sb = aliasPvcMap.get(aliasName);
                 // 查询申请配额
-                String requestQuery = "sum(kube_persistentvolumeclaim_resource_requests_storage_bytes{persistentvolumeclaim=~\""
-                        + sb.toString() + "\"})/1024/1024/1024";
+                String requestQuery = "sum(total_size_kb{pv=~\"" + sb.toString() + "\"})/1024/1024";
                 double request = prometheusResourceMonitorService.queryAndConvert(cluster.getId(), requestQuery);
 
                 // 查询使用量
-                String usedQuery = "sum(kubelet_volume_stats_used_bytes{persistentvolumeclaim=~\""
-                        + sb.toString() + "\",endpoint!=\"\"}) /1024/1024/1024";
+                String usedQuery = "sum(used_size_kb{pv=~\"" + sb.toString() + "\",endpoint!=\"\"}) /1024/1024";
                 double used = prometheusResourceMonitorService.queryAndConvert(cluster.getId(), usedQuery);
 
                 // 封装数据

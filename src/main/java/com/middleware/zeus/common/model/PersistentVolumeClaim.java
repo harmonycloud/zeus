@@ -39,6 +39,9 @@ public class PersistentVolumeClaim {
     @ApiModelProperty("accessModes")
     private List<String> accessModes;
 
+    @ApiModelProperty("pv名称")
+    private String volumeName;
+
     @ApiModelProperty("状态")
     private String phase;
 

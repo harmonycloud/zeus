@@ -78,7 +78,7 @@ public class PvcServiceImpl implements PvcService {
             new PersistentVolumeClaim().setName(pvc.getMetadata().getName()).setLabels(pvc.getMetadata().getLabels())
                 .setAccessModes(pvc.getSpec().getAccessModes()).setStorageClassName(pvc.getSpec().getStorageClassName())
                 .setVolumeMode(pvc.getSpec().getVolumeMode()).setPhase(pvc.getStatus().getPhase())
-                .setCreateTime(DateUtils.parseUTCDate(pvc.getMetadata().getCreationTimestamp()));
+                .setCreateTime(DateUtils.parseUTCDate(pvc.getMetadata().getCreationTimestamp())).setVolumeName(pvc.getSpec().getVolumeName());
         if (pvc.getSpec().getResources().getRequests() != null
             && pvc.getSpec().getResources().getRequests().containsKey(STORAGE)) {
             double request = ResourceCalculationUtil.getResourceValue(pvc.getSpec().getResources().getRequests().get(STORAGE).toString(), MEMORY, ResourceUnitEnum.GI.getUnit());

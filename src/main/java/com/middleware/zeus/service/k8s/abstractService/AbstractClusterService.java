@@ -452,14 +452,9 @@ public abstract class AbstractClusterService {
                     log.error("中间件{} 查询memory5分钟平均用量失败", mwRsInfo.getName());
                 }
                 // 查询pvc总量
-                List<String> pvcList = middlewareCrService.getPvc(mwCrd);
-                StringBuilder pvcs = new StringBuilder();
-                pvcList.forEach(pvc -> pvcs.append(pvc).append("|"));
                 try {
-                    String pvcTotalQuery =
-                            "sum(kube_persistentvolumeclaim_resource_requests_storage_bytes{persistentvolumeclaim=~\""
-                                    + pvcs.toString() + "\",namespace=\"" + mwCrd.getMetadata().getNamespace()
-                                    + "\"}) by (persistentvolumeclaim) /1024/1024/1024";
+                    String pvcTotalQuery = "sum(total_size_kb{pod=~\"" + pods.toString() + "\",namespace=\""
+                        + mwCrd.getMetadata().getNamespace() + "\"}) by (pod) /1024/1024";
                     Double pvcTotal = prometheusResourceMonitorService.queryAndConvert(clusterId, pvcTotalQuery);
                     mwRsInfo.setRequestStorage(pvcTotal);
                 } catch (Exception e) {
@@ -467,9 +462,8 @@ public abstract class AbstractClusterService {
                 }
                 // 查询pvc使用量
                 try {
-                    String pvcUsedQuery = "sum(kubelet_volume_stats_used_bytes{persistentvolumeclaim=~\""
-                            + pvcs.toString() + "\",namespace=\"" + mwCrd.getMetadata().getNamespace()
-                            + "\",endpoint!=\"\"}) by (persistentvolumeclaim) /1024/1024/1024";
+                    String pvcUsedQuery = "sum(used_size_kb{pod=~\"" + pods.toString() + "\",namespace=\""
+                        + mwCrd.getMetadata().getNamespace() + "\",endpoint!=\"\"}) by (pod) /1024/1024";
                     Double pvcUsed = prometheusResourceMonitorService.queryAndConvert(clusterId, pvcUsedQuery);
                     mwRsInfo.setPer5MinStorage(pvcUsed);
                 } catch (Exception e) {

@@ -867,32 +867,16 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             }
         });
 
-        // 获取pvc list
-        List<String> pvcList = middlewareCRService.getPvc(clusterId, namespace, type, name);
-        StringBuilder pvcs = new StringBuilder();
-        pvcList.forEach(pvc -> pvcs.append(pvc).append("|"));
-        // 判断存储类型
-        Map<String, String> params = storageService.checkHitachiAndGetParams(clusterId, middlewareTopologyDTO.getStorageClassName());
         // 查询total storage
         ThreadPoolExecutorFactory.executor.execute(() -> {
             try {
-                String totalStorageQuery;
-                if (params.containsKey("poolID") && params.containsKey("serialNumber")) {
-                    totalStorageQuery = PrometheusQueryUtil.queryHitachiPodTotal(params.get("serialNumber"),
-                        params.get("poolID"), namespace, pvcs.toString());
-                } else {
-                    totalStorageQuery =
-                        "sum(kube_persistentvolumeclaim_resource_requests_storage_bytes{persistentvolumeclaim=~\""
-                            + pvcs.toString() + "\",namespace=\"" + namespace
-                            + "\"}) by (persistentvolumeclaim) /1024/1024/1024";
-                }
+                String totalStorageQuery = "sum(total_size_kb{pod=~\"" + pods.toString() + "\",namespace=\"" + namespace
+                    + "\"}) by (pod) /1024/1024";
                 PrometheusResponse totalStorage = prometheusResourceMonitorService.query(clusterId, totalStorageQuery);
                 Map<String, Double> result = convertResponse(totalStorage);
                 middlewareTopologyDTO.getPods().forEach(podInfo -> {
                     String num = podInfo.getPodName().substring(podInfo.getPodName().length() - 1);
                     if (result.containsKey(num)) {
-                        QuotaBase cpu = new QuotaBase();
-                        cpu.setTotal(result.get(num));
                         podInfo.getMonitorResourceQuota().getStorage().setTotal(result.get(num));
                     }
                 });
@@ -905,21 +889,13 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         // 查询used storage
         ThreadPoolExecutorFactory.executor.execute(() -> {
             try {
-                String usedStorageQuery;
-                if (params.containsKey("poolID") && params.containsKey("serialNumber")) {
-                    usedStorageQuery = PrometheusQueryUtil.queryHitachiPodUsed(params.get("serialNumber"),
-                        params.get("poolID"), namespace, pvcs.toString());
-                } else {
-                    usedStorageQuery = "sum(kubelet_volume_stats_used_bytes{persistentvolumeclaim=~\"" + pvcs.toString()
-                        + "\",namespace=\""
-                        + namespace
-                        + "\",endpoint!=\"\"}) by (persistentvolumeclaim) /1024/1024/1024";
-                }
+                String usedStorageQuery = "sum(used_size_kb{pod=~\"" + pods.toString() + "\",namespace=\"" + namespace
+                    + "\",endpoint!=\"\"}) by (pod) /1024/1024";
                 PrometheusResponse usedStorage = prometheusResourceMonitorService.query(clusterId, usedStorageQuery);
                 Map<String, Double> result = convertResponse(usedStorage);
                 middlewareTopologyDTO.getPods().forEach(podInfo -> {
                     String num = podInfo.getPodName().substring(podInfo.getPodName().length() - 1);
-                    if (result.containsKey(num)){
+                    if (result.containsKey(num)) {
                         podInfo.getMonitorResourceQuota().getStorage().setUsed(result.get(num));
                     }
                 });
