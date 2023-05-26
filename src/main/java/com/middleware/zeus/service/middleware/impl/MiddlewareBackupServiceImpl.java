@@ -1898,6 +1898,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
      */
     private void setMiddlewareBackupStatus(MiddlewareBackup backup, MiddlewareBackupRecord backupRecord) {
         MiddlewareBackupStatus backupStatus = backup.getStatus();
+        if (backupStatus == null) {
+            return;
+        }
         if("RecycleFailed".equals(backupStatus.getPhase())){
             backupRecord.setPhrase(backupStatus.getPhase());
             backupRecord.setReason(backupStatus.getReason());
