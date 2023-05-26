@@ -91,7 +91,7 @@ public class MiddlewarePvcServiceImpl implements MiddlewarePvcService {
         checkStorage(clusterId, storageClass, targetStorage - storage);
         // 扩容
         io.fabric8.kubernetes.api.model.PersistentVolumeClaim pvc = pvcService.get(clusterId, namespace, pvcName);
-        pvc.getSpec().getResources().getRequests().put(STORAGE, new Quantity(targetStorage + "GI"));
+        pvc.getSpec().getResources().getRequests().put(STORAGE, new Quantity(targetStorage + "Gi"));
         pvcService.update(clusterId, namespace, pvc);
     }
 
