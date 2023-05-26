@@ -21,6 +21,7 @@ import com.middleware.zeus.common.model.middleware.ServiceDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
@@ -40,6 +41,11 @@ import java.util.stream.Collectors;
 @Slf4j
 @Operator(paramTypes4One = String.class)
 public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingService {
+
+    @Value("${k8s.containerd.enable:false}")
+    private String containerd;
+    @Value("${k8s.containerd.logPilot:0.9.7-filebeat-hc.5}")
+    private String logPilotImage;
 
     private static final String ES_NAME = "kubernetes-logging";
     @Autowired
@@ -168,6 +174,9 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
     public void logPilot(MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto) {
         String repository = getRepository(cluster);
         String setValues = "image.repository=" + repository;
+        if (Boolean.parseBoolean(containerd)){
+            setValues += "runtime.type=containerd,runtime.imageTag=" + logPilotImage;
+        }
         helmChartService.installComponents("log-pilot", "logging", setValues,
                 componentsPath + File.separator + "log-pilot", cluster);
     }

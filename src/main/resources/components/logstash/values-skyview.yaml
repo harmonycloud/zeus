@@ -194,7 +194,7 @@ logstashPipeline:
     output {
       if [index] == "nginxlog" {
         elasticsearch {
-          hosts => ["kubernetes-logging.logging:9200"]
+          hosts => ["kubernetes-logging-master.logging:9200"]
           index => "nginxlog-%{+YYYY.MM.dd}"
           user => "elastic"
           password => "Hc@Cloud01"
@@ -202,7 +202,7 @@ logstashPipeline:
       }
       else if [index] == "esrunlog"{
         elasticsearch {
-          hosts => ["kubernetes-logging.logging:9200"]
+          hosts => ["kubernetes-logging-master.logging:9200"]
           index => "esrunlog-%{+YYYY.MM.dd}"
           user => "elastic"
           password => "Hc@Cloud01"
@@ -210,7 +210,7 @@ logstashPipeline:
       }
       else if [index] == "esslowlog"{
         elasticsearch {
-          hosts => ["kubernetes-logging.logging:9200"]
+          hosts => ["kubernetes-logging-master.logging:9200"]
           index => "esslowlog-%{+YYYY.MM.dd}"
           user => "elastic"
           password => "Hc@Cloud01"
@@ -218,7 +218,7 @@ logstashPipeline:
       }
       else if [index] == "stdout"{
         elasticsearch {
-          hosts => ["kubernetes-logging.logging:9200"]
+          hosts => ["kubernetes-logging-master.logging:9200"]
           index => "stdout-%{+YYYY.MM.dd}"
           user => "elastic"
           password => "Hc@Cloud01"
@@ -226,7 +226,7 @@ logstashPipeline:
       }
       else if [index] == "mysqlslow"{
         elasticsearch {
-          hosts => ["kubernetes-logging.logging:9200"]
+          hosts => ["kubernetes-logging-master.logging:9200"]
           index => "mysqlslowlog-%{+YYYY.MM.dd}"
           user => "elastic"
           password => "Hc@Cloud01"
@@ -234,7 +234,7 @@ logstashPipeline:
       }
       else if [index] == "mysqlaudit"{
         elasticsearch {
-          hosts => ["kubernetes-logging.logging:9200"]
+          hosts => ["kubernetes-logging-master.logging:9200"]
           index => "mysqlaudit-%{+YYYY.MM.dd}"
           user => "elastic"
           password => "Hc@Cloud01"
@@ -242,7 +242,7 @@ logstashPipeline:
       }
       else if [index] == "middlewarestdout"{
         elasticsearch {
-          hosts => ["kubernetes-logging.logging:9200"]
+          hosts => ["kubernetes-logging-master.logging:9200"]
           index => "middlewarestdout-%{+YYYY.MM.dd}"
           user => "elastic"
           password => "Hc@Cloud01"
@@ -251,7 +251,7 @@ logstashPipeline:
       }
       else if [index] == "middlewarelogstash"{
         elasticsearch {
-          hosts => ["kubernetes-logging.logging:9200"]
+          hosts => ["kubernetes-logging-master.logging:9200"]
           index => "middlewarelogstash-%{+YYYY.MM.dd}"
           user => "elastic"
           password => "Hc@Cloud01"
@@ -260,7 +260,7 @@ logstashPipeline:
       }
       else if [index] == "postgresqlaudit"{
         elasticsearch {
-          hosts => ["kubernetes-logging.logging:9200"]
+          hosts => ["kubernetes-logging-master.logging:9200"]
           index => "postgresqlaudit-%{+YYYY.MM.dd}"
           user => "elastic"
           password => "Hc@Cloud01"
@@ -268,7 +268,7 @@ logstashPipeline:
       }
       else {
         elasticsearch {
-          hosts => ["kubernetes-logging.logging:9200"]
+          hosts => ["kubernetes-logging-master.logging:9200"]
           index => "logstash-%{+YYYY.MM.dd}"
           user => "elastic"
           password => "Hc@Cloud01"
