@@ -175,7 +175,7 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
         String repository = getRepository(cluster);
         String setValues = "image.repository=" + repository;
         if (Boolean.parseBoolean(containerd)){
-            setValues += "runtime.type=containerd,runtime.imageTag=" + logPilotImage;
+            setValues += ",runtime.type=containerd,runtime.imageTag=" + logPilotImage;
         }
         helmChartService.installComponents("log-pilot", "logging", setValues,
                 componentsPath + File.separator + "log-pilot", cluster);
