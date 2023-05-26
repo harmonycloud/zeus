@@ -204,7 +204,7 @@ public abstract class AbstractClusterService {
             CLUSTER_MAP.put(clusterId, SerializationUtils.clone(dto));
         }
         try {
-            refresh(clusterId);
+//            refresh(clusterId);
         } catch (Exception e){
             log.error("刷新集群信息出现异常", e);
         }
