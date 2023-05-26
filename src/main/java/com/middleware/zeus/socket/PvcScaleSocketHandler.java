@@ -70,7 +70,7 @@ public class PvcScaleSocketHandler extends TextWebSocketHandler {
 
                 List<String> statusMessage = new ArrayList<>();
                 PersistentVolumeClaim pvc = pvcService.get(clusterId, namespace, pvcName);
-                if (pvc.getStatus() == null || pvc.getStatus().getCapacity() == null || pvc.getStatus().getCapacity().containsKey(STORAGE)){
+                if (pvc.getStatus() == null || pvc.getStatus().getCapacity() == null || !pvc.getStatus().getCapacity().containsKey(STORAGE)){
                     statusMessage.add("pvc status error");
                 }else {
                     Double request = ResourceCalculationUtil.getResourceValue(pvc.getSpec().getResources().getRequests().get(STORAGE).getAmount(), MEMORY, ResourceUnitEnum.GI.getUnit());
