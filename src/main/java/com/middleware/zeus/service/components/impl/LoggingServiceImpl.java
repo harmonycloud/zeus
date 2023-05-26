@@ -44,8 +44,6 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
 
     @Value("${k8s.containerd.enable:false}")
     private String containerd;
-    @Value("${k8s.containerd.logPilot:0.9.7-filebeat-hc.5}")
-    private String logPilotImage;
 
     private static final String ES_NAME = "kubernetes-logging";
     @Autowired
@@ -175,7 +173,7 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
         String repository = getRepository(cluster);
         String setValues = "image.repository=" + repository;
         if (Boolean.parseBoolean(containerd)){
-            setValues += ",runtime.type=containerd,runtime.imageTag=" + logPilotImage;
+            setValues += ",runtime.type=containerd";
         }
         helmChartService.installComponents("log-pilot", "logging", setValues,
                 componentsPath + File.separator + "log-pilot", cluster);

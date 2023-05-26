@@ -16,12 +16,11 @@ logging_output:
   type: logstash
   address: logstash.logging
 
-# docker or containerd
 runtime:
+  #  type: docker or containerd
   type: docker
-  imageTag: 0.9.7-filebeat-hc.4
-#  type: containerd
-#  imageTag: 0.9.7-filebeat-hc.5
+  imageDockerTag: 0.9.7-filebeat-hc.4
+  imageContainerdTag: 0.9.7-filebeat-hc.6
 
 
 

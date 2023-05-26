@@ -21,7 +21,11 @@ spec:
       - operator: Exists
       containers:
       - name: log-pilot
-        image: {{ .Values.image.repository }}/log-pilot:{{ .Values.runtime.imageTag | default .Chart.AppVersion }}
+        {{- if eq .Values.runtime.type "containerd"}}
+        image: {{ .Values.image.repository }}/log-pilot:{{ .Values.runtime.imageContainerdTag | default .Chart.AppVersion }}
+        {{- else }}
+        image: {{ .Values.image.repository }}/log-pilot:{{ .Values.runtime.imageDockerTag | default .Chart.AppVersion }}
+        {{- end}}
         resources:
 {{ toYaml .Values.resources | indent 10 }}
         env:
