@@ -1114,6 +1114,15 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         } catch (Exception e) {
             log.error("设置时间失败", e);
         }
+        // 设置恢复状态
+        if (restoreCR.getStatus() != null) {
+            progressInfo.setPhrase(restoreCR.getStatus().getPhase());
+        }
+        if (restoreCR.getMetadata() != null && restoreCR.getMetadata().getLabels() != null && restoreCR.getMetadata().getLabels().containsKey("activeArea")) {
+            String activeArea = restoreCR.getMetadata().getLabels().get("activeArea");
+            progressInfo.setActiveArea(activeArea);
+            progressInfo.setAreaAliasName(getActiveAreaAliasName(clusterId, activeArea));
+        }
         // 查询restore进程pods
         progressInfo.setTaskPods(getTaskPods(clusterId, namespace, restoreName));
         // 查询备份控制器状态
