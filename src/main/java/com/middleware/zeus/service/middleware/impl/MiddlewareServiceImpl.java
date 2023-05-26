@@ -792,7 +792,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         // 查询total cpu
         ThreadPoolExecutorFactory.executor.execute(() -> {
             try {
-                String totalCpuQuery = "sum(kube_pod_container_resource_requests_cpu_cores{pod=~\"" + pods.toString()
+                String totalCpuQuery = "sum(kube_pod_container_resource_requests{resource=\"cpu\",pod=~\"" + pods.toString()
                     + "\",namespace=\"" + namespace + "\"}) by (pod)";
                 PrometheusResponse totalCpu = prometheusResourceMonitorService.query(clusterId, totalCpuQuery);
                 Map<String, Double> result = convertResponse(totalCpu);
@@ -831,7 +831,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         // 查询total memory
         ThreadPoolExecutorFactory.executor.execute(() -> {
             try {
-                String totalMemoryQuery = "sum(kube_pod_container_resource_requests_memory_bytes{pod=~\""
+                String totalMemoryQuery = "sum(kube_pod_container_resource_requests{resource=\"memory\",pod=~\""
                     + pods.toString() + "\",namespace=\"" + namespace + "\"}) by (pod) /1024/1024/1024";
                 PrometheusResponse totalMemory = prometheusResourceMonitorService.query(clusterId, totalMemoryQuery);
                 Map<String, Double> result = convertResponse(totalMemory);

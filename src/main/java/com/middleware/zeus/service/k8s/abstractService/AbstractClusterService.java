@@ -386,7 +386,7 @@ public abstract class AbstractClusterService {
 
                 // 查询cpu配额
                 try {
-                    String cpuRequestQuery = "sum(kube_pod_container_resource_requests_cpu_cores{pod=~\""
+                    String cpuRequestQuery = "sum(kube_pod_container_resource_requests{resource=\"cpu\",pod=~\""
                             + pods.toString() + "\",namespace=\"" + mwCrd.getMetadata().getNamespace() + "\"})";
                     queryMap.put("query", cpuRequestQuery);
                     PrometheusResponse cpuRequest =
@@ -419,7 +419,7 @@ public abstract class AbstractClusterService {
                 }
                 // 查询memory配额
                 try {
-                    String memoryRequestQuery = "sum(kube_pod_container_resource_requests_memory_bytes{pod=~\""
+                    String memoryRequestQuery = "sum(kube_pod_container_resource_requests{resource=\"memory\",pod=~\""
                             + pods.toString() + "\",namespace=\"" + mwCrd.getMetadata().getNamespace() + "\"})";
                     queryMap.put("query", memoryRequestQuery);
                     PrometheusResponse memoryRequest =
