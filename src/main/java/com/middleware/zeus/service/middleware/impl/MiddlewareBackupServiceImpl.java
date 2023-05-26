@@ -1086,12 +1086,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         progressInfo.setTaskPods(getTaskPods(clusterId, namespace, backupName));
         // 查询备份控制器状态
         progressInfo.setBackupControllerStatus(getBackupComponentStatus(clusterId));
-
-        if (backup != null && backup.getMetadata() != null && !CollectionUtils.isEmpty(backup.getMetadata().getLabels()) && backup.getMetadata().getLabels().containsKey("activeArea")) {
-            String activeArea = backup.getMetadata().getLabels().get("activeArea");
-            progressInfo.setActiveArea(activeArea);
-            progressInfo.setAreaAliasName(getActiveAreaAliasName(clusterId, activeArea));
-        }
+        // 设置可用区信息
+        setActiveAreaInfo(clusterId, namespace, backup, progressInfo);
         return progressInfo;
     }
 
@@ -1117,6 +1113,15 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             progressInfo.setCreateTime(creationTime);
         } catch (Exception e) {
             log.error("设置时间失败", e);
+        }
+        // 设置恢复状态
+        if (restoreCR.getStatus() != null) {
+            progressInfo.setPhrase(restoreCR.getStatus().getPhase());
+        }
+        if (restoreCR.getMetadata() != null && restoreCR.getMetadata().getLabels() != null && restoreCR.getMetadata().getLabels().containsKey("activeArea")) {
+            String activeArea = restoreCR.getMetadata().getLabels().get("activeArea");
+            progressInfo.setActiveArea(activeArea);
+            progressInfo.setAreaAliasName(getActiveAreaAliasName(clusterId, activeArea));
         }
         // 查询restore进程pods
         progressInfo.setTaskPods(getTaskPods(clusterId, namespace, restoreName));
@@ -1278,6 +1283,31 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             }
         }
         return 0;
+    }
+
+    /**
+     * 设置可用区信息
+     * @param clusterId
+     * @param namespace
+     * @param backup
+     * @param progressInfo
+     */
+    private void setActiveAreaInfo(String clusterId, String namespace, MiddlewareBackup backup, ProgressInfo progressInfo) {
+        if (backup != null && backup.getMetadata() != null && !CollectionUtils.isEmpty(backup.getMetadata().getLabels())) {
+            if (backup.getMetadata().getLabels().containsKey("activeArea")) {
+                String activeArea = backup.getMetadata().getLabels().get("activeArea");
+                progressInfo.setActiveArea(activeArea);
+                progressInfo.setAreaAliasName(getActiveAreaAliasName(clusterId, activeArea));
+            } else if (backup.getMetadata().getLabels().containsKey("owner")) {
+                String owner = backup.getMetadata().getLabels().get("owner");
+                MiddlewareBackupSchedule schedule = backupScheduleCRDService.get(clusterId, namespace, owner);
+                if (schedule != null) {
+                    String activeArea = schedule.getMetadata().getLabels().get("activeArea");
+                    progressInfo.setActiveArea(activeArea);
+                    progressInfo.setAreaAliasName(getActiveAreaAliasName(clusterId, activeArea));
+                }
+            }
+        }
     }
 
     /**
@@ -1877,6 +1907,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
      */
     private void setMiddlewareBackupStatus(MiddlewareBackup backup, MiddlewareBackupRecord backupRecord) {
         MiddlewareBackupStatus backupStatus = backup.getStatus();
+        if (backupStatus == null) {
+            return;
+        }
         if("RecycleFailed".equals(backupStatus.getPhase())){
             backupRecord.setPhrase(backupStatus.getPhase());
             backupRecord.setReason(backupStatus.getReason());
