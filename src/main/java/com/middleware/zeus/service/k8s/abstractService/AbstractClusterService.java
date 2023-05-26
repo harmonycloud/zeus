@@ -662,6 +662,7 @@ public abstract class AbstractClusterService {
                         MiddlewareClusterDTO dto = clusterList.get(0);
                         CLUSTER_MAP.put(clusterId, SerializationUtils.clone(dto));
                         try {
+                            log.info("集群:{},accessToken:{}",dto.getName(),dto.getAccessToken());
                             log.info("刷新集群信息成功，将静默10s");
                             Thread.sleep(10000);
                             log.info("静默完成，可再次刷新");
