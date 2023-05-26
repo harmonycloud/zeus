@@ -28,6 +28,9 @@ public class MiddlewarePvcDto {
     @ApiModelProperty("存储大小")
     private Double storage;
 
+    @ApiModelProperty("容量")
+    private Double capacity;
+
     @ApiModelProperty("存储类型")
     private String storageClass;
 

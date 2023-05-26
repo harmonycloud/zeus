@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.middleware.zeus.common.constants.NameConstant.MEMORY;
+import static com.middleware.zeus.common.constants.NameConstant.STORAGE;
 
 /**
  * @author dengyulong
@@ -79,9 +80,13 @@ public class PvcServiceImpl implements PvcService {
                 .setVolumeMode(pvc.getSpec().getVolumeMode()).setPhase(pvc.getStatus().getPhase())
                 .setCreateTime(DateUtils.parseUTCDate(pvc.getMetadata().getCreationTimestamp()));
         if (pvc.getSpec().getResources().getRequests() != null
-            && pvc.getSpec().getResources().getRequests().containsKey("storage")) {
-            double request = ResourceCalculationUtil.getResourceValue(pvc.getSpec().getResources().getRequests().get("storage").toString(), MEMORY, ResourceUnitEnum.GI.getUnit());
+            && pvc.getSpec().getResources().getRequests().containsKey(STORAGE)) {
+            double request = ResourceCalculationUtil.getResourceValue(pvc.getSpec().getResources().getRequests().get(STORAGE).toString(), MEMORY, ResourceUnitEnum.GI.getUnit());
             persistentVolumeClaim.setRequest(request);
+        }
+        if (pvc.getStatus() != null && pvc.getStatus().getCapacity() != null && pvc.getStatus().getCapacity().containsKey(STORAGE)){
+            double capacity = ResourceCalculationUtil.getResourceValue(pvc.getStatus().getCapacity().get(STORAGE).toString(), MEMORY, ResourceUnitEnum.GI.getUnit());
+            persistentVolumeClaim.setCapacity(capacity);
         }
         return persistentVolumeClaim;
     }

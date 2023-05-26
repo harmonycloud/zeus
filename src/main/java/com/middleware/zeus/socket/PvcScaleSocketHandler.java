@@ -10,8 +10,13 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import com.middleware.zeus.common.enums.middleware.ResourceUnitEnum;
 import com.middleware.zeus.service.k8s.MaintenanceService;
+import com.middleware.zeus.service.k8s.PvcService;
 import com.middleware.zeus.service.middleware.MiddlewarePvcService;
+import com.middleware.zeus.util.numeric.ResourceCalculationUtil;
+import io.fabric8.kubernetes.api.model.PersistentVolumeClaim;
+import io.fabric8.kubernetes.api.model.PersistentVolumeClaimCondition;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.socket.CloseStatus;
@@ -35,13 +40,13 @@ import static com.middleware.zeus.common.constants.NameConstant.*;
 public class PvcScaleSocketHandler extends TextWebSocketHandler {
 
     private final MiddlewarePvcService middlewarePvcService;
-    private final MaintenanceService maintenanceService;
+    private final PvcService pvcService;
     private final ScheduledExecutorService executor = Executors.newScheduledThreadPool(1);
 
     @Autowired
-    public PvcScaleSocketHandler(MiddlewarePvcService middlewarePvcService, MaintenanceService maintenanceService){
+    public PvcScaleSocketHandler(MiddlewarePvcService middlewarePvcService, PvcService pvcService){
         this.middlewarePvcService = middlewarePvcService;
-        this.maintenanceService = maintenanceService;
+        this.pvcService = pvcService;
     }
 
 
@@ -62,31 +67,16 @@ public class PvcScaleSocketHandler extends TextWebSocketHandler {
                 List<String> text = eventDetails.stream().map(EventDetail::getMessage).collect(Collectors.toList());
 
 
-                // 查询当前正在执行的maintenances状态 知道成功或者失败
+
                 List<String> statusMessage = new ArrayList<>();
-                Map<String, String> map = middlewarePvcService.getPvcStatus(clusterId, namespace, middlewareName, pvcName);
-                if(!CollectionUtils.isEmpty(map) && map.containsKey(STATUS)){
-                    String status = map.get(STATUS);
-                    switch (status){
-                        case SCALE_UP_PV_SUCCESS:
-                            statusMessage.add("scale succeed");
-                            break;
-                        case SCALE_UP_PV_ROLL_BACK_SUCCESS:
-                            statusMessage.add("rollBack succeed");
-                            break;
-                        case SCALE_UP_PV_FAILED:
-                            statusMessage.add("scale failed");
-                            if (map.containsKey(REASON)){
-                                text.add(map.get(REASON));
-                            }
-                            break;
-                        case SCALE_UP_PV_ROLL_BACK_FAILED:
-                            statusMessage.add("rollBack failed");
-                            if (map.containsKey(REASON)){
-                                text.add(map.get(REASON));
-                            }
-                            break;
-                        default:
+                PersistentVolumeClaim pvc = pvcService.get(clusterId, namespace, pvcName);
+                if (pvc.getStatus() == null || pvc.getStatus().getCapacity() == null || pvc.getStatus().getCapacity().containsKey(STORAGE)){
+                    statusMessage.add("pvc status error");
+                }else {
+                    Double request = ResourceCalculationUtil.getResourceValue(pvc.getSpec().getResources().getRequests().get(STORAGE).getAmount(), MEMORY, ResourceUnitEnum.GI.getUnit());
+                    Double used = ResourceCalculationUtil.getResourceValue(pvc.getStatus().getCapacity().get(STORAGE).getAmount(), MEMORY, ResourceUnitEnum.GI.getUnit());;
+                    if (request.equals(used)){
+                        statusMessage.add("scale succeed");
                     }
                 }
                 // 发送event

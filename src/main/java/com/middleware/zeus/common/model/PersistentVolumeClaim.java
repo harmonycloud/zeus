@@ -45,6 +45,9 @@ public class PersistentVolumeClaim {
     @ApiModelProperty("申请量")
     private Double request;
 
+    @ApiModelProperty("容量")
+    private Double capacity;
+
     @ApiModelProperty("创建时间")
     private Date createTime;
 }

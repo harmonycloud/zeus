@@ -61,13 +61,17 @@ public class MiddlewarePvcServiceImpl implements MiddlewarePvcService {
             .filter(pvDo -> StringUtils.isEmpty(pvDo.getStatus()) || !"Released".equals(pvDo.getStatus()))
             .collect(Collectors.toList());
 
-        // 设置回收策略
+
         Map<String, String> reclaimPolicyMap = pvList.stream().collect(Collectors.toMap(PvDo::getPvcName, PvDo::getReclaimPolicy));
         for (MiddlewarePvcDto dto : middlewarePvcDtoList){
+            // 设置回收策略
             dto.setReclaimPolicy(reclaimPolicyMap.getOrDefault(dto.getPvcName(), null));
-        }
 
-        // todo check scale up
+            // 设置扩容中
+            if (dto.getStorage() != null && dto.getCapacity() != null && dto.getStorage() > dto.getCapacity()){
+                dto.setStatus(SCALE_UP_PV);
+            }
+        }
         return middlewarePvcDtoList;
     }
 
@@ -116,29 +120,6 @@ public class MiddlewarePvcServiceImpl implements MiddlewarePvcService {
         Double storage = Double.parseDouble(mainLabels.get(STORAGE));
         // 回滚
         createMaintenance(clusterId, namespace, middlewareName, null, pvcName, storage, storage, SCALE_UP_PV_ROLL_BACK);
-    }
-
-    @Override
-    public Map<String, String> getPvcStatus(String clusterId, String namespace, String middlewareName, String pvcName) {
-        // 查询该pvc的运维cr
-        Map<String, String> labels = new HashMap<>();
-        labels.put(APP, middlewareName);
-        labels.put(PVC, pvcName);
-        List<Maintenance> maintenanceList = maintenanceService.list(clusterId, namespace, labels);
-        if (CollectionUtils.isEmpty(maintenanceList)) {
-            return null;
-        }
-        // 过滤获取扩容/回滚相关
-        maintenanceList = maintenanceList.stream()
-                .filter(maintenance -> maintenance.getMetadata().getLabels() != null
-                        && maintenance.getMetadata().getLabels().containsKey(ACTION)
-                        && (maintenance.getMetadata().getLabels().get(ACTION).equals(SCALE_UP_PV)
-                        || maintenance.getMetadata().getLabels().get(ACTION).equals(SCALE_UP_PV_ROLL_BACK)))
-                .collect(Collectors.toList());
-        // 根据创建时间排序，获取最新的状态
-        maintenanceList.sort(Comparator.comparing(maintenance -> maintenance.getMetadata().getCreationTimestamp()));
-        // 封装状态
-        return convertStatus(maintenanceList.get(maintenanceList.size() - 1), pvcName);
     }
 
     /**
@@ -195,6 +176,7 @@ public class MiddlewarePvcServiceImpl implements MiddlewarePvcService {
         dto.setStatus(pvc.getPhase());
         dto.setCreateTime(pvc.getCreateTime());
         dto.setStorageClass(pvc.getStorageClassName());
+        dto.setCapacity(pvc.getCapacity());
         // 拼接访问策略
         StringBuilder sb = new StringBuilder();
         for (String accessMode : pvc.getAccessModes()){
