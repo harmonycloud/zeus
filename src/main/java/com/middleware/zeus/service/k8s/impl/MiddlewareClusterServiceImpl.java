@@ -68,6 +68,9 @@ public class MiddlewareClusterServiceImpl implements MiddlewareClusterService {
                         ? DateUtils.parseUTCDate(c.getMetadata().getCreationTimestamp()) : c.getMetadata().getCreationTimestamp());
                 cluster.setAttributes(attributes);
             }
+            if (StringUtils.isNotEmpty(info.getAccessToken())) {
+                cluster.setAccessToken(info.getAccessToken());
+            }
             return SerializationUtils.clone(cluster);
         }).collect(Collectors.toList());
     }
