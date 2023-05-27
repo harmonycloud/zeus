@@ -207,6 +207,8 @@ public class UserServiceImpl extends AbstractUserService implements UserService 
         userRoleService.delete(userName, null, null, null);
         // 从项目中移除
         projectService.unbindUser(null, null, userName);
+        // 从组织中移除
+        organizationUserService.delete(null, userName);
         // 删除用户告警通知
         alertUserService.delete(userName, null, null, null, null);
         return true;
