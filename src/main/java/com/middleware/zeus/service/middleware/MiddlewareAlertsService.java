@@ -73,7 +73,7 @@ public interface MiddlewareAlertsService {
      *            告警名称
      * @return List<BeanPrometheusRules>
      */
-    void deleteRules(String clusterId, String namespace, String middlewareName, String alert, String alertRuleId);
+    void deleteRules(String clusterId, String namespace, String middlewareName, String alert);
 
     /**
      * 同步告警规则进数据库
@@ -110,14 +110,6 @@ public interface MiddlewareAlertsService {
      */
     void updateRules(String clusterId, String namespace, String middlewareName, String ding, String alertRuleId,
         MiddlewareAlertsDTO middlewareAlertsDTO) throws Exception;
-
-
-    /**
-     * 获取告警规则详情
-     * 
-     * @param alertRuleId
-     */
-    MiddlewareAlertsDTO alertRuleDetail(String alertRuleId);
 
     /**
      * 查询告警用户

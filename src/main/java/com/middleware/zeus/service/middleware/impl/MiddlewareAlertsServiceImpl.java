@@ -87,6 +87,11 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         PrometheusRule prometheusRule = prometheusRuleService.get(clusterId, namespace, middlewareName);
         // 封装告警规则文件
         List<MiddlewareAlertsDTO> middlewareAlertsDTOList = prometheusRuleService.convertPrometheusRule(prometheusRule);
+        // 添加符号和阈值信息
+        for (MiddlewareAlertsDTO middlewareAlertsDTO : middlewareAlertsDTOList){
+            middlewareAlertsDTO.setSymbol(getSymbol(middlewareAlertsDTO.getExpr()));
+            middlewareAlertsDTO.setThreshold(getThreshold(middlewareAlertsDTO.getExpr()));
+        }
         // 根据创建时间排序
         middlewareAlertsDTOList.sort((o1, o2) -> o1.getCreateTime() == null ? -1
             : o2.getCreateTime() == null ? -1 : o2.getCreateTime().compareTo(o1.getCreateTime()));
@@ -140,7 +145,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
     }
 
     @Override
-    public void deleteRules(String clusterId, String namespace, String middlewareName, String alert, String alertRuleId) {
+    public void deleteRules(String clusterId, String namespace, String middlewareName, String alert) {
         // 获取cr
         PrometheusRule prometheusRule = prometheusRuleService.get(clusterId, namespace, middlewareName);
         prometheusRule.getSpec().getGroups().forEach(prometheusRuleGroups -> {
@@ -183,21 +188,6 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             );
         }
         prometheusRuleService.update(clusterId, prometheusRule);
-    }
-
-    @Override
-    public MiddlewareAlertsDTO alertRuleDetail(String alertRuleId) {
-        QueryWrapper<AlertRuleId> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("alert_id",analysisID(alertRuleId));
-        AlertRuleId middlewareAlertInfo = alertRuleIdMapper.selectById(analysisID(alertRuleId));
-        MiddlewareAlertsDTO middlewareAlertsDTO = new MiddlewareAlertsDTO();
-        BeanUtils.copyProperties(middlewareAlertInfo,middlewareAlertsDTO);
-        Map<String, String > labels = JSON.parseObject(middlewareAlertInfo.getLabels(), HashMap.class);
-        Map<String, String> annotations = JSON.parseObject(middlewareAlertInfo.getAnnotations(), HashMap.class);
-        middlewareAlertsDTO.setLabels(labels);
-        middlewareAlertsDTO.setAnnotations(annotations);
-        middlewareAlertsDTO.setAlertId(calculateID(middlewareAlertInfo.getAlertId()));
-        return middlewareAlertsDTO;
     }
 
     /**

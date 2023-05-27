@@ -82,17 +82,15 @@ public class MiddlewareAlertsController {
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "alert", value = "告警名称", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "alertRuleId", value = "规则ID", paramType = "query", dataTypeClass = String.class)
+            @ApiImplicitParam(name = "alert", value = "告警名称", paramType = "query", dataTypeClass = String.class)
     })
     @DeleteMapping("/rules")
     @Authority(power = 1)
     public BaseResult deleteRules(@PathVariable("clusterId") String clusterId,
                                   @PathVariable(value = "namespace", required = false) String namespace,
                                   @PathVariable(value = "middlewareName", required = false) String middlewareName,
-                                  @RequestParam("alert") String alert,
-                                  @RequestParam("alertRuleId") String alertRuleId) {
-        middlewareAlertsService.deleteRules(clusterId, namespace, middlewareName, alert,alertRuleId);
+                                  @RequestParam("alert") String alert) {
+        middlewareAlertsService.deleteRules(clusterId, namespace, middlewareName, alert);
         return BaseResult.ok();
     }
 
@@ -115,16 +113,6 @@ public class MiddlewareAlertsController {
                                   @RequestBody MiddlewareAlertsDTO middlewareAlertsDTO) throws Exception {
         middlewareAlertsService.updateRules(clusterId, namespace, middlewareName, ding, alertRuleId, middlewareAlertsDTO);
         return BaseResult.ok();
-    }
-
-    @ApiOperation(value = "查询告警规则详情", notes = "查询告警规则详情")
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "alertRuleId", value = "规则ID", paramType = "query", dataTypeClass = String.class)
-    })
-    @GetMapping("/rules/detail")
-    @Authority(power = 1)
-    public BaseResult<MiddlewareAlertsDTO> alertRuleDetail(@RequestParam("alertRuleId") String alertRuleId) {
-        return BaseResult.ok(middlewareAlertsService.alertRuleDetail(alertRuleId));
     }
 
     @ApiOperation(value = "查询告警用户列表", notes = "查询告警用户列表")
