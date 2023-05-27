@@ -77,14 +77,21 @@ public class PrometheusRuleServiceImpl implements PrometheusRuleService {
                 middlewareAlertsDTO.setName(prometheusRules.getAlert());
                 middlewareAlertsDTO.setDescription(prometheusRules.getAlert());
                 middlewareAlertsDTO.setLevel(prometheusRules.getLabels().get("severity"));
-                if(prometheusRules.getAnnotations() != null){
-                    if(prometheusRules.getAnnotations().containsKey(SILENCE)){
+                if (prometheusRules.getAnnotations() != null) {
+                    if (prometheusRules.getAnnotations().containsKey(SILENCE)) {
                         middlewareAlertsDTO.setSilence(prometheusRules.getAnnotations().get(SILENCE));
                     }
                     middlewareAlertsDTO.setUnit(prometheusRules.getAnnotations().getOrDefault("unit", ""));
+                    if (prometheusRules.getAnnotations().containsKey("createTime")) {
+                        middlewareAlertsDTO.setCreateTime(DateUtils.parseDate(
+                            prometheusRules.getAnnotations().get("createTime"), DateUtils.YYYY_MM_DD_T_HH_MM_SS_Z));
+                    }
                 }
                 // 将文件创建时间设置为告警规则时间
-                middlewareAlertsDTO.setCreateTime(DateUtils.parseUTCDate(prometheusRule.getMetadata().getCreationTimestamp()));
+                if (middlewareAlertsDTO.getCreateTime() == null) {
+                    middlewareAlertsDTO
+                        .setCreateTime(DateUtils.parseUTCDate(prometheusRule.getMetadata().getCreationTimestamp()));
+                }
 
                 middlewareAlertsDTOList.add(middlewareAlertsDTO);
             });
