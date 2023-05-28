@@ -44,31 +44,42 @@ alertmanager:
   config:
     global:
       resolve_timeout: 5m
+    inhibit_rules:
+    - equal:
+        - namespace
+        - alertname
+      source_match:
+        severity: critical
+      target_match_re:
+        severity: warning|info
+    - equal:
+        - namespace
+        - alertname
+      source_match:
+        severity: warning
+      target_match_re:
+        severity: info
     route:
+      group_by: ['alertname', 'service', 'clusterId']
       group_interval: 5m
-      group_wait: 10s
-      receiver: Default
-      repeat_interval: 3h
+      group_wait: 30s
+      receiver: webhook
+      repeat_interval: 12h
       routes:
-      - receiver: Email
-        match_re:
-          serverity : email
-        group_wait: 10s
-      - receiver: DingTalkWebhook
-        match:
-          alert: "true"
+      - match:
+          severity: critical
+        receiver: Critical
     receivers:
     - name: Default
-    - name: DingTalkWebhook
+    - name: Watchdog
+    - name: Critical
       webhook_configs:
-      - url: "http://alertmanager-webhook-dingtalk/dingtalk/webhook/send"
-        send_resolved: true
-    - name: Email
-      email_configs:
-      - to: "zhangpan@harmonycloud.cn"
-        send_resolved: true
-    templates:
-    - /etc/alertmanager/config/*.tmpl
+      - url: "http://zeus.zeus:8080/webhook"
+        send_resolved: false
+    - name: webhook
+      webhook_configs:
+      - url: "http://zeus.zeus:8080/webhook"
+        send_resolved: false
   ## Pass the Alertmanager configuration directives through Helm's templating
   ## engine. If the Alertmanager configuration contains Alertmanager templates,
   ## they'll need to be properly escaped so that they are not interpreted by
@@ -304,7 +315,7 @@ alertmanager:
     ## If true then the user will be responsible to provide a secret with alertmanager configuration
     ## So when true the config part will be ignored (including templateFiles) and the one in the secret will be used
     ##
-    useExistingSecret: true
+    useExistingSecret: false
 
     ## Secrets is a list of Secrets in the same namespace as the Alertmanager object, which shall be mounted into the
     ## Alertmanager Pods. The Secrets are mounted into /etc/alertmanager/secrets/.
