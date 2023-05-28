@@ -335,6 +335,7 @@ public class AlertServiceImpl implements AlertService {
                     // 设置分区和prometheusRule名称
                     alertTargetDto.setNamespace(prometheusRule.getMetadata().getNamespace());
                     alertTargetDto.setPrometheusRuleName(prometheusRule.getMetadata().getName());
+                    alertTargetDto.setExist(true);
 
                     alertTargetDtoList.add(alertTargetDto);
                 }
