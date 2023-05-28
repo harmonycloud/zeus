@@ -66,14 +66,11 @@ public class AlertManagerWrapper {
         ClusterComponentsDto clusterComponentsDto = clusterComponentService.get(cluster.getId(), "alertmanager");
         if (clusterComponentsDto == null) {
             throw new BusinessException(ErrorMessage.ALERT_MANAGER_NOT_INSTALLED);
-        } else {
-            if (StringUtils.isBlank(clusterComponentsDto.getProtocol())) {
-                alertManager.setProtocol(Protocol.HTTP.getValue().toLowerCase());
-            }
-            if (StringUtils.isBlank(clusterComponentsDto.getPort())) {
-                alertManager.setPort(alertManagerPort);
-            }
         }
+        alertManager.setProtocol(clusterComponentsDto.getProtocol());
+        alertManager.setHost(clusterComponentsDto.getHost());
+        alertManager.setPort(clusterComponentsDto.getPort());
+
         if (StringUtils.isEmpty(alertManager.getAddress())) {
             alertManager
                     .setAddress(alertManager.getProtocol() + "://" + alertManager.getHost() + ":" + alertManager.getPort());
