@@ -57,7 +57,7 @@ public class MiddlewareBackupController {
                                 @PathVariable("namespace") String namespace,
                                 @PathVariable("backupId") String backupId,
                                 @RequestParam("time") String time) {
-        middlewareBackupService.createOrReplaceIncBackup(clusterId, namespace, backupId, time, "off");
+        middlewareBackupService.createOrReplaceIncBackup(clusterId, namespace, backupId, null, time, "off", true);
         return BaseResult.ok();
     }
 
@@ -71,11 +71,11 @@ public class MiddlewareBackupController {
             @ApiImplicitParam(name = "pause", value = "状态(on: 关闭增量，off：开启增量)", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "sameActiveActiveBackup", value = "双活可用区备份信息是否相同", paramType = "query", dataTypeClass = String.class),
     })
-    @PutMapping("{backupName}/inc")
+    @PutMapping("{backupId}/inc")
     public BaseResult updateInc(@PathVariable("clusterId") String clusterId,
                                 @PathVariable("namespace") String namespace,
-                                @RequestParam("backupId") String backupId,
-                                @PathVariable(value = "backupName", required = false) String backupName,
+                                @PathVariable("backupId") String backupId,
+                                @RequestParam(value = "backupName", required = false) String backupName,
                                 @RequestParam("time") String time,
                                 @RequestParam(value = "pause", defaultValue = "off") String pause,
                                 @RequestParam(value = "sameActiveActiveBackup", required = false, defaultValue = "false") Boolean sameActiveActiveBackup) {
