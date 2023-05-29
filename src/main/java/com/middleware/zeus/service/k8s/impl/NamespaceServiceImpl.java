@@ -155,7 +155,7 @@ public class NamespaceServiceImpl implements NamespaceService {
             throw new BusinessException(ErrorMessage.NAMESPACE_EXIST);
         }
         // 判断中文名是否重复
-        if (exist && checkAliasNameExist(namespace.getClusterId(), namespace.getAliasName())){
+        if (exist && onlyCheckAliasNameExist(namespace.getClusterId(), namespace.getAliasName())){
             throw new BusinessException(ErrorMessage.NAMESPACE_ALIAS_NAME_EXIST);
         }
         // create ns
@@ -547,6 +547,17 @@ public class NamespaceServiceImpl implements NamespaceService {
             if (ns.getMetadata().getName().equalsIgnoreCase(aliasName)) {
                 return true;
             }
+            if (ns.getMetadata().getAnnotations() != null && ns.getMetadata().getAnnotations().containsKey("alias_name")
+                    && aliasName.equals(ns.getMetadata().getAnnotations().get("alias_name"))) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean onlyCheckAliasNameExist(String clusterId, String aliasName) {
+        List<io.fabric8.kubernetes.api.model.Namespace> nsList = namespaceWrapper.list(clusterId);
+        for (io.fabric8.kubernetes.api.model.Namespace ns : nsList) {
             if (ns.getMetadata().getAnnotations() != null && ns.getMetadata().getAnnotations().containsKey("alias_name")
                     && aliasName.equals(ns.getMetadata().getAnnotations().get("alias_name"))) {
                 return true;

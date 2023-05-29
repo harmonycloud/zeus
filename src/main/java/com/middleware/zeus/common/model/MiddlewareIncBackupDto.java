@@ -40,6 +40,9 @@ public class MiddlewareIncBackupDto {
     @ApiModelProperty("(最新一次备份)结束时间")
     private Date endTime;
 
+    @ApiModelProperty("最近一次备份时间")
+    private Date successTime;
+
     @ApiModelProperty("双活备份信息是否相同")
     private Boolean sameActiveActiveBackup;
 
