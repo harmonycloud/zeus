@@ -146,6 +146,10 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     public void update(RoleDto roleDto) {
+        // 校验角色是否存在
+        if (checkExist(roleDto.getId(), roleDto.getName())) {
+            throw new BusinessException(ErrorMessage.ROLE_EXIST);
+        }
         // 更新角色信息
         BeanRole beanRole = new BeanRole();
         beanRole.setId(roleDto.getId());
@@ -281,6 +285,16 @@ public class RoleServiceImpl implements RoleService {
             return resourceMenuService.convertMenu(resourceMenuDtoList);
         }
         return new ArrayList<>();
+    }
+
+    /**
+     * 校验角色名是否存在
+     */
+    public boolean checkExist(Integer roleId, String name) {
+        QueryWrapper<BeanRole> wrapper = new QueryWrapper<BeanRole>().eq("name", name);
+        wrapper.notIn("id", roleId);
+        List<BeanRole> roles = beanRoleMapper.selectList(wrapper);
+        return !CollectionUtils.isEmpty(roles);
     }
 
     /**
