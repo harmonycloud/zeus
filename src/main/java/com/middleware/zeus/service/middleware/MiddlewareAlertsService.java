@@ -117,8 +117,7 @@ public interface MiddlewareAlertsService {
      *            中间件告警规则
      * @return List<BeanPrometheusRules>
      */
-    void updateRules(String clusterId, String namespace, String middlewareName, String ding, String alertRuleId,
-        MiddlewareAlertsDTO middlewareAlertsDTO) throws Exception;
+    void updateRules(String clusterId, String namespace, String middlewareName, MiddlewareAlertsDTO middlewareAlertsDTO);
 
     /**
      * 查询告警用户

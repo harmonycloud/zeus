@@ -176,8 +176,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
     }
 
     @Override
-    public void updateRules(String clusterId, String namespace, String middlewareName, String ding, String alertRuleId,
-        MiddlewareAlertsDTO middlewareAlertsDTO) {
+    public void updateRules(String clusterId, String namespace, String middlewareName, MiddlewareAlertsDTO middlewareAlertsDTO) {
         // 更新至prometheus
         updateServiceAlerts2Prometheus(clusterId, namespace, middlewareName, middlewareName, middlewareAlertsDTO);
         // updateAlerts2Mysql(clusterId, namespace, middlewareName, middlewareAlertsDTO);
