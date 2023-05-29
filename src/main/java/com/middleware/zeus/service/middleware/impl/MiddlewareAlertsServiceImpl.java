@@ -39,6 +39,7 @@ import com.middleware.zeus.service.middleware.MiddlewareService;
 import com.middleware.zeus.service.registry.HelmChartService;
 import com.middleware.zeus.service.system.AlertUserService;
 import com.middleware.zeus.service.user.ProjectService;
+import io.swagger.models.auth.In;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -171,6 +172,21 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         for (MiddlewareAlertsDTO middlewareAlertsDTO : middlewareAlertsDTOList){
             middlewareAlertsDTO.setSymbol(getSymbol(middlewareAlertsDTO.getExpr()));
             middlewareAlertsDTO.setThreshold(getThreshold(middlewareAlertsDTO.getExpr()));
+            if (StringUtils.isNotEmpty(middlewareAlertsDTO.getTime())){
+                String time = middlewareAlertsDTO.getTime();
+                if (time.contains("m")){
+                    middlewareAlertsDTO.setAlertTime(new BigDecimal(time.replace("m", "")));
+                    middlewareAlertsDTO.setAlertTimes(new BigDecimal(1));
+                } else if (time.contains("s")){
+                    String alertTime = time.replace("s", "");
+                    middlewareAlertsDTO.setAlertTime(new BigDecimal(1));
+                    middlewareAlertsDTO.setAlertTimes(new BigDecimal(60 / Integer.parseInt(alertTime)));
+                } else if (time.contains("h")){
+                    String alertTime = time.replace("h", "");
+                    middlewareAlertsDTO.setAlertTime(new BigDecimal(Integer.parseInt(alertTime) * 60));
+                    middlewareAlertsDTO.setAlertTimes(new BigDecimal(1));
+                }
+            }
         }
         return middlewareAlertsDTOList.get(0);
     }

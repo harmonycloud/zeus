@@ -244,6 +244,9 @@ public class AlertServiceImpl implements AlertService {
         // 更新所有规则
         prometheusRule.getSpec().getGroups().forEach(prometheusRuleGroups -> {
             prometheusRuleGroups.getRules().forEach(prometheusRules -> {
+                if (StringUtils.isNotEmpty(prometheusRules.getRecord())){
+                    return;
+                }
                 // 修改labels
                 Map<String, String> lab = new HashMap<>();
                 if (prometheusRules.getLabels() != null){
