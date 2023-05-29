@@ -1,0 +1,48 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: k8s
+    platform: zeus
+    role: alert-rules
+  annotations:
+    target_type: cluster
+    target_alias_name: "日志采集"
+    target_name: logCollect
+  name: log-pilot-rules
+spec:
+  groups:
+  - name: minio-rules
+    rules:
+    - alert: logstashCpuUsageHigh
+      annotations:
+        message: cpu usage high for {{ $labels.instance }}
+        summary: cpu usage high for {{ $labels.instance }}
+      expr: (sum by (pod) (rate(container_cpu_usage_seconds_total{image!="",container!~"|POD",endpoint!="", pod=~"log-pilot-.+",namespace="logging"}[5m]))) / (sum by (pod) (kube_pod_container_resource_requests{resource="cpu", pod=~"log-pilot-.+", namespace="logging"})) > 0.8
+      for: 5m
+      labels:
+        severity: critical
+    - alert: logstashMemoryUsageHigh
+      annotations:
+        message: memory usage high for {{ $labels.instance }}
+        summary: memory usage high for {{ $labels.instance }}
+      expr: (sum by (pod)(container_memory_working_set_bytes{container!~"|POD",endpoint!="",pod=~"log-pilot-.+",namespace="logging"})) * 100 / (sum by (pod) (kube_pod_container_resource_requests{resource="memory",pod=~"log-pilot-.+",namespace="logging"})) > 80
+      for: 5m
+      labels:
+        severity: critical
+    - alert: logstashInstanceNotReady
+      annotations:
+        message: logstash/log-pilot instance {{ $labels.instance }} not ready
+        summary: logstash/log-pilot instance {{ $labels.instance }} not ready
+      expr: kube_pod_container_status_ready{namespace="logging",container=~"log-pilot",pod=~"log-pilot-.+"} == 0
+      for: 30s
+      labels:
+        severity: warning
+    - alert: logstashInstanceNotRunning
+      annotations:
+        message: logstash/log-pilot instance {{ $labels.instance }} not running
+        summary: logstash/log-pilot instance {{ $labels.instance }} not running
+      expr: kube_pod_container_status_running{namespace="logging",container=~"log-pilot",pod=~"log-pilot-.+"} == 0
+      for: 30s
+      labels:
+        severity: critical

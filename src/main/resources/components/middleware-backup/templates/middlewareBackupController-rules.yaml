@@ -1,0 +1,48 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: k8s
+    platform: zeus
+    role: alert-rules
+  annotations:
+    target_type: cluster
+    target_alias_name: "中间件备份控制器"
+    target_name: middlewareBackupController
+  name: middleware-backup-controller-rules
+spec:
+  groups:
+  - name: middleware-rules
+    rules:
+    - alert: middlewareControllerCpuUsageHigh
+      annotations:
+        message: cpu usage high for {{ $labels.instance }}
+        summary: cpu usage high for {{ $labels.instance }}
+      expr: (sum by (pod) (rate(container_cpu_usage_seconds_total{image!="",container!~"|POD",endpoint!="", pod=~"middlewarebackup-controller-.+",namespace="middleware-operator"}[5m]))) / (sum by (pod) (kube_pod_container_resource_requests{resource="cpu", container="manager", pod=~"middlewarebackup-controller-.+", namespace="middleware-operator"})) > 0.8
+      for: 5m
+      labels:
+        severity: critical
+    - alert: middlewareControllerMemoryUsageHigh
+      annotations:
+        message: memory usage high for {{ $labels.instance }}
+        summary: memory usage high for {{ $labels.instance }}
+      expr: (sum by (pod)(container_memory_working_set_bytes{container!~"|POD",endpoint!="",pod=~"middlewarebackup-controller-.+",namespace="middleware-operator"})) * 100 / (sum by (pod) (kube_pod_container_resource_requests{container="manager",resource="memory",pod=~"middlewarebackup-controller-.+",namespace="middleware-operator"})) > 80
+      for: 5m
+      labels:
+        severity: critical
+    - alert: middlewareControllerInstanceNotReady
+      annotations:
+        message: middlewareController instance {{ $labels.instance }} not ready
+        summary: middlewareController instance {{ $labels.instance }} not ready
+      expr: kube_pod_container_status_ready{namespace="middleware-operator",container=~"manager", pod=~"middlewarebackup-controller-.+"} == 0
+      for: 30s
+      labels:
+        severity: warning
+    - alert: middlewareControllerInstanceNotRunning
+      annotations:
+        message: middlewareController instance {{ $labels.instance }} not running
+        summary: middlewareController instance {{ $labels.instance }} not running
+      expr: kube_pod_container_status_running{namespace="middleware-operator",container=~"manager", pod=~"middlewarebackup-controller-.+"} == 0
+      for: 30s
+      labels:
+        severity: critical

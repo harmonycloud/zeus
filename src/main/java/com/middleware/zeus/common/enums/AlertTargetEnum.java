@@ -10,7 +10,7 @@ import java.util.Map;
 public enum AlertTargetEnum {
 
     platform("platform", "平台系统告警"),
-    logstash("logstash", "日志采集"),
+    logstash("logCollect", "日志采集"),
     elasticsearch("elasticsearch", "日志组件"),
     grafana("grafana", "监控面板"),
     prometheus("prometheus", "数据监控"),
