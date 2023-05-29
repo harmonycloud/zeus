@@ -963,11 +963,16 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             JSONObject storageProvider = cr.getStatus().getStorageProvider();
             String type = middlewareCrTypeService.findTypeByCrType(cr.getSpec().getType());
             JSONObject time = storageProvider.getJSONObject(type);
-
+            // 设置增量备份起止时间
             if (time != null && time.containsKey("startTime") && time.containsKey("endTime")) {
                 Date startTime = DateUtils.parseUTCDate(time.getString("startTime"));
                 Date endTime = DateUtils.parseUTCDate(time.getString("endTime"));
                 middlewareIncBackupDto.setStartTime(startTime).setEndTime(endTime);
+            }
+            // 设置最近一次备份时间
+            if (time != null && time.containsKey("successTime")) {
+                Date successTime = DateUtils.parseUTCDate(time.getString("successTime"));
+                middlewareIncBackupDto.setSuccessTime(successTime);
             }
         }
 

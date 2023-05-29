@@ -132,13 +132,6 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         JSONObject values = helmChartService.getInstalledValues(config.getName(), config.getNamespace(), cluster);
         // 获取configs
         Map<String, String> data = getConfigFromValues(middleware, values, valuesType);
-        if (CollectionUtils.isEmpty(data)) {
-            // 从parameter.yaml文件创建一份
-            QueryWrapper<BeanCustomConfig> wrapper = new QueryWrapper<BeanCustomConfig>()
-                .eq("chart_name", middleware.getType()).eq("chart_version", values.getString("chart-version")).eq("role", config.getRole());
-            List<BeanCustomConfig> beanCustomConfigList = beanCustomConfigMapper.selectList(wrapper);
-            beanCustomConfigList.forEach(c -> data.put(c.getName(), c.getDefaultValue()));
-        }
         // 取出chartVersion
         middleware.setChartVersion(values.getString("chart-version"));
         middleware.setChartName(config.getType());
@@ -161,7 +154,7 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         }
         // 获取节点类型
         String podType = operator.getPodType(config.getRole());
-        updateValues(middleware, data, cluster, values, podType);
+        updateValues(middleware, data, cluster, values, valuesType);
         // 添加修改历史
         customConfigHistoryService.insert(config.getName(), oldDate, config);
         // 重启服务
