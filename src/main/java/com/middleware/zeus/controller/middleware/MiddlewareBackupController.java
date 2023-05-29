@@ -65,8 +65,8 @@ public class MiddlewareBackupController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "backupName", value = "备份任务名称", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "backupId", value = "备份任务id", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "backupId", value = "备份任务id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "backupName", value = "备份任务名称", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "time", value = "间隔时间", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "pause", value = "状态(on: 关闭增量，off：开启增量)", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "sameActiveActiveBackup", value = "双活可用区备份信息是否相同", paramType = "query", dataTypeClass = String.class),
