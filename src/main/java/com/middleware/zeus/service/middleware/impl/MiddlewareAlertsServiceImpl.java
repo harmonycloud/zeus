@@ -163,7 +163,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         PrometheusRule prometheusRule = prometheusRuleService.get(clusterId, namespace, middlewareName);
         // 封装告警规则文件
         List<MiddlewareAlertsDTO> middlewareAlertsDTOList = prometheusRuleService.convertPrometheusRule(prometheusRule);
-        middlewareAlertsDTOList = middlewareAlertsDTOList.stream().filter(middlewareAlertsDTO -> middlewareAlertsDTO.getAlert().equals(alert)).collect(Collectors.toList());
+        middlewareAlertsDTOList = middlewareAlertsDTOList.stream().filter(middlewareAlertsDTO -> middlewareAlertsDTO.getName().equals(alert)).collect(Collectors.toList());
         if (CollectionUtils.isEmpty(middlewareAlertsDTOList)){
             return null;
         }
