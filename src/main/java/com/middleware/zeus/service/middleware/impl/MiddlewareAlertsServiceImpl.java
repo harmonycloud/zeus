@@ -159,6 +159,23 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
     }
 
     @Override
+    public MiddlewareAlertsDTO detail(String clusterId, String namespace, String middlewareName, String alert) {
+        PrometheusRule prometheusRule = prometheusRuleService.get(clusterId, namespace, middlewareName);
+        // 封装告警规则文件
+        List<MiddlewareAlertsDTO> middlewareAlertsDTOList = prometheusRuleService.convertPrometheusRule(prometheusRule);
+        middlewareAlertsDTOList = middlewareAlertsDTOList.stream().filter(middlewareAlertsDTO -> middlewareAlertsDTO.getAlert().equals(alert)).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(middlewareAlertsDTOList)){
+            return null;
+        }
+        // 添加符号和阈值信息
+        for (MiddlewareAlertsDTO middlewareAlertsDTO : middlewareAlertsDTOList){
+            middlewareAlertsDTO.setSymbol(getSymbol(middlewareAlertsDTO.getExpr()));
+            middlewareAlertsDTO.setThreshold(getThreshold(middlewareAlertsDTO.getExpr()));
+        }
+        return middlewareAlertsDTOList.get(0);
+    }
+
+    @Override
     public void updateRules(String clusterId, String namespace, String middlewareName, String ding, String alertRuleId,
         MiddlewareAlertsDTO middlewareAlertsDTO) {
         // 更新至prometheus

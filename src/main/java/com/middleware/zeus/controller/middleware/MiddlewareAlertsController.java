@@ -37,9 +37,9 @@ public class MiddlewareAlertsController {
     })
     @GetMapping("/rules/used")
     @Authority(power = 1)
-    public BaseResult<List<MiddlewareAlertsDTO>> listUsedRules(@PathVariable(value = "clusterId",required = false) String clusterId,
-                                                               @PathVariable(value = "namespace", required = false) String namespace,
-                                                               @PathVariable(value = "middlewareName", required = false) String middlewareName,
+    public BaseResult<List<MiddlewareAlertsDTO>> listUsedRules(@PathVariable(value = "clusterId") String clusterId,
+                                                               @PathVariable(value = "namespace") String namespace,
+                                                               @PathVariable(value = "middlewareName") String middlewareName,
                                                                @RequestParam(value = "keyword", required = false) String keyword) {
         return BaseResult.ok(middlewareAlertsService.listUsedRules(clusterId, namespace, middlewareName, keyword));
     }
@@ -54,8 +54,8 @@ public class MiddlewareAlertsController {
     @GetMapping("/rules")
     @Authority(power = 1)
     public BaseResult<List<MiddlewareAlertsDTO>> listRules(@PathVariable("clusterId") String clusterId,
-                                                           @PathVariable(value = "namespace", required = false) String namespace,
-                                                           @PathVariable(value = "middlewareName", required = false) String middlewareName,
+                                                           @PathVariable(value = "namespace") String namespace,
+                                                           @PathVariable(value = "middlewareName") String middlewareName,
                                                            @RequestParam("type") String type) throws Exception {
         return BaseResult.ok(middlewareAlertsService.listRules(clusterId, namespace, middlewareName, type));
     }
@@ -70,11 +70,27 @@ public class MiddlewareAlertsController {
     @PostMapping("/rules")
     @Authority(power = 1)
     public BaseResult createRules(@PathVariable("clusterId") String clusterId,
-                                  @PathVariable(value = "namespace", required = false) String namespace,
-                                  @PathVariable(value = "middlewareName", required = false) String middlewareName,
+                                  @PathVariable(value = "namespace") String namespace,
+                                  @PathVariable(value = "middlewareName") String middlewareName,
                                   @RequestBody MiddlewareAlertsListDto middlewareAlertsListDto) throws Exception {
         middlewareAlertsService.createRules(clusterId, namespace, middlewareName, middlewareAlertsListDto);
         return BaseResult.ok();
+    }
+
+    @ApiOperation(value = "查询告警规则详情", notes = "查询告警规则详情")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "alertName", value = "规则名称", paramType = "path", dataTypeClass = String.class)
+    })
+    @GetMapping("/rules/{alertName}")
+    @Authority(power = 1)
+    public BaseResult<MiddlewareAlertsDTO> alertRuleDetail(@PathVariable("clusterId") String clusterId,
+                                                           @PathVariable(value = "namespace") String namespace,
+                                                           @PathVariable(value = "middlewareName") String middlewareName,
+                                                           @PathVariable("alertName") String alertName) {
+        return BaseResult.ok(middlewareAlertsService.detail(clusterId, namespace, middlewareName, alertName));
     }
 
     @ApiOperation(value = "删除服务告警规则", notes = "删除服务告警规则")
@@ -87,8 +103,8 @@ public class MiddlewareAlertsController {
     @DeleteMapping("/rules")
     @Authority(power = 1)
     public BaseResult deleteRules(@PathVariable("clusterId") String clusterId,
-                                  @PathVariable(value = "namespace", required = false) String namespace,
-                                  @PathVariable(value = "middlewareName", required = false) String middlewareName,
+                                  @PathVariable(value = "namespace") String namespace,
+                                  @PathVariable(value = "middlewareName") String middlewareName,
                                   @RequestParam("alert") String alert) {
         middlewareAlertsService.deleteRules(clusterId, namespace, middlewareName, alert);
         return BaseResult.ok();

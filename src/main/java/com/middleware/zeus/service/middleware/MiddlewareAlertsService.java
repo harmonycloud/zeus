@@ -75,6 +75,15 @@ public interface MiddlewareAlertsService {
      */
     void deleteRules(String clusterId, String namespace, String middlewareName, String alert);
 
+    /***
+     *
+     * @param clusterId
+     * @param namespace
+     * @param middlewareName
+     * @param alert
+     */
+    MiddlewareAlertsDTO detail(String clusterId, String namespace, String middlewareName, String alert);
+
     /**
      * 同步告警规则进数据库
      *
