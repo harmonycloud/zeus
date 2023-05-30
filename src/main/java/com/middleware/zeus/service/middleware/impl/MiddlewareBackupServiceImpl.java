@@ -859,6 +859,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             try {
                 backupScheduleCRDService.delete(clusterId, namespace, backupScheduleName + "-" + INCR, forceDelete);
             } catch (Exception ignored) {
+                log.error("删除失败", ignored);
             }
         } catch (Exception e) {
             if (MiddlewareTypeEnum.MYSQL.getType().equals(type)) {
@@ -1230,7 +1231,12 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         List<String> backupNameList = taskDTO.getBackupNameList();
         backupNameList.forEach(backupName -> {
             if ("period".equals(taskDTO.getBackupMode())) {
+                // 删除备份任务
                 deleteSchedule(clusterId, namespace, type, backupName, forceDelete);
+                // 删除备份任务产生的备份记录
+                deleteScheduleRecord(clusterId, namespace, type, backupName, forceDelete);
+                // 删除增量备份产生的备份记录
+                deleteIncrScheduleRecord(clusterId, namespace, type, backupName, forceDelete);
             } else {
                 deleteRecord(clusterId, namespace, type, backupName, forceDelete);
             }
@@ -1286,6 +1292,36 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Override
     public boolean checkSchedule(String clusterId, String namespace, String type, String middlewareName) {
         return checkBackupScheduleExist(clusterId, namespace, middlewareName, null);
+    }
+
+    /**
+     * 删除增量备份产生的备份记录
+     * @param clusterId
+     * @param namespace
+     * @param type
+     * @param scheduleName
+     * @param forceDelete
+     */
+    private void deleteIncrScheduleRecord(String clusterId,String namespace,String type,String scheduleName,Boolean forceDelete){
+        scheduleName = scheduleName +"-incr";
+        deleteScheduleRecord(clusterId, namespace, type, scheduleName, forceDelete);
+    }
+
+    /**
+     * 删除周期备份产生的备份记录
+     * @param clusterId
+     * @param namespace
+     * @param type
+     * @param scheduleName
+     * @param forceDelete
+     */
+    private void deleteScheduleRecord(String clusterId,String namespace,String type,String scheduleName,Boolean forceDelete){
+        Map<String,String> lables = new HashMap<>();
+        lables.put("owner", scheduleName);
+        List<MiddlewareBackup> backups = backupCRDService.list(clusterId, namespace, lables);
+        for (MiddlewareBackup backup : backups) {
+            deleteRecord(clusterId, namespace, type, backup.getCRDName(), forceDelete);
+        }
     }
 
     /**
