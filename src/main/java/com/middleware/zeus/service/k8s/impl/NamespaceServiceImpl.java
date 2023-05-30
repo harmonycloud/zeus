@@ -203,6 +203,8 @@ public class NamespaceServiceImpl implements NamespaceService {
         if (!CollectionUtils.isEmpty(middlewareCRList)) {
             throw new BusinessException(ErrorMessage.NAMESPACE_NOT_EMPTY);
         }
+        // 解绑分区
+        projectService.unBindNamespace(null, null, clusterId, name);
         // 更新分区接入信息
         update(clusterId, name, new Namespace().setRegistered(false));
         // 删除分区
@@ -211,8 +213,6 @@ public class NamespaceServiceImpl implements NamespaceService {
         meta.setName(name);
         ns.setMetadata(meta);
         namespaceWrapper.delete(clusterId, ns);
-        // 解绑分区
-        projectService.unBindNamespace(null, null, clusterId, name);
     }
 
     @Override
