@@ -31,4 +31,7 @@ public class RedisParam {
     @ApiModelProperty("exporter端口")
     private Integer exporterPort;
 
+    @ApiModelProperty("predixy节点exporter端口")
+    private Integer predixyExporterPort;
+
 }

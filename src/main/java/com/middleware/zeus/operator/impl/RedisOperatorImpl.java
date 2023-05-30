@@ -206,6 +206,10 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
                 && values.containsKey("predixy")) {
                 values.getJSONObject("predixy").put("port", redisParam.getPredixyPort());
             }
+            if (redisParam.getPredixyExporterPort() != null && redisParam.getPredixyExporterPort() != 0
+                    && values.containsKey("predixy")) {
+                values.getJSONObject("predixy").put("exporterPort", redisParam.getPredixyExporterPort());
+            }
             if (redisParam.getSentinelPort() != null && redisParam.getSentinelPort() != 0
                 && values.containsKey("sentinel")) {
                 values.getJSONObject("sentinel").put("port", redisParam.getSentinelPort());
@@ -301,6 +305,7 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         Integer redisPort = 6379;
         Integer sentinelPort = 26379;
         Integer predixyPort = 7617;
+        Integer predixyExporterPort = 9121;
         if (values.containsKey("exporter") && values.getJSONObject("exporter").containsKey("port")){
             exportPort = values.getJSONObject("exporter").getInteger("port");
         }
@@ -310,13 +315,19 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         if (SENTINEL.equals(values.getString("type")) && values.containsKey("sentinel") && values.getJSONObject("sentinel").containsKey("port")) {
             sentinelPort = values.getJSONObject("sentinel").getInteger("port");
         }
-        if (predixy != null && predixy.getBoolean("enableProxy") && values.containsKey("predixy") && values.getJSONObject("predixy").containsKey("port")) {
-            predixyPort = values.getJSONObject("predixy").getInteger("port");
+        if (predixy != null && predixy.getBoolean("enableProxy") && values.containsKey("predixy")) {
+            if (values.getJSONObject("predixy").containsKey("port")) {
+                predixyPort = values.getJSONObject("predixy").getInteger("port");
+            }
+            if (values.getJSONObject("predixy").containsKey("exporterPort")) {
+                predixyExporterPort = values.getJSONObject("predixy").getInteger("exporterPort");
+            }
         }
         redisParam.setExporterPort(exportPort);
         redisParam.setRedisPort(redisPort);
         redisParam.setSentinelPort(sentinelPort);
         redisParam.setPredixyPort(predixyPort);
+        redisParam.setPredixyExporterPort(predixyExporterPort);
         middleware.setRedisParam(redisParam);
     }
 
