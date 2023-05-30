@@ -57,6 +57,15 @@ public interface MiddlewareBackupScheduleCRDService {
     void delete(String clusterId, String namespace, String name)  throws IOException;
 
     /**
+     * 删除定时备份
+     * @param clusterId
+     * @param namespace
+     * @param name
+     * @throws IOException
+     */
+    void delete(String clusterId, String namespace, String name, Boolean forceDelete) throws IOException;
+
+    /**
      *
      * @param clusterId
      * @param namespace

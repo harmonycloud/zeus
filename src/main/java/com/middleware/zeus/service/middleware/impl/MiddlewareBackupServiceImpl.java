@@ -852,6 +852,23 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
+    public void deleteSchedule(String clusterId, String namespace, String type, String backupScheduleName, Boolean forceDelete) {
+        try {
+            backupScheduleCRDService.delete(clusterId, namespace, backupScheduleName, forceDelete);
+            // 尝试删除增量备份
+            try {
+                backupScheduleCRDService.delete(clusterId, namespace, backupScheduleName + "-" + INCR, forceDelete);
+            } catch (Exception ignored) {
+            }
+        } catch (Exception e) {
+            if (MiddlewareTypeEnum.MYSQL.getType().equals(type)) {
+                mysqlAdapterService.deleteSchedule(clusterId, namespace, type, backupScheduleName);
+            }
+            log.error("定时备份删除失败；{}", backupScheduleName, e);
+        }
+    }
+
+    @Override
     public boolean checkIfAlreadyBackup(String clusterId, String namespace, String type, String middlewareName) {
         if (MiddlewareTypeEnum.MYSQL.getType().equals(type)) {
             return mysqlAdapterService.checkIfAlreadyBackup(clusterId, namespace, type, middlewareName);
@@ -895,10 +912,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         List<MiddlewareBackupRecord> backupSchedules = listBackupSchedule(clusterId, namespace, type, middlewareName);
         // 获取备份任务的最近备份时间
         setBackupScheduleBackupTime(backupSchedules, backupRecords);
-        // 过滤backupSchedule所产生的backup  过滤删除中的任务
+        // 过滤backupSchedule所产生的backup
         backupRecords = backupRecords.stream().filter(backupRecord -> StringUtils.isEmpty(backupRecord.getOwner()))
-                .filter(backupRecord -> StringUtils.isEmpty(backupRecord.getPhrase())
-                        || !"Deleting".equals(backupRecord.getPhrase()))
                 .collect(Collectors.toList());
 
         recordList.addAll(backupRecords);
@@ -1211,12 +1226,13 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         String namespace = taskDTO.getNamespace();
         String type = taskDTO.getType();
         String backupId = taskDTO.getBackupId();
+        Boolean forceDelete = taskDTO.getForceDelete();
         List<String> backupNameList = taskDTO.getBackupNameList();
         backupNameList.forEach(backupName -> {
             if ("period".equals(taskDTO.getBackupMode())) {
-                deleteSchedule(clusterId, namespace, type, backupName);
+                deleteSchedule(clusterId, namespace, type, backupName, forceDelete);
             } else {
-                deleteRecord(clusterId, namespace, type, backupName, false);
+                deleteRecord(clusterId, namespace, type, backupName, forceDelete);
             }
         });
         if (StringUtils.isNotEmpty(backupId)) {

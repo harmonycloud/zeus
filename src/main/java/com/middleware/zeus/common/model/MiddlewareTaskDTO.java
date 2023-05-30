@@ -31,6 +31,9 @@ public class MiddlewareTaskDTO {
     @ApiModelProperty("是否是周期备份")
     private String backupMode;
 
+    @ApiModelProperty("是否强制删除")
+    private Boolean forceDelete;
+
     @ApiModelProperty("备份任务名称列表")
     private List<String> backupNameList;
 

@@ -279,6 +279,11 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
+    public void deleteSchedule(String clusterId, String namespace, String type, String backupScheduleName, Boolean forceDelete) {
+        mysqlScheduleBackupService.delete(clusterId, namespace, backupScheduleName);
+    }
+
+    @Override
     public boolean checkIfAlreadyBackup(String clusterId, String namespace, String type, String middlewareName) {
         List<ScheduleBackup> scheduleBackupList =
                 mysqlScheduleBackupService.listScheduleBackup(clusterId, namespace, middlewareName);

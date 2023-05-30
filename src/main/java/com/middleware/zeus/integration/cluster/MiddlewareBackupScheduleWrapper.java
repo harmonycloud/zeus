@@ -1,6 +1,7 @@
 package com.middleware.zeus.integration.cluster;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -86,6 +87,28 @@ public class MiddlewareBackupScheduleWrapper {
                 .resources(MiddlewareBackupSchedule.class, MiddlewareBackupScheduleList.class).inNamespace(namespace);
         // create
         backupScheduleClient.withName(name).delete();
+    }
+
+    /**
+     * 删除
+     * @param clusterId
+     * @param namespace
+     * @param name
+     * @param forceDelete
+     * @throws IOException
+     */
+    public void delete(String clusterId, String namespace, String name, Boolean forceDelete) throws IOException {
+        // init client
+        NonNamespaceOperation<MiddlewareBackupSchedule, MiddlewareBackupScheduleList,
+                Resource<MiddlewareBackupSchedule>> backupScheduleClient = K8sClient.getClient(clusterId)
+                .resources(MiddlewareBackupSchedule.class, MiddlewareBackupScheduleList.class).inNamespace(namespace);
+        if (forceDelete) {
+            MiddlewareBackupSchedule schedule = get(clusterId, namespace, name);
+            schedule.getMetadata().setFinalizers(Collections.emptyList());
+            backupScheduleClient.resource(schedule).update();
+        } else {
+            backupScheduleClient.withName(name).delete();
+        }
     }
 
     /**

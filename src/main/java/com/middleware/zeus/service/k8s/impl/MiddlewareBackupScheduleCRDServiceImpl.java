@@ -51,6 +51,11 @@ public class MiddlewareBackupScheduleCRDServiceImpl implements MiddlewareBackupS
     }
 
     @Override
+    public void delete(String clusterId, String namespace, String name, Boolean forceDelete) throws IOException {
+        middlewareBackupScheduleWrapper.delete(clusterId, namespace, name, forceDelete);
+    }
+
+    @Override
     public MiddlewareBackupScheduleList list(String clusterId, String namespace) {
         return middlewareBackupScheduleWrapper.list(clusterId, namespace, null);
     }

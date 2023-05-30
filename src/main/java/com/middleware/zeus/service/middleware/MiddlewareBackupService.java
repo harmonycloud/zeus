@@ -108,6 +108,16 @@ public interface MiddlewareBackupService {
     void deleteSchedule(String clusterId, String namespace, String type, String backupScheduleName);
 
     /**
+     * 删除备份规则
+     * @param clusterId
+     * @param namespace
+     * @param type
+     * @param backupScheduleName
+     * @param forceDelete
+     */
+    void deleteSchedule(String clusterId, String namespace, String type, String backupScheduleName, Boolean forceDelete);
+
+    /**
      * 删除备份记录
      *  @param clusterId      集群id
      * @param namespace      分区
