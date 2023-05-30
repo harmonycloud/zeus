@@ -1334,7 +1334,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         podInfos.sort(Comparator.comparing(PodInfo::getPodName));
 
         for (int i = 0; i < podInfos.size(); i++) {
-            podInfos.get(i).setPodAliasName("备份进程" + getLetterByIndex(i));
+            podInfos.get(i).setPodAliasName("备份进程" + (i + 1));
         }
         return podInfos;
     }
@@ -2088,17 +2088,17 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
      */
     public Boolean waitingHelmRelease(String clusterId, String namespace, String name) {
         boolean flag = false;
-        for (int i = 0; i < 60; ++i) {
+        for (int i = 0; i < 600; ++i) {
             try {
                 JSONObject values = helmChartService.getInstalledValues(name, namespace, clusterService.findById(clusterId));
                 if (values != null) {
                     return true;
                 }
             } catch (Exception e) {
-                log.error("备份恢复 集群{} 分区{} 中间件{} 查询Helm release状态失败,30s后重试", clusterId, namespace, name);
+                log.error("备份恢复 集群{} 分区{} 中间件{} 查询Helm release状态失败,5s后重试", clusterId, namespace, name);
             }
             try {
-                Thread.sleep(30000);
+                Thread.sleep(3000);
             } catch (Exception ignore) {
             }
         }
