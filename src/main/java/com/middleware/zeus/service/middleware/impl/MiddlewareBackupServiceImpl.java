@@ -1820,14 +1820,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         String position = "(" + parameters.getUrl() + "/"
                 + parameters.getBucket() + ")";
         backupRecord.setPosition(position);
-        // 获取备份状态
-        if (StringUtils.isNotEmpty(schedule.getMetadata().getDeletionTimestamp())) {
-            backupRecord.setPhrase("Deleting");
-        } else if (!ObjectUtils.isEmpty(backupStatus)) {
-            backupRecord.setPhrase(backupStatus.getPhase());
-        } else {
-            backupRecord.setPhrase("Unknown");
-        }
+        // 设置备份状态
+        setMiddlewareBackupStatus(schedule, backupRecord);
+        // 设置备份源名称、类型
         backupRecord.setSourceName(schedule.getSpec().getName());
         backupRecord.setSourceType(middlewareCrTypeService.findTypeByCrType(spec.getType()));
         // 获取labels参数
@@ -1984,6 +1979,35 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             backupRecord.setPhrase(backupStatus.getPhase());
             if ("Failed".equals(backupStatus.getPhase())) {
                 backupRecord.setReason(backupStatus.getReason());
+            }
+        } else {
+            backupRecord.setPhrase("Unknown");
+        }
+    }
+
+    /**
+     * 设置备份记录状态
+     * @param schedule
+     * @param backupRecord
+     */
+    private void setMiddlewareBackupStatus(MiddlewareBackupSchedule schedule, MiddlewareBackupRecord backupRecord) {
+        MiddlewareBackupScheduleStatus status = schedule.getStatus();
+        if (status == null) {
+            return;
+        }
+        if("RecycleFailed".equals(status.getPhase())){
+            backupRecord.setPhrase(status.getPhase());
+            backupRecord.setReason(status.getReason());
+            return;
+        }
+        if (StringUtils.isNotEmpty(schedule.getMetadata().getDeletionTimestamp())) {
+            backupRecord.setPhrase("Deleting");
+            return;
+        }
+        if (!ObjectUtils.isEmpty(status)) {
+            backupRecord.setPhrase(status.getPhase());
+            if ("Failed".equals(status.getPhase())) {
+                backupRecord.setReason(status.getReason());
             }
         } else {
             backupRecord.setPhrase("Unknown");
