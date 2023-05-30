@@ -987,7 +987,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             if (time != null && time.containsKey("startTime") && time.containsKey("endTime")) {
                 Date startTime = DateUtils.parseUTCDate(time.getString("startTime"));
                 Date endTime = DateUtils.parseUTCDate(time.getString("endTime"));
-                middlewareIncBackupDto.setStartTime(startTime).setEndTime(endTime);
+                middlewareIncBackupDto.setStartTime(startTime).setEndTime(endTime).setSuccessTime(endTime);
             }
             // 设置最近一次备份时间
             if (time != null && time.containsKey("successTime")) {
