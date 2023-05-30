@@ -1334,7 +1334,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         podInfos.sort(Comparator.comparing(PodInfo::getPodName));
 
         for (int i = 0; i < podInfos.size(); i++) {
-            podInfos.get(i).setPodAliasName("备份进程" + getLetterByIndex(i));
+            podInfos.get(i).setPodAliasName("备份进程" + (i + 1));
         }
         return podInfos;
     }
