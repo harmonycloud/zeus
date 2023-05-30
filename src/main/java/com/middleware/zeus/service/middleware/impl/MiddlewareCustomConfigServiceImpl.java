@@ -106,13 +106,11 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
                 customConfig.setUpdateTime(beanCustomConfigHistoryListMap.get(customConfig.getName()).get(0).getDate());
             }
             // 特殊处理mysql相关内容
-            if ("sql_mode".equals(beanCustomConfig.getName())) {
+            if ("sql_mode".equals(beanCustomConfig.getName())
+                || "audit_whitelist_cmds".equals(beanCustomConfig.getName())
+                || "audit_record_cmds".equals(beanCustomConfig.getName())) {
                 customConfig.setParamType("multiSelect");
             }
-//            if (beanMiddlewareParamTopList.stream()
-//                .anyMatch(beanMiddlewareParamTop -> beanMiddlewareParamTop.getParam().equals(customConfig.getName()) && beanMiddlewareParamTop.getRole().equals(role))) {
-//                customConfig.setTopping(true);
-//            }
             customConfigList.add(customConfig);
         });
         customConfigList.sort((o1, o2) -> o1.getTopping() == null && o2.getTopping() == null ? 0 : o1.getTopping() == null ? 1 : o2.getTopping() == null ? -1 : 0);
