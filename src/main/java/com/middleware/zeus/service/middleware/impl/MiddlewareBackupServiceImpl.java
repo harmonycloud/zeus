@@ -2098,7 +2098,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 log.error("备份恢复 集群{} 分区{} 中间件{} 查询Helm release状态失败,5s后重试", clusterId, namespace, name);
             }
             try {
-                Thread.sleep(5000);
+                Thread.sleep(3000);
             } catch (Exception ignore) {
             }
         }
