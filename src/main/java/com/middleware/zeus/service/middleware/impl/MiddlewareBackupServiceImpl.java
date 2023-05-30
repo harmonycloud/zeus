@@ -701,6 +701,10 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         if (StringUtils.isAnyEmpty(clusterId, namespace, type, middlewareName, backupName, sourceName, backupId)) {
             throw new BusinessException(ErrorMessage.PARAMETER_NOT_COMPLETE);
         }
+        // 等待中间件helm release
+        if (!waitingHelmRelease(clusterId, namespace, middlewareName)) {
+            return;
+        }
         MiddlewareRestoreCR crd = new MiddlewareRestoreCR();
         ObjectMeta meta = new ObjectMeta();
         meta.setNamespace(namespace);
@@ -2070,6 +2074,28 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                     && middlewareCR.getStatus().getPhase().equalsIgnoreCase(RUNNING)) {
                 flag = true;
                 break;
+            }
+            try {
+                Thread.sleep(30000);
+            } catch (Exception ignore) {
+            }
+        }
+        return flag;
+    }
+
+    /**
+     * 创建备份恢复等待helm release完成
+     */
+    public Boolean waitingHelmRelease(String clusterId, String namespace, String name) {
+        boolean flag = false;
+        for (int i = 0; i < 60; ++i) {
+            try {
+                JSONObject values = helmChartService.getInstalledValues(name, namespace, clusterService.findById(clusterId));
+                if (values != null) {
+                    return true;
+                }
+            } catch (Exception e) {
+                log.error("备份恢复 集群{} 分区{} 中间件{} 查询Helm release状态失败,30s后重试", clusterId, namespace, name);
             }
             try {
                 Thread.sleep(30000);

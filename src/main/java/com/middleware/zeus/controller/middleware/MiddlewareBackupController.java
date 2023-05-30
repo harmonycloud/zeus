@@ -7,6 +7,7 @@ import com.middleware.zeus.common.model.MiddlewareTaskDTO;
 import com.middleware.zeus.common.model.middleware.*;
 import com.middleware.zeus.annotation.Authority;
 import com.middleware.zeus.service.middleware.MiddlewareBackupService;
+import com.middleware.zeus.util.ThreadPoolExecutorFactory;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -302,7 +303,7 @@ public class MiddlewareBackupController {
                                     @RequestBody MiddlewareRestoreDto restoreDto) {
         restoreDto.setClusterId(clusterId);
         restoreDto.setNamespace(namespace);
-        middlewareBackupService.createRestore(restoreDto);
+        ThreadPoolExecutorFactory.executor.execute(() -> middlewareBackupService.createRestore(restoreDto));
         return BaseResult.ok();
     }
 
