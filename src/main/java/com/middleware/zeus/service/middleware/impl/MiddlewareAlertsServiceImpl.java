@@ -393,7 +393,6 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
                 && prometheusRules.getAlert().equals(middlewareAlertsDTO.getAlert()));
         });
 
-        String group = middlewareAlertsDTO.getAnnotations().get("group");
         // 创建prometheusRules
         middlewareAlertsDTO.setName(middlewareName);
         PrometheusRules prometheusRules = convertMiddlewareAlerts(middlewareAlertsDTO, clusterId);
@@ -415,7 +414,6 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             prometheusRuleGroups.setRules(prometheusRulesList);
             prometheusRule.getSpec().getGroups().add(prometheusRuleGroups);
         }
-        middlewareAlertsDTO.getAnnotations().put("group",group);
     }
 
     /**
