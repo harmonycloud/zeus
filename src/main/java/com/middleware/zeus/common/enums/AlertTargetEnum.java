@@ -9,7 +9,7 @@ import java.util.Map;
  */
 public enum AlertTargetEnum {
 
-    platform("platform", "平台系统告警"),
+    platform("platform", "平台系统监控"),
     logstash("logCollect", "日志采集"),
     elasticsearch("elasticsearch", "日志组件"),
     grafana("grafana", "监控面板"),
@@ -17,9 +17,11 @@ public enum AlertTargetEnum {
     alertmanager("alertmanager", "监控告警"),
     minio("minio", "备份存储"),
     middlewareController("middlewareController", "中间件控制器"),
+    middlewareBackupController("middlewareBackupController", "中间件备份控制器"),
     middlewareScheduler("middlewareScheduler", "扩展调度器"),
     lvmController("lvmController", "LVM控制器"),
     localPathController("localPathController", "Local-Path控制器"),
+    netWork("network", "网络监控"),
     cluster("cluster", "集群监控"),
     ;
 
