@@ -203,6 +203,9 @@ public class NamespaceServiceImpl implements NamespaceService {
         if (!CollectionUtils.isEmpty(middlewareCRList)) {
             throw new BusinessException(ErrorMessage.NAMESPACE_NOT_EMPTY);
         }
+        // 更新分区接入信息
+        update(clusterId, name, new Namespace().setRegistered(false));
+        // 删除分区
         io.fabric8.kubernetes.api.model.Namespace ns = new io.fabric8.kubernetes.api.model.Namespace();
         ObjectMeta meta = new ObjectMeta();
         meta.setName(name);
