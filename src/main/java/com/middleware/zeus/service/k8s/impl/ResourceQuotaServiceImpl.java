@@ -146,22 +146,20 @@ public class ResourceQuotaServiceImpl implements ResourceQuotaService {
                     usedMemory += quota.getMemory().getUsed();
                 }
                 // 获取已分配storage
-                if (!CollectionUtils.isEmpty(quota.getStorageList())) {
-                    for (StorageQuota storageQuota : quota.getStorageList()) {
+                if (!CollectionUtils.isEmpty(quota.getStorageList())){
+                    for (StorageQuota storageQuota : quota.getStorageList()){
                         // 设置request
-                        if (storageMap.containsKey(storageQuota.getStorageId())) {
+                        if (storageMap.containsKey(storageQuota.getStorageId())){
                             Double request = storageMap.get(storageQuota.getStorageId());
-                            storageMap.put(storageQuota.getStorageId(), request < storageQuota.getStorage().getRequest()
-                                ? request : storageQuota.getStorage().getRequest());
-                        } else {
+                            storageMap.put(storageQuota.getStorageId(), request + storageQuota.getStorage().getRequest());
+                        }else {
                             storageMap.put(storageQuota.getStorageId(), storageQuota.getStorage().getRequest());
                         }
                         // 设置used
-                        if (usedStorageMap.containsKey(storageQuota.getStorageId())) {
+                        if (usedStorageMap.containsKey(storageQuota.getStorageId())){
                             Double used = usedStorageMap.get(storageQuota.getStorageId());
-                            usedStorageMap.put(storageQuota.getStorageId(), used > storageQuota.getStorage().getUsed()
-                                ? used : storageQuota.getStorage().getUsed());
-                        } else {
+                            usedStorageMap.put(storageQuota.getStorageId(), used + storageQuota.getStorage().getUsed());
+                        }else {
                             usedStorageMap.put(storageQuota.getStorageId(), storageQuota.getStorage().getUsed());
                         }
                     }

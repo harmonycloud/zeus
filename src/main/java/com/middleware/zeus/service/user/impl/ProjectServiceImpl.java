@@ -422,9 +422,11 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
                 List<ResourceQuotaDo> nsResourceQuotaList =
                     nsListFilterByClusterId.stream().filter(ns -> ns.getQuotas() != null).map(ns -> {
                         ResourceQuotaDo nsQuotas = ns.getQuotas();
+                        Map<String, String> copyStorageClassIdMap = new HashMap<>(storageClassIdMap);
                         for (StorageQuota storageQuota : nsQuotas.getStorageList()) {
-                            if (storageClassIdMap.containsKey(storageQuota.getName())) {
-                                storageQuota.setStorageId(storageClassIdMap.get(storageQuota.getName()));
+                            if (copyStorageClassIdMap.containsKey(storageQuota.getName())) {
+                                storageQuota.setStorageId(copyStorageClassIdMap.get(storageQuota.getName()));
+                                copyStorageClassIdMap.remove(storageQuota.getName());
                             }
                         }
                         return nsQuotas;
