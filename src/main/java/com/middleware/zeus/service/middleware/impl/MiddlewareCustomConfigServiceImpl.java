@@ -340,7 +340,7 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
             // 处理需重启的参数，根据pod重启时间判断
             if (customConfigHistoryDTO.getRestart()) {
                 for (PodInfo podInfo : podInfoList) {
-                    if (StringUtils.isEmpty(podInfo.getRole()) || !podInfo.getRole().equals(podType)) {
+                    if (StringUtils.isEmpty(podInfo.getRole()) || !podInfo.getRole().equalsIgnoreCase(podType)) {
                         continue;
                     }
                     Date date = DateUtils.addInteger(
@@ -398,7 +398,7 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         JSONObject values, String podType) {
         JSONObject newValues = JSONObject.parseObject(values.toJSONString());
         JSONObject args;
-        if (podType.equalsIgnoreCase("Master")) {
+        if (podType.equalsIgnoreCase("master")) {
             args = newValues.getJSONObject("args");
         } else if (!newValues.containsKey(podType)) {
             args = new JSONObject();
