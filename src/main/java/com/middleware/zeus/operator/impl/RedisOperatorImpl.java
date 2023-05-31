@@ -729,4 +729,14 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         }
         return result;
     }
+
+    @Override
+    public Boolean withProxy(String clusterId, Middleware middleware) {
+        JSONObject values = helmChartService.getInstalledValues(middleware, clusterService.findById(clusterId));
+        if (values.containsKey("predixy") && values.getJSONObject("predixy").containsKey("enableProxy")
+            && values.getJSONObject("predixy").getBoolean("enableProxy")) {
+            return true;
+        }
+        return false;
+    }
 }

@@ -964,4 +964,14 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         return result;
     }
 
+    @Override
+    public Boolean withProxy(String clusterId, Middleware middleware) {
+        JSONObject values = helmChartService.getInstalledValues(middleware, clusterService.findById(clusterId));
+        if (values.containsKey("proxy") && values.getJSONObject("proxy").containsKey("enable")
+            && values.getJSONObject("proxy").getBoolean("enable")) {
+            return true;
+        }
+        return false;
+    }
+
 }

@@ -1605,4 +1605,8 @@ public abstract class AbstractBaseOperator {
         return null;
     }
 
+    public Boolean withProxy(String clusterId, Middleware middleware){
+        return false;
+    }
+
 }

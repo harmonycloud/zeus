@@ -353,6 +353,15 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             monitorDto.setUrl(url);
             monitorDtoList.add(monitorDto);
         }
+        // 获取proxy信息
+        Boolean withProxy =
+            getOperator(BaseOperator.class, BaseOperator.class, middleware).withProxy(clusterId, middleware);
+        if (!withProxy) {
+            monitorDtoList = monitorDtoList.stream()
+                .filter(
+                    monitorDto -> !"cBk_ZGpGz1".equals(monitorDto.getUid()) && !"dHlrS1PVz".equals(monitorDto.getUid()))
+                .collect(Collectors.toList());
+        }
         return monitorDtoList;
     }
 

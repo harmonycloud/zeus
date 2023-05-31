@@ -221,4 +221,12 @@ public interface BaseOperator {
      */
     Set<String> getCustomConfigRole(JSONObject values);
 
+    /***
+     * 查询中间件是否为读写分离模式
+     *
+     * @param middleware 中间件
+     * @return Boolean
+     */
+    Boolean withProxy(String clusterId, Middleware middleware);
+
 }
