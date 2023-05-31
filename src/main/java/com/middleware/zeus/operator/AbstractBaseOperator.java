@@ -29,7 +29,6 @@ import com.middleware.zeus.dao.AlertRuleIdMapper;
 import com.middleware.zeus.dao.BeanAlertRecordMapper;
 import com.middleware.zeus.dao.BeanAlertRuleMapper;
 import com.middleware.zeus.dao.BeanMiddlewareInfoMapper;
-import com.middleware.zeus.integration.cluster.PvcWrapper;
 import com.middleware.zeus.integration.cluster.ServiceWrapper;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareInfo;
@@ -91,7 +90,7 @@ public abstract class AbstractBaseOperator {
     @Autowired
     protected HelmChartService helmChartService;
     @Autowired
-    protected PvcWrapper pvcWrapper;
+    protected PvcService pvcService;
     @Autowired
     protected MiddlewareCRService middlewareCRService;
     @Autowired
@@ -402,7 +401,7 @@ public abstract class AbstractBaseOperator {
         if (StringUtils.isNotEmpty(beanCacheMiddleware.getPvc())) {
             List<String> pvcList = Arrays.asList(beanCacheMiddleware.getPvc().split(","));
             if (!CollectionUtils.isEmpty(pvcList)) {
-                pvcList.forEach(pvc -> pvcWrapper.delete(beanCacheMiddleware.getClusterId(),
+                pvcList.forEach(pvc -> pvcService.delete(beanCacheMiddleware.getClusterId(),
                     beanCacheMiddleware.getNamespace(), pvc));
             }
         }
@@ -423,7 +422,7 @@ public abstract class AbstractBaseOperator {
         String storage = middleware.getQuota().get(middleware.getType()).getStorageClassQuota();
         for (PersistentVolumeClaim pvc : pvcList) {
             pvc.getSpec().getResources().getRequests().put(STORAGE, new Quantity(storage));
-            pvcWrapper.update(middleware.getClusterId(), middleware.getNamespace(), pvc);
+            pvcService.update(middleware.getClusterId(), middleware.getNamespace(), pvc);
         }
     }
 
@@ -442,7 +441,7 @@ public abstract class AbstractBaseOperator {
         // 更新pvc内容
         List<PersistentVolumeClaim> pvcList = new ArrayList<>();
         for (String pvcName : pvcNameList) {
-            pvcList.add(pvcWrapper.get(middleware.getClusterId(), middleware.getNamespace(), pvcName));
+            pvcList.add(pvcService.get(middleware.getClusterId(), middleware.getNamespace(), pvcName));
         }
         updatePvc(middleware, pvcList);
 

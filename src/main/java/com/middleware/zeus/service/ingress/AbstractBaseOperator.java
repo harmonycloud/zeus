@@ -16,7 +16,6 @@ import com.middleware.zeus.bean.BeanClusterComponents;
 import com.middleware.zeus.bean.BeanIngressComponents;
 import com.middleware.zeus.dao.BeanClusterComponentsMapper;
 import com.middleware.zeus.dao.BeanIngressComponentsMapper;
-import com.middleware.zeus.integration.cluster.PvcWrapper;
 import com.middleware.zeus.service.k8s.*;
 import com.middleware.zeus.service.middleware.ImageRepositoryService;
 import com.middleware.zeus.service.registry.HelmChartService;
@@ -64,8 +63,6 @@ public abstract class AbstractBaseOperator {
     protected PodService podService;
     @Autowired
     protected BeanClusterComponentsMapper beanClusterComponentsMapper;
-    @Autowired
-    protected PvcWrapper pvcWrapper;
     @Autowired
     protected BeanIngressComponentsMapper beanIngressComponentsMapper;
     @Autowired

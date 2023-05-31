@@ -10,9 +10,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.middleware.zeus.common.model.StorageDto;
-import com.middleware.zeus.integration.cluster.PvcWrapper;
 import com.middleware.zeus.integration.cluster.StorageClassWrapper;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareInfo;
+import com.middleware.zeus.service.k8s.PvcService;
 import com.middleware.zeus.service.k8s.ResourceQuotaService;
 import com.middleware.zeus.service.k8s.StorageClassService;
 import io.fabric8.kubernetes.api.model.storage.StorageClass;
@@ -41,7 +41,7 @@ public class StorageClassServiceImpl implements StorageClassService {
     @Autowired
     private ResourceQuotaService resourceQuotaService;
     @Autowired
-    private PvcWrapper pvcWrapper;
+    private PvcService pvcService;
 
     @Value("${system.backup.storageTypeCheck:true}")
     private boolean storageTypeCheck;
@@ -124,7 +124,7 @@ public class StorageClassServiceImpl implements StorageClassService {
         Map<String, StorageClassDTO> scMap = new HashMap<>();
         if (!CollectionUtils.isEmpty(pvcInfos)) {
             pvcInfos.forEach(pvcInfo -> {
-                PersistentVolumeClaim pvc = pvcWrapper.get(clusterId, namespace, pvcInfo.getName());
+                PersistentVolumeClaim pvc = pvcService.get(clusterId, namespace, pvcInfo.getName());
                 if (pvc != null) {
                     StorageClassDTO sc = new StorageClassDTO();
                     String storage = pvc.getSpec().getResources().getRequests().get(STORAGE).toString();

@@ -50,6 +50,15 @@ public interface PvcService {
    boolean checkPvcExist(String clusterId, String namespace, String... pvcs);
 
     /**
+     * 删除pvc
+     *
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param pvcs pvc名称
+     */
+    void delete(String clusterId, String namespace, String pvcs);
+
+    /**
      * 查询存储列表
      *
      * @param clusterId 集群id

@@ -408,7 +408,7 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
             String storage = middleware.getQuota().get(names[names.length - 2]).getStorageClassQuota();
             // update
             pvc.getSpec().getResources().getRequests().put(STORAGE, new Quantity(storage));
-            pvcWrapper.update(middleware.getClusterId(), middleware.getNamespace(), pvc);
+            pvcService.update(middleware.getClusterId(), middleware.getNamespace(), pvc);
         }
 
     }

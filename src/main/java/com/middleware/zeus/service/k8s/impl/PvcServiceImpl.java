@@ -55,6 +55,11 @@ public class PvcServiceImpl implements PvcService {
     }
 
     @Override
+    public void delete(String clusterId, String namespace, String pvcs) {
+        pvcWrapper.delete(clusterId, namespace, pvcs);
+    }
+
+    @Override
     public List<PersistentVolumeClaim> listWithFields(String clusterId, String namespace, Map<String, String> fields) {
         List<io.fabric8.kubernetes.api.model.PersistentVolumeClaim> pvcList =
             pvcWrapper.listWithFields(clusterId, namespace, fields);

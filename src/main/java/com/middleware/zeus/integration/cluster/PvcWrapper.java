@@ -70,7 +70,7 @@ public class PvcWrapper {
 
     public void update(String clusterId, String namespace, PersistentVolumeClaim pvc) {
         try {
-            K8sClient.getClient(clusterId).persistentVolumeClaims().inNamespace(namespace).createOrReplace(pvc);
+            K8sClient.getClient(clusterId).persistentVolumeClaims().resource(pvc).update();
         } catch (Exception e) {
             if (StringUtils.isNotEmpty(e.getMessage())
                 && e.getMessage().contains("field can not be less than previous value")) {
