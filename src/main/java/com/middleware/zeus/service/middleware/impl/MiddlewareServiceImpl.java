@@ -880,7 +880,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             pvcs.append(pvc.getVolumeName()).append("|");
         }
         Map<String, String> pvcVolumeMap = pvcList.stream().collect(Collectors
-            .toMap(pvc -> pvc.getName().substring(pvc.getName().length() - 1), PersistentVolumeClaim::getVolumeName));
+            .toMap(pvc -> pvc.getName().substring(pvc.getName().lastIndexOf("-") + 1), PersistentVolumeClaim::getVolumeName));
         // 查询total storage
         ThreadPoolExecutorFactory.executor.execute(() -> {
             try {
