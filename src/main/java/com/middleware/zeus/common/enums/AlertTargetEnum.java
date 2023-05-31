@@ -17,7 +17,7 @@ public enum AlertTargetEnum {
     alertmanager("alertmanager", "监控告警"),
     minio("minio", "备份存储"),
     middlewareController("middlewareController", "中间件控制器"),
-    middlewareBackupController("middlewareBackupController", "中间件备份控制器"),
+    middlewareBackupController("middlewareBackupController", "备份控制器"),
     middlewareScheduler("middlewareScheduler", "扩展调度器"),
     lvmController("lvmController", "LVM控制器"),
     localPathController("localPathController", "Local-Path控制器"),
