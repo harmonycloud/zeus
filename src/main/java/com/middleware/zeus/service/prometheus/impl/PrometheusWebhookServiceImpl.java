@@ -108,6 +108,13 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
             alertRecordDo.setNamespace(labels.getString("namespace"));
             alertRecordDo.setLevel(labels.getString("severity"));
             alertRecordDo.setMessage(annotations.getString("message"));
+            if (StringUtils.isEmpty(alertRecordDo.getMessage())) {
+                if (annotations.containsKey("description")) {
+                    alertRecordDo.setMessage(annotations.getString("description"));
+                } else if (annotations.containsKey("summary")) {
+                    alertRecordDo.setMessage(annotations.getString("summary"));
+                }
+            }
             alertRecordDo.setSummary(annotations.getString("summary"));
             alertRecordDo.setAlertTime(convertToUtcDate(alert.getString("startsAt")));
             alertRecordDo.setAlertReceiveTime(new Date());

@@ -18,6 +18,8 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static com.middleware.zeus.common.constants.NameConstant.CLUSTER;
+
 /**
  * @author xutianhong
  * @Date 2023/5/8 11:01 上午
@@ -39,10 +41,10 @@ public class AlertUserServiceImpl implements AlertUserService {
         if (StringUtils.isNotEmpty(clusterId)) {
             wrapper.eq("cluster_id", clusterId);
         }
-        if (StringUtils.isNotEmpty(namespace)) {
+        if (StringUtils.isNotEmpty(namespace) && !alertType.equals(CLUSTER)) {
             wrapper.eq("namespace", namespace);
         }
-        if (StringUtils.isNotEmpty(name)) {
+        if (StringUtils.isNotEmpty(name) && !alertType.equals(CLUSTER)) {
             wrapper.eq("name", name);
         }
         if (StringUtils.isNotEmpty(alertType)) {
