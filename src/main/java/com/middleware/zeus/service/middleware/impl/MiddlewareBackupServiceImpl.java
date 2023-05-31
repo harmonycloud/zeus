@@ -216,7 +216,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         }
         String cron = baks.getSpec().getSchedule().getCron();
         Integer retentionTime = baks.getSpec().getSchedule().getRetentionTime();
-        if ("day".equalsIgnoreCase(baks.getMetadata().getLabels().get("unit"))) {
+        if ("day".equalsIgnoreCase(baks.getMetadata().getLabels().get("unit")) && "off".equalsIgnoreCase(pause)) {
             checkTimeLawful(cron, retentionTime);
         }
         createOrReplaceIncBackup(clusterId, namespace, backupName, time, pause, baks);
@@ -259,15 +259,17 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Override
     public void updateBackupSchedule(String backupName, MiddlewareBackupDTO backupDTO) {
         backupDTO.setBackupName(backupName);
-        MiddlewareBackupSchedule middlewareBackupSchedule = backupScheduleCRDService
-                .get(backupDTO.getClusterId(), backupDTO.getNamespace(), backupDTO.getBackupName());
-        if ("day".equalsIgnoreCase(backupDTO.getDateUnit()) && middlewareBackupSchedule.getSpec() != null && "off".equalsIgnoreCase(middlewareBackupSchedule.getSpec().getPause())) {
+        MiddlewareBackupSchedule incrBaks = backupScheduleCRDService.get(backupDTO.getClusterId(), backupDTO.getNamespace(), backupName + "-" + INCR);
+        if ("day".equalsIgnoreCase(backupDTO.getDateUnit()) && incrBaks != null && incrBaks.getSpec() != null
+            && "off".equalsIgnoreCase(incrBaks.getSpec().getPause())) {
             checkTimeLawful(backupDTO.getCron(), backupDTO.getRetentionTime());
         }
         // 是否为mysqlBackup
         if (backupDTO.getMysqlBackup() != null && backupDTO.getMysqlBackup()) {
             mysqlAdapterService.updateBackupSchedule(backupDTO);
         } else {
+            MiddlewareBackupSchedule middlewareBackupSchedule = backupScheduleCRDService
+                    .get(backupDTO.getClusterId(), backupDTO.getNamespace(), backupDTO.getBackupName());
             MiddlewareBackupScheduleSpec spec = middlewareBackupSchedule.getSpec();
             // 更新cron表达式
             if (StringUtils.isNotEmpty(backupDTO.getCron())) {
