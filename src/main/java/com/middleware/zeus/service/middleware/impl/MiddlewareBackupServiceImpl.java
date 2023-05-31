@@ -259,15 +259,15 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Override
     public void updateBackupSchedule(String backupName, MiddlewareBackupDTO backupDTO) {
         backupDTO.setBackupName(backupName);
-        if ("day".equalsIgnoreCase(backupDTO.getDateUnit()) && backupDTO.getIncrement() != null && backupDTO.getIncrement()) {
+        MiddlewareBackupSchedule middlewareBackupSchedule = backupScheduleCRDService
+                .get(backupDTO.getClusterId(), backupDTO.getNamespace(), backupDTO.getBackupName());
+        if ("day".equalsIgnoreCase(backupDTO.getDateUnit()) && middlewareBackupSchedule.getSpec() != null && "off".equalsIgnoreCase(middlewareBackupSchedule.getSpec().getPause())) {
             checkTimeLawful(backupDTO.getCron(), backupDTO.getRetentionTime());
         }
         // 是否为mysqlBackup
         if (backupDTO.getMysqlBackup() != null && backupDTO.getMysqlBackup()) {
             mysqlAdapterService.updateBackupSchedule(backupDTO);
         } else {
-            MiddlewareBackupSchedule middlewareBackupSchedule = backupScheduleCRDService
-                    .get(backupDTO.getClusterId(), backupDTO.getNamespace(), backupDTO.getBackupName());
             MiddlewareBackupScheduleSpec spec = middlewareBackupSchedule.getSpec();
             // 更新cron表达式
             if (StringUtils.isNotEmpty(backupDTO.getCron())) {
