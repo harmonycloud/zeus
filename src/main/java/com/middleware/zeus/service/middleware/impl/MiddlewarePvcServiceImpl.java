@@ -122,9 +122,7 @@ public class MiddlewarePvcServiceImpl implements MiddlewarePvcService {
         createMaintenance(clusterId, namespace, middlewareName, null, pvcName, storage, storage, SCALE_UP_PV_ROLL_BACK);
     }
 
-    /**
-     * 查询中间件pvc列表
-     * */
+    @Override
     public List<PersistentVolumeClaim> listMiddlewarePvc(String clusterId, String namespace, String middlewareName,
         String type) {
         // 查询中间件pvc名称

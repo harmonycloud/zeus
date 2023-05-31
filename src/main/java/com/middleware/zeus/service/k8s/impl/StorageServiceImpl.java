@@ -14,6 +14,7 @@ import com.middleware.zeus.common.enums.DictEnum;
 import com.middleware.zeus.common.model.QuotaBase;
 import com.middleware.zeus.common.model.middleware.*;
 import com.middleware.zeus.common.model.user.ProjectNamespaceDo;
+import com.middleware.zeus.service.middleware.MiddlewarePvcService;
 import com.middleware.zeus.util.uuid.UUIDUtils;
 import com.middleware.zeus.service.user.ProjectService;
 import com.middleware.zeus.util.DateUtil;
@@ -71,6 +72,8 @@ public class StorageServiceImpl implements StorageService {
     private ProjectService projectService;
     @Autowired
     private NamespaceService namespaceService;
+    @Autowired
+    private MiddlewarePvcService middlewarePvcService;
 
     @Override
     public List<String> getType() {
@@ -349,46 +352,25 @@ public class StorageServiceImpl implements StorageService {
             // 转换创建时间
             mwStoInfo.setCreateTime(DateUtils.parseUTCDate(middlewareCr.getMetadata().getCreationTimestamp()));
 
-            List<MiddlewareInfo> pvcNameList = middlewareCr.getStatus().getInclude().get(PERSISTENT_VOLUME_CLAIMS);
-
+            List<PersistentVolumeClaim> mwPvcList = middlewarePvcService.listMiddlewarePvc(clusterId, middlewareCr.getMetadata().getNamespace(), middlewareCr.getSpec().getName(), type);
             StringBuilder pvcs = new StringBuilder();
-            pvcNameList.forEach(pvcName -> pvcs.append(pvcName.getName()).append("|"));
-
-            // 查询storage request
-            String totalStorageQuery =
-                    "sum(kube_persistentvolumeclaim_resource_requests_storage_bytes{persistentvolumeclaim=~\""
-                            + pvcs.toString() + "\",namespace=\"" + middlewareCr.getMetadata().getNamespace()
-                            + "\"}) by (persistentvolumeclaim) /1024/1024/1024";
-            Map<String, Double> totalResult = prometheusResourceMonitorService.queryPvcs(clusterId, totalStorageQuery);
-
-            // 查询storage using
-            String usedStorageQuery =
-                    "sum(kubelet_volume_stats_used_bytes{persistentvolumeclaim=~\""
-                            + pvcs.toString() + "\",namespace=\"" + middlewareCr.getMetadata().getNamespace()
-                            + "\",endpoint!=\"\"}) by (persistentvolumeclaim) /1024/1024/1024";
-            Map<String, Double> usingResult = prometheusResourceMonitorService.queryPvcs(clusterId, usedStorageQuery);
-
-            // 封装数据
-            // 计算该中间件总存储
-            double totalStorage = 0.0;
-            double usedStorage = 0.0;
-            for (PodInfo pod : middleware.getPods()) {
-                MonitorResourceQuota podQuota = new MonitorResourceQuota();
-                String num = pod.getPodName().substring(pod.getPodName().length() - 1);
-                if (totalResult.containsKey(num)){
-                    podQuota.getStorage().setTotal(totalResult.get(num));
-                    totalStorage = totalStorage + totalResult.get(num);
-                }
-                if (usingResult.containsKey(num)){
-                    podQuota.getStorage().setUsed(usingResult.get(num));
-                    usedStorage = usedStorage + usingResult.get(num);
-                }
-                pod.setMonitorResourceQuota(podQuota);
+            for (PersistentVolumeClaim pvc : mwPvcList) {
+                pvcs.append(pvc.getVolumeName()).append("|");
             }
 
+            // 查询storage request
+            String totalStorageQuery = "sum(total_size_kb{pv=~\"" + pvcs.toString() + "\"}) /1024/1024";
+            double totalResult = prometheusResourceMonitorService.queryAndConvert(clusterId, totalStorageQuery);
+
+            // 查询storage using
+            String usedStorageQuery = "sum(used_size_kb{pv=~\"" + pvcs.toString() + "\"}) /1024/1024";
+            double usingResult = prometheusResourceMonitorService.queryAndConvert(clusterId, usedStorageQuery);
+
+            // 封装数据
+
             MonitorResourceQuota middlewareQuota = new MonitorResourceQuota();
-            middlewareQuota.getStorage().setTotal(totalStorage);
-            middlewareQuota.getStorage().setUsed(usedStorage);
+            middlewareQuota.getStorage().setTotal(totalResult);
+            middlewareQuota.getStorage().setUsed(usingResult);
 
             mwStoInfo.setMonitorResourceQuota(middlewareQuota);
             JSONObject values = helmChartService.getInstalledValues(middleware, clusterService.findById(clusterId));

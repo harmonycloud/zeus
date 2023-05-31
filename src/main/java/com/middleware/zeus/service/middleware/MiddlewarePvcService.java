@@ -1,6 +1,7 @@
 package com.middleware.zeus.service.middleware;
 
 import com.middleware.zeus.common.model.EventDetail;
+import com.middleware.zeus.common.model.PersistentVolumeClaim;
 import com.middleware.zeus.common.model.middleware.MiddlewarePvcDto;
 
 import java.util.List;
@@ -55,4 +56,15 @@ public interface MiddlewarePvcService {
      */
     void rollback(String clusterId, String namespace, String middlewareName, String pvcName);
 
+    /**
+     * 查询中间件pvc列表
+     *
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param middlewareName 中间件名称
+     * @param type 中间件类型
+     *
+     * @return List<PersistentVolumeClaim>
+     */
+    List<PersistentVolumeClaim> listMiddlewarePvc(String clusterId, String namespace, String middlewareName, String type);
 }

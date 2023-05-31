@@ -16,6 +16,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.middleware.zeus.bean.BeanActiveArea;
 import com.middleware.zeus.common.model.*;
 import com.middleware.zeus.dao.BeanActiveAreaMapper;
+import com.middleware.zeus.service.middleware.MiddlewarePvcService;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -100,6 +101,8 @@ public abstract class AbstractClusterService {
     protected PrometheusResourceMonitorService prometheusResourceMonitorService;
     @Autowired
     protected BeanActiveAreaMapper beanActiveAreaMapper;
+    @Autowired
+    protected MiddlewarePvcService middlewarePvcService;
 
 
     public List<MiddlewareClusterDTO> listClusters() {
@@ -451,10 +454,15 @@ public abstract class AbstractClusterService {
                 } catch (Exception e) {
                     log.error("中间件{} 查询memory5分钟平均用量失败", mwRsInfo.getName());
                 }
+
+                List<PersistentVolumeClaim> pvcList = middlewarePvcService.listMiddlewarePvc(mwRsInfo.getClusterId(), mwRsInfo.getNamespace(), mwRsInfo.getName(), mwRsInfo.getType());
+                StringBuilder pvcs = new StringBuilder();
+                for (PersistentVolumeClaim pvc : pvcList) {
+                    pvcs.append(pvc.getVolumeName()).append("|");
+                }
                 // 查询pvc总量
                 try {
-                    String pvcTotalQuery = "sum(total_size_kb{pod=~\"" + pods.toString() + "\",namespace=\""
-                        + mwCrd.getMetadata().getNamespace() + "\"}) by (pod) /1024/1024";
+                    String pvcTotalQuery = "sum(total_size_kb{pv=~\"" + pvcs.toString() + "\"}) /1024/1024";
                     Double pvcTotal = prometheusResourceMonitorService.queryAndConvert(clusterId, pvcTotalQuery);
                     mwRsInfo.setRequestStorage(pvcTotal);
                 } catch (Exception e) {
@@ -462,8 +470,7 @@ public abstract class AbstractClusterService {
                 }
                 // 查询pvc使用量
                 try {
-                    String pvcUsedQuery = "sum(used_size_kb{pod=~\"" + pods.toString() + "\",namespace=\""
-                        + mwCrd.getMetadata().getNamespace() + "\",endpoint!=\"\"}) by (pod) /1024/1024";
+                    String pvcUsedQuery = "sum(used_size_kb{pod=~\"" + pvcs.toString() + "\"}) /1024/1024";
                     Double pvcUsed = prometheusResourceMonitorService.queryAndConvert(clusterId, pvcUsedQuery);
                     mwRsInfo.setPer5MinStorage(pvcUsed);
                 } catch (Exception e) {
