@@ -203,14 +203,16 @@ public class MiddlewareAlertsController {
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "enable",value = "告警层面",paramType = "query",dataTypeClass = Boolean.class),
+            @ApiImplicitParam(name = "type",value = "中间件类型",paramType = "query",dataTypeClass = Boolean.class),
     })
     @PutMapping("/backup")
     @Authority(power = 1)
     public BaseResult<List<MiddlewareAlertsDTO>> editBackupAlert(@PathVariable("clusterId") String clusterId,
                                                                  @PathVariable("namespace") String namespace,
                                                                  @PathVariable("middlewareName") String middlewareName,
+                                                                 @RequestParam("type") String type,
                                                                  @RequestParam("enable") Boolean enable) {
-        middlewareAlertsService.editBackupAlert(clusterId, namespace, middlewareName, enable);
+        middlewareAlertsService.editBackupAlert(clusterId, namespace, middlewareName, type, enable);
         return BaseResult.ok();
     }
 }

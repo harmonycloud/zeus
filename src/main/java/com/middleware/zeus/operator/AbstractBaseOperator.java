@@ -1199,7 +1199,7 @@ public abstract class AbstractBaseOperator {
                 middleware.getName());
         }
         // 开启备份通知
-        middlewareAlertsService.editBackupAlert(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), true);
+        middlewareAlertsService.editBackupAlert(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), middleware.getType(), true);
 
     }
 

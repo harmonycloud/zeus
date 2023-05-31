@@ -191,6 +191,6 @@ public interface MiddlewareAlertsService {
      * @param enable
      *            开启/关闭
      */
-    void editBackupAlert(String clusterId, String namespace, String middlewareName, Boolean enable);
+    void editBackupAlert(String clusterId, String namespace, String middlewareName, String type, Boolean enable);
 
 }

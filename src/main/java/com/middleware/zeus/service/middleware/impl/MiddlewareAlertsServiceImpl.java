@@ -71,8 +71,6 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
     @Autowired
     private BeanAlertRuleMapper beanAlertRuleMapper;
     @Autowired
-    private AlertRuleIdMapper alertRuleIdMapper;
-    @Autowired
     private AlertUserService alertUserService;
     @Autowired
     private ProjectService projectService;
@@ -314,8 +312,10 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
     }
 
     @Override
-    public void editBackupAlert(String clusterId, String namespace, String middlewareName, Boolean enable) {
+    public void editBackupAlert(String clusterId, String namespace, String middlewareName, String type, Boolean enable) {
+        String alertName = "middlewareBackupFailed";
         alertUserService.delete(null, clusterId, namespace, middlewareName, BACKUP);
+        deleteRules(clusterId, namespace, middlewareName, alertName);
         if (enable){
             AlertUserDo alertUserDo = new AlertUserDo();
             alertUserDo.setClusterId(clusterId);
@@ -323,6 +323,35 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             alertUserDo.setName(middlewareName);
             alertUserDo.setAlertType(BACKUP);
             alertUserService.add(alertUserDo);
+
+            // 添加告警规则
+            MiddlewareAlertsDTO middlewareAlertsDTO = new MiddlewareAlertsDTO();
+            middlewareAlertsDTO.setAlert(alertName);
+            middlewareAlertsDTO.setAlertTime(new BigDecimal(1));
+            middlewareAlertsDTO.setAlertTimes(new BigDecimal(1));
+            middlewareAlertsDTO.setExpr("backup_failed_total{middleware_name=\"" + middlewareName + "\"} > 0");
+            middlewareAlertsDTO.setLay(SERVICE);
+            middlewareAlertsDTO.setName(alertName);
+            middlewareAlertsDTO.setLevel("critical");
+            middlewareAlertsDTO.setSilence("2h");
+
+            Map<String, String> labels = new HashMap<>();
+            labels.put("severity", "critical");
+            labels.put("clusterId", clusterId);
+            labels.put("namespace", namespace);
+            labels.put("middleware", type);
+            labels.put("service", middlewareName);
+            middlewareAlertsDTO.setLabels(labels);
+
+            Map<String, String> annotations = new HashMap<>();
+            annotations.put("alertLevel", "critical");
+            annotations.put("message", "job {{ $labels.name }} ,middleware {{ $labels.middleware_name }} backup failed");
+            annotations.put("summary", "job {{ $labels.name }} ,middleware {{ $labels.middleware_name }} backup failed");
+            annotations.put("group", "backup");
+            annotations.put("target_type", "backup");
+            middlewareAlertsDTO.setAnnotations(annotations);
+
+            updateServiceAlerts2Prometheus(clusterId, namespace, middlewareName, middlewareName, middlewareAlertsDTO);
         }
     }
 
@@ -377,8 +406,12 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         }
         String symbol = getSymbol(expr);
         String threshold = getThreshold(expr);
-        expr = expr.replace(symbol, middlewareAlertsDTO.getSymbol()).replace(threshold,
-                middlewareAlertsDTO.getThreshold());
+        if (StringUtils.isNotEmpty(middlewareAlertsDTO.getSymbol())) {
+            expr = expr.replace(symbol, middlewareAlertsDTO.getSymbol());
+        }
+        if (StringUtils.isNotEmpty(middlewareAlertsDTO.getThreshold())) {
+            expr = expr.replace(threshold, middlewareAlertsDTO.getThreshold());
+        }
         prometheusRules.setExpr(expr);
         return prometheusRules;
     }
@@ -408,7 +441,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             });
         } else {
             PrometheusRuleGroups prometheusRuleGroups =
-                    new PrometheusRuleGroups().setName(prometheusRules.getAnnotations().get("name"));
+                    new PrometheusRuleGroups().setName(prometheusRules.getAnnotations().get("group"));
             List<PrometheusRules> prometheusRulesList = new ArrayList<>();
             prometheusRulesList.add(prometheusRules);
             prometheusRuleGroups.setRules(prometheusRulesList);
