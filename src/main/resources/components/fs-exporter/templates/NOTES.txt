@@ -1,0 +1,17 @@
+ _______  _______         _______           _______  _______  _______ _________ _______  _______
+(  ____ \(  ____ \       (  ____ \|\     /|(  ____ )(  ___  )(  ____ )\__   __/(  ____ \(  ____ )
+| (    \/| (    \/       | (    \/( \   / )| (    )|| (   ) || (    )|   ) (   | (    \/| (    )|
+| (__    | (_____  _____ | (__     \ (_) / | (____)|| |   | || (____)|   | |   | (__    | (____)|
+|  __)   (_____  )(_____)|  __)     ) _ (  |  _____)| |   | ||     __)   | |   |  __)   |     __)
+| (            ) |       | (       / ( ) \ | (      | |   | || (\ (      | |   | (      | (\ (
+| )      /\____) |       | (____/\( /   \ )| )      | (___) || ) \ \__   | |   | (____/\| ) \ \__
+|/       \_______)       (_______/|/     \||/       (_______)|/   \__/   )_(   (_______/|/   \__/
+
+# metrics server work on {{ .Values.web.listenAddress }}/metrics
+{{- if .Values.hostNetWork }}
+export NODE_IP=$(kubectl get nodes -o jsonpath="{.items[0].status.addresses[0].address}")
+echo "curl http://$NODE_IP:{{ .Values.web.port }}/metrics"
+{{- else }}
+export SVC_CLUSTER_IP=$(kubectl get svc {{ include "fs-exporter.fullname" . }} -o jsonpath='{.spec.clusterIP}')
+echo "curl http://$SVC_CLUSTER_IP:{{ .Values.web.port }}/metrics"
+{{- end }}

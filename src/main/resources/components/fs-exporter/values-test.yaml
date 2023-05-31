@@ -1,0 +1,11 @@
+fullnameOverride: fs-exporter
+image:
+  registry: "10.120.1.233:8443/zyydebug/"
+
+# command line parameters
+web:
+  listenAddress: "0.0.0.0:9101"
+  port: 9101
+logLevel: 5 # Debug Level
+
+hostNetWork: true

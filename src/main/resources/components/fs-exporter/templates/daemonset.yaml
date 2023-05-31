@@ -1,0 +1,90 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  labels:
+    app: fs-exporter
+  name: {{ include "fs-exporter.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: fs-exporter
+      {{- include "fs-exporter.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        app: fs-exporter
+        {{- include "fs-exporter.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: fs-exporter
+          image: "{{ .Values.image.registry }}{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          command:
+            - /fs-exporter
+            - "--web.listen-address={{ .Values.web.listenAddress }}"
+            - "--log-level={{ .Values.logLevel | default 4 }}"
+          imagePullPolicy: IfNotPresent
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          ports:
+            - protocol: TCP
+              containerPort: {{ .Values.web.port }}
+          securityContext:
+            allowPrivilegeEscalation: true
+            capabilities:
+              add:
+                - SYS_ADMIN
+            privileged: true
+          terminationMessagePath: /dev/termination-log
+          terminationMessagePolicy: File
+          volumeMounts:
+            - mountPath: /var/lib/kubelet
+              mountPropagation: Bidirectional
+              name: pods-mount-dir
+            - mountPath: /dev
+              mountPropagation: HostToContainer
+              name: host-dev
+            - mountPath: /var/log/
+              name: host-log
+      dnsPolicy: ClusterFirstWithHostNet
+      hostNetwork: {{ .Values.hostNetWork }}
+      nodeSelector:
+        kubernetes.io/os: linux
+        {{- with .Values.nodeSelector }}
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      priorityClassName: system-node-critical
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      volumes:
+        - hostPath:
+            path: /var/lib/kubelet
+            type: Directory
+          name: pods-mount-dir
+        - hostPath:
+            path: /dev
+            type: ""
+          name: host-dev
+        - hostPath:
+            path: /var/log/
+            type: ""
+          name: host-log
+  updateStrategy:
+    rollingUpdate:
+      maxSurge: 0
+      maxUnavailable: 1
+    type: RollingUpdate

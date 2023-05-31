@@ -1,0 +1,32 @@
+{{- if  .Capabilities.APIVersions.Has "monitoring.coreos.com/v1" }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    {{- include "fs-exporter.labels" . | nindent 4 }}
+  name: {{ include "fs-exporter.fullname" . }}
+spec:
+  endpoints:
+    - interval: 30s
+      path: /metrics
+      port: fs-exporter
+      relabelings:
+        - action: replace
+          regex: (.*)
+          replacement: $1
+          sourceLabels:
+            - __meta_kubernetes_pod_host_ip
+          targetLabel: kubernetes_pod_host_ip
+        - action: replace
+          regex: (.*)
+          replacement: $1
+          sourceLabels:
+            - __meta_kubernetes_pod_node_name
+          targetLabel: kubernetes_pod_node_name
+  namespaceSelector:
+    matchNames:
+      - {{ .Release.Namespace }}
+  selector:
+    matchLabels:
+      {{- include "fs-exporter.labels" . | nindent 6 }}
+{{- end }}
