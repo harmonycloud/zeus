@@ -216,7 +216,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         }
         String cron = baks.getSpec().getSchedule().getCron();
         Integer retentionTime = baks.getSpec().getSchedule().getRetentionTime();
-        if ("day".equalsIgnoreCase(baks.getMetadata().getLabels().get("unit"))) {
+        if ("day".equalsIgnoreCase(baks.getMetadata().getLabels().get("unit")) && "off".equalsIgnoreCase(pause)) {
             checkTimeLawful(cron, retentionTime);
         }
         createOrReplaceIncBackup(clusterId, namespace, backupName, time, pause, baks);
@@ -259,7 +259,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Override
     public void updateBackupSchedule(String backupName, MiddlewareBackupDTO backupDTO) {
         backupDTO.setBackupName(backupName);
-        if ("day".equalsIgnoreCase(backupDTO.getDateUnit()) && backupDTO.getIncrement() != null && backupDTO.getIncrement()) {
+        MiddlewareBackupSchedule incrBaks = backupScheduleCRDService.get(backupDTO.getClusterId(), backupDTO.getNamespace(), backupName + "-" + INCR);
+        if ("day".equalsIgnoreCase(backupDTO.getDateUnit()) && incrBaks != null && incrBaks.getSpec() != null
+            && "off".equalsIgnoreCase(incrBaks.getSpec().getPause())) {
             checkTimeLawful(backupDTO.getCron(), backupDTO.getRetentionTime());
         }
         // 是否为mysqlBackup
