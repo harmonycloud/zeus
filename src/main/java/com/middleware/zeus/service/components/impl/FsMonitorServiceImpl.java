@@ -32,7 +32,7 @@ public class FsMonitorServiceImpl extends AbstractBaseOperator implements FsMoni
 
     @Override
     protected String getValues(String repository, MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto) {
-        String setValues = "global.repository=" + repository + "/";
+        String setValues = "image.registry=" + repository + "/";
         return setValues;
     }
 
