@@ -46,11 +46,3 @@ spec:
       for: 30s
       labels:
         severity: critical
-    - alert: middlewareBackupFailed
-      annotations:
-        message: job {{ $labels.name }} ,middleware {{ $labels.middleware_name }} backup failed
-        summary: job {{ $labels.name }} ,middleware {{ $labels.middleware_name }} backup failed
-      expr: backup_failed_total > 0
-      for: 10s
-      labels:
-        severity: critical
