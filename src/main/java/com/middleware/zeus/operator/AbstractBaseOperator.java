@@ -1579,7 +1579,7 @@ public abstract class AbstractBaseOperator {
     public String getPodType(String customConfigRole){
         switch (customConfigRole.toLowerCase()) {
             case "major":
-                return "Master";
+                return "master";
             default:
                 return customConfigRole;
         }
