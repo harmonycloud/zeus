@@ -804,15 +804,17 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 PrometheusResponse totalCpu = prometheusResourceMonitorService.query(clusterId, totalCpuQuery);
                 Map<String, Double> result = convertResponse(totalCpu, false);
                 middlewareTopologyDTO.getPods().forEach(podInfo -> {
-                    String num = podInfo.getPodName().substring(podInfo.getPodName().length() - 1);
-                    if (result.containsKey(num)) {
-                        podInfo.getMonitorResourceQuota().getCpu().setTotal(result.get(num));
+                    String podName = podInfo.getPodName();
+                    for(String key : result.keySet()){
+                        if (key.contains(podName)){
+                            podInfo.getMonitorResourceQuota().getCpu().setTotal(result.get(key));
+                            break;
+                        }
                     }
                 });
             } catch (Exception e) {
                 log.error("中间件{} 查询total cpu失败", name);
-            }
-            finally {
+            } finally {
                 cd.countDown();
             }
         });
@@ -824,9 +826,12 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 PrometheusResponse usedCpu = prometheusResourceMonitorService.query(clusterId, usedCpuQuery);
                 Map<String, Double> result = convertResponse(usedCpu, false);
                 middlewareTopologyDTO.getPods().forEach(podInfo -> {
-                    String num = podInfo.getPodName().substring(podInfo.getPodName().length() - 1);
-                    if (result.containsKey(num)){
-                        podInfo.getMonitorResourceQuota().getCpu().setUsed(result.get(num));
+                    String podName = podInfo.getPodName();
+                    for(String key : result.keySet()){
+                        if (key.contains(podName)){
+                            podInfo.getMonitorResourceQuota().getCpu().setUsed(result.get(key));
+                            break;
+                        }
                     }
                 });
             } catch (Exception e) {
@@ -843,9 +848,12 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 PrometheusResponse totalMemory = prometheusResourceMonitorService.query(clusterId, totalMemoryQuery);
                 Map<String, Double> result = convertResponse(totalMemory, false);
                 middlewareTopologyDTO.getPods().forEach(podInfo -> {
-                    String num = podInfo.getPodName().substring(podInfo.getPodName().length() - 1);
-                    if (result.containsKey(num)){
-                        podInfo.getMonitorResourceQuota().getMemory().setTotal(result.get(num));
+                    String podName = podInfo.getPodName();
+                    for(String key : result.keySet()){
+                        if (key.contains(podName)){
+                            podInfo.getMonitorResourceQuota().getMemory().setTotal(result.get(key));
+                            break;
+                        }
                     }
                 });
             } catch (Exception e) {
@@ -862,9 +870,12 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 PrometheusResponse usedMemory = prometheusResourceMonitorService.query(clusterId, usedMemoryQuery);
                 Map<String, Double> result = convertResponse(usedMemory, false);
                 middlewareTopologyDTO.getPods().forEach(podInfo -> {
-                    String num = podInfo.getPodName().substring(podInfo.getPodName().length() - 1);
-                    if (result.containsKey(num)){
-                        podInfo.getMonitorResourceQuota().getMemory().setUsed(result.get(num));
+                    String podName = podInfo.getPodName();
+                    for(String key : result.keySet()){
+                        if (key.contains(podName)){
+                            podInfo.getMonitorResourceQuota().getMemory().setUsed(result.get(key));
+                            break;
+                        }
                     }
                 });
             } catch (Exception e) {
@@ -882,7 +893,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         Map<String,
             String> pvcVolumeMap = pvcList.stream()
                 .filter(pvc -> StringUtils.isNotEmpty(pvc.getVolumeName()) && StringUtils.isNotEmpty(pvc.getName()))
-                .collect(Collectors.toMap(pvc -> pvc.getName().substring(pvc.getName().lastIndexOf("-") + 1),
+                .collect(Collectors.toMap(PersistentVolumeClaim::getName,
                     PersistentVolumeClaim::getVolumeName));
         // 查询total storage
         ThreadPoolExecutorFactory.executor.execute(() -> {
@@ -891,9 +902,12 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 PrometheusResponse totalStorage = prometheusResourceMonitorService.query(clusterId, totalStorageQuery);
                 Map<String, Double> result = convertResponse(totalStorage, true);
                 middlewareTopologyDTO.getPods().forEach(podInfo -> {
-                    String num = podInfo.getPodName().substring(podInfo.getPodName().length() - 1);
-                    if (pvcVolumeMap.containsKey(num) && result.containsKey(pvcVolumeMap.get(num))) {
-                        podInfo.getMonitorResourceQuota().getStorage().setTotal(result.get(pvcVolumeMap.get(num)));
+                    String podName = podInfo.getPodName();
+                    for(String key : pvcVolumeMap.keySet()){
+                        if (key.contains(podName) && result.containsKey(pvcVolumeMap.get(key))){
+                            podInfo.getMonitorResourceQuota().getStorage().setTotal(result.get(pvcVolumeMap.get(key)));
+                            break;
+                        }
                     }
                 });
             } catch (Exception e) {
@@ -909,9 +923,12 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 PrometheusResponse usedStorage = prometheusResourceMonitorService.query(clusterId, usedStorageQuery);
                 Map<String, Double> result = convertResponse(usedStorage, true);
                 middlewareTopologyDTO.getPods().forEach(podInfo -> {
-                    String num = podInfo.getPodName().substring(podInfo.getPodName().length() - 1);
-                    if (pvcVolumeMap.containsKey(num) && result.containsKey(pvcVolumeMap.get(num))) {
-                        podInfo.getMonitorResourceQuota().getStorage().setUsed(result.get(pvcVolumeMap.get(num)));
+                    String podName = podInfo.getPodName();
+                    for(String key : pvcVolumeMap.keySet()){
+                        if (key.contains(podName) && result.containsKey(pvcVolumeMap.get(key))){
+                            podInfo.getMonitorResourceQuota().getStorage().setUsed(result.get(pvcVolumeMap.get(key)));
+                            break;
+                        }
                     }
                 });
             } catch (Exception e) {
@@ -1321,11 +1338,10 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             res.getMetric().forEach((k, v) -> {
                 double value = ResourceCalculationUtil.roundNumber(
                     BigDecimal.valueOf(Double.parseDouble(res.getValue().get(1))), 2, RoundingMode.CEILING);
-                String key = storage ? v : v.substring(v.length() - 1);
-                if (map.containsKey(key)) {
-                    map.put(key, map.get(key) + value);
+                if (map.containsKey(v)) {
+                    map.put(v, map.get(v) + value);
                 } else {
-                    map.put(key, value);
+                    map.put(v, value);
                 }
             });
         });
