@@ -1506,7 +1506,7 @@ prometheus:
     ## Default configuration will connect to the alertmanager deployed as part of this release
     ##
     alertingEndpoints:
-      - name: "kube-prometheus-stack-alertmanager"
+      - name: "alertmanager-alertmanager"
         namespace: "monitoring"
         port: http-web
         scheme: http
