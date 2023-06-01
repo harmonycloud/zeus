@@ -153,6 +153,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             });
         }
         setBackupPosition(records);
+        records.sort(Comparator.comparing(MiddlewareBackupRecord::getActiveArea, Comparator.nullsLast(String::compareTo)));
         return records;
     }
 
@@ -1045,6 +1046,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 }
             }
         }
+        incBackupDtos.sort(Comparator.comparing(MiddlewareIncBackupDto::getActiveArea, Comparator.nullsLast(String::compareTo)));
         return incBackupDtos;
     }
 
