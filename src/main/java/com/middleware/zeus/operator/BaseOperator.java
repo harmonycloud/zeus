@@ -229,4 +229,13 @@ public interface BaseOperator {
      */
     Boolean withProxy(String clusterId, Middleware middleware);
 
+    /**
+     * 中间件pod group信息
+     *
+     * @param middleware 中间件对象
+     *
+     * @return List<PodInfoGroup>
+     */
+    List<PodInfoGroup> podInfoGroup(Middleware middleware);
+
 }

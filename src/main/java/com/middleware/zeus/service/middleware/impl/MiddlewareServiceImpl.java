@@ -1212,6 +1212,12 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         return activeMode && openAvailableDomain && activeActiveMiddleware;
     }
 
+    @Override
+    public List<PodInfoGroup> podGroupInfo(String clusterId, String namespace, String middlewareName, String type) {
+        Middleware middleware = new Middleware(clusterId, namespace, middlewareName, type);
+        return getOperator(BaseOperator.class, BaseOperator.class, middleware).podInfoGroup(middleware);
+    }
+
     /**
      * 服务排序类，按服务数量进行排序
      */

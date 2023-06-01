@@ -2,6 +2,7 @@ package com.middleware.zeus.controller.k8s;
 
 import com.middleware.zeus.common.base.BaseResult;
 import com.middleware.zeus.common.model.middleware.Middleware;
+import com.middleware.zeus.common.model.middleware.MiddlewarePodGroupDto;
 import com.middleware.zeus.common.model.middleware.PodMigrateDTO;
 import com.middleware.zeus.annotation.Authority;
 import com.middleware.zeus.service.k8s.PodService;
@@ -13,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.List;
 
 /**
  * @author dengyulong
@@ -124,5 +126,20 @@ public class PodController {
                                     @RequestParam("mtName") String mtName) throws IOException {
         podService.screenMigrate(clusterId, namespace, middlewareName, mtName);
         return BaseResult.ok();
+    }
+
+    @ApiOperation(value = "中间件pod group信息", notes = "中间件pod group信息")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
+    })
+    @GetMapping("/group")
+    public BaseResult<List<MiddlewarePodGroupDto>> podGroupInfo(@PathVariable("clusterId") String clusterId,
+                                                                @PathVariable("namespace") String namespace,
+                                                                @PathVariable("middlewareName") String middlewareName,
+                                                                @RequestParam("type") String type) {
+        return BaseResult.ok(podService.podGroupInfo(clusterId, namespace, middlewareName, type));
     }
 }

@@ -1,9 +1,13 @@
 package com.middleware.zeus.operator.impl;
 
 import static com.middleware.zeus.common.constants.NameConstant.*;
+import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.PREDIXY;
+import static com.middleware.zeus.common.enums.middleware.ElasticSearchRoleEnum.*;
+
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.middleware.zeus.common.constants.CommonConstant;
 import com.middleware.zeus.common.enums.middleware.MiddlewareTypeEnum;
 import com.middleware.zeus.util.numeric.ResourceCalculationUtil;
 import com.middleware.zeus.common.model.middleware.*;
@@ -322,7 +326,7 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
             return;
         }
         // 主节点
-        MiddlewareQuota master = middleware.getQuota().get(ElasticSearchRoleEnum.MASTER.getRole());
+        MiddlewareQuota master = middleware.getQuota().get(MASTER.getRole());
         if (master == null || StringUtils.isAnyBlank(master.getCpu(), master.getMemory())) {
             throw new IllegalArgumentException("Please confirm master node quota is not null");
         }
@@ -437,7 +441,7 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
             String cpu;
             switch (key) {
                 case "masterReplacesCount":
-                    quota = resources.getJSONObject(ElasticSearchRoleEnum.MASTER.getRole());
+                    quota = resources.getJSONObject(MASTER.getRole());
                     cpu = quota.getJSONObject("requests").getString(CPU);
                     cpuCount += ResourceCalculationUtil.getResourceValue(cpu, CPU, "") * clusterInfo.getIntValue(key);
                     break;
@@ -498,5 +502,48 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
             return resultList;
         }
         return Collections.emptyList();
+    }
+
+    @Override
+    public List<PodInfoGroup> podInfoGroup(Middleware middleware) {
+        // 获取所有pod
+        List<PodInfo> podInfoList = podService.listMiddlewarePods(middleware.getClusterId(), middleware.getNamespace(),
+            middleware.getName(), middleware.getType());
+        // 处理elasticsearch节点角色信息
+        for (PodInfo podInfo : podInfoList) {
+            String name = middleware.getName();
+            if (podInfo.getPodName().contains(name + CommonConstant.LINE + MASTER.getRole())) {
+                podInfo.setRole(MASTER.getRole());
+            } else if (podInfo.getPodName().contains(name + CommonConstant.LINE + KIBANA.getRole())) {
+                podInfo.setRole(KIBANA.getRole());
+            } else if (podInfo.getPodName().contains(name + CommonConstant.LINE + ElasticSearchRoleEnum.DATA.getRole())) {
+                podInfo.setRole(ElasticSearchRoleEnum.DATA.getRole());
+            } else if (podInfo.getPodName().contains(name + CommonConstant.LINE + CLIENT.getRole())) {
+                podInfo.setRole(CLIENT.getRole());
+            } else if (podInfo.getPodName().contains(name + CommonConstant.LINE + COLD.getRole())) {
+                podInfo.setRole(COLD.getRole());
+            }
+        }
+        // 根据pod角色进行分组
+        Map<String, List<PodInfo>> podInfoMap =
+            podInfoList.stream().filter(podInfo -> StringUtils.isNotEmpty(podInfo.getRole()))
+                .collect(Collectors.groupingBy(PodInfo::getRole));
+        // 初始化返回数据结构
+        List<PodInfoGroup> podInfoGroupList = new ArrayList<>();
+        for (String key : podInfoMap.keySet()) {
+            PodInfoGroup podInfoGroup = new PodInfoGroup();
+            podInfoGroup.setRole(key);
+            podInfoGroup.setPods(podInfoMap.get(key));
+            podInfoGroupList.add(podInfoGroup);
+        }
+        // 处理pod组状态
+        for (PodInfoGroup podInfoGroup : podInfoGroupList) {
+            if (podInfoList.stream().allMatch(podInfo -> podInfo.getStatus().equalsIgnoreCase(RUNNING))) {
+                podInfoGroup.setStatus(RUNNING);
+            } else {
+                podInfoGroup.setStatus("NotReady");
+            }
+        }
+        return podInfoGroupList;
     }
 }

@@ -1,6 +1,7 @@
 package com.middleware.zeus.service.k8s;
 
 import com.middleware.zeus.common.model.middleware.Middleware;
+import com.middleware.zeus.common.model.middleware.MiddlewarePodGroupDto;
 import com.middleware.zeus.common.model.middleware.PodInfo;
 import com.middleware.zeus.common.model.middleware.PodMigrateDTO;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
@@ -161,4 +162,16 @@ public interface PodService {
      * @param mtName maintenance名称
      */
     void screenMigrate(String clusterId, String namespace, String middlewareName, String mtName) throws IOException;
+
+    /**
+     * 中间件pod group信息
+     *
+     * @param clusterId      集群id
+     * @param namespace      命名空间
+     * @param middlewareName 中间件名称
+     * @param type 中间件类型
+     *
+     * @return MiddlewarePodGroupDto
+     */
+    List<MiddlewarePodGroupDto> podGroupInfo(String clusterId, String namespace, String middlewareName, String type);
 }

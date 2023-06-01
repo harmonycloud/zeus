@@ -326,6 +326,18 @@ public abstract class AbstractBaseOperator {
         cacheMiddlewareService.updateValuesToNull(middleware);
     }
 
+    public List<PodInfoGroup> podInfoGroup(Middleware middleware){
+        List<PodInfo> podInfoList = podService.listMiddlewarePods(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), middleware.getType());
+        PodInfoGroup podInfoGroup = new PodInfoGroup();
+        podInfoGroup.setRole(middleware.getType());
+        if (podInfoList.stream().allMatch(podInfo -> podInfo.getStatus().equalsIgnoreCase(RUNNING))){
+            podInfoGroup.setStatus(RUNNING);
+        }else {
+            podInfoGroup.setStatus("NotReady");
+        }
+        return Collections.singletonList(podInfoGroup);
+    }
+
 
     /**
      * 更新自定义中间件

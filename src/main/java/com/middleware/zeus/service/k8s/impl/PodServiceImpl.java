@@ -11,6 +11,7 @@ import com.middleware.zeus.common.exception.BusinessException;
 import com.middleware.zeus.common.model.ContainerWithStatus;
 import com.middleware.zeus.common.model.Node;
 import com.middleware.zeus.common.model.StorageClassDTO;
+import com.middleware.zeus.service.middleware.MiddlewareService;
 import com.middleware.zeus.util.numeric.ResourceCalculationUtil;
 import com.middleware.zeus.util.uuid.UUIDUtils;
 import com.middleware.zeus.common.model.middleware.*;
@@ -75,6 +76,8 @@ public class PodServiceImpl implements PodService {
     private ClusterService clusterService;
     @Autowired
     private StorageService storageService;
+    @Autowired
+    private MiddlewareService middlewareService;
 
     @Override
     public Middleware list(String clusterId, String namespace, String middlewareName, String type) {
@@ -572,6 +575,20 @@ public class PodServiceImpl implements PodService {
         mtLabel.put("screen", "true");
         mt.getMetadata().setLabels(mtLabel);
         maintenanceWrapper.update(clusterId, namespace, mt);
+    }
+
+    @Override
+    public List<MiddlewarePodGroupDto> podGroupInfo(String clusterId, String namespace, String middlewareName, String type) {
+        List<PodInfoGroup> podInfoGroupList = middlewareService.podGroupInfo(clusterId, namespace, middlewareName, type);
+        if (CollectionUtils.isEmpty(podInfoGroupList)){
+            return new ArrayList<>();
+        }
+        return podInfoGroupList.stream().map(podInfoGroup -> {
+            MiddlewarePodGroupDto middlewarePodGroupDto = new MiddlewarePodGroupDto();
+            middlewarePodGroupDto.setRole(podInfoGroup.getRole());
+            middlewarePodGroupDto.setStatus(podInfoGroup.getStatus());
+            return middlewarePodGroupDto;
+        }).collect(Collectors.toList());
     }
 
     private List<PodInfo> addPodExtraRole(String clusterId, String namespace, String middlewareName, String type, List<PodInfo> podInfoList, MiddlewareCR mw) {

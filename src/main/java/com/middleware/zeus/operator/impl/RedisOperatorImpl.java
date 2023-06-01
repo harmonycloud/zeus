@@ -739,4 +739,43 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         }
         return false;
     }
+
+    @Override
+    public List<PodInfoGroup> podInfoGroup(Middleware middleware){
+        // 获取所有pod
+        List<PodInfo> podInfoList = podService.listMiddlewarePods(middleware.getClusterId(), middleware.getNamespace(),
+            middleware.getName(), middleware.getType());
+        // 根据pod角色进行分组
+        Map<String, List<PodInfo>> podInfoMap =
+            podInfoList.stream().filter(podInfo -> StringUtils.isNotEmpty(podInfo.getRole()))
+                .collect(Collectors.groupingBy(PodInfo::getRole));
+        // 初始化返回数据结构
+        List<PodInfoGroup> podInfoGroupList = new ArrayList<>();
+        PodInfoGroup redis = new PodInfoGroup().setRole(REDIS).setPods(new ArrayList<>());
+        for (String key : podInfoMap.keySet()) {
+            if (key.equals(PROXY)) {
+                PodInfoGroup podInfoGroup = new PodInfoGroup();
+                podInfoGroup.setRole(PREDIXY);
+                podInfoGroup.setPods(podInfoMap.get(key));
+                podInfoGroupList.add(podInfoGroup);
+            } else if (key.equals(SENTINEL)) {
+                PodInfoGroup podInfoGroup = new PodInfoGroup();
+                podInfoGroup.setRole(key);
+                podInfoGroup.setPods(podInfoMap.get(key));
+                podInfoGroupList.add(podInfoGroup);
+            } else {
+                redis.getPods().addAll(podInfoMap.get(key));
+            }
+        }
+        podInfoGroupList.add(redis);
+        // 处理pod组状态
+        for (PodInfoGroup podInfoGroup : podInfoGroupList){
+            if (podInfoList.stream().allMatch(podInfo -> podInfo.getStatus().equalsIgnoreCase(RUNNING))){
+                podInfoGroup.setStatus(RUNNING);
+            }else {
+                podInfoGroup.setStatus("NotReady");
+            }
+        }
+        return podInfoGroupList;
+    }
 }

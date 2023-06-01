@@ -1,6 +1,7 @@
 package com.middleware.zeus.common.model.middleware;
 
 import lombok.Data;
+import lombok.experimental.Accessors;
 
 import java.util.List;
 
@@ -9,12 +10,18 @@ import java.util.List;
  * @since 2021/11/4 9:45 上午
  */
 @Data
+@Accessors(chain = true)
 public class PodInfoGroup {
 
     /**
      * pod分组角色
      */
     private String role;
+
+    /**
+     * 状态
+     */
+    private String status;
 
     /**
      * 是否拥有子分组

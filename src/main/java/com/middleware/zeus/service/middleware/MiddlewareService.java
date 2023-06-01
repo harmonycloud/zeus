@@ -300,4 +300,16 @@ public interface MiddlewareService {
      */
     boolean activeActiveMiddlewareCheck(String clusterId,String namespace,String middlewareName,String type);
 
+    /**
+     * 中间件pod group信息
+     *
+     * @param clusterId      集群id
+     * @param namespace      命名空间
+     * @param middlewareName 中间件名称
+     * @param type 中间件类型
+     *
+     * @return MiddlewarePodGroupDto
+     */
+    List<PodInfoGroup> podGroupInfo(String clusterId, String namespace, String middlewareName, String type);
+
 }
