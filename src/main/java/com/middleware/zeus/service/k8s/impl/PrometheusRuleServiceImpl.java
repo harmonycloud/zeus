@@ -70,8 +70,8 @@ public class PrometheusRuleServiceImpl implements PrometheusRuleService {
                     return;
                 }
                 MiddlewareAlertsDTO middlewareAlertsDTO = new MiddlewareAlertsDTO();
-                middlewareAlertsDTO.setLabels(middlewareAlertsDTO.getLabels());
-                middlewareAlertsDTO.setAnnotations(middlewareAlertsDTO.getAnnotations());
+                middlewareAlertsDTO.setLabels(prometheusRules.getLabels());
+                middlewareAlertsDTO.setAnnotations(prometheusRules.getAnnotations());
                 middlewareAlertsDTO.setExpr(prometheusRules.getExpr());
                 middlewareAlertsDTO.setTime(prometheusRules.getTime());
                 middlewareAlertsDTO.setName(prometheusRules.getAlert());
