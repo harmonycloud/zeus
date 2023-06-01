@@ -225,7 +225,9 @@ public class NamespaceServiceImpl implements NamespaceService {
         if (ns.getMetadata().getAnnotations() == null) {
             ns.getMetadata().setAnnotations(new HashMap<>());
         }
-        ns.getMetadata().getAnnotations().put("alias_name", namespace.getAliasName());
+        if (StringUtils.isNotEmpty(namespace.getAliasName())) {
+            ns.getMetadata().getAnnotations().put("alias_name", namespace.getAliasName());
+        }
         // 修改分区注册状态
         if (namespace.getRegistered() != null) {
             register(clusterId, name, namespace.getRegistered(), ns);
