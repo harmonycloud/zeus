@@ -17,6 +17,8 @@ public class RedisClusterSpec {
 
     private Object env;
 
+    private Object exporter;
+
     private Object hostVolumes;
 
     private Object pod;
