@@ -1,6 +1,6 @@
 # command line parameters
 web:
-  listenAddress: "127.0.0.1:9100"
+  listenAddress: "0.0.0.0:9100"
   port: 9100
 logLevel: 4 # Info Level
 
