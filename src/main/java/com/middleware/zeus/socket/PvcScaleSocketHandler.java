@@ -73,8 +73,8 @@ public class PvcScaleSocketHandler extends TextWebSocketHandler {
                 if (pvc.getStatus() == null || pvc.getStatus().getCapacity() == null || !pvc.getStatus().getCapacity().containsKey(STORAGE)){
                     statusMessage.add("pvc status error");
                 }else {
-                    Double request = ResourceCalculationUtil.getResourceValue(pvc.getSpec().getResources().getRequests().get(STORAGE).getAmount(), MEMORY, ResourceUnitEnum.GI.getUnit());
-                    Double used = ResourceCalculationUtil.getResourceValue(pvc.getStatus().getCapacity().get(STORAGE).getAmount(), MEMORY, ResourceUnitEnum.GI.getUnit());;
+                    Double request = ResourceCalculationUtil.getResourceValue(pvc.getSpec().getResources().getRequests().get(STORAGE).toString(), MEMORY, ResourceUnitEnum.GI.getUnit());
+                    Double used = ResourceCalculationUtil.getResourceValue(pvc.getStatus().getCapacity().get(STORAGE).toString(), MEMORY, ResourceUnitEnum.GI.getUnit());;
                     if (request.equals(used)){
                         statusMessage.add("scale succeed");
                     }
