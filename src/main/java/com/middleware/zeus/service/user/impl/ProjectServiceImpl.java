@@ -416,19 +416,24 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
                 // 分区存储资源设置存储id
                 List<StorageClassInfo> storageClassInfoList =
                     storageService.listStorageClassInfo(resourceQuotaDo.getClusterId(), false);
+                // 将存储id根据存储名称转化为map
                 Map<String, String> storageClassIdMap =
                     storageClassInfoList.stream().filter(sc -> StringUtils.isNotEmpty(sc.getStorageId()))
                         .collect(Collectors.toMap(StorageClassInfo::getName, StorageClassInfo::getStorageId));
+                // 过滤掉没有quota的分区，处理有storage的分区quota，添加存储id
                 List<ResourceQuotaDo> nsResourceQuotaList =
                     nsListFilterByClusterId.stream().filter(ns -> ns.getQuotas() != null).map(ns -> {
                         ResourceQuotaDo nsQuotas = ns.getQuotas();
-                        Map<String, String> copyStorageClassIdMap = new HashMap<>(storageClassIdMap);
+                        // 记录相同分区内存在相同存储id的storageClass，说明存在双活存储
+                        // 针对双活存储，仅设置一次storageClass并过滤掉没有存储id的存储（特指双活存储中的另一个存储）
+                        List<String> existStorageClassIdList = new ArrayList<>();
                         for (StorageQuota storageQuota : nsQuotas.getStorageList()) {
-                            if (copyStorageClassIdMap.containsKey(storageQuota.getName())) {
-                                storageQuota.setStorageId(copyStorageClassIdMap.get(storageQuota.getName()));
-                                copyStorageClassIdMap.remove(storageQuota.getName());
+                            if (storageClassIdMap.containsKey(storageQuota.getName()) && !existStorageClassIdList.contains(storageClassIdMap.get(storageQuota.getName()))) {
+                                storageQuota.setStorageId(storageClassIdMap.get(storageQuota.getName()));
+                                existStorageClassIdList.add(storageClassIdMap.get(storageQuota.getName()));
                             }
                         }
+                        nsQuotas.getStorageList().removeIf(storageQuota -> StringUtils.isEmpty(storageQuota.getStorageId()));
                         return nsQuotas;
                     }).collect(Collectors.toList());
                 // 计算多分区配额总和
