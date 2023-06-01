@@ -546,10 +546,22 @@ public abstract class AbstractBaseOperator {
     protected void convertCommonByHelmChart(Middleware middleware, JSONObject values) {
         if (values != null) {
             middleware.setAliasName(values.getString("aliasName")).setDescription(values.getString("middleware-desc"))
-                .setLabels(values.getString("middleware-label")).setVersion(values.getString("version"))
+                .setVersion(values.getString("version"))
                 .setMode(values.getString(MODE));
             // 获取chart-version
             middleware.setChartVersion(helmChartService.getChartVersion(values, middleware.getType()));
+            // 获取labels
+            if (values.containsKey("labels")) {
+                JSONObject labels = values.getJSONObject("labels");
+                StringBuilder builder = new StringBuilder();
+                for (String key : labels.keySet()) {
+                    builder.append(key).append("=").append(labels.getString(key)).append(",");
+                }
+                if (builder.length() != 0) {
+                    builder.deleteCharAt(builder.length() - 1);
+                    middleware.setLabels(builder.toString());
+                }
+            }
             // 获取annotations
             if (values.containsKey("annotations")) {
                 JSONObject ann = values.getJSONObject("annotations");
@@ -843,7 +855,6 @@ public abstract class AbstractBaseOperator {
         values.put("aliasName",
             StringUtils.isBlank(middleware.getAliasName()) ? middleware.getName() : middleware.getAliasName());
         values.put("middleware-desc", middleware.getDescription());
-        values.put("middleware-label", middleware.getLabels());
         values.put("chart-version", middleware.getChartVersion());
 
         // labels
