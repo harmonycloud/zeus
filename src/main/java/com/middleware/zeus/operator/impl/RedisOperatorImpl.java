@@ -214,6 +214,9 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
                 && values.containsKey("sentinel")) {
                 values.getJSONObject("sentinel").put("port", redisParam.getSentinelPort());
             }
+            if (redisParam.getSentinelExporterPort() != null && redisParam.getSentinelExporterPort() !=0 && values.containsKey("exporter")) {
+                values.getJSONObject("exporter").put("sentinelPort", redisParam.getSentinelPort());
+            }
             if (redisParam.getExporterPort() != null && redisParam.getExporterPort() != 0 ) {
                 JSONObject exporter = values.getJSONObject("exporter");
                 if (exporter == null) {
@@ -306,8 +309,14 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         Integer sentinelPort = 26379;
         Integer predixyPort = 7617;
         Integer predixyExporterPort = 9121;
-        if (values.containsKey("exporter") && values.getJSONObject("exporter").containsKey("port")){
-            exportPort = values.getJSONObject("exporter").getInteger("port");
+        Integer sentinelExporterPort = 9121;
+        if (values.containsKey("exporter")){
+            if (values.getJSONObject("exporter").containsKey("port")) {
+                exportPort = values.getJSONObject("exporter").getInteger("port");
+            }
+            if (values.getJSONObject("exporter").containsKey("sentinelPort")) {
+                sentinelExporterPort = values.getJSONObject("exporter").getInteger("sentinelPort");
+            }
         }
         if (values.containsKey("redis") && values.getJSONObject("redis").containsKey("port")){
             redisPort = values.getJSONObject("redis").getInteger("port");
@@ -328,6 +337,7 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         redisParam.setSentinelPort(sentinelPort);
         redisParam.setPredixyPort(predixyPort);
         redisParam.setPredixyExporterPort(predixyExporterPort);
+        redisParam.setSentinelExporterPort(sentinelExporterPort);
         middleware.setRedisParam(redisParam);
     }
 
