@@ -1032,8 +1032,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 incBackupDtos.add(incBackupInfoA);
                 incBackupDtos.add(incBackupInfoB);
             } else {
-                incBackupInfoA.setSameActiveActiveBackup(true);
-                incBackupInfoB.setSameActiveActiveBackup(true);
+                incBackupInfoA.setSameActiveActiveBackup(false);
+                incBackupInfoB.setSameActiveActiveBackup(false);
                 incBackupDtos.add(incBackupInfoA);
                 incBackupDtos.add(incBackupInfoB);
             }
