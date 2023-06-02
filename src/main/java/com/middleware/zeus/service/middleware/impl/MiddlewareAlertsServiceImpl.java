@@ -334,7 +334,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             middlewareAlertsDTO.setAlert(alertName);
             middlewareAlertsDTO.setAlertTime(new BigDecimal(1));
             middlewareAlertsDTO.setAlertTimes(new BigDecimal(1));
-            middlewareAlertsDTO.setExpr("backup_failed_total{middleware_name=\"" + middlewareName + "\"} > 0");
+            middlewareAlertsDTO.setExpr("rate(backup_failed_total{middleware_name=\"" + middlewareName + "\")[3m]} > 0");
             middlewareAlertsDTO.setLay(SERVICE);
             middlewareAlertsDTO.setName(alertName);
             middlewareAlertsDTO.setLevel("critical");
