@@ -538,7 +538,7 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
         }
         // 处理pod组状态
         for (PodInfoGroup podInfoGroup : podInfoGroupList) {
-            if (podInfoList.stream().allMatch(podInfo -> podInfo.getStatus().equalsIgnoreCase(RUNNING))) {
+            if (podInfoGroup.getPods().stream().allMatch(podInfo -> podInfo.getStatus().equalsIgnoreCase(RUNNING))) {
                 podInfoGroup.setStatus(RUNNING);
             } else {
                 podInfoGroup.setStatus("NotReady");

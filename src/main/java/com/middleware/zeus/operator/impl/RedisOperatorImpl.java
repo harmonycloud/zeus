@@ -780,7 +780,7 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         podInfoGroupList.add(redis);
         // 处理pod组状态
         for (PodInfoGroup podInfoGroup : podInfoGroupList){
-            if (podInfoList.stream().allMatch(podInfo -> podInfo.getStatus().equalsIgnoreCase(RUNNING))){
+            if (podInfoGroup.getPods().stream().allMatch(podInfo -> podInfo.getStatus().equalsIgnoreCase(RUNNING))){
                 podInfoGroup.setStatus(RUNNING);
             }else {
                 podInfoGroup.setStatus("NotReady");
