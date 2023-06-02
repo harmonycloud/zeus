@@ -16,7 +16,7 @@
   "gnetId": null,
   "graphTooltip": 0,
   "id": 9,
-  "iteration": 1684719118210,
+  "iteration": 1685101384584,
   "links": [],
   "panels": [
     {
@@ -85,27 +85,11 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(rate (container_cpu_usage_seconds_total{namespace=\"$namespace\",pod=\"$pod\", container=\"proxysql\"}[3m]) )  / sum(kube_pod_container_resource_requests_cpu_cores{namespace=\"$namespace\",pod=\"$pod\", container=\"proxysql\"})  * 100",
+          "expr": "sum(rate (container_cpu_usage_seconds_total{namespace=\"$namespace\",pod=\"$pod\",endpoint!=\"\",container!=\"\"}[5m]) ) by (pod) / sum(kube_pod_container_resource_requests{namespace=\"$namespace\",pod=\"$pod\",resource=\"cpu\"}) by (pod)  * 100",
           "hide": false,
           "interval": "",
           "legendFormat": "CPU usage",
           "refId": "A"
-        },
-        {
-          "exemplar": true,
-          "expr": "sum(rate(container_cpu_user_seconds_total{namespace=\"$namespace\",pod=\"$pod\",container=\"proxysql\"}[5m]))",
-          "hide": true,
-          "interval": "",
-          "legendFormat": "CPU User Total",
-          "refId": "B"
-        },
-        {
-          "exemplar": true,
-          "expr": "sum(rate(container_cpu_system_seconds_total{namespace=\"$namespace\",pod=\"$pod\", container=\"proxysql\"}[5m]))",
-          "hide": true,
-          "interval": "",
-          "legendFormat": "CPU System Total",
-          "refId": "C"
         }
       ],
       "thresholds": [],
@@ -156,7 +140,7 @@
       "dashes": false,
       "datasource": "Prometheus",
       "decimals": null,
-      "description": "",
+      "description": "The percentage of requested memory resources that are actually being used (memory working set bytes) by the MySQL ProxySQL Pod.",
       "fieldConfig": {
         "defaults": {
           "custom": {
@@ -221,7 +205,7 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(container_memory_working_set_bytes{namespace=\"$namespace\",pod=\"$pod\", container=\"proxysql\"}) / sum(kube_pod_container_resource_requests_memory_bytes{namespace=\"$namespace\",pod=\"$pod\", container=\"proxysql\"}) * 100",
+          "expr": "sum(container_memory_working_set_bytes{namespace=\"$namespace\",pod=\"$pod\",endpoint!=\"\",container!=\"\"}) by (pod) / sum(kube_pod_container_resource_requests{namespace=\"$namespace\",pod=\"$pod\",resource=\"memory\"}) by (pod) * 100",
           "format": "time_series",
           "hide": false,
           "instant": false,
@@ -235,7 +219,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Memory Usage(%)",
+      "title": "Memory Working Set Usage(%)",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -1814,5 +1798,5 @@
   "timezone": "",
   "title": "ProxySQL Fleet Overview",
   "uid": "cBk_ZGpGz1",
-  "version": 2
+  "version": 5
 }

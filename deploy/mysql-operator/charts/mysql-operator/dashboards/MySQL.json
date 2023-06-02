@@ -17,7 +17,7 @@
   "gnetId": 7362,
   "graphTooltip": 1,
   "id": 10,
-  "iteration": 1684720190758,
+  "iteration": 1685520175042,
   "links": [],
   "panels": [
     {
@@ -420,8 +420,9 @@
           "calculatedInterval": "10m",
           "datasourceErrors": {},
           "errors": {},
-          "expr": "max(mysql_global_variables_innodb_buffer_pool_size{namespace=\"$namespace\",pod=\"$pod\"} * 100) / max(kube_pod_container_resource_requests_memory_bytes{namespace=\"$namespace\",pod=\"$pod\",container=\"mysql\"})",
+          "expr": "max(mysql_global_variables_innodb_buffer_pool_size{namespace=\"$namespace\",pod=\"$pod\"} * 100) / max(kube_pod_container_resource_requests{namespace=\"$namespace\",pod=\"$pod\",container=\"mysql\",resource=\"memory\"})",
           "format": "time_series",
+          "hide": false,
           "interval": "5m",
           "intervalFactor": 1,
           "legendFormat": "",
@@ -490,27 +491,11 @@
       "targets": [
         {
           "exemplar": true,
-          "expr": "sum(rate (container_cpu_usage_seconds_total{namespace=\"$namespace\",pod=\"$pod\", container=\"mysql\"}[3m]) )  / sum(kube_pod_container_resource_requests_cpu_cores{namespace=\"$namespace\",pod=\"$pod\", container=\"mysql\"})  * 100",
+          "expr": "sum(rate (container_cpu_usage_seconds_total{namespace=\"$namespace\",pod=\"$pod\",endpoint!=\"\",container!=\"\"}[5m]) ) by (pod) / sum(kube_pod_container_resource_requests{namespace=\"$namespace\",pod=\"$pod\",resource=\"cpu\"}) by (pod)  * 100",
           "hide": false,
           "interval": "",
           "legendFormat": "CPU usage",
           "refId": "A"
-        },
-        {
-          "exemplar": true,
-          "expr": "sum(rate(container_cpu_user_seconds_total{namespace=\"$namespace\",pod=\"$pod\", container=\"mysql\"}[5m]))",
-          "hide": true,
-          "interval": "",
-          "legendFormat": "CPU User Total",
-          "refId": "B"
-        },
-        {
-          "exemplar": true,
-          "expr": "sum(rate(container_cpu_system_seconds_total{namespace=\"$namespace\",pod=\"$pod\", container=\"mysql\"}[5m]))",
-          "hide": true,
-          "interval": "",
-          "legendFormat": "CPU System Total",
-          "refId": "C"
         }
       ],
       "thresholds": [],
@@ -560,7 +545,7 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "Prometheus",
-      "description": "",
+      "description": "The percentage of requested memory resources that are actually being used (memory working set bytes) by the MySQL Pod.",
       "fieldConfig": {
         "defaults": {
           "custom": {},
@@ -606,7 +591,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum(container_memory_working_set_bytes{namespace=\"$namespace\",pod=\"$pod\", container=\"mysql\"}) / sum(kube_pod_container_resource_requests_memory_bytes{namespace=\"$namespace\",pod=\"$pod\", container=\"mysql\"}) * 100",
+          "expr": "sum(container_memory_working_set_bytes{namespace=\"$namespace\",pod=\"$pod\",endpoint!=\"\",container!=\"\"}) by (pod) / sum(kube_pod_container_resource_requests{namespace=\"$namespace\",pod=\"$pod\",resource=\"memory\"}) by (pod) * 100",
           "interval": "",
           "legendFormat": "Mem",
           "refId": "B"
@@ -616,7 +601,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Memory Usage(%)",
+      "title": "Memory Working Set Usage(%)",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -5268,8 +5253,8 @@
         "allValue": null,
         "current": {
           "selected": false,
-          "text": "zeus-mysql-0",
-          "value": "zeus-mysql-0"
+          "text": "zeus-mysql-1",
+          "value": "zeus-mysql-1"
         },
         "datasource": null,
         "definition": "label_values(kube_pod_info{namespace=\"$namespace\", created_by_name=\"$mc\"}, pod) ",
@@ -5297,27 +5282,22 @@
         "allValue": null,
         "current": {
           "selected": false,
-          "text": "All",
-          "value": "$__all"
+          "text": "mysql-data-zeus-mysql-1",
+          "value": "mysql-data-zeus-mysql-1"
         },
         "datasource": "Prometheus",
         "definition": "query_result(kube_pod_spec_volumes_persistentvolumeclaims_info{namespace=\"$namespace\", pod=\"$pod\"})",
         "error": null,
-        "hide": 2,
-        "includeAll": true,
+        "hide": 0,
+        "includeAll": false,
         "label": "pvc",
-        "multi": true,
+        "multi": false,
         "name": "pvc",
         "options": [
           {
             "selected": true,
-            "text": "All",
-            "value": "$__all"
-          },
-          {
-            "selected": false,
-            "text": "mysql-data-zeus-mysql-0",
-            "value": "mysql-data-zeus-mysql-0"
+            "text": "mysql-data-zeus-mysql-1",
+            "value": "mysql-data-zeus-mysql-1"
           }
         ],
         "query": "query_result(kube_pod_spec_volumes_persistentvolumeclaims_info{namespace=\"$namespace\", pod=\"$pod\"})",
@@ -5336,8 +5316,8 @@
         "allValue": null,
         "current": {
           "selected": false,
-          "text": "openshift311-0",
-          "value": "openshift311-0"
+          "text": "mw-worker2",
+          "value": "mw-worker2"
         },
         "datasource": null,
         "definition": "label_values(kube_pod_info{namespace=\"$namespace\", pod=\"$pod\"}, node)",
@@ -5364,32 +5344,23 @@
       {
         "allValue": null,
         "current": {
-          "selected": true,
-          "text": [
-            "All"
-          ],
-          "value": [
-            "$__all"
-          ]
+          "selected": false,
+          "text": "disk-7ee64f3d-c9ed-46b8-8ea8-c7a435efd889",
+          "value": "disk-7ee64f3d-c9ed-46b8-8ea8-c7a435efd889"
         },
         "datasource": "Prometheus",
         "definition": "query_result(kube_persistentvolumeclaim_info{namespace=\"$namespace\", persistentvolumeclaim=\"$pvc\"})",
         "error": null,
-        "hide": 0,
-        "includeAll": true,
+        "hide": 2,
+        "includeAll": false,
         "label": "pv",
-        "multi": true,
+        "multi": false,
         "name": "pv",
         "options": [
           {
             "selected": true,
-            "text": "All",
-            "value": "$__all"
-          },
-          {
-            "selected": false,
-            "text": "disk-da320ece-5d55-4819-96ff-056d98bac160",
-            "value": "disk-da320ece-5d55-4819-96ff-056d98bac160"
+            "text": "disk-7ee64f3d-c9ed-46b8-8ea8-c7a435efd889",
+            "value": "disk-7ee64f3d-c9ed-46b8-8ea8-c7a435efd889"
           }
         ],
         "query": "query_result(kube_persistentvolumeclaim_info{namespace=\"$namespace\", persistentvolumeclaim=\"$pvc\"})",
@@ -5444,5 +5415,5 @@
   "timezone": "browser",
   "title": "MySQL Overview",
   "uid": "uaKUl7_Mk1",
-  "version": 2
+  "version": 6
 }

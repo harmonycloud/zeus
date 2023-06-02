@@ -265,7 +265,7 @@ spec:
       labels:
         severity: warning
     - alert: MySQLVolumeUsage
-      expr: spc_volume_used_capacity_rate{namespace='{{ .Release.Namespace }}', persistentvolumeclaim=~".*{{ include "mysql.fullname" . }}.*"} > 0.7
+      expr:  (0* kube_persistentvolumeclaim_info{namespace='{{ .Release.Namespace }}', persistentvolumeclaim=~"mysql-data-{{ include "mysql.fullname" . }}-[0-9]"}) + on(volumename) group_left max(label_replace ((used_size_kb / total_size_kb),"volumename", "$1", "pv", "(.+)")) by (volumename) > 0.7
       for: 1m
       labels:
         severity: critical

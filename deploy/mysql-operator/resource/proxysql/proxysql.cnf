@@ -11,33 +11,18 @@ admin_variables=
 
 mysql_variables=
 {
-  monitor_slave_lag_when_null=0
-  threads=2
-  default_query_delay=0
-  default_query_timeout=36000000
-  have_compress=true
-  poll_timeout=2000
-  interfaces="0.0.0.0:6033"
-  default_schema="information_schema"
-  stacksize=1048576
-  server_version="8.0.20"
-  connect_timeout_server=3000
+
   monitor_username="{{ .Values.proxy.user | default "root"}}"
   monitor_password="{{ .Values.args.root_password  | default "Hc@Cloud01"}}"
-  monitor_history=600000
-  monitor_connect_interval=5000
-  monitor_ping_interval=2000
-  monitor_read_only_interval=1500
-  monitor_read_only_timeout=500
-  ping_interval_server_msec=15000
-  ping_timeout_server=500
-  commands_stats=true
-  sessions_sort=true
-  connect_retries_on_failure=10
-  auto_increment_delay_multiplex=0
+
+  # value.yaml中int会转化float64，转为科学计数法，导致配置错误，需要强制将float64转为int类型
   {{- range $k, $v := .Values.proxy.args }}
   {{- if regexMatch "^mysql-" $k }}
-  {{ regexReplaceAll "mysql-" $k ""}}={{$v}}
+  {{- if eq (kindOf $v) "float64" }}
+  {{ regexReplaceAll "mysql-" $k ""}}={{int $v}}
+  {{- else }}
+  {{ regexReplaceAll "mysql-" $k ""}}="{{$v}}"
+  {{- end }}
   {{- end }}
   {{- end }}
 }
