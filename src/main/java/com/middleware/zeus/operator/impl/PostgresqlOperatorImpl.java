@@ -455,9 +455,9 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         // 处理审计日志开启关闭时的参数修改
         if (middleware.getAudit() != null) {
             if (middleware.getAudit()) {
-                sb.append("args.pgaudit\\.log=WRITE\\,DDL");
+                sb.append("args.pgaudit\\\\.log=WRITE\\\\,DDL");
             } else if (!middleware.getAudit()) {
-                sb.append("args.pgaudit\\.log=none");
+                sb.append("args.pgaudit\\\\.log=NONE");
             }
         }
 
