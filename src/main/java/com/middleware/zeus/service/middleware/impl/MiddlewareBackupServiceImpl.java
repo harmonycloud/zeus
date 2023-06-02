@@ -1031,14 +1031,12 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                     && incBackupInfoA.getPause().equals(incBackupInfoB.getPause())) {
                 incBackupInfoA.setSameActiveActiveBackup(true);
                 incBackupInfoB.setSameActiveActiveBackup(true);
-                incBackupDtos.add(incBackupInfoA);
-                incBackupDtos.add(incBackupInfoB);
             } else {
                 incBackupInfoA.setSameActiveActiveBackup(false);
                 incBackupInfoB.setSameActiveActiveBackup(false);
-                incBackupDtos.add(incBackupInfoA);
-                incBackupDtos.add(incBackupInfoB);
             }
+            incBackupDtos.add(incBackupInfoA);
+            incBackupDtos.add(incBackupInfoB);
         } else {
             for (MiddlewareBackupSchedule schedule : scheduleCRList) {
                 MiddlewareIncBackupDto incBackupInfo = getIncBackupInfo(clusterId, namespace, schedule.getMetadata().getName());
@@ -1300,6 +1298,40 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     /**
+     * 比较可用区A和B的最近一次备份成功时间，并将A、B可用区的最近一次备份时间都设置为最新一次备份时间
+     * @param incBackupInfoA
+     * @param incBackupInfoB
+     */
+    private void compareAndSetLastSuccessTime(MiddlewareIncBackupDto incBackupInfoA, MiddlewareIncBackupDto incBackupInfoB) {
+        if (incBackupInfoA == null || incBackupInfoB == null) {
+            log.warn("对象为空，无法比较时间");
+            return;
+        }
+        Date successTime1 = incBackupInfoA.getSuccessTime();
+        Date successTime2 = incBackupInfoB.getSuccessTime();
+
+        // 判断 successTime 属性是否为空
+        if (successTime1 == null || successTime2 == null) {
+            log.warn("successTime 属性为空，无法比较时间");
+            if(successTime1 == null && successTime2 != null){
+                incBackupInfoA.setSuccessTime(successTime2);
+                return;
+            }
+            if(successTime1 != null){
+                incBackupInfoB.setSuccessTime(successTime1);
+                return;
+            }
+            return;
+        }
+        // 比较时间并更新
+        if (successTime1.after(successTime2)) {
+            incBackupInfoB.setSuccessTime(successTime1);
+        } else {
+            incBackupInfoA.setSuccessTime(successTime2);
+        }
+    }
+
+    /**
      * 删除增量备份产生的备份记录
      * @param clusterId
      * @param namespace
@@ -1325,7 +1357,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         lables.put("owner", scheduleName);
         List<MiddlewareBackup> backups = backupCRDService.list(clusterId, namespace, lables);
         for (MiddlewareBackup backup : backups) {
-            deleteRecord(clusterId, namespace, type, backup.getCRDName(), forceDelete);
+            deleteRecord(clusterId, namespace, type, backup.getMetadata().getName(), forceDelete);
         }
     }
 
