@@ -86,8 +86,12 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         PrometheusRule prometheusRule = prometheusRuleService.get(clusterId, namespace, middlewareName);
         // 封装告警规则文件
         List<MiddlewareAlertsDTO> middlewareAlertsDTOList = prometheusRuleService.convertPrometheusRule(prometheusRule);
+        // 过滤备份告警规则
+        middlewareAlertsDTOList = middlewareAlertsDTOList.stream()
+            .filter(middlewareAlertsDTO -> !"middlewareBackupFailed".equals(middlewareAlertsDTO.getAlert()))
+            .collect(Collectors.toList());
         // 添加符号和阈值信息
-        for (MiddlewareAlertsDTO middlewareAlertsDTO : middlewareAlertsDTOList){
+        for (MiddlewareAlertsDTO middlewareAlertsDTO : middlewareAlertsDTOList) {
             middlewareAlertsDTO.setSymbol(getSymbol(middlewareAlertsDTO.getExpr()));
             middlewareAlertsDTO.setThreshold(getThreshold(middlewareAlertsDTO.getExpr()));
         }
@@ -112,14 +116,15 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             });
             rules.addAll(prometheusRuleGroups.getRules());
         }
-        rules.removeIf(rule -> StringUtils.isEmpty(rule.getAlert()));
+        rules
+            .removeIf(rule -> StringUtils.isEmpty(rule.getAlert()) || "middlewareBackupFailed".equals(rule.getAlert()));
         // 封装数据
         List<MiddlewareAlertsDTO> middlewareAlertsDTOList = new ArrayList<>();
         rules.forEach(rule -> {
             if (filterExpr(rule.getExpr())) {
                 return;
             }
-            if (rule.getAlert().contains("-")){
+            if (rule.getAlert().contains("-")) {
                 return;
             }
             MiddlewareAlertsDTO middlewareAlertsDTO = new MiddlewareAlertsDTO();
@@ -333,7 +338,6 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             middlewareAlertsDTO.setLay(SERVICE);
             middlewareAlertsDTO.setName(alertName);
             middlewareAlertsDTO.setLevel("critical");
-            middlewareAlertsDTO.setSilence("2h");
 
             Map<String, String> labels = new HashMap<>();
             labels.put("severity", "critical");
@@ -384,7 +388,9 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             prometheusRules.getLabels().put("value", replaceValue(prometheusRules.getLabels().get("value")));
         }
         // 写入通道沉默时间
-        prometheusRules.getAnnotations().put("silence", middlewareAlertsDTO.getSilence());
+        if (StringUtils.isNotEmpty(middlewareAlertsDTO.getSilence())){
+            prometheusRules.getAnnotations().put("silence", middlewareAlertsDTO.getSilence());
+        }
         // 写入创建时间
         prometheusRules.getAnnotations().put("createTime",
                 DateUtils.dateToString(new Date(), DateUtils.YYYY_MM_DD_T_HH_MM_SS_Z));
