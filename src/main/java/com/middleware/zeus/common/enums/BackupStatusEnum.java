@@ -13,6 +13,7 @@ public enum BackupStatusEnum {
     CREATING("Creating", "创建中"),
     DELETING("Deleting", "删除中"),
     UNKNOWN("Unknown", "未知"),
+    RECYCLEFAILED("RecycleFailed", "删除失败"),
     ;
 
     private final String status;
