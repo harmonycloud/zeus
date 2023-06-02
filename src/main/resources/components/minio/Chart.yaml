@@ -5,4 +5,4 @@ appVersion: RELEASE.2021-02-14T04-01-33Z
 description: Minio by Harmonycloud
 name: minio
 type: application
-version: 1.5.39
+version: 1.5.40
