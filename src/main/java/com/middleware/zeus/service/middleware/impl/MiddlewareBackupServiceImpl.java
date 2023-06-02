@@ -1526,7 +1526,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             MiddlewareBackupRecord record = new MiddlewareBackupRecord();
             if (schedule.getMetadata().getLabels().containsKey("backupId")) {
                 BeanMiddlewareBackupName backupName = backupNameService.getByBackupId(schedule.getMetadata().getLabels().get("backupId"));
-                record.setTaskName(backupName.getBackupName());
+                if (backupName != null) {
+                    record.setTaskName(backupName.getBackupName());
+                }
             }
             if (schedule.getMetadata().getLabels().containsKey("activeArea")) {
                 String activeArea = schedule.getMetadata().getLabels().get("activeArea");
@@ -2299,6 +2301,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             return BackupStatusEnum.SUCCESS.getStatus();
         } else if (BackupStatusEnum.UNKNOWN.getStatus().equals(phrase0) && BackupStatusEnum.UNKNOWN.getStatus().equals(phrase1)) {
             return BackupStatusEnum.UNKNOWN.getStatus();
+        } else if (BackupStatusEnum.RECYCLEFAILED.getStatus().equals(phrase0) && BackupStatusEnum.RECYCLEFAILED.getStatus().equals(phrase1)) {
+            return BackupStatusEnum.RECYCLEFAILED.getStatus();
         } else {
             return BackupStatusEnum.RUNNING.getStatus();
         }
