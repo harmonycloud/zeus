@@ -91,12 +91,6 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
     @Value("${system.components.active:false}")
     private Boolean activeComponents;
 
-    @Value("${system.privateRegistry.enable:false}")
-    private boolean enablePrivateRegistry;
-
-    @Value("${system.privateRegistry.imagePullSecret:middleware-zeus-secret}")
-    private String imagePullSecret;
-
     @Deprecated
     @Override
     public List<V1HelmChartVersion> listHelmChartVersions(Registry registry, String chartName) {
@@ -643,11 +637,6 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
         String cmd = String.format("helm upgrade --install %s %s --set %s -n %s --kube-apiserver %s --kubeconfig %s ",
                 name, chartUrl, setValues, namespace, cluster.getAddress(),
                 clusterCertService.getKubeConfigFilePath(cluster.getId()));
-        if (enablePrivateRegistry) {
-            cmd = String.format("helm upgrade --install %s %s --set %s --set imagePullSecrets[0].name=%s -n %s --kube-apiserver %s --kubeconfig %s ",
-                    name, chartUrl, setValues, imagePullSecret, namespace, cluster.getAddress(),
-                    clusterCertService.getKubeConfigFilePath(cluster.getId()));
-        }
         if (StringUtils.isNotEmpty(param)){
             cmd += param;
         }
@@ -687,11 +676,6 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
         BeanImageRepository registry = imageRepositoryService.getClusterDefaultRegistry(cluster.getId());
         JSONObject values = yaml.loadAs(HelmChartUtil.getValueYaml(operatorChartPath), JSONObject.class);
         values.getJSONObject("image").put("repository", registry.getAddress());
-        // 设置imagePullSecrets
-        if (enablePrivateRegistry) {
-            this.addImagePullSecrets(values);
-        }
-
         //高可用或单实例
         if (SIMPLE.equals(type)) {
             values.put("replicaCount",1);
@@ -800,18 +784,6 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
 
     private String getLocalTgzPath(String chartName, String chartVersion){
         return middlewarePath + File.separator + chartName + "-" + chartVersion + ".tgz";
-    }
-
-    /**
-     * 添加imagePullSecrets
-     * @param values
-     */
-    private void addImagePullSecrets(JSONObject values) {
-        JSONObject ims = new JSONObject();
-        ims.put("name", imagePullSecret);
-        JSONArray imagePullSecrets = new JSONArray();
-        imagePullSecrets.add(ims);
-        values.put("imagePullSecrets", imagePullSecrets);
     }
 
     /**

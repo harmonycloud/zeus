@@ -79,8 +79,6 @@ data:
         storageTypeCheck: true
         storages: localplugin.csi.alibabacloud.com
       privateRegistry:
-        enable: false
-        imagePullSecret: middleware-zeus-secret
         updateNamespaceDefaultSecret: false
 
     overview:
