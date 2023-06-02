@@ -25,5 +25,9 @@ rules:
     redisResource: ".spec.pod[0].resources"
     redisMiddlewareImage: ".spec.pod[0].middlewareImage"
     redisPassword: ".spec.pod[0].requirepass"
+- name: rediscluster
+  mode: sentinel
+  component: predixy
+  pipePath: "pipeline-predixy.yaml"
 - name: postgresql
   pipePath: "pipeline-postgresql.yaml"
