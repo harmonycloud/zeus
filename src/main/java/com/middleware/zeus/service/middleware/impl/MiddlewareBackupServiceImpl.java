@@ -1029,8 +1029,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             }
             if (incBackupInfoA.getTime().equals(incBackupInfoB.getTime())
                     && incBackupInfoA.getPause().equals(incBackupInfoB.getPause())) {
-                // 比较可用区A和B的最近一次备份成功时间，并将A、B可用区的最近一次备份时间都设置为最新一次备份时间
-                compareAndSetLastSuccessTime(incBackupInfoA, incBackupInfoB);
                 incBackupInfoA.setSameActiveActiveBackup(true);
                 incBackupInfoB.setSameActiveActiveBackup(true);
             } else {
