@@ -5,15 +5,19 @@ import static com.middleware.zeus.common.constants.NameConstant.MEMORY;
 import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_EXPOSE_INGRESS;
 import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.NODE_AFFINITY;
 import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.PREDIXY;
+import static com.middleware.zeus.common.enums.middleware.ElasticSearchRoleEnum.*;
+import static com.middleware.zeus.common.enums.middleware.ElasticSearchRoleEnum.COLD;
 
 
 import cn.hutool.core.collection.CollectionUtil;
 import com.alibaba.fastjson.JSONArray;
 import com.middleware.zeus.common.constants.ActiveAreaConstant;
+import com.middleware.zeus.common.constants.CommonConstant;
 import com.middleware.zeus.common.constants.ContainerConstant;
 import com.middleware.zeus.common.enums.DictEnum;
 import com.middleware.zeus.common.enums.ErrorMessage;
 import com.middleware.zeus.common.enums.Protocol;
+import com.middleware.zeus.common.enums.middleware.ElasticSearchRoleEnum;
 import com.middleware.zeus.common.exception.BusinessException;
 import com.middleware.zeus.common.enums.middleware.MiddlewareTypeEnum;
 import com.middleware.zeus.common.model.*;
@@ -757,6 +761,15 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         // 获取所有pod
         List<PodInfo> podInfoList = podService.listMiddlewarePods(middleware.getClusterId(), middleware.getNamespace(),
             middleware.getName(), middleware.getType());
+        // 处理redis节点角色信息
+        for (PodInfo podInfo : podInfoList) {
+            String name = middleware.getName();
+            if (podInfo.getPodName().contains(name + CommonConstant.LINE + PREDIXY)) {
+                podInfo.setRole(PREDIXY);
+            } else if (podInfo.getPodName().contains(name + CommonConstant.LINE + SENTINEL)) {
+                podInfo.setRole(PROXY);
+            }
+        }
         // 根据pod角色进行分组
         Map<String, List<PodInfo>> podInfoMap =
             podInfoList.stream().filter(podInfo -> StringUtils.isNotEmpty(podInfo.getRole()))
