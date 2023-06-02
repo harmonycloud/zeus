@@ -61,12 +61,6 @@ public class ResourceMenuRoleServiceImpl implements ResourceMenuRoleService {
         if (StringUtils.isNotEmpty(roleId)){
             rmRoleWrapper.eq("role_id", roleId);
         }
-        List<BeanResourceMenuRole> list = beanResourceMenuRoleMapper.selectList(rmRoleWrapper);
-        if (CollectionUtils.isEmpty(list)){
-            Integer intRoleId = Integer.parseInt(roleId);
-            init(intRoleId, null);
-            updateOpsMenu(intRoleId, roleAuthorityService.checkOps(roleId, null));
-        }
         return beanResourceMenuRoleMapper.selectList(rmRoleWrapper);
     }
 
