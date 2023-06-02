@@ -12,12 +12,16 @@ metadata:
   namespace: {{ template "kube-prometheus-stack.namespace" . }}
   labels:
     app: {{ template "kube-prometheus-stack.name" . }}
+    platform: zeus
 {{ include "kube-prometheus-stack.labels" . | indent 4 }}
 {{- if .Values.defaultRules.labels }}
 {{ toYaml .Values.defaultRules.labels | indent 4 }}
 {{- end }}
 {{- if .Values.defaultRules.annotations }}
   annotations:
+    target_alias_name: 集群监控
+    target_name: cluster
+    target_type: cluster
 {{ toYaml .Values.defaultRules.annotations | indent 4 }}
 {{- end }}
 spec:
