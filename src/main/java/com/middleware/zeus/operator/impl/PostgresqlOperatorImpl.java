@@ -106,7 +106,9 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         // 主机网络配置
         if (middleware.getPostgresqlParam() != null && middleware.getPostgresqlParam().getHostNetwork() != null) {
             values.put("hostNetwork", middleware.getPostgresqlParam().getHostNetwork());
-            values.put("podAntiAffinity", "hard");
+            if (middleware.getPostgresqlParam().getHostNetwork()){
+                values.put("podAntiAffinity", "hard");
+            }
         }
 
         // 端口配置

@@ -232,7 +232,9 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
             values.getJSONObject("redis").put("hostNetwork", middleware.getRedisParam().getHostNetwork());
             values.getJSONObject("sentinel").put("hostNetwork", middleware.getRedisParam().getHostNetwork());
             values.getJSONObject("predixy").put("hostNetwork", middleware.getRedisParam().getHostNetwork());
-            values.put("podAntiAffinity", "hard");
+            if (middleware.getRedisParam().getHostNetwork()){
+                values.put("podAntiAffinity", "hard");
+            }
         }
 
         // 设置双活参数
