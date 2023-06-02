@@ -387,6 +387,11 @@ public class MysqlBackupServiceImpl implements MiddlewareBackupService {
         return false;
     }
 
+    @Override
+    public void checkSchedule() {
+
+    }
+
     private void tryCreateMiddleware(String clusterId, String namespace, String type, String middlewareName,
                                      Middleware middleware) {
         for (int i = 0; i < 600; i++) {

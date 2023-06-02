@@ -344,4 +344,9 @@ public interface MiddlewareBackupService {
      */
     boolean checkSchedule(String clusterId, String namespace, String type, String middlewareName);
 
+    /**
+     * 检查增量备份任务开关
+     */
+    void checkSchedule();
+
 }

@@ -3,6 +3,7 @@ package com.middleware.zeus.service.middleware.impl;
 import static com.middleware.zeus.common.constants.BackupConstant.*;
 import static com.middleware.zeus.common.constants.CommonConstant.INCR;
 import static com.middleware.zeus.common.constants.NameConstant.*;
+import static com.middleware.zeus.common.enums.BackupStatusEnum.SUCCESS;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -238,9 +239,11 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 scheduleCR = backupScheduleCRDService.get(clusterId, namespace, backupName);
             }
             Map<String, String> annotations = getAreaSelectorAnnotations(scheduleCR.getMetadata().getAnnotations());
-            Map<String, String> areaLabels = getAreaLabels(scheduleCR.getMetadata().getLabels());
+            Map<String, String> labels = getAreaLabels(scheduleCR.getMetadata().getLabels());
+            // labels添加waiting full backup
+            labels.put("fullBackupWaiting", "true");
             meta.setAnnotations(annotations);
-            meta.setLabels(areaLabels);
+            meta.setLabels(labels);
         }
         createOrReplaceIncBackupSchedule(incBackup, meta);
     }
@@ -283,7 +286,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             }
             try {
                 backupScheduleCRDService.update(backupDTO.getClusterId(), middlewareBackupSchedule);
-            } catch (IOException e) {
+            } catch (Exception e) {
                 log.error("中间件{}备份设置更新失败", backupDTO.getMiddlewareName());
                 throw new BusinessException(ErrorMessage.MIDDLEWARE_BACKUP_UPDATE_FAILED);
             }
@@ -309,7 +312,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 }
                 try {
                     backupScheduleCRDService.update(backupDTO.getClusterId(), incBackupScheduleCr);
-                } catch (IOException e) {
+                } catch (Exception e) {
                     log.error("中间件{}增量备份设置更新失败", backupDTO.getMiddlewareName());
                     throw new BusinessException(ErrorMessage.MIDDLEWARE_BACKUP_UPDATE_FAILED);
                 }
@@ -379,7 +382,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         }
         // 创建增量备份
         if (backupDTO.getIncrement() != null && StringUtils.isNotEmpty(backupDTO.getTime()) && backupDTO.getIncrement()) {
-            createOrReplaceIncBackup(backupDTO.getClusterId(), backupDTO.getNamespace(), meta.getName(), backupDTO.getTime(), "off", crd);
+            createOrReplaceIncBackup(backupDTO.getClusterId(), backupDTO.getNamespace(), meta.getName(), backupDTO.getTime(), "on", crd);
         }
     }
 
@@ -1295,6 +1298,35 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Override
     public boolean checkSchedule(String clusterId, String namespace, String type, String middlewareName) {
         return checkBackupScheduleExist(clusterId, namespace, middlewareName, null);
+    }
+
+    @Override
+    public void checkSchedule() {
+        List<MiddlewareClusterDTO> clusterList = clusterService.listClusters();
+        Map<String, String> labels = new HashMap<>();
+        labels.put("fullBackupWaiting", "true");
+        for (MiddlewareClusterDTO cluster : clusterList){
+            List<MiddlewareBackupSchedule> middlewareBackupScheduleList = backupScheduleCRDService.listByLabels(cluster.getId(), null, labels);
+            for (MiddlewareBackupSchedule inc : middlewareBackupScheduleList){
+                MiddlewareBackupSchedule schedule = backupScheduleCRDService.get(cluster.getId(), inc.getMetadata().getNamespace(), inc.getMetadata().getName().replace("-incr", ""));
+                if (CollectionUtils.isEmpty(schedule.getMetadata().getLabels()) && schedule.getMetadata().getLabels().containsKey("storageId")){
+                    String storageId = schedule.getMetadata().getLabels().get("storageId");
+                    Map<String, String> storageIdMap = new HashMap<>();
+                    storageIdMap.put("storageId", storageId);
+
+                    List<MiddlewareBackup> middlewareBackupList = backupCRDService.list(cluster.getId(), schedule.getMetadata().getNamespace(), storageIdMap);
+                    if (CollectionUtils.isEmpty(middlewareBackupList)){
+                        continue;
+                    }
+                    boolean fullBackup = middlewareBackupList.stream().anyMatch(middlewareBackup -> middlewareBackup.getStatus() != null && StringUtils.isNotEmpty(middlewareBackup.getStatus().getPhase()) && middlewareBackup.getStatus().getPhase().equalsIgnoreCase(SUCCESS.getStatus()));
+                    if (fullBackup){
+                        schedule.getSpec().setPause("off");
+                        schedule.getMetadata().getLabels().remove("fullBackupWaiting");
+                        backupScheduleCRDService.update(cluster.getId(), schedule);
+                    }
+                }
+            }
+        }
     }
 
     /**
@@ -2329,8 +2361,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             return BackupStatusEnum.FAILED.getStatus();
         } else if (BackupStatusEnum.CREATING.getStatus().equals(phrase0) && BackupStatusEnum.CREATING.getStatus().equals(phrase1)) {
             return BackupStatusEnum.CREATING.getStatus();
-        } else if (BackupStatusEnum.SUCCESS.getStatus().equals(phrase0) && BackupStatusEnum.SUCCESS.getStatus().equals(phrase1)) {
-            return BackupStatusEnum.SUCCESS.getStatus();
+        } else if (SUCCESS.getStatus().equals(phrase0) && SUCCESS.getStatus().equals(phrase1)) {
+            return SUCCESS.getStatus();
         } else if (BackupStatusEnum.UNKNOWN.getStatus().equals(phrase0) && BackupStatusEnum.UNKNOWN.getStatus().equals(phrase1)) {
             return BackupStatusEnum.UNKNOWN.getStatus();
         } else if (BackupStatusEnum.RECYCLEFAILED.getStatus().equals(phrase0) && BackupStatusEnum.RECYCLEFAILED.getStatus().equals(phrase1)) {

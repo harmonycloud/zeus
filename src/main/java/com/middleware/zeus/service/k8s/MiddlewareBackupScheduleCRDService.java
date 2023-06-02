@@ -36,7 +36,7 @@ public interface MiddlewareBackupScheduleCRDService {
      * @param middlewareBackupSchedule
      * @throws IOException
      */
-    void update(String clusterId, MiddlewareBackupSchedule middlewareBackupSchedule)  throws IOException;
+    void update(String clusterId, MiddlewareBackupSchedule middlewareBackupSchedule);
 
     /**
      * 查询备份

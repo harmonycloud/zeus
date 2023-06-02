@@ -63,7 +63,7 @@ public class MiddlewareBackupScheduleWrapper {
      * @param backupScheduleCr
      * @throws IOException
      */
-    public void update(String clusterId, MiddlewareBackupSchedule backupScheduleCr) throws IOException {
+    public void update(String clusterId, MiddlewareBackupSchedule backupScheduleCr) {
         // init client
         NonNamespaceOperation<MiddlewareBackupSchedule, MiddlewareBackupScheduleList,
             Resource<MiddlewareBackupSchedule>> backupScheduleClient = K8sClient.getClient(clusterId)
