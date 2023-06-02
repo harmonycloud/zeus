@@ -1309,12 +1309,11 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             List<MiddlewareBackupSchedule> middlewareBackupScheduleList = backupScheduleCRDService.listByLabels(cluster.getId(), null, labels);
             for (MiddlewareBackupSchedule inc : middlewareBackupScheduleList){
                 MiddlewareBackupSchedule schedule = backupScheduleCRDService.get(cluster.getId(), inc.getMetadata().getNamespace(), inc.getMetadata().getName().replace("-incr", ""));
-                if (CollectionUtils.isEmpty(schedule.getMetadata().getLabels()) && schedule.getMetadata().getLabels().containsKey("storageId")){
-                    String storageId = schedule.getMetadata().getLabels().get("storageId");
-                    Map<String, String> storageIdMap = new HashMap<>();
-                    storageIdMap.put("storageId", storageId);
+                if (!CollectionUtils.isEmpty(schedule.getMetadata().getLabels())){
+                    Map<String, String> ownMap = new HashMap<>();
+                    ownMap.put("owner", schedule.getMetadata().getName());
 
-                    List<MiddlewareBackup> middlewareBackupList = backupCRDService.list(cluster.getId(), schedule.getMetadata().getNamespace(), storageIdMap);
+                    List<MiddlewareBackup> middlewareBackupList = backupCRDService.list(cluster.getId(), schedule.getMetadata().getNamespace(), ownMap);
                     if (CollectionUtils.isEmpty(middlewareBackupList)){
                         continue;
                     }
