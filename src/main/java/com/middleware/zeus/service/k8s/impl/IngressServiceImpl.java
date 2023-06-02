@@ -642,7 +642,8 @@ public class IngressServiceImpl implements IngressService {
                 try {
                     if (null != tcpCR && null != tcpCR.getSpec() && !CollectionUtils.isEmpty(tcpCR.getSpec().getEntryPoints())) {
                         String entryPoint = tcpCR.getSpec().getEntryPoints().get(0);
-                        traefikPortSet.add(Integer.parseInt(entryPoint.substring(entryPoint.length() - traefikPortLength)));
+                        String regex = "[^0-9]";
+                        traefikPortSet.add(Integer.parseInt(entryPoint.replaceAll(regex, "")));
                     }
                 } catch (Exception e) {
                     log.error("获取traefik tcp 端口失败", e);
