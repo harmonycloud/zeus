@@ -97,6 +97,42 @@ logstashPipeline:
             target => "@timestamp"
             timezone => "Asia/Shanghai"
           }
+          csv {
+            columns => ["log_time","user_name","database_name","process_id","connection_from","session_id","session_line_num","command_tag","session_start_time","virtual_transaction_id","transaction_id","error_severity","sql_state_code","message_audit","detail","hint","internal_query","internal_query_pos","context","query_orgin","query_pos_orgin","location","application_name","backend_type","leader_pid","query_id"]
+          }
+          # 丢弃部分日志
+          if "AUDIT:" in [message_audit]
+          {
+            mutate {
+              add_field => { "postgres_audit" => "true" }
+            }
+          }
+          csv {
+            source => "message_audit"
+            columns => ["audit_type","statement_id","substatement_id","class","command","object_type","object_name","statement","parameter"]
+          }
+          date {
+            match => ["log_time", "yyyy-MM-dd HH:mm:ss.SSS 'CST'"]
+            target => "@timestamp"
+            timezone => "Asia/Shanghai"
+          }
+          mutate {
+            remove_field => ["@version"]
+            rename => {
+              "user_name" => "user"
+              "database_name" => "db"
+              "connection_from" => "ip"
+            }
+            copy => { "statement" => "query" }
+          }
+          # cmd命令提取
+          mutate {
+            add_field => { "cmd" => "%{[command_tag]}" }
+          }
+          mutate {
+            convert => { "cmd" => "string" }
+            uppercase => ["cmd"]
+          }
         }
         if [k8s_container_name] == "redis-cluster" {
           grok {
@@ -174,46 +210,6 @@ logstashPipeline:
           remove_field => "message"
         }
       }
-      # pgsql审计日志，默认只记录ddl操作，
-      # 如果想记录表数据的增删改，可以将psgql的参数log_statement设置为mod
-      # 如果想记录记录数据表查询操作，可以将psgql的参数log_statement设置为all
-      else if [index] == "postgresqlaudit" {
-        csv {
-          columns => ["log_time","user_name","database_name","process_id","connection_from","session_id","session_line_num","command_tag","session_start_time","virtual_transaction_id","transaction_id","error_severity","sql_state_code","message","detail","hint","internal_query","internal_query_pos","context","query_orgin","query_pos_orgin","location","application_name","backend_type","leader_pid","query_id"]
-        }
-        # 丢弃部分日志
-        if "AUDIT:" not in [message]
-        {
-          drop{}
-        }
-        csv {
-          source => "message"
-          columns => ["audit_type","statement_id","substatement_id","class","command","object_type","object_name","statement","parameter"]
-        }
-        date {
-          match => ["log_time", "yyyy-MM-dd HH:mm:ss.SSS 'CST'"]
-          target => "@timestamp"
-          timezone => "Asia/Shanghai"
-        }
-        mutate {
-          remove_field => ["@version"]
-          rename => {
-            "user_name" => "user"
-            "database_name" => "db"
-            "connection_from" => "ip"
-          }
-          copy => { "statement" => "query" }
-        }
-        # cmd命令提取
-        mutate {
-          add_field => { "cmd" => "%{[command_tag]}" }
-        }
-        mutate {
-          convert => { "cmd" => "string" }
-          uppercase => ["cmd"]
-          remove_field => "message"
-        }
-      }
     }
     # to-es
     output {
@@ -281,6 +277,15 @@ logstashPipeline:
           user => "elastic"
           password => "Hc@Cloud01"
           document_type =>"_doc"
+        }
+        if [postgres_audit] == "true"{
+          elasticsearch {
+            hosts => ["kubernetes-logging-master.logging:9200"]
+            index => "postgresqlaudit-%{+YYYY.MM.dd}"
+            user => "elastic"
+            password => "Hc@Cloud01"
+            document_type =>"_doc"
+          }
         }
       }
       else if [index] == "postgresqlaudit"{
