@@ -765,12 +765,7 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         List<PodInfoGroup> podInfoGroupList = new ArrayList<>();
         PodInfoGroup redis = new PodInfoGroup().setRole(REDIS).setPods(new ArrayList<>());
         for (String key : podInfoMap.keySet()) {
-            if (key.equals(PROXY)) {
-                PodInfoGroup podInfoGroup = new PodInfoGroup();
-                podInfoGroup.setRole(PREDIXY);
-                podInfoGroup.setPods(podInfoMap.get(key));
-                podInfoGroupList.add(podInfoGroup);
-            } else if (key.equals(SENTINEL)) {
+            if (key.equals(PROXY) || key.equals(SENTINEL)) {
                 PodInfoGroup podInfoGroup = new PodInfoGroup();
                 podInfoGroup.setRole(key);
                 podInfoGroup.setPods(podInfoMap.get(key));
