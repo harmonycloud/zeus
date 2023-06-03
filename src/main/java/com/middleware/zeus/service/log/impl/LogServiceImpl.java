@@ -205,9 +205,10 @@ public class LogServiceImpl implements LogService {
 
         List<Map<String, String>> fileMapList = new ArrayList<>();
         logFileNames.forEach(item -> {
+            // todo  是否可以不判断isPodLog，都直接切分
             if (logQuery.isPodLog()) {
                 Map<String, String> singleFileMap = new HashMap<>(8);
-                if (item.indexOf(SLASH) == -1) {
+                if (!item.contains(SLASH)) {
                     singleFileMap.put("name", logQuery.getPod());
                     singleFileMap.put("logPath", item);
                     fileMapList.add(singleFileMap);
@@ -396,6 +397,11 @@ public class LogServiceImpl implements LogService {
     public LogQuery transLogQuery(LogQueryDto logQueryDto) throws Exception {
         Assert.hasText(logQueryDto.getNamespace(), "分区不能为空");
         AssertUtil.notBlank(logQueryDto.getClusterId(), DictEnum.CLUSTER_ID);
+        // 设置pod名称
+        if (StringUtils.isEmpty(logQueryDto.getPod()) && StringUtils.isNotEmpty(logQueryDto.getLogPath())
+            && logQueryDto.getLogPath().contains(SLASH)) {
+            logQueryDto.setPod(logQueryDto.getLogPath().split(SLASH)[0]);
+        }
 
         if (StringUtils.isNotBlank(logQueryDto.getScrollId())) {
             LogQuery logQuery = new LogQuery();
@@ -539,6 +545,9 @@ public class LogServiceImpl implements LogService {
         BoolQueryBuilder queryBuilder = QueryBuilders.boolQuery().filter(timeFilter)
                 .filter(QueryBuilders.matchPhraseQuery("k8s_pod_namespace", logQuery.getNamespace()));
         queryBuilder.filter(QueryBuilders.matchPhraseQuery("middleware_name", logQuery.getMiddlewareName()));
+        if (StringUtils.isNotEmpty(logQuery.getPod())){
+            queryBuilder.filter(QueryBuilders.matchPhraseQuery("k8s_pod", logQuery.getPod()));
+        }
         if (StringUtils.isNotBlank(logQuery.getContainer())) {
             queryBuilder.filter(QueryBuilders.matchPhraseQuery("k8s_container_name", logQuery.getContainer()));
         }
