@@ -232,7 +232,7 @@ public class AlertServiceImpl implements AlertService {
             annotations.putAll(prometheusRule.getMetadata().getAnnotations());
         }
         if (alertTargetDto.getName().equals(PLATFORM)) {
-            annotations.put("target_type", PLATFORM);
+            annotations.put("target_type", SYSTEM);
         } else {
             annotations.put("target_type", CLUSTER);
         }
@@ -262,7 +262,7 @@ public class AlertServiceImpl implements AlertService {
                     ann.putAll(prometheusRules.getAnnotations());
                 }
                 if (alertTargetDto.getName().equals(PLATFORM)) {
-                    ann.put("target_type", PLATFORM);
+                    ann.put("target_type", SYSTEM);
                 } else {
                     ann.put("target_type", CLUSTER);
                 }
