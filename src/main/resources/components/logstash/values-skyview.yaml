@@ -269,14 +269,6 @@ logstashPipeline:
           }
         }
       }
-      else if [index] == "postgresqlaudit"{
-        elasticsearch {
-          hosts => ["kubernetes-logging-master.logging:9200"]
-          index => "postgresqlaudit-%{+YYYY.MM.dd}"
-          user => "elastic"
-          password => "Hc@Cloud01"
-        }
-      }
       else {
         elasticsearch {
           hosts => ["kubernetes-logging-master.logging:9200"]
