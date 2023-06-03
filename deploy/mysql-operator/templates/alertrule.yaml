@@ -2,8 +2,13 @@
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
+  annotations:
+    target_alias_name: 平台系统监控
+    target_name: platform
+    target_type: platform
   labels:
     prometheus: k8s
+    platform: zeus
     role: alert-rules
   name: {{ include "mysql.fullname" . }}
 spec:
@@ -20,6 +25,40 @@ spec:
         summary: MySQL Exporter is down
       expr: up{service='{{ include "mysql.fullname" . }}'} == 0
       for: 2m
+      labels:
+        severity: critical
+  - name: zeus-platfomr
+    rules:
+    - alert: zeusCpuUsageHigh
+      annotations:
+        message: cpu usage high for {{`{{ $labels.instance }}`}}
+        summary: cpu usage high for {{`{{ $labels.instance }}`}}
+      expr: (sum by (pod) (rate(container_cpu_usage_seconds_total{image!="",container!~"|POD",endpoint!="", pod=~"zeus-.+",namespace="zeus"}[5m]))) / (sum by (pod) (kube_pod_container_resource_requests{resource="cpu", container="scheduler", pod=~"zeus-.+", namespace="zeus"})) > 0.8
+      for: 5m
+      labels:
+        severity: critical
+    - alert: zeusMemoryUsageHigh
+      annotations:
+        message: memory usage high for {{`{{ $labels.instance }}`}}
+        summary: memory usage high for {{`{{ $labels.instance }}`}}
+      expr: (sum by (pod)(container_memory_working_set_bytes{container!~"|POD",endpoint!="",pod=~"zeus-.+",namespace="zeus"})) * 100 / (sum by (pod) (kube_pod_container_resource_requests{resource="memory",pod=~"zeus-.+",namespace="zeus"})) > 80
+      for: 5m
+      labels:
+        severity: critical
+    - alert: zeusInstanceNotReady
+      annotations:
+        message: middlewareController instance {{`{{ $labels.instance }}`}} not ready
+        summary: middlewareController instance {{`{{ $labels.instance }}`}} not ready
+      expr: kube_pod_container_status_ready{namespace="zeus",pod=~"zeus-.+"} == 0
+      for: 30s
+      labels:
+        severity: warning
+    - alert: zeusNotRunning
+      annotations:
+        message: middlewareController instance {{`{{ $labels.instance }}`}} not running
+        summary: middlewareController instance {{`{{ $labels.instance }}`}} not running
+      expr: kube_pod_container_status_running{namespace="zeus",pod=~"zeus-.+"} == 0
+      for: 30s
       labels:
         severity: critical
   - name: mysql-cluster
