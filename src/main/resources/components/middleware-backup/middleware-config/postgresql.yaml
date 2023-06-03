@@ -21,6 +21,7 @@ isRestoreMount: false
 envs:
   # 该环境变量需要置空，由WALE_S3_PREFIX代替
   WALG_S3_PREFIX: ""
+  TZ: "Asia/Shanghai"
 
 # 系统变量
 sysDynamicVariable:
@@ -34,6 +35,10 @@ sysDynamicVariable:
 
 backupDynamicVariable:
   # 为full表示是全量，inc为增量
+  SCHEDULE_NAME:
+    objectType: middlewarebackup
+    jsonPath: .metadata.labels.owner
+    type: env
   mode:
     objectType: middlewarebackup
     jsonPath: ".spec.customBackups[].env[]|select(.name==\"OPERATION_TYPE\")|if .value == \"backup-inc\" then \"inc\" else \"full\" end"

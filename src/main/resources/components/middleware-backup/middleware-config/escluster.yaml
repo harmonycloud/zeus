@@ -61,7 +61,7 @@ backupDynamicVariable:
     type: arg
 
 # pod选择器
-defaultSelector: "[.status.conditions[]|select(.type==\"data\")|.name]"
+defaultSelector: 'if .spec.clusterMode=="simple" then [.status.conditions[]|select(.type=="master")|.name] else [.status.conditions[]|select(.type=="data")|.name] end'
 # 中间件过滤器
 defaultFilterMiddleware: ".status|select(.phase==\"Running\" or .phase==\"running\")"
 # pod过滤器
