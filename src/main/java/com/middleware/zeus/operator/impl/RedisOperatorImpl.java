@@ -765,9 +765,9 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         for (PodInfo podInfo : podInfoList) {
             String name = middleware.getName();
             if (podInfo.getPodName().contains(name + CommonConstant.LINE + PREDIXY)) {
-                podInfo.setRole(PREDIXY);
-            } else if (podInfo.getPodName().contains(name + CommonConstant.LINE + SENTINEL)) {
                 podInfo.setRole(PROXY);
+            } else if (podInfo.getPodName().contains(name + CommonConstant.LINE + SENTINEL)) {
+                podInfo.setRole(SENTINEL);
             }
         }
         // 根据pod角色进行分组
