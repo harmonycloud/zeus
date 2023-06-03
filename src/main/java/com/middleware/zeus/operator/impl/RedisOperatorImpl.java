@@ -519,19 +519,27 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         JSONObject requests = new JSONObject();
         JSONObject limits = new JSONObject();
 
-        MiddlewareQuota quota = middleware.getQuota().get(middleware.getType());
-        String memory = MiddlewareResourceCalculateUtil.calculateProxyResource(quota.getMemory().replace("Gi", ""));
-        if (Double.parseDouble(memory) < 0.256) {
-            memory = String.valueOf(0.256);
-        } else if (Double.parseDouble(memory) > 2) {
-            memory = String.valueOf(2);
+        if (middleware.getQuota().containsKey(PROXY)){
+            MiddlewareQuota proxyQuota = middleware.getQuota().get(PROXY);
+            requests.put(CPU, proxyQuota.getCpu());
+            requests.put(MEMORY, proxyQuota.getMemory());
+            limits.put(CPU, proxyQuota.getCpu());
+            limits.put(MEMORY, proxyQuota.getMemory());
+        } else {
+            MiddlewareQuota quota = middleware.getQuota().get(middleware.getType());
+            String memory = MiddlewareResourceCalculateUtil.calculateProxyResource(quota.getMemory().replace("Gi", ""));
+            if (Double.parseDouble(memory) < 0.256) {
+                memory = String.valueOf(0.256);
+            } else if (Double.parseDouble(memory) > 2) {
+                memory = String.valueOf(2);
+            }
+            requests.put(CPU, "1");
+            requests.put(MEMORY, memory + "Gi");
+            limits.put(CPU, "1");
+            limits.put(MEMORY, memory + "Gi");
         }
 
-        requests.put(CPU, "1");
-        requests.put(MEMORY, memory + "Gi");
-        limits.put(CPU, "1");
-        limits.put(MEMORY, memory + "Gi");
-        Integer num = quota.getNum();
+        Integer num = middleware.getQuota().get(middleware.getType()).getNum();
         predixy.put("replicas", num / 2 == 1 ? num : num / 2);
 
         JSONObject resources = new JSONObject();

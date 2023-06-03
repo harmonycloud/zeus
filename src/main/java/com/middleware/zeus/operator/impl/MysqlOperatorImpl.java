@@ -653,24 +653,33 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         ReadWriteProxy readWriteProxy = middleware.getReadWriteProxy();
         JSONObject proxy = values.containsKey("proxy") ? values.getJSONObject("proxy") : new JSONObject();
         proxy.put("enable", readWriteProxy.getEnabled());
-        // 获取proxy节点数
-        MysqlDTO mysqlDTO = middleware.getMysqlDTO();
-        int replicaCount = mysqlDTO.getReplicaCount();
-        proxy.put("replicaCount", replicaCount + 1);
 
         JSONObject requests = new JSONObject();
         JSONObject limits = new JSONObject();
 
-        MiddlewareQuota quota = middleware.getQuota().get(middleware.getType());
-        String cpu = MiddlewareResourceCalculateUtil.calculateProxyResource(quota.getCpu());
-        String memory = MiddlewareResourceCalculateUtil.calculateProxyResource(quota.getMemory().replace("Gi", ""));
-        if (Double.parseDouble(memory) < 0.256){
-            memory = String.valueOf(0.256);
+        if (middleware.getQuota().containsKey(PROXY)){
+            MiddlewareQuota proxyQuota = middleware.getQuota().get(PROXY);
+            requests.put(CPU, proxyQuota.getCpu());
+            requests.put(MEMORY, proxyQuota.getMemory());
+            limits.put(CPU, proxyQuota.getCpu());
+            limits.put(MEMORY, proxyQuota.getMemory());
+        } else {
+            MiddlewareQuota quota = middleware.getQuota().get(middleware.getType());
+            String cpu = MiddlewareResourceCalculateUtil.calculateProxyResource(quota.getCpu());
+            String memory = MiddlewareResourceCalculateUtil.calculateProxyResource(quota.getMemory().replace("Gi", ""));
+            if (Double.parseDouble(memory) < 0.256){
+                memory = String.valueOf(0.256);
+            }
+            requests.put(CPU, cpu);
+            requests.put(MEMORY, memory + "Gi");
+            limits.put(CPU, cpu);
+            limits.put(MEMORY, memory + "Gi");
         }
-        requests.put(CPU, cpu);
-        requests.put(MEMORY, memory + "Gi");
-        limits.put(CPU, cpu);
-        limits.put(MEMORY, memory + "Gi");
+
+        // 获取proxy节点数
+        MysqlDTO mysqlDTO = middleware.getMysqlDTO();
+        int replicaCount = mysqlDTO.getReplicaCount();
+        proxy.put("replicaCount", replicaCount + 1);
 
         JSONObject resources = new JSONObject();
         resources.put("requests", requests);
