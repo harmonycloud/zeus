@@ -2,6 +2,7 @@ package com.middleware.zeus.service.log.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
+import com.middleware.zeus.bean.BeanLogMsg;
 import com.middleware.zeus.common.constants.CommonConstant;
 import com.middleware.zeus.common.constants.CoreConstant;
 import com.middleware.zeus.common.constants.DateStyle;
@@ -409,12 +410,26 @@ public class EsComponentServiceImpl implements EsComponentService {
         response = esClient.search(request, RequestOptions.DEFAULT);
         Iterator<SearchHit> it = response.getHits().iterator();
         List<MysqlLogDTO> searchResults = new ArrayList<>();
+        // 解决同pod  同container 同日志内容的数据显示问题
+        List<String> existCheckList = new ArrayList<>();
         while (it.hasNext()) {
             SearchHit sh = it.next();
             Map<String, Object> doc = sh.getSourceAsMap();
-            MysqlLogDTO mysqlSlowSqlDTO = new MysqlLogDTO();
-            mysqlSlowSqlDTO.toDTO(doc);
-            searchResults.add(mysqlSlowSqlDTO);
+            if (!doc.containsKey("query") || StringUtils.isEmpty(doc.get("query").toString())){
+                continue;
+            }
+            String queryStr = doc.get("query").toString();
+            String time = doc.get("@timestamp").toString();
+            String pod = doc.get("k8s_pod").toString();
+            String container = doc.get("k8s_container_name").toString();
+            StringBuilder sb = new StringBuilder();
+            sb.append(pod).append("-").append(container).append("-").append(time).append("-").append(queryStr);
+            if (!existCheckList.contains(sb.toString())){
+                existCheckList.add(sb.toString());
+                MysqlLogDTO mysqlSlowSqlDTO = new MysqlLogDTO();
+                mysqlSlowSqlDTO.toDTO(doc);
+                searchResults.add(mysqlSlowSqlDTO);
+            }
         }
         long totalHits = response.getHits().getTotalHits().value;
         PageObject<MysqlLogDTO> objectPageObject = new PageObject(searchResults, new Long(totalHits).intValue());

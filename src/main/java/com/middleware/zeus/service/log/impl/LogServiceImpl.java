@@ -174,11 +174,20 @@ public class LogServiceImpl implements LogService {
             scrollResp = client.scroll(request, RequestOptions.DEFAULT);
         }
         List<BeanLogMsg> logList = new ArrayList<>();
+        // 解决同pod  同container 同日志内容的数据显示问题
+        List<String> existCheckList = new ArrayList<>();
         for (SearchHit it : scrollResp.getHits().getHits()) {
             String onelogs = it.getSourceAsMap().get("message").toString();
             String offset = it.getSourceAsMap().get("offset").toString();
             String time = it.getSourceAsMap().get("@timestamp").toString();
-            logList.add(new BeanLogMsg(Long.parseLong(offset), time, onelogs));
+            String pod = it.getSourceAsMap().get("k8s_pod").toString();
+            String container = it.getSourceAsMap().get("k8s_container_name").toString();
+            StringBuilder sb = new StringBuilder();
+            sb.append(pod).append("-").append(container).append("-").append(time).append("-").append(onelogs);
+            if (!existCheckList.contains(sb.toString())){
+                existCheckList.add(sb.toString());
+                logList.add(new BeanLogMsg(Long.parseLong(offset), time, onelogs));
+            }
         }
         Map<String, Object> dataWithScrollId = new HashMap<>(2);
         dataWithScrollId.put("log", logList);
