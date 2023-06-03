@@ -522,9 +522,9 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         if (middleware.getQuota().containsKey(PROXY)){
             MiddlewareQuota proxyQuota = middleware.getQuota().get(PROXY);
             requests.put(CPU, proxyQuota.getCpu());
-            requests.put(MEMORY, proxyQuota.getMemory());
+            requests.put(MEMORY, proxyQuota.getMemory() + "Gi");
             limits.put(CPU, proxyQuota.getCpu());
-            limits.put(MEMORY, proxyQuota.getMemory());
+            limits.put(MEMORY, proxyQuota.getMemory() + "Gi");
         } else {
             MiddlewareQuota quota = middleware.getQuota().get(middleware.getType());
             String memory = MiddlewareResourceCalculateUtil.calculateProxyResource(quota.getMemory().replace("Gi", ""));
