@@ -177,3 +177,7 @@ spec:
   extraVolumes:
     {{- toYaml . | nindent 4 }}
   {{- end }}
+  {{- if .Values.customVolumes }}
+  customVolumes:
+    {{- toYaml .Values.customVolumes | nindent 4 }}
+  {{- end }}

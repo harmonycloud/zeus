@@ -62,3 +62,21 @@ Create the name of the service account to use
 {{- end }}
 {{- end }}
 
+{{/*
+If a list map has a specific value use that values, other wise use the defualt
+*/}}
+{{- define "helm.function.ifListMapHasValue" -}}
+  {{- $list := index . 0 -}}
+  {{- $Key := index . 1 -}}
+  {{- $targetValue := index . 2 -}}
+  {{- $defaultValue := index . 3 -}}
+
+  {{- $value := $defaultValue -}}
+
+  {{- range $list -}}
+    {{- if eq (index . $Key) $targetValue -}}
+      {{- $value = $targetValue -}}
+    {{- end -}}
+  {{- end -}}
+  {{- $value -}}
+{{- end -}}

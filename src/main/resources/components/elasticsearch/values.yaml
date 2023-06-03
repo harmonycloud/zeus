@@ -20,9 +20,9 @@ image:
   busyImageTag: "1.0"
   kibanaImageTag_6_8_10: 6.8.10
   kibanaImageTag_7_16_3: 7.16.3
-  initImageTag: 1.5.1
-  elasticImageTag_6_8_22: 6.8.22-3
-  elasticImageTag_7_16_3: 7.16.3-1
+  initImageTag: be52828b
+  elasticImageTag_6_8_22: 6.8.22-d7ab6b50
+  elasticImageTag_7_16_3: 7.16.3-d7ab6b50
   exporterImageTag: 1.1.0rc1
   testImageTag: v0.3
 
@@ -136,3 +136,33 @@ extraVolumeMounts: {}
 #  mountPath: /data-backup
 #  name: elasticsearch-backup
 
+#name规范为 节点类型+Node+'-'+定制目录功能，比如masterNode-data、masterNode-log、coldNode-data、clientNode-data
+customVolumes: {}
+#  - name: masterNode-data
+#    mountPath: /es/data
+#    targetContainers:
+#      - es-cluster
+#    storageClass: local-path
+#    volumeSize: 1G
+#    hostPath: /es/data
+#  - name: masterNode-logs
+#    mountPath: /es/logs
+#    targetContainers:
+#      - es-cluster
+#    storageClass: local-path
+#    volumeSize: 1G
+#    hostPath: /es/logs
+#  - name: dataNode-data
+#    mountPath: /es/datanode_data
+#    targetContainers:
+#      - es-cluster
+#    storageClass: local-path
+#    volumeSize: 1G
+#    hostPath: /es/datanode/data
+#  - name: dataNode-logs
+#    mountPath: /es/datanode_logs
+#    targetContainers:
+#      - es-cluster
+#    storageClass: local-path
+#    volumeSize: 1G
+#    hostPath: /es/datanode/logs

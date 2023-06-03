@@ -4,7 +4,7 @@ image:
   repository: harbor.middleware.com/middleware
   pullPolicy: IfNotPresent
   # Overrides the image tag whose default is the chart appVersion.
-  tag: v1.7.11
+  tag: 2e9e0942
 
 imagePullSecrets: []
 nameOverride: ""

@@ -24,13 +24,13 @@ data:
     http.cors.enabled: true
     http.cors.allow-origin: "*" 
     http.cors.allow-headers: "Authorization"
-    path.repo: {{ .Values.args.path_repo | default "/data/elastic/{ClusterName}/{PodName}/data/data_back" }}
-    path.logs: /data/elastic/{ClusterName}/{PodName}/log
-    path.data: /data/elastic/{ClusterName}/{PodName}/data
+    path.data: {DATA_PATH}
+    path.logs: {LOG_PATH}
+    path.repo: {PathRepo}
+    xpack.security.transport.ssl.keystore.path: {CONFIG_PATH}/elastic-certificates.p12
+    xpack.security.transport.ssl.truststore.path: {CONFIG_PATH}/elastic-certificates.p12
     discovery.zen.minimum_master_nodes: {minimum_master_nodes}
     xpack.security.transport.ssl.enabled: true
-    xpack.security.transport.ssl.keystore.path: /data/elastic/{ClusterName}/{PodName}/config/elastic-certificates.p12 
-    xpack.security.transport.ssl.truststore.path: /data/elastic/{ClusterName}/{PodName}/config/elastic-certificates.p12
     xpack.security.transport.ssl.verification_mode: certificate
   jvm.options: |
     ## JVM configuration
