@@ -92,7 +92,7 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
             // init object
             AlertRecordDo alertRecordDo = new AlertRecordDo();
 
-            // 区分集群/平台 和 服务 告警类型s
+            // 区分集群/平台 和 服务 告警类型
             if(annotations.containsKey("target_type") && annotations.containsKey("target_name") && annotations.containsKey("target_alias_name")){
                 alertRecordDo.setAlertType(annotations.getString("target_type"));
                 alertRecordDo.setTargetName(annotations.getString("target_name"));

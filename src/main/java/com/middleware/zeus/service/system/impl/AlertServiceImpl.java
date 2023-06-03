@@ -261,7 +261,11 @@ public class AlertServiceImpl implements AlertService {
                 if (prometheusRules.getAnnotations() != null){
                     ann.putAll(prometheusRules.getAnnotations());
                 }
-                ann.put("target_type", CLUSTER);
+                if (alertTargetDto.getName().equals(PLATFORM)) {
+                    ann.put("target_type", PLATFORM);
+                } else {
+                    ann.put("target_type", CLUSTER);
+                }
                 ann.put("target_name", alertTargetDto.getName());
                 ann.put("target_alias_name", alertTargetDto.getAliasName());
                 prometheusRules.setAnnotations(ann);
