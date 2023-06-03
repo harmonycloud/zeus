@@ -1070,6 +1070,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                     if (schedule != null) {
                         record.setActiveArea(schedule.getActiveArea());
                         record.setAreaAliasName(schedule.getAreaAliasName());
+                        record.setTaskName(schedule.getTaskName());
                     }
                     return true;
                 }
