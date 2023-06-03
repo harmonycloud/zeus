@@ -113,6 +113,7 @@ public class RedisDashboardServiceImpl implements RedisDashboardService {
             case "sentinelProxy":
                 redisMod = "single";
                 setPort(clusterId, namespace, middlewareName, true);
+                username = "";
                 host = K8sServiceNameUtil.getRedisPredixyServicePath(namespace, middlewareName);
                 break;
             default:
