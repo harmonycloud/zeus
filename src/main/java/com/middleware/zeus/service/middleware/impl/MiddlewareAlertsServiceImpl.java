@@ -320,8 +320,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
     public void editBackupAlert(String clusterId, String namespace, String middlewareName, String type, Boolean enable) {
         String alertName = "middlewareBackupFailed";
         alertUserService.delete(null, clusterId, namespace, middlewareName, BACKUP);
-        deleteRules(clusterId, namespace, middlewareName, alertName);
-        if (enable){
+        if (enable && detail(clusterId, namespace, middlewareName, alertName) == null){
             AlertUserDo alertUserDo = new AlertUserDo();
             alertUserDo.setClusterId(clusterId);
             alertUserDo.setNamespace(namespace);
