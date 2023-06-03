@@ -336,7 +336,8 @@ public class ClusterComponentServiceImpl extends AbstractBaseService implements 
             loggingService.logPilot(cluster, clusterComponentsDto);
             loggingService.logStash(cluster, clusterComponentsDto);
         }else {
-            helmChartService.uninstall(cluster, MIDDLEWARE_OPERATOR, "log");
+            helmChartService.uninstall(cluster, "logging", "log-pilot");
+            helmChartService.uninstall(cluster, "logging", "logstash");
         }
     }
 
