@@ -1320,9 +1320,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                     }
                     boolean fullBackup = middlewareBackupList.stream().anyMatch(middlewareBackup -> middlewareBackup.getStatus() != null && StringUtils.isNotEmpty(middlewareBackup.getStatus().getPhase()) && middlewareBackup.getStatus().getPhase().equalsIgnoreCase(SUCCESS.getStatus()));
                     if (fullBackup){
-                        schedule.getSpec().setPause("off");
-                        schedule.getMetadata().getLabels().remove("fullBackupWaiting");
-                        backupScheduleCRDService.update(cluster.getId(), schedule);
+                        inc.getSpec().setPause("off");
+                        inc.getMetadata().getLabels().remove("fullBackupWaiting");
+                        backupScheduleCRDService.update(cluster.getId(), inc);
                     }
                 }
             }
