@@ -102,8 +102,8 @@ public class EventServiceImpl implements EventService {
         } else {
             eventDetail.setFirstTimestamp(eventDetail.getEventTime());
         }
-        if (StringUtils.isNotBlank(event.getFirstTimestamp())) {
-            eventDetail.setLastTimestamp(DateUtils.parseUTCDate(event.getFirstTimestamp()));
+        if (StringUtils.isNotBlank(event.getLastTimestamp())) {
+            eventDetail.setLastTimestamp(DateUtils.parseUTCDate(event.getLastTimestamp()));
         } else {
             eventDetail.setLastTimestamp(eventDetail.getEventTime());
         }
