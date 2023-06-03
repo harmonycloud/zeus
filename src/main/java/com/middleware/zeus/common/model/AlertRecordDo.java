@@ -61,4 +61,7 @@ public class AlertRecordDo {
     @ApiModelProperty("告警接收时间")
     private Date alertReceiveTime;
 
+    @ApiModelProperty("是否备份告警")
+    private Boolean backupAlert;
+
 }

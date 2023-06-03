@@ -97,7 +97,10 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
                 alertRecordDo.setAlertType(annotations.getString("target_type"));
                 alertRecordDo.setTargetName(annotations.getString("target_name"));
                 alertRecordDo.setTargetAliasName(annotations.getString("target_alias_name"));
-            } else if (labels.containsKey(SERVICE)){
+            } else if (labels.containsKey(SERVICE)) {
+                if (annotations.containsKey("target_type")) {
+                    alertRecordDo.setBackupAlert(true);
+                }
                 alertRecordDo.setAlertType(SERVICE);
                 alertRecordDo.setTargetName(labels.getString(SERVICE));
                 alertRecordDo.setTargetAliasName(labels.getString(SERVICE));
@@ -134,7 +137,7 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
     private void sendAlertMessage(AlertRecordDo alertRecordDo) {
         if (StringUtils.isNoneEmpty(alertRecordDo.getClusterId(), alertRecordDo.getNamespace(), alertRecordDo.getTargetName(), alertRecordDo.getAlertType())){
             // 备份告警是否开启判断
-            if (alertRecordDo.getAlertType().equals(BACKUP)) {
+            if (alertRecordDo.getBackupAlert() != null && alertRecordDo.getBackupAlert()) {
                 if (!middlewareAlertsService.getBackupAlert(alertRecordDo.getClusterId(), alertRecordDo.getNamespace(),
                     alertRecordDo.getTargetName())) {
                     return;
