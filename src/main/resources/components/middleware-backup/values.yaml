@@ -4,7 +4,7 @@ global:
   middlewarebackup_controller:
     image: middlewarebackup-controller
     removeBinlog: "yes"
-    tag: fe2726a4
+    tag: 76f61d8b
     resources:
       limits:
         cpu: 200m
