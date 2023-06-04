@@ -3,8 +3,8 @@ global:
   crdGroup: harmonycloud
   middleware_controller:
     controller:
-      pvTopology: false
-      gracefulRestart: true
+      pvTopology: true
+      gracefulRestart: false
     image: middleware-controller
     tag: v1.2.20
     resources:
@@ -51,8 +51,27 @@ global:
       type: ClusterIP
       port: 8080
     nodeSelector: {}
-
-podAntiAffinityTopologKey: "kubernetes.io/hostname"
-
+  middlewarebackup_controller:
+    job_creator:
+      jobServiceAccount: default
+      jobTolerations: harm.cn/type,harm.cn/system
+podAntiAffinityTopologKey: "zone"
 #取值[hard|soft] hard:强制反亲和 soft:非强制反亲和
 podAntiAffinity: "soft"
+tolerations:
+  - effect: NoSchedule
+    key: harm.cn/type
+    value: active-active
+  - effect: NoSchedule
+    key: harm.cn/system
+nodeAffinity:
+  preferredDuringSchedulingIgnoredDuringExecution:
+    - weight: 100
+      preference:
+        matchExpressions:
+          - key: system
+            operator: In
+            values:
+              - "true"
+imagePullSecrets:
+  - name: registrysecret
