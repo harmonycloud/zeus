@@ -1,0 +1,48 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: k8s
+    platform: zeus
+    role: alert-rules
+  annotations:
+    target_type: cluster
+    target_alias_name: "监控面板"
+    target_name: grafana
+  name: grafana-rules
+spec:
+  groups:
+    - name: middleware-rules
+      rules:
+        - alert: grafanaCpuUsageHigh
+          annotations:
+            message: cpu usage high for {{`{{ $labels.pod }}`}}
+            summary: cpu usage high for {{`{{ $labels.pod }}`}}
+          expr: (sum by (pod) (rate(container_cpu_usage_seconds_total{image!="",container!~"|POD",endpoint!="", pod=~"grafana-.+",namespace="monitoring"}[5m]))) / (sum by (pod) (kube_pod_container_resource_requests{resource="cpu", container="scheduler", pod=~"grafana-.+", namespace="monitoring"})) > 0.8
+          for: 5m
+          labels:
+            severity: critical
+        - alert: grafanaMemoryUsageHigh
+          annotations:
+            message: memory usage high for {{`{{ $labels.pod }}`}}
+            summary: memory usage high for {{`{{ $labels.pod }}`}}
+          expr: (sum by (pod)(container_memory_working_set_bytes{container!~"|POD",endpoint!="",pod=~"grafana-.+",namespace="monitoring"})) * 100 / (sum by (pod) (kube_pod_container_resource_requests{container="scheduler",resource="memory",pod=~"grafana-.+",namespace="monitoring"})) > 80
+          for: 5m
+          labels:
+            severity: critical
+        - alert: grafanaInstanceNotReady
+          annotations:
+            message: grafana instance {{`{{ $labels.instance }}`}} not ready
+            summary: grafana instance {{`{{ $labels.instance }}`}} not ready
+          expr: kube_pod_container_status_ready{namespace="monitoring",pod=~"grafana-.+"} == 0
+          for: 30s
+          labels:
+            severity: warning
+        - alert: grafanaInstanceNotRunning
+          annotations:
+            message: grafana instance {{`{{ $labels.instance }}`}} not running
+            summary: grafana instance {{`{{ $labels.instance }}`}} not running
+          expr: kube_pod_container_status_running{namespace="monitoring",pod=~"grafana-.+"} == 0
+          for: 30s
+          labels:
+            severity: critical
