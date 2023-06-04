@@ -5,7 +5,7 @@ global:
   replicaCount: 1
   zeus:
     image: zeus
-    tag: v1.3.3
+    tag: v1.3.3-hk
     pullPolicy: Always
     resources:
       requests:
