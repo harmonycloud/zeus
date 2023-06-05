@@ -274,6 +274,12 @@
         <dependency>
             <groupId>com.middleware.caas</groupId>
             <artifactId>filters</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.middleware.caas</groupId>
+                    <artifactId>common</artifactId>
+                </exclusion>
+            </exclusions>
             <version>3.0.0</version>
         </dependency>
 
