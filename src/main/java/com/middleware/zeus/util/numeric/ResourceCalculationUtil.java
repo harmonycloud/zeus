@@ -29,20 +29,17 @@ public class ResourceCalculationUtil {
         switch (resourceType) {
             case "cpu":
                 //将resource转换成单位为m的值，然后根据返回单位返回对应的值
-//                BigDecimal valueInUnitM = null;
-//                if (resource.contains("m")) {
-//                    valueInUnitM = new BigDecimal(resource.replace("m", ""));
-//                } else {
-//                    valueInUnitM = new BigDecimal(resource).multiply(new BigDecimal("1000"));
-//                }
-//                if ("m".equalsIgnoreCase(unit)) {
-//                    return roundNumber(valueInUnitM, decimalCount, roundingMode);
-//                } else if ("".equalsIgnoreCase(unit)){
-//                    return roundNumber(valueInUnitM.divide(new BigDecimal("1000")), decimalCount, roundingMode);
-//                }
-                BigDecimal milliResource = CpuUnitEnum.toMilli(resource);
-                BigDecimal unitCpuResource = CpuUnitEnum.milliToUnit(milliResource, unit);
-                return roundNumber(unitCpuResource, decimalCount, roundingMode);
+                BigDecimal valueInUnitM = null;
+                if (resource.contains("m")) {
+                    valueInUnitM = new BigDecimal(resource.replace("m", ""));
+                } else {
+                    valueInUnitM = new BigDecimal(resource).multiply(new BigDecimal("1000"));
+                }
+                if ("m".equalsIgnoreCase(unit)) {
+                    return roundNumber(valueInUnitM, decimalCount, roundingMode);
+                } else if ("".equalsIgnoreCase(unit)){
+                    return roundNumber(valueInUnitM.divide(new BigDecimal("1000")), decimalCount, roundingMode);
+                }
             case "memory":
             case "disk":
                 BigDecimal byteResource = MemoryUnitEnum.toByte(resource);
