@@ -28,8 +28,13 @@ public class ScheduleTask {
     private MiddlewareBackupService middlewareBackupService;
 
     @Scheduled(fixedDelayString = "${system.license.refresh:30000}", initialDelay = 10 * 1000)
-    public void calculateCpu() throws Exception{
-        //licenseService.refreshMiddlewareResource();
+    public void calculateCpu() {
+        try {
+            licenseService.refreshMiddlewareResource();
+        } catch (Exception e){
+            log.error("刷新中间件资源使用情况失败");
+            log.debug("刷新中间件资源使用情况失败, e");
+        }
     }
 
     @Scheduled(cron = "${es.log.cron:0 0 0 * * ?}")

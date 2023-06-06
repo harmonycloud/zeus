@@ -240,8 +240,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             }
             Map<String, String> annotations = getAreaSelectorAnnotations(scheduleCR.getMetadata().getAnnotations());
             Map<String, String> labels = getAreaLabels(scheduleCR.getMetadata().getLabels());
-            // labels添加waiting full backup
-            labels.put("fullBackupWaiting", "true");
+
             meta.setAnnotations(annotations);
             meta.setLabels(labels);
         }
@@ -459,8 +458,11 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         Map<String, String> backupLabel = objectMeta.getLabels();
         if (backupLabel == null) {
             backupLabel = new HashMap<>();
-            objectMeta.setLabels(backupLabel);
         }
+        // labels添加waiting full backup
+        backupLabel.put("fullBackupWaiting", "true");
+        objectMeta.setLabels(backupLabel);
+
         backupLabel.put("middleware", cr.getSpec().getType() + "-" + cr.getSpec().getName());
         backupLabel.put("owner", backupName);
 
