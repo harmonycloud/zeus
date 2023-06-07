@@ -7,6 +7,7 @@ import com.middleware.zeus.common.model.AlertUserDo;
 import com.middleware.zeus.bean.BeanSystemConfig;
 import com.middleware.zeus.dao.*;
 import com.middleware.zeus.dao.BeanAlertRecordMapper;
+import com.middleware.zeus.service.middleware.AlertRecordService;
 import com.middleware.zeus.service.middleware.MiddlewareAlertsService;
 import com.middleware.zeus.bean.BeanAlertRecord;
 import com.middleware.zeus.service.system.AlertNotifierService;
@@ -47,17 +48,13 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
     private String silentTime;
 
     @Autowired
-    private BeanAlertRecordMapper beanAlertRecordMapper;
-    @Autowired
-    private DingRobotService dingRobotService;
+    private AlertRecordService alertRecordService;
     @Autowired
     private MailService mailService;
     @Autowired
     private AlertManagerWrapper alertManagerWrapper;
     @Autowired
     private MiddlewareAlertsService middlewareAlertsService;
-    @Autowired
-    private AlertService alertService;
     @Autowired
     private BeanSystemConfigMapper beanSystemConfigMapper;
     @Autowired
@@ -123,7 +120,7 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
             alertRecordDo.setAlertReceiveTime(new Date());
 
             // 数据库记录告警记录
-            saveRecord(alertRecordDo);
+            alertRecordService.insert(alertRecordDo);
 
             // 设置通道沉默时间
             if (StringUtils.isNotEmpty(alertRecordDo.getClusterId())) {
@@ -161,23 +158,6 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
             alertNotifierService.sendSMSAlertMessage(alertRecordDo, alertUserDoList);
         }
 
-    }
-
-    public void saveRecord(AlertRecordDo recordDo){
-        BeanAlertRecord beanAlertRecord = new BeanAlertRecord();
-        beanAlertRecord.setName(recordDo.getTargetName());
-        beanAlertRecord.setAliasName(recordDo.getTargetAliasName());
-        beanAlertRecord.setNamespace(recordDo.getNamespace());
-        beanAlertRecord.setType(recordDo.getMiddlewareType());
-        beanAlertRecord.setLay(recordDo.getAlertType());
-        beanAlertRecord.setClusterId(recordDo.getClusterId());
-        beanAlertRecord.setAlert(recordDo.getAlertName());
-        beanAlertRecord.setLevel(recordDo.getLevel());
-        beanAlertRecord.setSummary(recordDo.getSummary());
-        beanAlertRecord.setMessage(recordDo.getMessage());
-        beanAlertRecord.setAlertTime(recordDo.getAlertTime());
-        beanAlertRecord.setAlertReceiveTime(recordDo.getAlertReceiveTime());
-        beanAlertRecordMapper.insert(beanAlertRecord);
     }
 
     /**
