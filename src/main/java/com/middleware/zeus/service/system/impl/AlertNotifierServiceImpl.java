@@ -40,8 +40,7 @@ public class AlertNotifierServiceImpl implements AlertNotifierService {
             // 调用方法
             res = (JSONArray) method.invoke(smsService, alertRecord, alertUsers);
         } catch (Exception e) {
-            log.error("调用外部告警服务失败");
-            e.printStackTrace();
+            log.error("调用外部告警服务smsComponent失败");
         }
         return res;
     }
