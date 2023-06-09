@@ -470,7 +470,7 @@ public abstract class AbstractClusterService {
                 }
                 // 查询pvc使用量
                 try {
-                    String pvcUsedQuery = "sum(used_size_kb{pod=~\"" + pvcs.toString() + "\"}) /1024/1024";
+                    String pvcUsedQuery = "sum(used_size_kb{pv=~\"" + pvcs.toString() + "\"}) /1024/1024";
                     Double pvcUsed = prometheusResourceMonitorService.queryAndConvert(clusterId, pvcUsedQuery);
                     mwRsInfo.setPer5MinStorage(pvcUsed);
                 } catch (Exception e) {
