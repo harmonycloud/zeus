@@ -1032,8 +1032,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             if (incBackupInfoA == null || incBackupInfoB == null) {
                 return Collections.emptyList();
             }
-            if (incBackupInfoA.getTime().equals(incBackupInfoB.getTime())
-                    && incBackupInfoA.getPause().equals(incBackupInfoB.getPause())) {
+            if (incBackupInfoA.getTime().equals(incBackupInfoB.getTime())) {
                 incBackupInfoA.setSameActiveActiveBackup(true);
                 incBackupInfoB.setSameActiveActiveBackup(true);
             } else {
