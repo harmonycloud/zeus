@@ -1196,20 +1196,13 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
 
     @Override
     public boolean activeActiveMiddlewareCheck(String clusterId, String namespace, String middlewareName, String type) {
-        boolean openAvailableDomain = namespaceService.isOpenAvailableDomain(clusterId, namespace);
         String mode = helmChartService.getMiddlewareMode(middlewareName, namespace, clusterId);
         Boolean activeMode = MiddlewareModeUtil.activeActiveModeCheck(type, mode);
         if (!activeMode) {
             return false;
         }
-        List<PodInfo> podInfos = podService.listMiddlewarePodsWithArea(clusterId, namespace, middlewareName, type);
-        boolean activeActiveMiddleware = true;
-        for (PodInfo podInfo : podInfos) {
-            if (StringUtils.isEmpty(podInfo.getNodeZone())) {
-                activeActiveMiddleware = false;
-            }
-        }
-        return activeMode && openAvailableDomain && activeActiveMiddleware;
+        JSONObject values = helmChartService.getInstalledValues(middlewareName, namespace, clusterService.findById(clusterId));
+        return values != null && values.containsKey("podAntiAffinityTopologKey") && "zone".equals(values.getString("podAntiAffinityTopologKey"));
     }
 
     @Override

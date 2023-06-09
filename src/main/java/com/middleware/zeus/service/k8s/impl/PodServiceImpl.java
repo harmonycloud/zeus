@@ -500,8 +500,10 @@ public class PodServiceImpl implements PodService {
         }
         // 添加pod额外角色类型
         podInfoList = addPodExtraRole(clusterId, namespace, middlewareName, type, podInfoList, mw);
-        // 设置pod所在可用区
-        this.setPodArea(clusterId, podInfoList);
+        // 如果中间件是双活中间件，则设置pod所在可用区
+        if (middlewareService.activeActiveMiddlewareCheck(clusterId, namespace, middlewareName, type)) {
+            this.setPodArea(clusterId, podInfoList);
+        }
         middleware.setPodInfoGroup(convertPodListToGroup(podInfoList));
         middleware.setPods(podInfoList);
         return middleware;

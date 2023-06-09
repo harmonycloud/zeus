@@ -562,30 +562,12 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         String middlewareName = backupDTO.getMiddlewareName();
         boolean activeActiveNamespace = namespaceService.isOpenAvailableDomain(clusterId, namespace);
         BeanBackupServer backupServer = backupPositionService.getBackupServer(backupDTO.getBackupPositionId());
-
-        if (activeActiveNamespace && (backupServer.getType() == 2) && checkActiveActiveMiddleware(clusterId, namespace, middlewareName, backupDTO.getType())) {
+        boolean activeMiddleware = middlewareService.activeActiveMiddlewareCheck(clusterId, namespace, middlewareName, backupDTO.getType());
+        if (activeActiveNamespace && (backupServer.getType() == 2) && activeMiddleware) {
             String type = backupDTO.getType();
             return type.equals(MiddlewareTypeEnum.MYSQL.getType()) || type.equals(MiddlewareTypeEnum.POSTGRESQL.getType()) || type.equals(MiddlewareTypeEnum.REDIS.getType());
         }
         return false;
-    }
-
-    /**
-     * 检查中间件是否是双活中间件，双活中间件：所有pod所在节点都是可用区
-     *
-     * @param clusterId
-     * @param namespace
-     * @param middlewareName
-     * @return
-     */
-    private boolean checkActiveActiveMiddleware(String clusterId, String namespace, String middlewareName, String type) {
-        List<PodInfo> podInfos = podService.listMiddlewarePodsWithArea(clusterId, namespace, middlewareName, type);
-        for (PodInfo podInfo : podInfos) {
-            if (StringUtils.isEmpty(podInfo.getNodeZone())) {
-                return false;
-            }
-        }
-        return true;
     }
 
     private Integer calRetentionTime(MiddlewareBackupDTO backupDTO) {

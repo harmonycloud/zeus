@@ -291,7 +291,7 @@ public interface MiddlewareService {
     String getManagePlatformServicePort(String clusterId, String namespace, String name, String type);
 
     /**
-     * 检查中间件是否是双活中间件,双活中间件：可用区是双活可用区，并且pod运行在可用区node上
+     * 检查中间件是否是双活中间件,双活中间件：可用区是双活可用区，并且values.yaml有设置podAntiAffinityTopologKey: zone
      * @param clusterId
      * @param namespace
      * @param middlewareName
