@@ -55,7 +55,7 @@ public class EventServiceImpl implements EventService {
                 return false;
             }
 
-            if (StringUtils.isNotBlank(kind) && !kind.equals(e.getKind())) {
+            if (StringUtils.isNotBlank(kind) && !kind.equals(e.getInvolvedObject().getKind())) {
                 return false;
             }
             // 过滤中间件信息
