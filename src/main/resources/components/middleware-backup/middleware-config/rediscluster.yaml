@@ -58,8 +58,7 @@ backupDynamicVariable:
     scope: pod
     type: arg
   pvcName:
-    jsonPath: .spec.volumes[].persistentVolumeClaim.claimName
-    objectType: pod
+    jsonPath: ".spec.customBackups[].commonPathBackupObjects[]|select(.pod==\"{POD_NAME}\")|.pvcObjects[].pvc"
     type: arg
     scope: pod
   paths:
