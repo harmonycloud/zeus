@@ -319,15 +319,18 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
     @Override
     public void editBackupAlert(String clusterId, String namespace, String middlewareName, String type, Boolean enable) {
         String alertName = "middlewareBackupFailed";
+        // 备份告警通知开关更新
         alertUserService.delete(null, clusterId, namespace, middlewareName, BACKUP);
-        if (enable && detail(clusterId, namespace, middlewareName, alertName) == null){
+        if (enable){
             AlertUserDo alertUserDo = new AlertUserDo();
             alertUserDo.setClusterId(clusterId);
             alertUserDo.setNamespace(namespace);
             alertUserDo.setName(middlewareName);
             alertUserDo.setAlertType(BACKUP);
             alertUserService.add(alertUserDo);
+        }
 
+        if (detail(clusterId, namespace, middlewareName, alertName) == null){
             // 添加告警规则
             MiddlewareAlertsDTO middlewareAlertsDTO = new MiddlewareAlertsDTO();
             middlewareAlertsDTO.setAlert(alertName);
