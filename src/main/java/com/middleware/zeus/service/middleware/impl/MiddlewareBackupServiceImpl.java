@@ -1032,8 +1032,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             if (incBackupInfoA == null || incBackupInfoB == null) {
                 return Collections.emptyList();
             }
-            if (incBackupInfoA.getTime().equals(incBackupInfoB.getTime())
-                    && incBackupInfoA.getPause().equals(incBackupInfoB.getPause())) {
+            if (incBackupInfoA.getTime().equals(incBackupInfoB.getTime())) {
                 incBackupInfoA.setSameActiveActiveBackup(true);
                 incBackupInfoB.setSameActiveActiveBackup(true);
             } else {
@@ -1533,25 +1532,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         return recordList;
     }
 
-    public static void main(String[] args) {
-        List<Integer> s = new ArrayList<>();
-        s.add(null);
-        s.add(2);
-        s.add(null);
-        s.add(null);
-        s.add(5);
-        s.add(4);
-        s.sort(((o1, o2) -> {
-            if (o1 == null) {
-                return 1;
-            }
-            if (o2 == null) {
-                return -1;
-            }
-            return o1.compareTo(o2);
-        }));
-        System.out.println("ok");
-    }
 
     /**
      * 根据备份任务id查询周期备份任务名字列表

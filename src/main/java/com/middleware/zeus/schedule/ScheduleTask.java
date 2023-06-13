@@ -1,6 +1,7 @@
 package com.middleware.zeus.schedule;
 
-import com.middleware.zeus.service.log.LogService;
+
+import com.middleware.zeus.service.middleware.AlertRecordService;
 import com.middleware.zeus.service.middleware.MiddlewareBackupService;
 import com.middleware.zeus.service.system.LicenseService;
 import lombok.extern.slf4j.Slf4j;
@@ -21,11 +22,11 @@ public class ScheduleTask {
 
     @Autowired
     private LicenseService licenseService;
-    @Autowired
-    private LogService logService;
     @Qualifier("middlewareBackupServiceImpl")
     @Autowired
     private MiddlewareBackupService middlewareBackupService;
+    @Autowired
+    private AlertRecordService alertRecordService;
 
     @Scheduled(fixedDelayString = "${system.license.refresh:30000}", initialDelay = 10 * 1000)
     public void calculateCpu() {
@@ -37,19 +38,19 @@ public class ScheduleTask {
         }
     }
 
-    @Scheduled(cron = "${es.log.cron:0 0 0 * * ?}")
-    public void logCleanSchedule() {
-//        try {
-//            logService.cleanHistoryLog();
-//        } catch (Exception e){
-//            log.error("定时清理日志失败", e);
-//        }
+    @Scheduled(cron = "${system.alert.record.cron:0 0 0 * * ?}")
+    public void alertRecordClear() {
+        try {
+            alertRecordService.clear();
+        } catch (Exception e){
+            log.error("清理过期告警记录失败");
+            log.error("清理过期告警记录失败", e);
+        }
     }
 
     @Scheduled(cron = "0 */5 * ? * *")
     public void incBackupScheduleCheck() {
         try {
-            log.info("开始同步查询增量备份任务");
             middlewareBackupService.checkSchedule();
         } catch (Exception e){
             log.error("定时查询增量周期备份失败");

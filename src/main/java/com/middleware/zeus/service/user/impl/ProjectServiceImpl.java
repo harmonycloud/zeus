@@ -1,5 +1,6 @@
 package com.middleware.zeus.service.user.impl;
 
+import static com.middleware.zeus.common.constants.AlertConstant.SERVICE;
 import static com.middleware.zeus.common.constants.CommonConstant.NUM_TWO;
 import static com.middleware.zeus.common.constants.NameConstant.*;
 import static com.middleware.zeus.common.constants.user.UserConstant.USERNAME;
@@ -12,6 +13,7 @@ import com.middleware.zeus.common.model.ProjectBackupServerDTO;
 import com.middleware.zeus.common.model.ResourceQuotaDo;
 import com.middleware.zeus.common.model.StorageDto;
 import com.middleware.zeus.common.model.StorageQuota;
+import com.middleware.zeus.service.system.AlertUserService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -92,6 +94,8 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
     private StorageService storageService;
     @Autowired
     private OrganizationService organizationService;
+    @Autowired
+    private AlertUserService alertUserService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -274,7 +278,15 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
 
     @Override
     public void unbindUser(String organId, String projectId, String username) {
+        // 移除项目用户绑定关系
         userRoleService.delete(username, organId, projectId, null);
+        // 移除该项目下中间件告警通知
+        if (StringUtils.isNotEmpty(username)){
+            List<Namespace> namespaceList = getNamespace(organId, projectId);
+            for (Namespace namespace : namespaceList){
+                alertUserService.delete(username, null, namespace.getName(), null, SERVICE);
+            }
+        }
     }
 
     @Override

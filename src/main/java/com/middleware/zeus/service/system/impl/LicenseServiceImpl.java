@@ -235,8 +235,8 @@ public class LicenseServiceImpl implements LicenseService {
         }
         Double produce = calculateCpu(produceList);
         Double test = calculateCpu(testList);
-        log.info("produce cpu count: {}", produce);
-        log.info("test cpu count: {}", test);
+        log.debug("produce cpu count: {}", produce);
+        log.debug("test cpu count: {}", test);
         updateSysConfig(PRODUCE, String.valueOf(produce));
         updateSysConfig(TEST, String.valueOf(test));
     }

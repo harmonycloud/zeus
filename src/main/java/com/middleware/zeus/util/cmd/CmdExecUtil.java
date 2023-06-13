@@ -70,7 +70,7 @@ public class CmdExecUtil {
         Process p = null;
         try {
             String[] cmdArr = new String[] {"/bin/sh", "-c", cmd};
-            logger.info("执行命令 : {}", Arrays.toString(cmdArr));
+            logger.debug("执行命令 : {}", Arrays.toString(cmdArr));
             p = Runtime.getRuntime().exec(cmdArr);
             BufferedReader stdInput = new BufferedReader(new InputStreamReader(p.getInputStream()));
             BufferedReader stdError = new BufferedReader(new InputStreamReader(p.getErrorStream()));
@@ -82,9 +82,10 @@ public class CmdExecUtil {
                 dealErr.apply(res);
             }
             int runningStatus = p.waitFor();
-            logger.info("执行状态 : {}", runningStatus);
+            logger.debug("执行状态 : {}", runningStatus);
         } catch (Exception e) {
-            logger.error("执行异常", e);
+            logger.error("执行语句{} 出现异常", cmd);
+            logger.debug("执行语句{} 出现异常", cmd, e);
             throw new RuntimeException("Run command error : " + e.getMessage());
         } finally {
             if (p != null) {
