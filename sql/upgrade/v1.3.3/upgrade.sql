@@ -43,3 +43,7 @@ alter table alert_record add alias_name varchar(128) CHARACTER SET utf8mb4 COLLA
 -- menu菜单更新
 DELETE FROM middleware_platform.resource_menu WHERE id = 21;
 UPDATE resource_menu t SET t.alias_name = '告警中心', t.url = 'monitorAlarm/alarmCenter/system' WHERE t.id = 16;
+
+-- 20230613 xutianhong
+-- 告警记录表更新
+alter table alert_record modify message text CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci null comment '告警信息';
