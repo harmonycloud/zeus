@@ -155,7 +155,7 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
             }
 
             // todo 短信通知
-            alertNotifierService.sendSMSAlertMessage(alertRecordDo, alertUserDoList);
+            //alertNotifierService.sendSMSAlertMessage(alertRecordDo, alertUserDoList);
         }
 
     }
