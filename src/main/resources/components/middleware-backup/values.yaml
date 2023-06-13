@@ -4,7 +4,7 @@ global:
   middlewarebackup_controller:
     image: middlewarebackup-controller
     removeBinlog: "yes"
-    tag: 76f61d8b
+    tag: 662e7ffe
     resources:
       limits:
         cpu: 200m
@@ -23,10 +23,10 @@ global:
       tag: v1.0.4
     common_path_backup:
       image: middleware-backup-operator
-      tag: v1.0.6-common
+      tag: common-958df34f
     job_pgsql_backup:
       image: middleware-backup-operator
-      tag: aed02372
+      tag: 8adf9733
     job_mysql_backup:
       image: middleware-backup-operator
       tag: 57-ac03749c
