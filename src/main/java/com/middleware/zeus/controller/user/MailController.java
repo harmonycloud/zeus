@@ -42,11 +42,11 @@ public class MailController {
 
     @ApiOperation(value = "邮箱连接测试", notes = "邮箱连接测试")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "email", value = "邮箱", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "password", value = "密码", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "mailInfo", value = "邮箱信息", paramType = "query", dataTypeClass = MailInfo.class),
     })
-    @GetMapping("/connect")
-    public BaseResult connect(@RequestParam String email,@RequestParam String password) {
-        return BaseResult.ok(mailService.checkEmail(email, password));
+    @PostMapping("/connect")
+    public BaseResult connect(@RequestBody MailInfo mailInfo) {
+        mailService.checkEmail(mailInfo);
+        return BaseResult.ok();
     }
 }
