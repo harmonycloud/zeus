@@ -4,7 +4,7 @@ global:
   middlewarebackup_controller:
     image: middlewarebackup-controller
     removeBinlog: "yes"
-    tag: 662e7ffe
+    tag: d53d2ebb
     resources:
       limits:
         cpu: 200m
@@ -14,19 +14,19 @@ global:
         memory: 512Mi
     nodeSelector: {}
     job_creator:
-      jobTolerations: harm.cn/type,harm.cn/system
+      jobTolerations: harm.cn/type
       jobNamespace: ""
-      jobServiceAccount: default
+      jobServiceAccount: job-creator
       # jobSecondsAfterFinished: 60
       # jobActiveDeadlineSeconds: 86400
       image: backup-job-creator
-      tag: v1.0.4
+      tag: 5af0bbbb
     common_path_backup:
       image: middleware-backup-operator
-      tag: common-958df34f
+      tag: 3f8e4817
     job_pgsql_backup:
       image: middleware-backup-operator
-      tag: 8adf9733
+      tag: 9db55be3
     job_mysql_backup:
       image: middleware-backup-operator
       tag: 57-ac03749c
@@ -44,23 +44,8 @@ global:
     nodeSelector: {}
     tolerations: []
     affinity: {}
-podAntiAffinityTopologKey: "zone"
+
+podAntiAffinityTopologKey: "kubernetes.io/hostname"
+
 #取值[hard|soft] hard:强制反亲和 soft:非强制反亲和
 podAntiAffinity: "soft"
-tolerations:
-  - effect: NoSchedule
-    key: harm.cn/type
-    value: active-active
-  - effect: NoSchedule
-    key: harm.cn/system
-nodeAffinity:
-  preferredDuringSchedulingIgnoredDuringExecution:
-    - weight: 100
-      preference:
-        matchExpressions:
-          - key: system
-            operator: In
-            values:
-              - "true"
-imagePullSecrets:
-  - name: registrysecret
