@@ -4,6 +4,7 @@ import com.middleware.zeus.common.base.BaseResult;
 import com.middleware.zeus.annotation.ExcludeAuditMethod;
 import com.middleware.zeus.common.model.AlertRecordDo;
 import com.middleware.zeus.common.model.AlertUserDo;
+import com.middleware.zeus.common.model.AlertUserDto;
 import com.middleware.zeus.service.prometheus.PrometheusWebhookService;
 import com.middleware.zeus.service.system.AlertNotifierService;
 import io.swagger.annotations.Api;
@@ -16,6 +17,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -46,6 +48,5 @@ public class PrometheusWebhookController {
         prometheusWebhookService.alert(json);
         return BaseResult.ok();
     }
-
 
 }

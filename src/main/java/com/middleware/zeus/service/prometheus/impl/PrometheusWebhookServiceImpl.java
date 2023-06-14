@@ -62,6 +62,9 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
     @Autowired
     private AlertNotifierService alertNotifierService;
 
+    @Value("${system.alert.enableSMS:false}")
+    private Boolean enableSMS;
+
     @Override
     public void alert(String json) throws Exception {
         JSONObject object = JSONObject.parseObject(json);
@@ -126,8 +129,10 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
             if (StringUtils.isNotEmpty(alertRecordDo.getClusterId())) {
                 setSilence(alert, alertRecordDo.getClusterId());
             }
-            // 发送告警通知
-            sendAlertMessage(alertRecordDo);
+            // 如果集群id不为空，发送告警通知
+            if (StringUtils.isNotEmpty(alertRecordDo.getClusterId())) {
+                sendAlertMessage(alertRecordDo);
+            }
         }
     }
 
@@ -154,8 +159,10 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
                 log.error("集群{} 发送告警{} 失败", alertRecordDo.getClusterId(), alertRecordDo.getAlertName(), e);
             }
 
-            // todo 短信通知
-            alertNotifierService.sendSMSAlertMessage(alertRecordDo, alertUserDoList);
+            // 短信通知
+            if (enableSMS) {
+                alertNotifierService.sendSMSAlertMessage(alertRecordDo, alertUserDoList);
+            }
         }
 
     }

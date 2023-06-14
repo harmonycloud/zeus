@@ -22,25 +22,29 @@ import java.util.List;
 @Service
 public class AlertNotifierServiceImpl implements AlertNotifierService {
 
-    @Value("${system.alert.alertNotifierService:smsService}")
+    @Value("${system.alert.smsServiceName:smsService}")
     private String alertNotifierService;
 
     @Value("${system.alert.alertNotifierMethod:sendAlertMessage}")
     private String alertNotifierMethod;
 
+    @Value("${system.alert.smsUrl:http://localhost:8099/sms/sendsms}")
+    private String smsUrl;
+
     @Override
-    public JSONArray sendSMSAlertMessage(AlertRecordDo alertRecordDo, List<AlertUserDo> alertUserDoList) {
-        JSONArray res = new JSONArray();
+    public Object sendSMSAlertMessage(AlertRecordDo alertRecordDo, List<AlertUserDo> alertUserDoList) {
+        Object res = new Object();
         try {
             Object smsService = SpringContextUtils.getBean(alertNotifierService);
-            Method method = smsService.getClass().getMethod(alertNotifierMethod, JSONObject.class, JSONArray.class);
+            Method method = smsService.getClass().getMethod(alertNotifierMethod, String.class, JSONObject.class, JSONArray.class);
             // 将参数转为json类型
             JSONObject alertRecord = (JSONObject) JSON.toJSON(alertRecordDo);
             JSONArray alertUsers = (JSONArray) JSON.toJSON(alertUserDoList);
             // 调用方法
-            res = (JSONArray) method.invoke(smsService, alertRecord, alertUsers);
+            res = method.invoke(smsService, smsUrl, alertRecord, alertUsers);
         } catch (Exception e) {
             log.error("调用外部告警服务smsComponent失败");
+            log.debug("调用外部告警服务smsComponent失败", e);
         }
         return res;
     }

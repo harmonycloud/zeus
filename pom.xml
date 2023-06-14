@@ -388,6 +388,12 @@
             <version>7.1.4</version>
         </dependency>
 
+        <dependency>
+            <groupId>com.middleware.zeus</groupId>
+            <artifactId>smscomponent</artifactId>
+            <version>0.0.3</version>
+        </dependency>
+
     </dependencies>
 
     <build>

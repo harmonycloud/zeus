@@ -1,6 +1,5 @@
 package com.middleware.zeus.service.system;
 
-import com.alibaba.fastjson.JSONArray;
 import com.middleware.zeus.common.model.AlertRecordDo;
 import com.middleware.zeus.common.model.AlertUserDo;
 
@@ -19,6 +18,6 @@ public interface AlertNotifierService {
      * @param alertUserDoList
      * @return 告警结果
      */
-    JSONArray sendSMSAlertMessage(AlertRecordDo alertRecordDo, List<AlertUserDo> alertUserDoList);
+    Object sendSMSAlertMessage(AlertRecordDo alertRecordDo, List<AlertUserDo> alertUserDoList);
 
 }
