@@ -5,6 +5,7 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 
 import com.middleware.zeus.service.k8s.ClusterService;
+import com.middleware.zeus.util.numeric.MathUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -176,7 +177,7 @@ public class ClusterController {
                                @RequestParam("name") String name,
                                @RequestParam(value = "protocol", required = false) String protocol,
                                @RequestParam(value = "address", required = false) String address,
-                               @RequestParam(value = "port", required = false) Integer port,
+                               @RequestParam(value = "port", required = false) String port,
                                @RequestParam(value = "user", required = false) String user,
                                @RequestParam(value = "password", required = false) String password) {
         log.info("name{}", name);
@@ -185,7 +186,9 @@ public class ClusterController {
             registry = new Registry();
             registry.setProtocol(protocol);
             registry.setAddress(address);
-            registry.setPort(port);
+            if (MathUtil.isDigit(port)) {
+                registry.setPort(Integer.parseInt(port));
+            }
             registry.setUser(user);
             registry.setPassword(password);
         }
