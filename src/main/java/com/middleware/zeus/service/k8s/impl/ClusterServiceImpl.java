@@ -9,9 +9,11 @@ import java.io.InputStreamReader;
 import java.text.MessageFormat;
 import java.util.*;
 
+import com.middleware.zeus.bean.BeanKubeConfig;
 import com.middleware.zeus.common.constants.DateStyle;
 import com.middleware.zeus.common.model.ClusterComponentsDto;
 import com.middleware.zeus.common.model.middleware.*;
+import com.middleware.zeus.dao.BeanKubeConfigMapper;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -101,6 +103,8 @@ public class ClusterServiceImpl extends AbstractClusterService implements Cluste
     private ConfigMapService configMapService;
     @Autowired
     private GrafanaService grafanaService;
+    @Autowired
+    private BeanKubeConfigMapper kubeConfigMapper;
 
     @Value("${k8s.component.middleware:/usr/local/zeus-pv/middleware}")
     private String middlewarePath;
@@ -257,6 +261,8 @@ public class ClusterServiceImpl extends AbstractClusterService implements Cluste
     }
 
     public void bindResourceDelete(MiddlewareClusterDTO cluster) {
+        // 删除kube-config信息
+        this.deleteKubeConfig(cluster.getId());
         // 删除集群组件信息
         clusterComponentService.delete(cluster.getId());
         // 删除ingress信息
@@ -504,6 +510,16 @@ public class ClusterServiceImpl extends AbstractClusterService implements Cluste
             monitorMap.put(title, monitorDto);
         });
         return monitorMap;
+    }
+
+    /**
+     * 删除数据库中的kube_config信息
+     * @param clusterId
+     */
+    private void deleteKubeConfig(String clusterId) {
+        QueryWrapper<BeanKubeConfig> wrapper = new QueryWrapper<>();
+        wrapper.eq("cluster_id", clusterId);
+        kubeConfigMapper.delete(wrapper);
     }
 
     private void createMiddlewareCrd(MiddlewareClusterDTO middlewareClusterDTO) {
