@@ -687,9 +687,8 @@ public class PodServiceImpl implements PodService {
                     podInfoList.add(pi);
                 }
             }
-            // 设置pod所在可用区
-            setPodArea(clusterId, podInfoList);
         }
         return podInfoList;
     }
+
 }
