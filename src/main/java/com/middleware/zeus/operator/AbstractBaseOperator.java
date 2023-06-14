@@ -1220,8 +1220,13 @@ public abstract class AbstractBaseOperator {
             log.error("集群{} 分区{} 中间件{}， 告警规则标签添加集群失败", middleware.getClusterId(), middleware.getNamespace(),
                 middleware.getName());
         }
-        // 开启备份通知
-        middlewareAlertsService.editBackupAlert(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), middleware.getType(), true);
+        try {
+            // 开启备份通知
+            middlewareAlertsService.editBackupAlert(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), middleware.getType(), true);
+        } catch (Exception e) {
+            log.error("集群{} 分区{} 中间件{}， 开启备份通知失败", middleware.getClusterId(), middleware.getNamespace(),
+                    middleware.getName());
+        }
 
     }
 
