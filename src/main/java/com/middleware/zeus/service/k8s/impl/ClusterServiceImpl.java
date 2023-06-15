@@ -261,8 +261,6 @@ public class ClusterServiceImpl extends AbstractClusterService implements Cluste
     }
 
     public void bindResourceDelete(MiddlewareClusterDTO cluster) {
-        // 删除kube-config信息
-        this.deleteKubeConfig(cluster.getId());
         // 删除集群组件信息
         clusterComponentService.delete(cluster.getId());
         // 删除ingress信息
@@ -277,6 +275,8 @@ public class ClusterServiceImpl extends AbstractClusterService implements Cluste
         backupServerService.unbinding(cluster.getId());
         // 删除组织、项目下的资源分配
         organizationService.clear(cluster.getId());
+        // 删除kube-config信息
+        this.deleteKubeConfig(cluster.getId());
     }
 
     private void checkClusterExistent(MiddlewareClusterDTO cluster, boolean expectExisting) {
@@ -383,9 +383,12 @@ public class ClusterServiceImpl extends AbstractClusterService implements Cluste
         String clusterJoinUrl = apiAddress + "/clusters/quickAdd";
         String param = "name=" + clusterName;
         if (registry != null) {
-            param = param + "&protocol=%s&address=%s&port=%s&user=%s&&password=%s";
-            param = String.format(param, registry.getProtocol(), registry.getAddress(), registry.getPort(),
+            param = param + "&protocol=%s&address=%s&user=%s&&password=%s";
+            param = String.format(param, registry.getProtocol(), registry.getAddress(),
                 registry.getUser(), registry.getPassword());
+            if (registry.getPort() != null){
+                param = param + "&port=" + registry.getPort();
+            }
         }
         String curlCommand =
             "curl -X POST --header 'Content-Type: multipart/form-data' --header 'userToken: %s' --header 'authType: 1' --form adminConf=@/etc/kubernetes/admin.conf \"%s?"

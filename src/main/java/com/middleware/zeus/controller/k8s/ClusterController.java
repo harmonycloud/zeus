@@ -168,7 +168,7 @@ public class ClusterController {
             @ApiImplicitParam(name = "name", value = "集群名称", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "protocol", value = "协议", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "address", value = "地址", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "port", value = "端口", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "port", value = "端口", paramType = "query", dataTypeClass = Integer.class),
             @ApiImplicitParam(name = "user", value = "用户", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "password", value = "密码", paramType = "query", dataTypeClass = String.class),
     })
@@ -177,7 +177,7 @@ public class ClusterController {
                                @RequestParam("name") String name,
                                @RequestParam(value = "protocol", required = false) String protocol,
                                @RequestParam(value = "address", required = false) String address,
-                               @RequestParam(value = "port", required = false) String port,
+                               @RequestParam(value = "port", required = false) Integer port,
                                @RequestParam(value = "user", required = false) String user,
                                @RequestParam(value = "password", required = false) String password) {
         log.info("name{}", name);
@@ -186,9 +186,7 @@ public class ClusterController {
             registry = new Registry();
             registry.setProtocol(protocol);
             registry.setAddress(address);
-            if (MathUtil.isDigit(port)) {
-                registry.setPort(Integer.parseInt(port));
-            }
+            registry.setPort(port);
             registry.setUser(user);
             registry.setPassword(password);
         }
