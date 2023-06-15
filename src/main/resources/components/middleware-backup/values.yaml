@@ -4,7 +4,7 @@ global:
   middlewarebackup_controller:
     image: middlewarebackup-controller
     removeBinlog: "yes"
-    tag: 76f61d8b
+    tag: d53d2ebb
     resources:
       limits:
         cpu: 200m
@@ -20,13 +20,13 @@ global:
       # jobSecondsAfterFinished: 60
       # jobActiveDeadlineSeconds: 86400
       image: backup-job-creator
-      tag: v1.0.4
+      tag: 5af0bbbb
     common_path_backup:
       image: middleware-backup-operator
-      tag: v1.0.6-common
+      tag: 3f8e4817
     job_pgsql_backup:
       image: middleware-backup-operator
-      tag: aed02372
+      tag: 9db55be3
     job_mysql_backup:
       image: middleware-backup-operator
       tag: 57-ac03749c

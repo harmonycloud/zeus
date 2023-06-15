@@ -20,6 +20,7 @@ import com.middleware.zeus.common.model.middleware.*;
 import com.middleware.zeus.common.model.registry.HelmChartFile;
 import com.middleware.zeus.service.k8s.IngressService;
 import com.middleware.zeus.service.middleware.impl.MiddlewareServiceImpl;
+import com.middleware.zeus.service.system.AlertUserService;
 import com.middleware.zeus.util.ThreadPoolExecutorFactory;
 import com.middleware.zeus.util.collection.JsonUtils;
 import com.middleware.zeus.util.numeric.ResourceCalculationUtil;
@@ -66,6 +67,7 @@ import java.math.RoundingMode;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.middleware.zeus.common.constants.AlertConstant.SERVICE;
 import static com.middleware.zeus.common.constants.CommonConstant.FALSE;
 import static com.middleware.zeus.common.constants.CommonConstant.TRUE;
 import static com.middleware.zeus.common.constants.NameConstant.*;
@@ -147,6 +149,8 @@ public abstract class AbstractBaseOperator {
     protected SystemConfigService systemConfigService;
     @Autowired
     private CustomConfigHistoryService customConfigHistoryService;
+    @Autowired
+    protected AlertUserService alertUserService;
 
     /**
      * 是否支持该中间件
@@ -315,6 +319,8 @@ public abstract class AbstractBaseOperator {
         BeanCacheMiddleware beanCacheMiddleware = cacheMiddlewareService.get(middleware);
         deletePvc(beanCacheMiddleware);
         deleteCustomConfigHistory(middleware);
+        // 删除告警联系人绑定
+        alertUserService.delete(null, middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), SERVICE);
         // 删除Maintenance
         maintenanceService.delete(middleware.getClusterId(), middleware.getNamespace(), middleware.getName());
         // 删除备份相关

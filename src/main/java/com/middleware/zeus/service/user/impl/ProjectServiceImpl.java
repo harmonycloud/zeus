@@ -1,5 +1,6 @@
 package com.middleware.zeus.service.user.impl;
 
+import static com.middleware.zeus.common.constants.AlertConstant.SERVICE;
 import static com.middleware.zeus.common.constants.CommonConstant.NUM_TWO;
 import static com.middleware.zeus.common.constants.NameConstant.*;
 import static com.middleware.zeus.common.constants.user.UserConstant.USERNAME;
@@ -283,7 +284,7 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
         if (StringUtils.isNotEmpty(username)){
             List<Namespace> namespaceList = getNamespace(organId, projectId);
             for (Namespace namespace : namespaceList){
-                alertUserService.delete(username, null, namespace.getName(), null, null);
+                alertUserService.delete(username, null, namespace.getName(), null, SERVICE);
             }
         }
     }

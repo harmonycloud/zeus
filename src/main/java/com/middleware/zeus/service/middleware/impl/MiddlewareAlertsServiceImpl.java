@@ -88,7 +88,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         List<MiddlewareAlertsDTO> middlewareAlertsDTOList = prometheusRuleService.convertPrometheusRule(prometheusRule);
         // 过滤备份告警规则
         middlewareAlertsDTOList = middlewareAlertsDTOList.stream()
-            .filter(middlewareAlertsDTO -> !"middlewareBackupFailed".equals(middlewareAlertsDTO.getAlert()))
+            .filter(middlewareAlertsDTO -> !"middlewareBackupFailed".equals(middlewareAlertsDTO.getName()))
             .collect(Collectors.toList());
         // 添加符号和阈值信息
         for (MiddlewareAlertsDTO middlewareAlertsDTO : middlewareAlertsDTOList) {
@@ -134,6 +134,8 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             middlewareAlertsDTO.setType(type);
             middlewareAlertsDTOList.add(middlewareAlertsDTO);
         });
+        //校验备份告警规则是否存在
+        checkBackupAlert(clusterId, namespace, middlewareName, type);
         return middlewareAlertsDTOList;
     }
 
@@ -318,44 +320,19 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
 
     @Override
     public void editBackupAlert(String clusterId, String namespace, String middlewareName, String type, Boolean enable) {
-        String alertName = "middlewareBackupFailed";
+        // 备份告警通知开关更新
         alertUserService.delete(null, clusterId, namespace, middlewareName, BACKUP);
-        if (enable && detail(clusterId, namespace, middlewareName, alertName) == null){
+        if (enable){
             AlertUserDo alertUserDo = new AlertUserDo();
             alertUserDo.setClusterId(clusterId);
             alertUserDo.setNamespace(namespace);
             alertUserDo.setName(middlewareName);
             alertUserDo.setAlertType(BACKUP);
             alertUserService.add(alertUserDo);
-
-            // 添加告警规则
-            MiddlewareAlertsDTO middlewareAlertsDTO = new MiddlewareAlertsDTO();
-            middlewareAlertsDTO.setAlert(alertName);
-            middlewareAlertsDTO.setAlertTime(new BigDecimal(1));
-            middlewareAlertsDTO.setAlertTimes(new BigDecimal(1));
-            middlewareAlertsDTO.setExpr("rate(backup_failed_total{middleware_name=\"" + middlewareName + "\"}[3m]) > 0");
-            middlewareAlertsDTO.setLay(SERVICE);
-            middlewareAlertsDTO.setName(alertName);
-            middlewareAlertsDTO.setLevel("critical");
-
-            Map<String, String> labels = new HashMap<>();
-            labels.put("severity", "critical");
-            labels.put("clusterId", clusterId);
-            labels.put("namespace", namespace);
-            labels.put("middleware", type);
-            labels.put("service", middlewareName);
-            middlewareAlertsDTO.setLabels(labels);
-
-            Map<String, String> annotations = new HashMap<>();
-            annotations.put("alertLevel", "critical");
-            annotations.put("message", "job {{ $labels.name }} ,middleware {{ $labels.middleware_name }} backup failed");
-            annotations.put("summary", "job {{ $labels.name }} ,middleware {{ $labels.middleware_name }} backup failed");
-            annotations.put("group", "backup");
-            annotations.put("target_type", "backup");
-            middlewareAlertsDTO.setAnnotations(annotations);
-
-            updateServiceAlerts2Prometheus(clusterId, namespace, middlewareName, middlewareName, middlewareAlertsDTO);
         }
+
+        //校验备份告警规则是否存在
+        checkBackupAlert(clusterId, namespace, middlewareName, type);
     }
 
     /**
@@ -601,5 +578,38 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             alertUserDto.setUsername(userDto.getUserName());
             return alertUserDto;
         }).collect(Collectors.toList());
+    }
+
+    public void checkBackupAlert(String clusterId, String namespace, String middlewareName, String type){
+        String alertName = "middlewareBackupFailed";
+        if (detail(clusterId, namespace, middlewareName, alertName) == null){
+            // 添加告警规则
+            MiddlewareAlertsDTO middlewareAlertsDTO = new MiddlewareAlertsDTO();
+            middlewareAlertsDTO.setAlert(alertName);
+            middlewareAlertsDTO.setAlertTime(new BigDecimal(1));
+            middlewareAlertsDTO.setAlertTimes(new BigDecimal(1));
+            middlewareAlertsDTO.setExpr("rate(backup_failed_total{middleware_name=\"" + middlewareName + "\"}[3m]) > 0");
+            middlewareAlertsDTO.setLay(SERVICE);
+            middlewareAlertsDTO.setName(alertName);
+            middlewareAlertsDTO.setLevel("critical");
+
+            Map<String, String> labels = new HashMap<>();
+            labels.put("severity", "critical");
+            labels.put("clusterId", clusterId);
+            labels.put("namespace", namespace);
+            labels.put("middleware", type);
+            labels.put("service", middlewareName);
+            middlewareAlertsDTO.setLabels(labels);
+
+            Map<String, String> annotations = new HashMap<>();
+            annotations.put("alertLevel", "critical");
+            annotations.put("message", "job {{ $labels.name }} ,middleware {{ $labels.middleware_name }} backup failed");
+            annotations.put("summary", "job {{ $labels.name }} ,middleware {{ $labels.middleware_name }} backup failed");
+            annotations.put("group", "backup");
+            annotations.put("target_type", "backup");
+            middlewareAlertsDTO.setAnnotations(annotations);
+
+            updateServiceAlerts2Prometheus(clusterId, namespace, middlewareName, middlewareName, middlewareAlertsDTO);
+        }
     }
 }

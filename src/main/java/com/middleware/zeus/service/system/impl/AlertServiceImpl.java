@@ -477,9 +477,15 @@ public class AlertServiceImpl implements AlertService {
                         || !annotations.containsKey("target_alias_name")) {
                         if (!CollectionUtils.isEmpty(prometheusRule.getMetadata().getAnnotations())) {
                             Map<String, String> parentAnn = prometheusRule.getMetadata().getAnnotations();
-                            annotations.put("target_type", parentAnn.get("target_type"));
-                            annotations.put("target_name", parentAnn.get("target_name"));
-                            annotations.put("target_alias_name", parentAnn.get("target_alias_name"));
+                            if (parentAnn.containsKey("target_type")) {
+                                annotations.put("target_type", parentAnn.get("target_type"));
+                            }
+                            if (parentAnn.containsKey("target_name")) {
+                                annotations.put("target_name", parentAnn.get("target_name"));
+                            }
+                            if (parentAnn.containsKey("target_alias_name")) {
+                                annotations.put("target_alias_name", parentAnn.get("target_alias_name"));
+                            }
                             flag = true;
                         }
                     }

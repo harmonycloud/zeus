@@ -37,11 +37,10 @@ public interface MailService {
 
     /**
      * 邮箱连接测试
-     * @param email
-     * @param password
+     * @param mailInfo
      * @return
      */
-    boolean checkEmail(String email, String password);
+    void checkEmail(MailInfo mailInfo);
 
     /**
      * 使用新浪邮箱发送邮件
@@ -51,5 +50,5 @@ public interface MailService {
      * @throws MessagingException
      * @throws IOException
      */
-    void sendSinaMail(MailInfo mailInfo, AlertRecordDo alertRecordDo, AlertUserDo alertUserDo) throws MessagingException, IOException;
+    void sendMail(MailInfo mailInfo, AlertRecordDo alertRecordDo, AlertUserDo alertUserDo) throws MessagingException, IOException;
 }

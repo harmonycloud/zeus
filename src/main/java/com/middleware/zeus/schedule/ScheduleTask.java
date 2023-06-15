@@ -51,7 +51,6 @@ public class ScheduleTask {
     @Scheduled(cron = "0 */5 * ? * *")
     public void incBackupScheduleCheck() {
         try {
-            log.info("开始同步查询增量备份任务");
             middlewareBackupService.checkSchedule();
         } catch (Exception e){
             log.error("定时查询增量周期备份失败");

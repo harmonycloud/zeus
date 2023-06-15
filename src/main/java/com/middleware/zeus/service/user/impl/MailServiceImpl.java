@@ -1,34 +1,37 @@
 package com.middleware.zeus.service.user.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.middleware.zeus.common.enums.ErrorMessage;
-import com.middleware.zeus.common.exception.BusinessException;
-import com.middleware.zeus.common.model.AlertRecordDo;
-import com.middleware.zeus.common.model.AlertUserDo;
-import com.middleware.zeus.bean.MailInfo;
-import com.middleware.zeus.dao.MailMapper;
-import com.middleware.zeus.service.user.MailService;
-import com.middleware.zeus.util.RobotClientUtil;
-import lombok.extern.slf4j.Slf4j;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.text.MessageFormat;
+import java.util.List;
+import java.util.Properties;
+import java.util.regex.Pattern;
+
+import javax.mail.*;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeMessage;
+
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import javax.mail.*;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
-import java.io.*;
-import java.lang.reflect.Field;
-import java.text.MessageFormat;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.regex.Pattern;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.middleware.zeus.bean.MailInfo;
+import com.middleware.zeus.common.enums.ErrorMessage;
+import com.middleware.zeus.common.exception.BusinessException;
+import com.middleware.zeus.common.model.AlertRecordDo;
+import com.middleware.zeus.common.model.AlertUserDo;
+import com.middleware.zeus.dao.MailMapper;
+import com.middleware.zeus.service.user.MailService;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author yushuaikang
@@ -38,10 +41,11 @@ import java.util.regex.Pattern;
 @Slf4j
 public class MailServiceImpl implements MailService {
 
+    @Value("${system.mail.ssl.enable:false}")
+    private Boolean mailSSL;
+
     @Autowired
     private MailMapper mailMapper;
-
-    private static RobotClientUtil robot = new RobotClientUtil();
 
     /**
      * 邮件发送器
@@ -90,22 +94,20 @@ public class MailServiceImpl implements MailService {
                 messageHelper.setText(buildContent(alertRecordDo, alertUserDo.getUsername()), true);
                 messageHelper.setTo(alertUserDo.getEmail());
                 mailSender.send(mimeMessage);
-                return;
+            } else {
+                sendMail(mailInfo,alertRecordDo,alertUserDo);
             }
-            sendSinaMail(mailInfo,alertRecordDo,alertUserDo);
         }
     }
 
     @Override
     public void insertMail(MailInfo mailInfo) throws IllegalAccessException {
         paramsCheck(mailInfo);
-        boolean flag = this.checkEmail(mailInfo.getUserName(),mailInfo.getPassword());
-        if (!flag) {
-            throw new BusinessException(ErrorMessage.MAIL_SERVER_CONNECT_FAILED);
-        }
+        // 校验邮箱服务器
+        checkEmail(mailInfo);
         QueryWrapper<MailInfo> wrapper = new QueryWrapper<>();
         List<MailInfo> list = mailMapper.selectList(wrapper);
-        objectToTrim(mailInfo);
+
         if (list.size() == 0) {
             mailMapper.insert(mailInfo);
         }else {
@@ -114,23 +116,34 @@ public class MailServiceImpl implements MailService {
     }
 
     @Override
-    public boolean checkEmail(String email, String password) {
-        boolean result = isValidEmail(email);
-        if (!result) {
-            return result;
+    public void checkEmail(MailInfo mailInfo) {
+        if (StringUtils.isNotEmpty(mailInfo.getUserName()) && !isValidEmail(mailInfo.getUserName())){
+            throw new BusinessException(ErrorMessage.MAIL_ADDRESS_INVALID);
         }
-        if ("163.com".equals(email.split("@")[1])) {
-            try {
-                RobotClientUtil robotClientUtil = new RobotClientUtil(email,password);
-                robotClientUtil.checkPassword();
-                new Thread(robotClientUtil).start();
-                return robotClientUtil.getSuccess();
-            } catch (IOException e) {
-                e.printStackTrace();
-                return false;
-            }
+        Properties props = new Properties();
+        props.put("mail.smtp.host", mailInfo.getMailServer());
+        props.put("mail.smtp.port", mailInfo.getPort());
+        props.put("mail.smtp.starttls.enable", "true");
+        props.put("mail.smtp.connectiontimeout", "7000");
+        // 开启SSL
+        if (mailSSL){
+            props.put("mail.smtp.ssl.enable", "true");
+            props.put("mail.smtp.socketFactory.port", mailInfo.getPort());
+            props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+            // 配置信任所有证书
+            props.put("mail.smtp.ssl.trust", "*");
         }
-        return robot.checkEmailMethod(email);
+
+        Session session = Session.getInstance(props);
+        session.setDebug(true);
+        try {
+            Transport transport = session.getTransport("smtp");
+            transport.connect();
+            transport.close();
+        } catch (MessagingException e) {
+            log.error("连接SMTP邮箱服务器失败", e);
+            throw new BusinessException(ErrorMessage.SMTP_SERVER_CONNECT_FAILED);
+        }
     }
 
     public static boolean isValidEmail(String email) {
@@ -141,23 +154,41 @@ public class MailServiceImpl implements MailService {
     }
 
     @Override
-    public void sendSinaMail(MailInfo mailInfo, AlertRecordDo alertRecordDo, AlertUserDo alertUserDo) throws MessagingException, IOException {
+    public void sendMail(MailInfo mailInfo, AlertRecordDo alertRecordDo, AlertUserDo alertUserDo) throws MessagingException, IOException {
         Properties props = new Properties();
-        props.setProperty("mail.host", mailInfo.getMailServer());
-        props.setProperty("mail.smtp.auth", "true");
-        props.setProperty("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
-        Authenticator authenticator = new Authenticator() {
-            @Override
-            public PasswordAuthentication getPasswordAuthentication() {
-                return new PasswordAuthentication(mailInfo.getUserName(), mailInfo.getPassword());
-            }
-        };
-        //1 获得连接
-        Session session = Session.getDefaultInstance(props, authenticator);
+        props.setProperty("mail.smtp.host", mailInfo.getMailServer());
+        props.setProperty("mail.smtp.port", String.valueOf(mailInfo.getPort()));
+        props.put("mail.smtp.starttls.enable", "true");
+
+        // 开启SSL
+        if (mailSSL){
+            props.put("mail.smtp.ssl.enable", "true");
+            props.put("mail.smtp.socketFactory.port", mailInfo.getPort());
+            props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+            // 配置信任所有证书
+            props.put("mail.smtp.ssl.trust", "*");
+        }
+
+        //1 初始化连接
+        Session session;
+        if(StringUtils.isNotEmpty(mailInfo.getUserName()) && StringUtils.isNotEmpty(mailInfo.getPassword())){
+            props.setProperty("mail.smtp.auth", "true");
+            Authenticator authenticator = new Authenticator() {
+                @Override
+                public PasswordAuthentication getPasswordAuthentication() {
+                    return new PasswordAuthentication(mailInfo.getUserName(), mailInfo.getPassword());
+                }
+            };
+            session = Session.getInstance(props, authenticator);
+        } else {
+            session = Session.getInstance(props);
+        }
         //2 创建消息
         Message message = new MimeMessage(session);
         // 2.1 发件人
-        message.setFrom(new InternetAddress(mailInfo.getUserName()));
+        if (StringUtils.isNotEmpty(mailInfo.getUserName())){
+            message.setFrom(new InternetAddress(mailInfo.getUserName()));
+        }
         // 2.2 收件人
         message.setRecipient(Message.RecipientType.TO, new InternetAddress(alertUserDo.getEmail()));
         // 2.3 主题（标题）
@@ -239,32 +270,4 @@ public class MailServiceImpl implements MailService {
         }
     }
 
-    /**
-     * 去除两端空格
-     * @param obj
-     * @throws IllegalAccessException
-     */
-    public static void objectToTrim(Object obj) throws IllegalAccessException {
-        Map<String,String> map = new HashMap<>();
-        Field[] declaredFields = obj.getClass().getDeclaredFields();
-        for (Field field:declaredFields){
-            String type = field.getType().getCanonicalName();
-            if (StringUtils.equals("java.lang.String", type)){
-                field.setAccessible(true);
-                Object object = field.get(obj);
-                if (object != null) {
-                    String trim = object.toString().replace(" ","");
-                    map.put(field.getName(),trim);
-                }
-            }
-        }
-        for (Field field:declaredFields){
-            if (map.get(field.getName())!=null){
-                String s = map.get(field.getName());
-                field.setAccessible(true);
-                field.set(obj,s);
-            }
-        }
-
-    }
 }

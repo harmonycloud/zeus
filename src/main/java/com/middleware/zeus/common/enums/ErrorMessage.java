@@ -221,25 +221,23 @@ public enum ErrorMessage {
     PASSWORD_IS_EXPIRED(400018, "password is expired.", "密码已过有效期，请到容器平台修改密码后重新登录！"),
     CREATE_USER_FAILED(400018, "create user failed", "创建用户失败"),
     DROP_USER_FAILED(400019, "drop user failed", "删除用户失败"),
-    // ldap
-    LDAP_SERVER_CONNECT_FAILED(400017 , "connect to ldap server failed", "LDAP连接失败"),
-    LDAP_INCOMPLETE_PARAMETERS(400018, "Incomplete parameters", "LDAP参数不全"),
-    // mail
-    MAIL_SERVER_CONNECT_FAILED(400019, "connect to mail server failed", "邮箱连接失败"),
-    MAIL_INCOMPLETE_PARAMETERS(400020, "Incomplete parameters", "邮箱参数不全"),
-    // ding
-    DING_SERVER_CONNECT_FAILED(400021, "connect to ding server failed", "钉钉连接失败"),
-    DING_INCOMPLETE_PARAMETERS(400022, "Incomplete parameters", "钉钉参数不全"),
-    WEB_HOOK_REPETITION(400023,"webhook repetition","webhook重复"),
+    LDAP_SERVER_CONNECT_FAILED(400020 , "connect to ldap server failed", "LDAP连接失败"),
+    LDAP_INCOMPLETE_PARAMETERS(400021, "Incomplete parameters", "LDAP参数不全"),
+    // mail and ding
+    SMTP_SERVER_CONNECT_FAILED(400022, "connect to smtp server failed", "smtp邮箱服务器连接失败"),
+    MAIL_INCOMPLETE_PARAMETERS(400023, "Incomplete parameters", "邮箱参数不全"),
+    MAIL_ADDRESS_INVALID(400024, "invalid mail address", "邮箱地址不合法"),
+    DING_SERVER_CONNECT_FAILED(400024, "connect to ding server failed", "钉钉连接失败"),
+    DING_INCOMPLETE_PARAMETERS(400025, "Incomplete parameters", "钉钉参数不全"),
+    WEB_HOOK_REPETITION(400026,"webhook repetition","webhook重复"),
 
     // mysql database manage
-    MYSQL_INCOMPLETE_PARAMETERS(400024, "Incomplete parameters", "参数不全"),
-    MYSQL_PASSWORD_NOT_MATCH(400027, "two password not match", "两次密码不一致"),
-    MYSQL_UPDATE_PASSWORD_FAILED(400028, "mysql update password failed", "mysql更新密码失败"),
-    MYSQL_CONNECTION_FAILED(400029, "mysql connection failed,please check service routine,Ensure that at least " +
+    MYSQL_INCOMPLETE_PARAMETERS(400050, "Incomplete parameters", "参数不全"),
+    MYSQL_PASSWORD_NOT_MATCH(400051, "two password not match", "两次密码不一致"),
+    MYSQL_UPDATE_PASSWORD_FAILED(400052, "mysql update password failed", "mysql更新密码失败"),
+    MYSQL_CONNECTION_FAILED(400053, "mysql connection failed,please check service routine,Ensure that at least " +
             " one external service exposure is available", "连接mysql失败，请检查服务暴露，确保至少有一个对外服务暴露可用"),
-    // skyview
-    USER_NOT_AUTH(400030, "User is not authorized.", "该用户未授权，请联系管理员"),
+
     // project
     PROJECT_NOT_EXIST(400101, "project not exist", "项目不存在"),
     PROJECT_NAMESPACE_ALREADY_BIND(400102, "project namespace already bind", "该分区已与项目绑定"),
