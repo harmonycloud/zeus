@@ -4,7 +4,7 @@ global:
   middlewarebackup_controller:
     image: middlewarebackup-controller
     removeBinlog: "yes"
-    tag: d53d2ebb
+    tag: v1.4.0
     resources:
       limits:
         cpu: 200m
@@ -20,17 +20,17 @@ global:
       # jobSecondsAfterFinished: 60
       # jobActiveDeadlineSeconds: 86400
       image: backup-job-creator
-      tag: 5af0bbbb
+      tag: v1.1.0
     common_path_backup:
       image: middleware-backup-operator
-      tag: 3f8e4817
+      tag: v1.1.0-common
     job_pgsql_backup:
       image: middleware-backup-operator
-      tag: 9db55be3
+      tag: v1.1.0-pgsql
     job_mysql_backup:
       image: middleware-backup-operator
-      tag: 57-ac03749c
-      mysql8tag: 80-ac03749c
+      tag: v1.1.0-mysql
+      mysql8tag: v1.1.0-mysql8
   kubectl:
     installCRDs: true
     tag: 1.21
