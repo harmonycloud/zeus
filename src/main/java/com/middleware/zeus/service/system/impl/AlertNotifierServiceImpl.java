@@ -22,13 +22,13 @@ import java.util.List;
 @Service
 public class AlertNotifierServiceImpl implements AlertNotifierService {
 
-    @Value("${system.alert.smsServiceName:smsService}")
+    @Value("${system.alert.sms.serviceName:smsService}")
     private String alertNotifierService;
 
-    @Value("${system.alert.alertNotifierMethod:sendAlertMessage}")
+    @Value("${system.alert.sms.alertNotifierMethod:sendAlertMessage}")
     private String alertNotifierMethod;
 
-    @Value("${system.alert.smsUrl:http://localhost:8099/sms/sendsms}")
+    @Value("${system.alert.sms.url:http://localhost:8099/sms/sendsms}")
     private String smsUrl;
 
     @Override

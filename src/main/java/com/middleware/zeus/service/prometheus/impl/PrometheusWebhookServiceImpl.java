@@ -62,7 +62,7 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
     @Autowired
     private AlertNotifierService alertNotifierService;
 
-    @Value("${system.alert.enableSMS:false}")
+    @Value("${system.alert.sms.enable:false}")
     private Boolean enableSMS;
 
     @Override
