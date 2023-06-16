@@ -66,6 +66,22 @@ public class MiddlewareController {
         return BaseResult.ok(middlewareService.detail(clusterId, namespace, name, type));
     }
 
+    @ApiOperation(value = "校验中间件是否已存在", notes = "校验中间件是否已存在")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
+    })
+    @GetMapping("/{middlewareName}/checkExist")
+    @Authority
+    public BaseResult<Middleware> checkExist(@PathVariable("clusterId") String clusterId,
+                                             @PathVariable("namespace") String namespace,
+                                             @PathVariable("middlewareName") String name,
+                                             @RequestParam("type") String type) {
+        return BaseResult.ok(middlewareService.checkExist(clusterId, namespace, name, type));
+    }
+
     @ApiOperation(value = "创建中间件", notes = "创建中间件")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
