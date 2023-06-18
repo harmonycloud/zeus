@@ -4,7 +4,7 @@ global:
   middlewarebackup_controller:
     image: middlewarebackup-controller
     removeBinlog: "yes"
-    tag: v1.4.0
+    tag: v1.4.1
     resources:
       limits:
         cpu: 200m
@@ -23,14 +23,14 @@ global:
       tag: v1.1.0
     common_path_backup:
       image: middleware-backup-operator
-      tag: v1.1.0-common
+      tag: v1.1.1-common
     job_pgsql_backup:
       image: middleware-backup-operator
-      tag: v1.1.0-pgsql
+      tag: v1.1.1-pgsql
     job_mysql_backup:
       image: middleware-backup-operator
-      tag: v1.1.0-mysql
-      mysql8tag: v1.1.0-mysql8
+      tag: v1.1.1-mysql
+      mysql8tag: v1.1.1-mysql8
   kubectl:
     installCRDs: true
     tag: 1.21
