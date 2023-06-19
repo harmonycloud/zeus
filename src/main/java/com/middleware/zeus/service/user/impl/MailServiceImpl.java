@@ -139,6 +139,7 @@ public class MailServiceImpl implements MailService {
             props.put("mail.smtp.host", mailInfo.getMailServer());
             props.put("mail.smtp.port", mailInfo.getPort());
             props.put("mail.smtp.starttls.enable", "true");
+            props.put("mail.smtp.ssl.protocols", "TLSv1.2");
             //props.put("mail.smtp.connectiontimeout", "7000");
         }
 
