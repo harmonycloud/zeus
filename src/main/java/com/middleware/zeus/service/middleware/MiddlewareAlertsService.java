@@ -29,7 +29,7 @@ public interface MiddlewareAlertsService {
      *            关键字
      * @return List<MiddlewareAlertsDTO>
      */
-    List<MiddlewareAlertsDTO> listUsedRules(String clusterId, String namespace, String middlewareName, String keyword);
+    List<MiddlewareAlertsDTO> listUsedRules(String clusterId, String namespace, String middlewareName, String type, String keyword);
 
     /**
      * 获取可添加告警规则列表

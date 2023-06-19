@@ -1,3 +1,4 @@
+{{- if  .Capabilities.APIVersions.Has "monitoring.coreos.com/v1" }}
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
@@ -46,3 +47,4 @@ spec:
       for: 30s
       labels:
         severity: critical
+{{- end }}

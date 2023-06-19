@@ -48,6 +48,17 @@ public interface MiddlewareService {
     Middleware detail(String clusterId, String namespace, String name, String type);
 
     /**
+     * 校验中间件是否已存在
+     *
+     * @param clusterId 集群id
+     * @param namespace 命名空间
+     * @param name      中间件名称
+     * @param type      中间件类型
+     * @return Boolean
+     */
+    Boolean checkExist(String clusterId, String namespace, String name, String type);
+
+    /**
      * 查询中间件切换信息
      *
      * @param clusterId 集群id
