@@ -13,6 +13,7 @@ import javax.mail.*;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 
+import com.sun.mail.smtp.SMTPTransport;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -121,23 +122,34 @@ public class MailServiceImpl implements MailService {
             throw new BusinessException(ErrorMessage.MAIL_ADDRESS_INVALID);
         }
         Properties props = new Properties();
-        props.put("mail.smtp.host", mailInfo.getMailServer());
-        props.put("mail.smtp.port", mailInfo.getPort());
-        props.put("mail.smtp.starttls.enable", "true");
-        props.put("mail.smtp.connectiontimeout", "7000");
-        // 开启SSL
+
+        String protocol = "smtp";
         if (mailSSL){
-            props.put("mail.smtp.ssl.enable", "true");
-            props.put("mail.smtp.socketFactory.port", mailInfo.getPort());
-            props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
+            props.put("mail.smtps.ssl.enable", "true");
+            props.put("mail.smtps.host", mailInfo.getMailServer());
+            props.put("mail.smtps.port", mailInfo.getPort());
+            props.put("mail.smtps.starttls.enable", "true");
+//            props.put("mail.smtp.socketFactory.port", mailInfo.getPort());
+//            props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
             // 配置信任所有证书
-            props.put("mail.smtp.ssl.trust", "*");
+            props.put("mail.smtps.ssl.trust", "*");
+            //props.put("mail.smtp.connectiontimeout", "7000");
+            protocol = "smtps";
+        } else {
+            props.put("mail.smtp.host", mailInfo.getMailServer());
+            props.put("mail.smtp.port", mailInfo.getPort());
+            props.put("mail.smtp.starttls.enable", "true");
+            //props.put("mail.smtp.connectiontimeout", "7000");
         }
 
         Session session = Session.getInstance(props);
+        if (mailSSL){
+            session.setProtocolForAddress("rfc822", protocol);
+        }
         session.setDebug(true);
         try {
-            Transport transport = session.getTransport("smtp");
+            //Transport transport = session.getTransport("smtp");
+            SMTPTransport transport = (SMTPTransport)session.getTransport(protocol);
             transport.connect();
             transport.close();
         } catch (MessagingException e) {
