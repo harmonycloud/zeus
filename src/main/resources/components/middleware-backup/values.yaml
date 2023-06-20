@@ -4,7 +4,7 @@ global:
   middlewarebackup_controller:
     image: middlewarebackup-controller
     removeBinlog: "yes"
-    tag: v1.4.1
+    tag: v1.4.2
     resources:
       limits:
         cpu: 200m
@@ -26,7 +26,7 @@ global:
       tag: v1.1.1-common
     job_pgsql_backup:
       image: middleware-backup-operator
-      tag: v1.1.1-pgsql
+      tag: v1.1.2-pgsql
     job_mysql_backup:
       image: middleware-backup-operator
       tag: v1.1.1-mysql
