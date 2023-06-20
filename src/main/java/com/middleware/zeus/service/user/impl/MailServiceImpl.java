@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
 import java.text.MessageFormat;
 import java.util.List;
 import java.util.Properties;
@@ -12,7 +14,12 @@ import java.util.regex.Pattern;
 import javax.mail.*;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
+import com.sun.mail.smtp.SMTPTransport;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -120,24 +127,18 @@ public class MailServiceImpl implements MailService {
         if (StringUtils.isNotEmpty(mailInfo.getUserName()) && !isValidEmail(mailInfo.getUserName())){
             throw new BusinessException(ErrorMessage.MAIL_ADDRESS_INVALID);
         }
+        String protocol = mailSSL ? "smtps" : "smtp";
+
         Properties props = new Properties();
-        props.put("mail.smtp.host", mailInfo.getMailServer());
-        props.put("mail.smtp.port", mailInfo.getPort());
-        props.put("mail.smtp.starttls.enable", "true");
-        props.put("mail.smtp.connectiontimeout", "7000");
-        // 开启SSL
-        if (mailSSL){
-            props.put("mail.smtp.ssl.enable", "true");
-            props.put("mail.smtp.socketFactory.port", mailInfo.getPort());
-            props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
-            // 配置信任所有证书
-            props.put("mail.smtp.ssl.trust", "*");
-        }
+        initProps(protocol, props, mailInfo);
 
         Session session = Session.getInstance(props);
+        if (mailSSL){
+            session.setProtocolForAddress("rfc822", protocol);
+        }
         session.setDebug(true);
         try {
-            Transport transport = session.getTransport("smtp");
+            SMTPTransport transport = (SMTPTransport)session.getTransport(protocol);
             transport.connect();
             transport.close();
         } catch (MessagingException e) {
@@ -155,24 +156,19 @@ public class MailServiceImpl implements MailService {
 
     @Override
     public void sendMail(MailInfo mailInfo, AlertRecordDo alertRecordDo, AlertUserDo alertUserDo) throws MessagingException, IOException {
-        Properties props = new Properties();
-        props.setProperty("mail.smtp.host", mailInfo.getMailServer());
-        props.setProperty("mail.smtp.port", String.valueOf(mailInfo.getPort()));
-        props.put("mail.smtp.starttls.enable", "true");
+        String protocol = mailSSL ? "smtps" : "smtp";
 
-        // 开启SSL
-        if (mailSSL){
-            props.put("mail.smtp.ssl.enable", "true");
-            props.put("mail.smtp.socketFactory.port", mailInfo.getPort());
-            props.put("mail.smtp.socketFactory.class", "javax.net.ssl.SSLSocketFactory");
-            // 配置信任所有证书
-            props.put("mail.smtp.ssl.trust", "*");
-        }
+        Properties props = new Properties();
+        initProps(protocol, props, mailInfo);
 
         //1 初始化连接
         Session session;
         if(StringUtils.isNotEmpty(mailInfo.getUserName()) && StringUtils.isNotEmpty(mailInfo.getPassword())){
-            props.setProperty("mail.smtp.auth", "true");
+            if (mailSSL) {
+                props.setProperty("mail.smtps.auth", "true");
+            } else {
+                props.setProperty("mail.smtp.auth", "true");
+            }
             Authenticator authenticator = new Authenticator() {
                 @Override
                 public PasswordAuthentication getPasswordAuthentication() {
@@ -182,6 +178,9 @@ public class MailServiceImpl implements MailService {
             session = Session.getInstance(props, authenticator);
         } else {
             session = Session.getInstance(props);
+        }
+        if (mailSSL){
+            session.setProtocolForAddress("rfc822", protocol);
         }
         //2 创建消息
         Message message = new MimeMessage(session);
@@ -197,6 +196,7 @@ public class MailServiceImpl implements MailService {
         //设置编码，防止发送的内容中文乱码。
         message.setContent(buildContent(alertRecordDo , alertUserDo.getUsername()), "text/html;charset=UTF-8");
         //3发送消息
+        SMTPTransport transport = (SMTPTransport)session.getTransport(protocol);
         Transport.send(message);
     }
 
@@ -249,8 +249,8 @@ public class MailServiceImpl implements MailService {
         StringBuilder linesBuffer = new StringBuilder();
         String date = DateFormatUtils.format(alertRecordDo.getAlertTime(), "yyyy-MM-dd HH:mm:ss");
         linesBuffer.append("<tr><td>").append(emailTextColor).append("</td><td>")
-            .append(alertRecordDo.getTargetAliasName()).append("</td><td>").append(alertRecordDo.getMessage())
-            .append("</td><td>").append(date).append("</td></tr>");
+                .append(alertRecordDo.getTargetAliasName()).append("</td><td>").append(alertRecordDo.getMessage())
+                .append("</td><td>").append(date).append("</td></tr>");
 
         String href = "";
         String ip = "";
@@ -265,8 +265,55 @@ public class MailServiceImpl implements MailService {
 
     private void paramsCheck(MailInfo mailInfo) {
         if (StringUtils.isAnyBlank(mailInfo.getMailServer(), mailInfo.getPassword(), mailInfo.getUserName(),
-            String.valueOf(mailInfo.getPort()))) {
+                String.valueOf(mailInfo.getPort()))) {
             throw new BusinessException(ErrorMessage.MAIL_INCOMPLETE_PARAMETERS);
+        }
+    }
+
+    public void initProps(String protocol, Properties props, MailInfo mailInfo){
+        if (mailSSL){
+            props.put("mail.smtps.ssl.enable", "true");
+            props.put("mail.smtps.host", mailInfo.getMailServer());
+            props.put("mail.smtps.port", mailInfo.getPort());
+            props.put("mail.smtps.starttls.enable", "true");
+            // 配置信任所有证书
+            props.put("mail.smtps.ssl.trust", "*");
+            props.put("mail.smtps.connectiontimeout", "7000");
+            protocol = "smtps";
+        } else {
+            props.put("mail.smtp.host", mailInfo.getMailServer());
+            props.put("mail.smtp.port", mailInfo.getPort());
+            props.put("mail.smtp.starttls.enable", "true");
+            props.put("mail.smtp.ssl.protocols", "TLSv1.2");
+            props.put("mail.smtp.ssl.trust", "*");
+            props.put("mail.smtp.connectiontimeout", "7000");
+        }
+
+        // 创建一个信任所有证书的信任管理器
+        TrustManager[] trustAllCerts = new TrustManager[] {
+                new X509TrustManager() {
+                    @Override
+                    public X509Certificate[] getAcceptedIssuers() {
+                        return null;
+                    }
+                    @Override
+                    public void checkClientTrusted(X509Certificate[] certs, String authType) {
+                    }
+                    @Override
+                    public void checkServerTrusted(X509Certificate[] certs, String authType) {
+                    }
+                }
+        };
+        // 启用信任所有证书的信任管理器
+        try {
+            SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(null, trustAllCerts, new SecureRandom());
+            // 创建一个 SSL socket 工厂，禁用证书验证
+            SSLSocketFactory socketFactory = sslContext.getSocketFactory();
+            // 设置 Java Mail API 的 SSL socket 工厂
+            props.put("mail.smtp.ssl.socketFactory", socketFactory);
+        } catch (Exception e){
+            log.error("启用信任所有证书的信任管理器失败", e);
         }
     }
 

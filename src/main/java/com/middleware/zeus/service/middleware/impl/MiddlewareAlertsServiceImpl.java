@@ -81,7 +81,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
 
     @Override
     public List<MiddlewareAlertsDTO> listUsedRules(String clusterId, String namespace, String middlewareName,
-        String keyword) {
+        String type, String keyword) {
         // 查询prometheus文件
         PrometheusRule prometheusRule = prometheusRuleService.get(clusterId, namespace, middlewareName);
         // 封装告警规则文件
@@ -95,6 +95,8 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             middlewareAlertsDTO.setSymbol(getSymbol(middlewareAlertsDTO.getExpr()));
             middlewareAlertsDTO.setThreshold(getThreshold(middlewareAlertsDTO.getExpr()));
         }
+        //校验备份告警规则是否存在
+        checkBackupAlert(clusterId, namespace, middlewareName, type);
         // 根据创建时间排序
         middlewareAlertsDTOList.sort((o1, o2) -> o1.getCreateTime() == null ? -1
             : o2.getCreateTime() == null ? -1 : o2.getCreateTime().compareTo(o1.getCreateTime()));
@@ -134,8 +136,6 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             middlewareAlertsDTO.setType(type);
             middlewareAlertsDTOList.add(middlewareAlertsDTO);
         });
-        //校验备份告警规则是否存在
-        checkBackupAlert(clusterId, namespace, middlewareName, type);
         return middlewareAlertsDTOList;
     }
 

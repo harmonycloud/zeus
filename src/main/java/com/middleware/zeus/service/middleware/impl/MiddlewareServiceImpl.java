@@ -196,6 +196,16 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     }
 
     @Override
+    public Boolean checkExist(String clusterId, String namespace, String name, String type) {
+        // check exist
+        List<HelmListInfo> helms = helmChartService.listHelm(namespace, null, clusterService.findById(clusterId));
+        if (helms.stream().anyMatch(h -> name.equals(h.getName()))) {
+            return true;
+        }
+        return false;
+    }
+
+    @Override
     public SwitchInfo autoSwitch(String clusterId, String namespace, String name, String type) {
         Middleware middleware =
                 new Middleware().setClusterId(clusterId).setNamespace(namespace).setType(type).setName(name);
