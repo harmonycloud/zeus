@@ -128,7 +128,7 @@ public class MailServiceImpl implements MailService {
             throw new BusinessException(ErrorMessage.MAIL_ADDRESS_INVALID);
         }
         String protocol = mailSSL ? "smtps" : "smtp";
-        
+
         Properties props = new Properties();
         initProps(protocol, props, mailInfo);
 
@@ -157,7 +157,7 @@ public class MailServiceImpl implements MailService {
     @Override
     public void sendMail(MailInfo mailInfo, AlertRecordDo alertRecordDo, AlertUserDo alertUserDo) throws MessagingException, IOException {
         String protocol = mailSSL ? "smtps" : "smtp";
-        
+
         Properties props = new Properties();
         initProps(protocol, props, mailInfo);
 
@@ -249,8 +249,8 @@ public class MailServiceImpl implements MailService {
         StringBuilder linesBuffer = new StringBuilder();
         String date = DateFormatUtils.format(alertRecordDo.getAlertTime(), "yyyy-MM-dd HH:mm:ss");
         linesBuffer.append("<tr><td>").append(emailTextColor).append("</td><td>")
-            .append(alertRecordDo.getTargetAliasName()).append("</td><td>").append(alertRecordDo.getMessage())
-            .append("</td><td>").append(date).append("</td></tr>");
+                .append(alertRecordDo.getTargetAliasName()).append("</td><td>").append(alertRecordDo.getMessage())
+                .append("</td><td>").append(date).append("</td></tr>");
 
         String href = "";
         String ip = "";
@@ -265,7 +265,7 @@ public class MailServiceImpl implements MailService {
 
     private void paramsCheck(MailInfo mailInfo) {
         if (StringUtils.isAnyBlank(mailInfo.getMailServer(), mailInfo.getPassword(), mailInfo.getUserName(),
-            String.valueOf(mailInfo.getPort()))) {
+                String.valueOf(mailInfo.getPort()))) {
             throw new BusinessException(ErrorMessage.MAIL_INCOMPLETE_PARAMETERS);
         }
     }
