@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
 import java.text.MessageFormat;
 import java.util.List;
 import java.util.Properties;
@@ -12,6 +14,10 @@ import java.util.regex.Pattern;
 import javax.mail.*;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSocketFactory;
+import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 
 import com.sun.mail.smtp.SMTPTransport;
 import org.apache.commons.lang3.StringUtils;
@@ -140,7 +146,36 @@ public class MailServiceImpl implements MailService {
             props.put("mail.smtp.port", mailInfo.getPort());
             props.put("mail.smtp.starttls.enable", "true");
             props.put("mail.smtp.ssl.protocols", "TLSv1.2");
+            props.put("mail.smtp.ssl.trust", "*");
             //props.put("mail.smtp.connectiontimeout", "7000");
+        }
+
+        // 创建一个信任所有证书的信任管理器
+        TrustManager[] trustAllCerts = new TrustManager[] {
+                new X509TrustManager() {
+                    @Override
+                    public X509Certificate[] getAcceptedIssuers() {
+                        return null;
+                    }
+                    @Override
+                    public void checkClientTrusted(X509Certificate[] certs, String authType) {
+                    }
+                    @Override
+                    public void checkServerTrusted(X509Certificate[] certs, String authType) {
+                    }
+                }
+        };
+
+        // 启用信任所有证书的信任管理器
+        try {
+            SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(null, trustAllCerts, new SecureRandom());
+            // 创建一个 SSL socket 工厂，禁用证书验证
+            SSLSocketFactory socketFactory = sslContext.getSocketFactory();
+            // 设置 Java Mail API 的 SSL socket 工厂
+            props.put("mail.smtp.ssl.socketFactory", socketFactory);
+        } catch (Exception e){
+            log.error("启用信任所有证书的信任管理器失败", e);
         }
 
         Session session = Session.getInstance(props);
