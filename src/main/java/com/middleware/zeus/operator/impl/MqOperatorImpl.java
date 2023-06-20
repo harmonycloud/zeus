@@ -77,13 +77,22 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
                 break;
             default:
         }
-
         // jvm堆内存
         String mem = calculateMem(mqQuota.getLimitMemory(), "0.5", "m");
         JSONObject javaOpts = values.getJSONObject("javaOpts");
         if (javaOpts != null){
             javaOpts.put("xms", mem);
             javaOpts.put("xmx", mem);
+        }
+        // rocketmq特有参数
+        if (middleware.getRocketMQParam() != null){
+            RocketMQParam param = middleware.getRocketMQParam();
+            // console调度策略
+            JSONObject kibanaDeploymentConfiguration = values.getJSONObject("kibanaDeploymentConfiguration");
+            convertDeployConfiguration(kibanaDeploymentConfiguration, param.getConsoleNodeAffinity(), param.getConsoleTolerations());
+            // exporter调度策略
+            JSONObject exporterDeploymentConfiguration = values.getJSONObject("exporterDeploymentConfiguration");
+            convertDeployConfiguration(exporterDeploymentConfiguration, param.getExporterNodeAffinity(), param.getExporterTolerations());
         }
     }
 

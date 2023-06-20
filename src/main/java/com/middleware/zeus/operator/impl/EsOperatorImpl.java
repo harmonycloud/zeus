@@ -7,8 +7,10 @@ import static com.middleware.zeus.common.enums.middleware.ElasticSearchRoleEnum.
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.alibaba.fastjson.JSONArray;
 import com.middleware.zeus.common.constants.CommonConstant;
 import com.middleware.zeus.common.enums.middleware.MiddlewareTypeEnum;
+import com.middleware.zeus.util.K8sConvert;
 import com.middleware.zeus.util.numeric.ResourceCalculationUtil;
 import com.middleware.zeus.common.model.middleware.*;
 import com.middleware.zeus.operator.api.EsOperator;
@@ -126,6 +128,12 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
                     port.put("esTcpPort", param.getTcpPort());
                 }
             }
+            // kibana调度策略
+            JSONObject kibanaDeploymentConfiguration = values.getJSONObject("kibanaDeploymentConfiguration");
+            convertDeployConfiguration(kibanaDeploymentConfiguration, param.getKibanaNodeAffinity(), param.getKibanaTolerations());
+            // exporter调度策略
+            JSONObject exporterDeploymentConfiguration = values.getJSONObject("exporterDeploymentConfiguration");
+            convertDeployConfiguration(exporterDeploymentConfiguration, param.getExporterNodeAffinity(), param.getExporterTolerations());
         }
     }
 

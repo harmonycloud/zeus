@@ -46,15 +46,23 @@ public class KafkaOperatorImpl extends AbstractKafkaOperator implements KafkaOpe
             values.put("version", Double.parseDouble(middleware.getVersion()));
         }
         // 设置zookeeper信息
-        JSONObject zookeeper = new JSONObject();
-        KafkaDTO kafkaDTO = middleware.getKafkaDTO();
-        if (ObjectUtils.isEmpty(kafkaDTO)){
-            throw new BusinessException(ErrorMessage.PARAMETER_VALUE_NOT_PROVIDE);
+        if (middleware.getKafkaDTO() != null){
+            KafkaDTO kafkaDTO = middleware.getKafkaDTO();
+
+            // 设置zookeeper地址信息
+            JSONObject zookeeper = new JSONObject();
+            zookeeper.put("address", kafkaDTO.getZkAddress());
+            zookeeper.put("port", kafkaDTO.getZkPort());
+            zookeeper.put("path", kafkaDTO.getPath().replace("/",""));
+            values.put("zookeeper", zookeeper);
+
+            // console调度策略
+            JSONObject kibanaDeploymentConfiguration = values.getJSONObject("kibanaDeploymentConfiguration");
+            convertDeployConfiguration(kibanaDeploymentConfiguration, kafkaDTO.getManagerNodeAffinity(), kafkaDTO.getManagerTolerations());
+            // exporter调度策略
+            JSONObject exporterDeploymentConfiguration = values.getJSONObject("exporterDeploymentConfiguration");
+            convertDeployConfiguration(exporterDeploymentConfiguration, kafkaDTO.getExporterNodeAffinity(), kafkaDTO.getExporterTolerations());
         }
-        zookeeper.put("address", kafkaDTO.getZkAddress());
-        zookeeper.put("port", kafkaDTO.getZkPort());
-        zookeeper.put("path", kafkaDTO.getPath().replace("/",""));
-        values.put("zookeeper", zookeeper);
     }
 
     @Override

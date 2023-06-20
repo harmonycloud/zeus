@@ -1,10 +1,13 @@
 package com.middleware.zeus.common.model.middleware;
 
+import com.middleware.zeus.common.model.AffinityDTO;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
+
+import java.util.List;
 
 /**
  * @author xutianhong
@@ -37,5 +40,14 @@ public class RocketMQParam {
 
     @ApiModelProperty("是否自动创建Topic")
     private Boolean autoCreateTopicEnable;
+
+    @ApiModelProperty("监控采集污点容忍")
+    private List<String> exporterTolerations;
+    @ApiModelProperty("监控采集节点亲和")
+    private List<AffinityDTO> exporterNodeAffinity;
+    @ApiModelProperty("console污点容忍")
+    private List<String> consoleTolerations;
+    @ApiModelProperty("console节点亲和")
+    private List<AffinityDTO> consoleNodeAffinity;
 
 }

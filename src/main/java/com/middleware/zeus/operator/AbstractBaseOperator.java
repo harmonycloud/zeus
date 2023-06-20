@@ -1642,4 +1642,31 @@ public abstract class AbstractBaseOperator {
         return false;
     }
 
+    public void convertDeployConfiguration(JSONObject configuration, List<AffinityDTO> nodeAffinity, List<String> tolerations){
+        if (configuration == null){
+            configuration = new JSONObject();
+        }
+
+        if (!CollectionUtils.isEmpty(nodeAffinity)){
+            JSONObject jsonNodeAffinity = K8sConvert.convertNodeAffinity2Json(nodeAffinity);
+            JSONObject affinity = configuration.getJSONObject("affinity");
+            if (affinity == null){
+                affinity = new JSONObject();
+            }
+            affinity.put("nodeAffinity", jsonNodeAffinity);
+            configuration.put("affinity", affinity);
+        }
+
+        if (!CollectionUtils.isEmpty(tolerations)){
+            JSONArray jsonTolerations = K8sConvert.convertToleration2Json(tolerations);
+            configuration.put("tolerations", jsonTolerations);
+            StringBuilder sb = new StringBuilder();
+            for (String toleration : tolerations) {
+                sb.append(toleration).append(",");
+            }
+            configuration.put("tolerationAry", sb.substring(0, sb.length()));
+        }
+
+    }
+
 }

@@ -151,6 +151,9 @@ public class Middleware implements Serializable {
     @ApiModelProperty("redis独有字段")
     private RedisParam redisParam;
 
+    @ApiModelProperty("kafka专有信息")
+    private KafkaDTO kafkaDTO;
+
     @ApiModelProperty("mysql专有信息")
     private MysqlDTO mysqlDTO;
 
@@ -171,9 +174,6 @@ public class Middleware implements Serializable {
 
     @ApiModelProperty("管理平台地址")
     private String managePlatformAddress;
-
-    @ApiModelProperty("kafka专有信息")
-    private KafkaDTO kafkaDTO;
 
     @ApiModelProperty("是否全部使用的lvm存储")
     private Boolean isAllLvmStorage;

@@ -1,10 +1,13 @@
 package com.middleware.zeus.common.model.middleware;
 
+import com.middleware.zeus.common.model.AffinityDTO;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
+
+import java.util.List;
 
 /**
  * @auther wangpenglei
@@ -30,4 +33,13 @@ public class EsParam {
 
     @ApiModelProperty("master节点tcp端口")
     private Integer tcpPort;
+
+    @ApiModelProperty("监控采集污点容忍")
+    private List<String> exporterTolerations;
+    @ApiModelProperty("监控采集节点亲和")
+    private List<AffinityDTO> exporterNodeAffinity;
+    @ApiModelProperty("kibana污点容忍")
+    private List<String> kibanaTolerations;
+    @ApiModelProperty("kibana节点亲和")
+    private List<AffinityDTO> kibanaNodeAffinity;
 }
