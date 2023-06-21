@@ -131,11 +131,15 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
             // kibana调度策略
             JSONObject kibanaDeploymentConfiguration = values.getJSONObject("kibanaDeploymentConfiguration");
             convertDeployConfiguration(kibanaDeploymentConfiguration, param.getKibanaNodeAffinity(), param.getKibanaTolerations());
-            values.put("kibanaDeploymentConfiguration", kibanaDeploymentConfiguration);
+            if (kibanaDeploymentConfiguration != null){
+                values.put("kibanaDeploymentConfiguration", kibanaDeploymentConfiguration);
+            }
             // exporter调度策略
             JSONObject exporterDeploymentConfiguration = values.getJSONObject("exporterDeploymentConfiguration");
             convertDeployConfiguration(exporterDeploymentConfiguration, param.getExporterNodeAffinity(), param.getExporterTolerations());
-            values.put("exporterDeploymentConfiguration", exporterDeploymentConfiguration);
+            if (exporterDeploymentConfiguration != null){
+                values.put("exporterDeploymentConfiguration", exporterDeploymentConfiguration);
+            }
         }
     }
 

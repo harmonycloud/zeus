@@ -1637,7 +1637,7 @@ public abstract class AbstractBaseOperator {
 
     public void convertDeployConfiguration(JSONObject configuration, List<AffinityDTO> nodeAffinity, List<String> tolerations){
         if (configuration == null){
-            configuration = new JSONObject();
+            return;
         }
 
         if (!CollectionUtils.isEmpty(nodeAffinity)){
