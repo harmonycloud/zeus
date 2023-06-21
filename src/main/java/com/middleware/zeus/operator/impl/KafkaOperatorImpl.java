@@ -59,9 +59,12 @@ public class KafkaOperatorImpl extends AbstractKafkaOperator implements KafkaOpe
             // console调度策略
             JSONObject managerDeploymentConfiguration = values.getJSONObject("managerDeploymentConfiguration");
             convertDeployConfiguration(managerDeploymentConfiguration, kafkaDTO.getManagerNodeAffinity(), kafkaDTO.getManagerTolerations());
+            values.put("managerDeploymentConfiguration", managerDeploymentConfiguration);
             // exporter调度策略
             JSONObject exporterDeploymentConfiguration = values.getJSONObject("exporterDeploymentConfiguration");
             convertDeployConfiguration(exporterDeploymentConfiguration, kafkaDTO.getExporterNodeAffinity(), kafkaDTO.getExporterTolerations());
+            values.put("exporterDeploymentConfiguration", exporterDeploymentConfiguration);
+
         }
     }
 

@@ -90,9 +90,11 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
             // console调度策略
             JSONObject consoleDeploymentConfiguration = values.getJSONObject("consoleDeploymentConfiguration");
             convertDeployConfiguration(consoleDeploymentConfiguration, param.getConsoleNodeAffinity(), param.getConsoleTolerations());
+            values.put("consoleDeploymentConfiguration", consoleDeploymentConfiguration);
             // exporter调度策略
             JSONObject exporterDeploymentConfiguration = values.getJSONObject("exporterDeploymentConfiguration");
             convertDeployConfiguration(exporterDeploymentConfiguration, param.getExporterNodeAffinity(), param.getExporterTolerations());
+            values.put("exporterDeploymentConfiguration", exporterDeploymentConfiguration);
         }
     }
 
