@@ -1585,7 +1585,7 @@ public abstract class AbstractBaseOperator {
             List<MiddlewareInfo> pods = mw.getStatus().getInclude().get(PODS);
             if(!CollectionUtils.isEmpty(pods)){
                 pods.forEach(pod -> {
-                    if (pod.getType().equalsIgnoreCase(podType)){
+                    if (podType == null || pod.getType() == null || pod.getType().equalsIgnoreCase(podType)){
                         podService.restart(clusterId, namespace, name, type, pod.getName());
                     }
                 });
