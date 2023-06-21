@@ -7,7 +7,7 @@ logLevel: 4 # Info Level
 image:
   registry: "10.120.1.233:8443/zyydebug/"
   repository: fs-exporter
-  tag: "1.1.0" # Overrides the image tag whose default is the chart appVersion.
+  tag: "1.3.0" # Overrides the image tag whose default is the chart appVersion.
   pullPolicy: IfNotPresent
 
 hostNetWork: false
