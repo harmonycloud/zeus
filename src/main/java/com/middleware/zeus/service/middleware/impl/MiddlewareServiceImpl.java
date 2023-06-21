@@ -293,7 +293,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         operator.update(middleware, cluster);
         // reboot
         if (rebootCheck(middleware)) {
-            reboot(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), middleware.getType(), "Master");
+            reboot(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), middleware.getType(), null);
         }
     }
 
