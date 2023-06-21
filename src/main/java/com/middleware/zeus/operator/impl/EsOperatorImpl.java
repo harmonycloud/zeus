@@ -143,6 +143,22 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
         convertCommonByHelmChart(middleware, values);
         convertRegistry(middleware, values);
         convertEsParamByHelmChart(middleware, values);
+
+        EsParam esParam = middleware.getEsParam();
+        if (esParam == null) {
+            esParam = new EsParam();
+        }
+        // 处理特殊调度策略
+        if (values.containsKey("kibanaDeploymentConfiguration")){
+            esParam.setKibanaNodeAffinity(convertDeployConfigAffinity(values.getJSONObject("kibanaDeploymentConfiguration")));
+            esParam.setKibanaTolerations(convertDeployConfigTolerations(values.getJSONObject("kibanaDeploymentConfiguration")));
+        }
+
+        if (values.containsKey("exporterDeploymentConfiguration")){
+            esParam.setExporterNodeAffinity(convertDeployConfigAffinity(values.getJSONObject("exporterDeploymentConfiguration")));
+            esParam.setExporterTolerations(convertDeployConfigTolerations(values.getJSONObject("exporterDeploymentConfiguration")));
+        }
+
         super.convertCustomVolumesByHelmChart(middleware, values);
 
         // 处理es特有参数

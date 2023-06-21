@@ -635,13 +635,6 @@ public abstract class AbstractBaseOperator {
                     middleware.setScheduler(true);
                 }
             }
-
-            // 设置服务备份状态
-            /*middleware.setHasConfigBackup(middlewareBackupService.checkIfAlreadyBackup(middleware.getClusterId(),
-                middleware.getNamespace(), middleware.getType(), middleware.getName()));*/
-
-            // 设置中间件图片
-            // setImagePath(middleware, values);
         } else {
             middleware.setAliasName(middleware.getName());
         }
@@ -1660,13 +1653,40 @@ public abstract class AbstractBaseOperator {
         if (!CollectionUtils.isEmpty(tolerations)){
             JSONArray jsonTolerations = K8sConvert.convertToleration2Json(tolerations);
             configuration.put("tolerations", jsonTolerations);
-            StringBuilder sb = new StringBuilder();
+            StringBuffer sb = new StringBuffer();
             for (String toleration : tolerations) {
                 sb.append(toleration).append(",");
             }
             configuration.put("tolerationAry", sb.substring(0, sb.length()));
         }
+    }
 
+    public List<AffinityDTO> convertDeployConfigAffinity(JSONObject configuration) {
+        try {
+            if (configuration != null && configuration.containsKey("affinity")) {
+                JSONObject affinity = configuration.getJSONObject("affinity");
+                if (affinity.containsKey("nodeAffinity")) {
+                    JSONObject nodeAffinity = affinity.getJSONObject("nodeAffinity");
+                    return K8sConvert.convertNodeAffinity(
+                            JSONObject.parseObject(nodeAffinity.toJSONString(), NodeAffinity.class), AffinityDTO.class);
+                }
+            }
+        } catch (Exception e){
+            log.error("获取deploy 节点亲和配置失败", e);
+        }
+        return null;
+    }
+
+    public List<String> convertDeployConfigTolerations(JSONObject configuration){
+        try {
+            if (configuration.containsKey("tolerations")){
+                JSONArray tolerations = configuration.getJSONArray("tolerations");
+                return K8sConvert.convertTolerationToString(tolerations);
+            }
+        } catch (Exception e){
+            log.error("获取deploy容忍配置失败", e);
+        }
+        return null;
     }
 
 }

@@ -259,6 +259,31 @@ public class K8sConvert {
         return list;
     }
 
+    public static List<String> convertTolerationToString(JSONArray tolerations){
+        List<String> tolerationList = new ArrayList<>();
+        for (int i = 0; i < tolerations.size(); ++i){
+            JSONObject jsonToleration = tolerations.getJSONObject(i);
+            Toleration toleration = JSONObject.parseObject(jsonToleration.toJSONString(), Toleration.class);
+
+            if (StringUtils.isEmpty(toleration.getKey()) && StringUtils.isEmpty(toleration.getValue())){
+                continue;
+            }
+
+            StringBuilder sb = new StringBuilder();
+            String operator = toleration.getOperator();
+            if ("Equal".equals(operator) && toleration.getKey() != null && toleration.getValue() != null){
+                sb.append(toleration.getKey()).append("=").append(toleration.getValue());
+            } else if ("Exists".equals(operator) && toleration.getKey() != null){
+                sb.append(toleration.getKey());
+            }
+            if (StringUtils.isNotEmpty(toleration.getEffect())){
+                sb.append(":").append(toleration.getEffect());
+            }
+            tolerationList.add(sb.toString());
+        }
+        return tolerationList;
+    }
+
     public static Toleration convertToleration(String tolerationStr) {
         Toleration toleration = new Toleration();
         String[] tolerationAry = tolerationStr.split(":");

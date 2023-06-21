@@ -88,8 +88,8 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
         if (middleware.getRocketMQParam() != null){
             RocketMQParam param = middleware.getRocketMQParam();
             // console调度策略
-            JSONObject kibanaDeploymentConfiguration = values.getJSONObject("kibanaDeploymentConfiguration");
-            convertDeployConfiguration(kibanaDeploymentConfiguration, param.getConsoleNodeAffinity(), param.getConsoleTolerations());
+            JSONObject consoleDeploymentConfiguration = values.getJSONObject("consoleDeploymentConfiguration");
+            convertDeployConfiguration(consoleDeploymentConfiguration, param.getConsoleNodeAffinity(), param.getConsoleTolerations());
             // exporter调度策略
             JSONObject exporterDeploymentConfiguration = values.getJSONObject("exporterDeploymentConfiguration");
             convertDeployConfiguration(exporterDeploymentConfiguration, param.getExporterNodeAffinity(), param.getExporterTolerations());
@@ -126,6 +126,18 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
             }
             rocketMQParam.setReplicas(clusterInfo.getInteger("membersPerGroup"));
             rocketMQParam.setGroup(clusterInfo.getInteger("groupReplica"));
+
+            // 处理特殊调度策略
+            if (values.containsKey("consoleDeploymentConfiguration")){
+                rocketMQParam.setConsoleNodeAffinity(convertDeployConfigAffinity(values.getJSONObject("consoleDeploymentConfiguration")));
+                rocketMQParam.setConsoleTolerations(convertDeployConfigTolerations(values.getJSONObject("consoleDeploymentConfiguration")));
+            }
+
+            if (values.containsKey("exporterDeploymentConfiguration")){
+                rocketMQParam.setExporterNodeAffinity(convertDeployConfigAffinity(values.getJSONObject("exporterDeploymentConfiguration")));
+                rocketMQParam.setExporterTolerations(convertDeployConfigTolerations(values.getJSONObject("exporterDeploymentConfiguration")));
+            }
+
             middleware.setRocketMQParam(rocketMQParam);
             
             // 设置从节点数量

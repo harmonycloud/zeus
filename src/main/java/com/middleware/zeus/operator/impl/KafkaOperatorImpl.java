@@ -57,8 +57,8 @@ public class KafkaOperatorImpl extends AbstractKafkaOperator implements KafkaOpe
             values.put("zookeeper", zookeeper);
 
             // console调度策略
-            JSONObject kibanaDeploymentConfiguration = values.getJSONObject("kibanaDeploymentConfiguration");
-            convertDeployConfiguration(kibanaDeploymentConfiguration, kafkaDTO.getManagerNodeAffinity(), kafkaDTO.getManagerTolerations());
+            JSONObject managerDeploymentConfiguration = values.getJSONObject("managerDeploymentConfiguration");
+            convertDeployConfiguration(managerDeploymentConfiguration, kafkaDTO.getManagerNodeAffinity(), kafkaDTO.getManagerTolerations());
             // exporter调度策略
             JSONObject exporterDeploymentConfiguration = values.getJSONObject("exporterDeploymentConfiguration");
             convertDeployConfiguration(exporterDeploymentConfiguration, kafkaDTO.getExporterNodeAffinity(), kafkaDTO.getExporterTolerations());
@@ -88,6 +88,18 @@ public class KafkaOperatorImpl extends AbstractKafkaOperator implements KafkaOpe
             if (external != null && external.get("enable") != null) {
                 kafkaDTO.setEnableExternal(external.getBooleanValue("enable"));
             }
+
+            // 处理特殊调度策略
+            if (values.containsKey("managerDeploymentConfiguration")){
+                kafkaDTO.setManagerNodeAffinity(convertDeployConfigAffinity(values.getJSONObject("managerDeploymentConfiguration")));
+                kafkaDTO.setManagerTolerations(convertDeployConfigTolerations(values.getJSONObject("managerDeploymentConfiguration")));
+            }
+
+            if (values.containsKey("exporterDeploymentConfiguration")){
+                kafkaDTO.setExporterNodeAffinity(convertDeployConfigAffinity(values.getJSONObject("exporterDeploymentConfiguration")));
+                kafkaDTO.setExporterTolerations(convertDeployConfigTolerations(values.getJSONObject("exporterDeploymentConfiguration")));
+            }
+
             middleware.setKafkaDTO(kafkaDTO);
         }
 
