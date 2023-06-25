@@ -1125,7 +1125,9 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         });
         if (middlewareCrTypeService.isType(type)) {
             String pluralName = customResourceDefinitionWrapper.getCRPluralName(clusterId, middlewareCrTypeService.findByType(type));
-            resources.add(new K8sResource(pluralName, Arrays.asList(middlewareName)));
+            if (StringUtils.isNotEmpty(pluralName)) {
+                resources.add(new K8sResource(pluralName, Arrays.asList(middlewareName)));
+            }
         }
         // 添加configmap资源
         List<String> cmNameList = middlewareConfigYamlService.nameList(clusterId, namespace, middlewareName, type, null);
