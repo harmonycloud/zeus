@@ -49,7 +49,7 @@ public class YamlServiceImpl implements YamlService {
             msg.add(ErrorMessage.YAML_FORMAT_WRONG.getZhMsg());
         }
         // yaml为k8s资源
-        if (object != null && yamlContent.contains(API_VERSION)) {
+        if (object != null && object.containsKey(API_VERSION)) {
             // 校验基本结构
             msg.addAll(baseCheck(object));
             // yaml为configmap
