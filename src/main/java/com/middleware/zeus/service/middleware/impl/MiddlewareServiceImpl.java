@@ -119,11 +119,6 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     private ServiceAccountService serviceAccountService;
     @Autowired
     private NodeService nodeService;
-    @Value("${system.privateRegistry.middlewareServiceAccount:default}")
-    private String middlewareServiceAccount;
-
-    @Value("${system.wrongTypeKeys:tolerations,customVolumes}")
-    private String wrongTypeKeys;
     @Autowired
     private CustomResourceDefinitionWrapper customResourceDefinitionWrapper;
     @Autowired
@@ -132,6 +127,13 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     private MiddlewareConfigYamlService middlewareConfigYamlService;
     @Autowired
     private MiddlewarePvcService middlewarePvcService;
+
+    @Value("${system.privateRegistry.middlewareServiceAccount:default}")
+    private String middlewareServiceAccount;
+    @Value("${system.wrongTypeKeys:tolerations,customVolumes}")
+    private String wrongTypeKeys;
+    @Value("${active-active.label.key:topology.kubernetes.io/zone}")
+    private String zoneKey;
 
     @Override
     public List<Middleware> simpleList(String clusterId, String namespace, String type, String keyword) {
@@ -1214,7 +1216,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             return false;
         }
         JSONObject values = helmChartService.getInstalledValues(middlewareName, namespace, clusterService.findById(clusterId));
-        return values != null && values.containsKey("podAntiAffinityTopologKey") && "zone".equals(values.getString("podAntiAffinityTopologKey"));
+        return values != null && values.containsKey("podAntiAffinityTopologKey") && zoneKey.equals(values.getString("podAntiAffinityTopologKey"));
     }
 
     @Override
