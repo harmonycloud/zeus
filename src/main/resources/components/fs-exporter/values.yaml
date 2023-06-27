@@ -1,13 +1,13 @@
 # command line parameters
 web:
-  listenAddress: "0.0.0.0:9100"
+  listenAddress: "127.0.0.1:9100"
   port: 9100
 logLevel: 4 # Info Level
 
 image:
-  registry: "10.120.1.233:8443/zyydebug/"
+  # registry: "10.120.1.233:8443/zyydebug/"
   repository: fs-exporter
-  tag: "1.3.0" # Overrides the image tag whose default is the chart appVersion.
+  tag: "v1.4.0" # Overrides the image tag whose default is the chart appVersion.
   pullPolicy: IfNotPresent
 
 hostNetWork: false
@@ -21,8 +21,7 @@ resources:
     memory: 180Mi
 
 nodeSelector: {}
-tolerations:
-  - operator: Exists
+tolerations: []
 affinity: {}
 # imagePullSecrets: []
 # nameOverride: ""

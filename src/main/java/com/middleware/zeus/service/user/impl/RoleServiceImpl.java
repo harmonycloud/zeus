@@ -135,7 +135,7 @@ public class RoleServiceImpl implements RoleService {
             }
             return roleDto;
         }).sorted((o1, o2) -> o1.getWeight() == null && o2.getWeight() == null ? 0
-            : o1.getWeight() == null ? 1 : o2.getWeight() == null ? 1 : o1.getWeight().compareTo(o2.getWeight()))
+            : o1.getWeight() == null ? 1 : o2.getWeight() == null ? -1 : o1.getWeight().compareTo(o2.getWeight()))
             .filter(roleDto -> {
                 if (StringUtils.isNotEmpty(key)) {
                     return roleDto.getName().contains(key) || roleDto.getDescription().contains(key);
