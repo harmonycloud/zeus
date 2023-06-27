@@ -1943,6 +1943,13 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             convertBackupToRecord(clusterId, backup, record);
             records.add(record);
         });
+        // 如果是双活备份任务，则结合两个可用区任务的状态来设置任务整体状态
+        if (records.size() == 2 && records.get(0).getActiveActive()) {
+            String taskPhrase = getTaskPhrase(records);
+            for (MiddlewareBackupRecord record : records) {
+                record.setPhrase(taskPhrase);
+            }
+        }
         return records;
     }
 
@@ -2343,7 +2350,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             return BackupStatusEnum.FAILED.getStatus();
         } else if (BackupStatusEnum.CREATING.getStatus().equals(phrase0) && BackupStatusEnum.CREATING.getStatus().equals(phrase1)) {
             return BackupStatusEnum.CREATING.getStatus();
-        } else if (SUCCESS.getStatus().equals(phrase0) && SUCCESS.getStatus().equals(phrase1)) {
+        } else if (SUCCESS.getStatus().equals(phrase0) || SUCCESS.getStatus().equals(phrase1)) {
             return SUCCESS.getStatus();
         } else if (BackupStatusEnum.UNKNOWN.getStatus().equals(phrase0) && BackupStatusEnum.UNKNOWN.getStatus().equals(phrase1)) {
             return BackupStatusEnum.UNKNOWN.getStatus();
