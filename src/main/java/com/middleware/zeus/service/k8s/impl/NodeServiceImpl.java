@@ -195,7 +195,7 @@ public class NodeServiceImpl implements NodeService {
         return nodes.stream().filter(node -> {
             // 过滤非work节点
             return node.getMetadata() == null || node.getMetadata().getLabels() == null
-                    || (!node.getMetadata().getLabels().containsKey("node-role.kubernetes.io/slave")
+                    || (!node.getMetadata().getLabels().containsKey("node-role.kubernetes.io/master")
                     && !"true".equals(node.getMetadata().getLabels().get("system")));
         }).map(node -> {
             String nodeName = node.getMetadata().getName();
