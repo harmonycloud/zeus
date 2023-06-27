@@ -477,7 +477,7 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
     public void reboot(String clusterId, String namespace, String name, String type, String podType) {
         Postgresql postgresql = postgresqlWrapper.get(clusterId, namespace, name);
         Integer numberOfInstances = postgresql.getSpec().getNumberOfInstances();
-        if (numberOfInstances == 1 || !podType.equalsIgnoreCase("Master")) {
+        if (numberOfInstances == 1 || (StringUtils.isNotEmpty(podType) && !"Master".equalsIgnoreCase(podType))) {
             super.reboot(clusterId, namespace, name, type, podType);
             return;
         }
