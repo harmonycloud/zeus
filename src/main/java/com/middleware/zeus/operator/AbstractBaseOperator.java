@@ -934,6 +934,15 @@ public abstract class AbstractBaseOperator {
         if (middleware.getAudit() != null){
             JSONObject features = values.getJSONObject("features");
             checkAndSetAuditSqlStatus(features, middleware);
+            // 特殊处理postgresql
+            if (middleware.getType().equals(MiddlewareTypeEnum.POSTGRESQL.getType())){
+                JSONObject args = values.getJSONObject("args");
+                if (args == null){
+                    args = new JSONObject();
+                }
+                args.put("pgaudit.log", "WRITE,DDL");
+                values.put("args", args);
+            }
         }
     }
 
