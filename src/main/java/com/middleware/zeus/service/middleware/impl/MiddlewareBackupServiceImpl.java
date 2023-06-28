@@ -2342,20 +2342,11 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         String phrase0 = records.get(0).getPhrase();
         String phrase1 = records.get(1).getPhrase();
 
-        if (BackupStatusEnum.RUNNING.getStatus().equals(phrase0) && BackupStatusEnum.RUNNING.getStatus().equals(phrase1)) {
-            return BackupStatusEnum.RUNNING.getStatus();
-        } else if (BackupStatusEnum.DELETING.getStatus().equals(phrase0) && BackupStatusEnum.DELETING.getStatus().equals(phrase1)) {
-            return BackupStatusEnum.DELETING.getStatus();
-        } else if (BackupStatusEnum.FAILED.getStatus().equals(phrase0) && BackupStatusEnum.FAILED.getStatus().equals(phrase1)) {
-            return BackupStatusEnum.FAILED.getStatus();
-        } else if (BackupStatusEnum.CREATING.getStatus().equals(phrase0) && BackupStatusEnum.CREATING.getStatus().equals(phrase1)) {
-            return BackupStatusEnum.CREATING.getStatus();
-        } else if (SUCCESS.getStatus().equals(phrase0) || SUCCESS.getStatus().equals(phrase1)) {
+        if (phrase0.equals(phrase1)) {
+            return phrase0;
+        }
+        if (SUCCESS.getStatus().equals(phrase0) || SUCCESS.getStatus().equals(phrase1)) {
             return SUCCESS.getStatus();
-        } else if (BackupStatusEnum.UNKNOWN.getStatus().equals(phrase0) && BackupStatusEnum.UNKNOWN.getStatus().equals(phrase1)) {
-            return BackupStatusEnum.UNKNOWN.getStatus();
-        } else if (BackupStatusEnum.RECYCLEFAILED.getStatus().equals(phrase0) && BackupStatusEnum.RECYCLEFAILED.getStatus().equals(phrase1)) {
-            return BackupStatusEnum.RECYCLEFAILED.getStatus();
         } else {
             return BackupStatusEnum.RUNNING.getStatus();
         }
