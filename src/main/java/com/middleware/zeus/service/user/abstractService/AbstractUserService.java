@@ -215,8 +215,9 @@ public abstract class AbstractUserService {
 
             List<UserRole> userRoleList = getUserDto(userMap.getString("username"), true).getUserRoleList();
             userRoleList = userRoleList.stream()
-                    .filter(userRole -> userRole.getRoleId() == 1 || userRole.getProjectId().equals(projectId))
-                    .collect(Collectors.toList());
+                .filter(userRole -> userRole.getRoleId() == 1
+                    || (StringUtils.isNotEmpty(userRole.getProjectId()) && userRole.getProjectId().equals(projectId)))
+                .collect(Collectors.toList());
             if (!CollectionUtils.isEmpty(userRoleList)) {
                 return userRoleList.get(0).getPower();
             }
