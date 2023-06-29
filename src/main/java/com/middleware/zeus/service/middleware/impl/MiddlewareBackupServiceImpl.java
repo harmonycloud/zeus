@@ -2002,7 +2002,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
         backupRecord.setAddressId(labels.get("addressId"));
         backupRecord.setSourceName(backup.getSpec().getName());
-        backupRecord.setBackupMode("single");
+        backupRecord.setBackupMode(getBackupMode(backup));
         backupRecord.setSchedule(false);
         backupRecord.setOwner(labels.get(OWNER));
         // 设置备份任务可用区别名
@@ -2013,6 +2013,20 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             backupRecord.setActiveActive(true);
         } else {
             backupRecord.setActiveActive(false);
+        }
+    }
+
+    /**
+     * 获取记录的备份类型，如果记录是由周期备份任务产生的，则为schedule
+     * @param backup
+     * @return
+     */
+    private String getBackupMode(MiddlewareBackup backup) {
+        if (backup != null && backup.getMetadata() != null && backup.getMetadata().getLabels() != null
+                && backup.getMetadata().getLabels().containsKey("owner")) {
+            return "schedule";
+        } else {
+            return "single";
         }
     }
 
