@@ -46,6 +46,8 @@ import org.springframework.util.ObjectUtils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -817,7 +819,7 @@ public class OverviewServiceImpl implements OverviewService {
     @Override
     public AlertMessageDTO getAlertInfo(String clusterId, Integer current, Integer size, String level) {
         //获取异常告警信息
-        Date now = new Date();
+        Date now = Date.from(LocalDateTime.now().toInstant(ZoneOffset.UTC));
         Date ago = DateUtil.addHour(now, -24);
         String beginTime = DateUtils.DateToString(ago, DateType.YYYY_MM_DD_HH_MM_SS.getValue());
         String endTime = DateUtils.DateToString(now, DateType.YYYY_MM_DD_HH_MM_SS.getValue());
