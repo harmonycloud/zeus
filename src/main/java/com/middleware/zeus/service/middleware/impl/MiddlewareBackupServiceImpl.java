@@ -2024,7 +2024,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     private String getBackupMode(MiddlewareBackup backup) {
         if (backup != null && backup.getMetadata() != null && backup.getMetadata().getLabels() != null
                 && backup.getMetadata().getLabels().containsKey("owner")) {
-            return "schedule";
+            return "period";
         } else {
             return "single";
         }
