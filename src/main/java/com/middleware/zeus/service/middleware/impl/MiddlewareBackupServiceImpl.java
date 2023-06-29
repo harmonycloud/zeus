@@ -2342,6 +2342,15 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         String phrase0 = records.get(0).getPhrase();
         String phrase1 = records.get(1).getPhrase();
 
+        if (phrase0 == null && phrase1 != null) {
+            return phrase1;
+        }
+        if (phrase0 != null && phrase1 == null) {
+            return phrase0;
+        }
+        if(phrase0 == null){
+            return BackupStatusEnum.UNKNOWN.getStatus();
+        }
         if (phrase0.equals(phrase1)) {
             return phrase0;
         }
