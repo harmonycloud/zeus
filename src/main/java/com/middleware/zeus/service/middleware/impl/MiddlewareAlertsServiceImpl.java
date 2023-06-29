@@ -555,29 +555,29 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
     }
 
     public List<AlertUserDto> listAllocatableAlertUser(String clusterId, String namespace, String middlewareName,
-                                                       String organId, String projectId) {
+        String organId, String projectId) {
         // 获取告警用户列表
         List<AlertUserDo> alertUserDoList = alertUserService.list(clusterId, namespace, middlewareName, SERVICE);
-        // 获取用户集，并过滤掉已分配的用户和普通用户
-        List<UserDto> userDtoList = projectService.getUser(organId, projectId, false).stream()
-                .filter(userDto -> alertUserDoList.stream()
-                        .noneMatch(alertUserDo -> alertUserDo.getUsername().equals(userDto.getUserName())))
-                .collect(Collectors.toList());
-        // 获取超级管理员用户
-        userDtoList.addAll(userService.list(null).stream()
+        // 获取用户集
+        List<UserDto> userDtoList = projectService.getUser(organId, projectId, false);
+        // 获取超级管理员用户,并过滤admin用户和同时存在于项目中的超级管理员角色用户
+        List<UserDto> adminUserList = userService.list(null).stream()
             .filter(
                 userDto -> userDto.getIsAdmin() != null && userDto.getIsAdmin() && !userDto.getUserName().equals(ADMIN))
-            .filter(userDto -> alertUserDoList.stream()
-                .noneMatch(alertUserDo -> alertUserDo.getUsername().equals(userDto.getUserName())))
-            .collect(Collectors.toList()));
-        // 返回封装数据
-        return userDtoList.stream().map(userDto -> {
-            AlertUserDto alertUserDto = new AlertUserDto();
-            BeanUtils.copyProperties(userDto, alertUserDto);
-            alertUserDto.setMail(userDto.getEmail());
-            alertUserDto.setUsername(userDto.getUserName());
-            return alertUserDto;
-        }).collect(Collectors.toList());
+            .filter(userDto -> userDtoList.stream()
+                .noneMatch(existUser -> existUser.getUserName().equals(userDto.getUserName())))
+            .collect(Collectors.toList());
+        // 合并可添加用户
+        userDtoList.addAll(adminUserList);
+        // 返回封装数据并过滤已分配的告警用户
+        return userDtoList.stream().filter(userDto -> alertUserDoList.stream()
+            .noneMatch(alertUserDo -> alertUserDo.getUsername().equals(userDto.getUserName()))).map(userDto -> {
+                AlertUserDto alertUserDto = new AlertUserDto();
+                BeanUtils.copyProperties(userDto, alertUserDto);
+                alertUserDto.setMail(userDto.getEmail());
+                alertUserDto.setUsername(userDto.getUserName());
+                return alertUserDto;
+            }).collect(Collectors.toList());
     }
 
     public void checkBackupAlert(String clusterId, String namespace, String middlewareName, String type){
