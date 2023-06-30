@@ -67,6 +67,7 @@ spec:
           mountPath: /var/lib/filebeat
         - name: root
           mountPath: /host
+          mountPropagation: Bidirectional
           readOnly: true
         - name: localtime
           mountPath: /etc/localtime
@@ -80,6 +81,7 @@ spec:
           capabilities:
             add:
             - SYS_ADMIN
+          privileged: true
       terminationGracePeriodSeconds: 30
       hostNetwork: false
       volumes:

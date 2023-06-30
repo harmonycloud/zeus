@@ -188,6 +188,9 @@ public class MiddlewareBackupRecord {
     @ApiModelProperty("双活备份信息是否相同")
     private Boolean sameActiveActiveBackup;
 
+    @ApiModelProperty("不应被删除的备份记录")
+    private Boolean protect;
+
     public MiddlewareBackupRecord() {
     }
 

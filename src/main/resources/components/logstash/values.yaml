@@ -85,6 +85,7 @@ logstashPipeline:
             match => ["LogTime","YYYY-MM-dd'T'HH:mm:ss", "ISO8601"]
             target => "@timestamp"
             timezone => "Asia/Shanghai"
+            remove_field => ["LogTime"]
           }
         }
         if [k8s_container_name] == "postgres" {
@@ -96,6 +97,7 @@ logstashPipeline:
             match => [ "LogTime", "YYYY-MM-dd HH:mm:ss.SSS 'CST'"]
             target => "@timestamp"
             timezone => "Asia/Shanghai"
+            remove_field => ["LogTime"]
           }
           csv {
             columns => ["log_time","user_name","database_name","process_id","connection_from","session_id","session_line_num","command_tag","session_start_time","virtual_transaction_id","transaction_id","error_severity","sql_state_code","message_audit","detail","hint","internal_query","internal_query_pos","context","query_orgin","query_pos_orgin","location","application_name","backend_type","leader_pid","query_id"]
@@ -115,6 +117,7 @@ logstashPipeline:
             match => ["log_time", "yyyy-MM-dd HH:mm:ss.SSS 'CST'"]
             target => "@timestamp"
             timezone => "Asia/Shanghai"
+            remove_field => ["log_time"]
           }
           mutate {
             remove_field => ["@version"]
@@ -143,6 +146,7 @@ logstashPipeline:
             match => [ "LogTime", "dd MMM YYYY HH:mm:ss.SSS"]
             target => "@timestamp"
             timezone => "Asia/Shanghai"
+            remove_field => ["LogTime"]
           }
         }
         if [k8s_container_name] == "redis-init" {
@@ -154,15 +158,17 @@ logstashPipeline:
             match => [ "LogTime", "dd MMM YYYY HH:mm:ss.SSS"]
             target => "@timestamp"
             timezone => "Asia/Shanghai"
+            remove_field => ["LogTime"]
           }
         }
       }
       else if [index] == "middlewarestdout" {
-         json {
-          source => "message"
+        grok {
+          match => { "message" => "%{TIMESTAMP_ISO8601:timestamp} %{WORD:word1} %{WORD:word2} %{GREEDYDATA:logmessage}" }
         }
         mutate {
-          rename => { "log" => "message" }
+          replace => { "message" => "%{logmessage}" }
+          remove_field => ["timestamp","word1","word2","logmessage"]
         }
         date{
           match => ["time", "ISO8601"]

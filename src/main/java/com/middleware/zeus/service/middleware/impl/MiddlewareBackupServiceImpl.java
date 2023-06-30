@@ -1,7 +1,7 @@
 package com.middleware.zeus.service.middleware.impl;
 
 import static com.middleware.zeus.common.constants.BackupConstant.*;
-import static com.middleware.zeus.common.constants.CommonConstant.INCR;
+import static com.middleware.zeus.common.constants.CommonConstant.*;
 import static com.middleware.zeus.common.constants.NameConstant.*;
 import static com.middleware.zeus.common.enums.BackupStatusEnum.SUCCESS;
 
@@ -1083,6 +1083,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                     activeArea.equals(record.getActiveArea())).collect(Collectors.toList());
         }
         setBackupPosition(recordList);
+        setProtectBackupRecord(recordList);
         return sortAndSetAliasName(recordList, orderBy);
     }
 
@@ -1515,7 +1516,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 }
                 BigDecimal o1Size = new BigDecimal(o1.getByteSize());
                 BigDecimal o2Size = new BigDecimal(o2.getByteSize());
-                return o1Size.compareTo(o2Size) * (order[1].equals("desc") ? -1 : 1);
+                return o1Size.compareTo(o2Size) * ("desc".equals(order[1]) ? -1 : 1);
             } else if ("time".equals(order[0])) {
                 return o1.getBackupTime() == null ? 1
                         : o2.getBackupTime() == null ? -1 : o2.getBackupTime().compareTo(o1.getBackupTime()) * ("desc".equals(order[1]) ? 1 : -1);
@@ -2492,6 +2493,40 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         recordList.sort((o1, o2) -> o1.getBackupTime() == null ? -1
                 : o2.getBackupTime() == null ? -1 : o2.getBackupTime().compareTo(o1.getBackupTime()));
         return recordList;
+    }
+
+    /***
+     * 标记不应被删除的备份记录
+     *
+     * @param recordList 备份记录列表
+     */
+    public void setProtectBackupRecord(List<MiddlewareBackupRecord> recordList){
+        if(CollectionUtils.isEmpty(recordList)){
+            return;
+        }
+        recordList.sort(Comparator.comparing(MiddlewareBackupRecord::getBackupTime, Comparator.nullsLast(Date::compareTo)).reversed());
+
+        // 分别标记可用区A和可用区B中最新的成功的全量备份任务为不可删除任务
+        boolean protectA = false;
+        boolean protectB = false;
+        for (MiddlewareBackupRecord record : recordList) {
+            if (record.getPhrase().equals(SUCCESS.getStatus())) {
+                // 在非双活场景下 找到最新的记录标记完则直接返回
+                if (StringUtils.isEmpty(record.getActiveArea()) && !protectA && !protectB) {
+                    record.setProtect(true);
+                    return;
+                } else if (record.getActiveArea().equals(ZONE_A) && !protectA) {
+                    record.setProtect(true);
+                    protectA = true;
+                } else if (record.getActiveArea().equals(ZONE_B) && !protectB) {
+                    record.setProtect(true);
+                    protectB = true;
+                }
+            }
+            if (protectA && protectB) {
+                return;
+            }
+        }
     }
 
 }
