@@ -770,7 +770,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 backupScheduleCRDService.listByLabels(clusterId, namespace, labels);
         middlewareBackupScheduleList.forEach(item -> {
             try {
-                backupScheduleCRDService.delete(clusterId, namespace, item.getMetadata().getName());
+                backupScheduleCRDService.delete(clusterId, namespace, item.getMetadata().getName(), true);
             } catch (IOException e) {
                 log.error("删除定时备份失败");
             }
@@ -780,7 +780,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         if (!CollectionUtils.isEmpty(backupCRList)) {
             backupCRList.forEach(item -> {
                 try {
-                    backupCRDService.delete(clusterId, namespace, item.getMetadata().getName());
+                    backupCRDService.delete(clusterId, namespace, item.getMetadata().getName(), true);
                 } catch (IOException e) {
                     log.error("删除立即备份失败");
                 }
@@ -2002,7 +2002,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
         backupRecord.setAddressId(labels.get("addressId"));
         backupRecord.setSourceName(backup.getSpec().getName());
-        backupRecord.setBackupMode("single");
+        backupRecord.setBackupMode(getBackupMode(backup));
         backupRecord.setSchedule(false);
         backupRecord.setOwner(labels.get(OWNER));
         // 设置备份任务可用区别名
@@ -2013,6 +2013,20 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             backupRecord.setActiveActive(true);
         } else {
             backupRecord.setActiveActive(false);
+        }
+    }
+
+    /**
+     * 获取记录的备份类型，如果记录是由周期备份任务产生的，则为schedule
+     * @param backup
+     * @return
+     */
+    private String getBackupMode(MiddlewareBackup backup) {
+        if (backup != null && backup.getMetadata() != null && backup.getMetadata().getLabels() != null
+                && backup.getMetadata().getLabels().containsKey("owner")) {
+            return "period";
+        } else {
+            return "single";
         }
     }
 
@@ -2342,6 +2356,15 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         String phrase0 = records.get(0).getPhrase();
         String phrase1 = records.get(1).getPhrase();
 
+        if (phrase0 == null && phrase1 != null) {
+            return phrase1;
+        }
+        if (phrase0 != null && phrase1 == null) {
+            return phrase0;
+        }
+        if(phrase0 == null){
+            return BackupStatusEnum.UNKNOWN.getStatus();
+        }
         if (phrase0.equals(phrase1)) {
             return phrase0;
         }
