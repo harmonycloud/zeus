@@ -770,7 +770,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 backupScheduleCRDService.listByLabels(clusterId, namespace, labels);
         middlewareBackupScheduleList.forEach(item -> {
             try {
-                backupScheduleCRDService.delete(clusterId, namespace, item.getMetadata().getName());
+                backupScheduleCRDService.delete(clusterId, namespace, item.getMetadata().getName(), true);
             } catch (IOException e) {
                 log.error("删除定时备份失败");
             }
@@ -780,7 +780,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         if (!CollectionUtils.isEmpty(backupCRList)) {
             backupCRList.forEach(item -> {
                 try {
-                    backupCRDService.delete(clusterId, namespace, item.getMetadata().getName());
+                    backupCRDService.delete(clusterId, namespace, item.getMetadata().getName(), true);
                 } catch (IOException e) {
                     log.error("删除立即备份失败");
                 }
