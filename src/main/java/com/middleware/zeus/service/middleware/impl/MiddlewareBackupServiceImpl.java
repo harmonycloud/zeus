@@ -2510,7 +2510,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         boolean protectA = false;
         boolean protectB = false;
         for (MiddlewareBackupRecord record : recordList) {
-            if (record.getPhrase().equals(SUCCESS.getStatus())) {
+            if (StringUtils.isNotEmpty(record.getPhrase()) && record.getPhrase().equals(SUCCESS.getStatus())) {
                 // 在非双活场景下 找到最新的记录标记完则直接返回
                 if (StringUtils.isEmpty(record.getActiveArea()) && !protectA && !protectB) {
                     record.setProtect(true);
