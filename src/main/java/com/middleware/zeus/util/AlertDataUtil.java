@@ -32,16 +32,17 @@ public class AlertDataUtil {
             });
         }
 
+        // todo 暂时写死东8区
         hourList.forEach(item -> {
             Map<String, Object> single = new HashMap();
             if (map.containsKey(item)) {
-                single.put(DateUtil.addHourAndGetNormal(item, 0), map.get(item));
+                single.put(DateUtil.addHourAndGetNormal(item, 8), map.get(item));
                 single.put("num", map.get(item));
-                single.put("alerttime", DateUtil.addHourAndGetNormal(item, 0));
+                single.put("alerttime", DateUtil.addHourAndGetNormal(item, 8));
             } else {
-                single.put(DateUtil.addHourAndGetNormal(item, 0), "0");
+                single.put(DateUtil.addHourAndGetNormal(item, 8), "0");
                 single.put("num", 0);
-                single.put("alerttime", DateUtil.addHourAndGetNormal(item, 0));
+                single.put("alerttime", DateUtil.addHourAndGetNormal(item, 8));
             }
             resList.add(single);
         });
