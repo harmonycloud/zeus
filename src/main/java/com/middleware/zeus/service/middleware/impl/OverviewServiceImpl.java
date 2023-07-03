@@ -888,7 +888,7 @@ public class OverviewServiceImpl implements OverviewService {
             return alertDTO;
         }).collect(Collectors.toList()));
 
-        List<String> hourList = DateUtil.calcHour(now);
+        List<String> hourList = DateUtil.calcHour(new Date());
         List<Map<String, Object>> criticalList = beanAlertRecordMapper.queryByTimeAndLevel(beginTime, endTime, "critical");
         List<Map<String, Object>> infoList = beanAlertRecordMapper.queryByTimeAndLevel(beginTime, endTime, "info");
         List<Map<String, Object>> warningList = beanAlertRecordMapper.queryByTimeAndLevel(beginTime, endTime, "warning");
