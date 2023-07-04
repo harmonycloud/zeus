@@ -47,7 +47,7 @@ public class ServiceWrapper {
 
     public Service create(String clusterId, String namespace, Service service) {
         try {
-            return K8sClient.getClient(clusterId).services().inNamespace(namespace).create(service);
+            return K8sClient.getClient(clusterId).services().resource(service).create();
         } catch (KubernetesClientException e) {
             if (e.getCode() == 409) {
                 throw new BusinessException(DictEnum.SERVICE_NAME, service.getMetadata().getName(), ErrorMessage.EXIST);

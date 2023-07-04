@@ -27,8 +27,6 @@ public class IngressController {
 
     @Autowired
     private IngressService ingressService;
-    @Autowired
-    private NodeService nodeService;
 
     @ApiOperation(value = "查询中间件对外访问列表", notes = "查询中间件对外访问列表")
     @ApiImplicitParams({

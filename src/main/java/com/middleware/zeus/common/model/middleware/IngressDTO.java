@@ -1,5 +1,6 @@
 package com.middleware.zeus.common.model.middleware;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
@@ -92,7 +93,7 @@ public class IngressDTO {
     /**
      * 四层或七层
      */
-    private int networkModel;
+    private Integer networkModel;
 
     /**
      * ingress vip
@@ -102,7 +103,9 @@ public class IngressDTO {
     /**
      * 是否开启集群外访问
      */
-    private boolean externalEnable;
+    private Boolean externalEnable;
+    @ApiModelProperty("跳过端口冲突")
+    private Boolean skipPortConflict;
 
     public IngressDTO(String clusterId, String namespace, String middlewareType, String middlewareName) {
         this.namespace = namespace;

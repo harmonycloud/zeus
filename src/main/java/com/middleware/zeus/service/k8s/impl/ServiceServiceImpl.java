@@ -2,7 +2,7 @@ package com.middleware.zeus.service.k8s.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.middleware.zeus.common.enums.middleware.MiddlewareTypeEnum;
+import com.middleware.zeus.common.model.k8s.ServiceDo;
 import com.middleware.zeus.common.model.middleware.PortDetailDTO;
 import com.middleware.zeus.common.model.middleware.ServicePortDTO;
 import com.middleware.zeus.bean.BeanMiddlewareInfo;
@@ -17,6 +17,8 @@ import com.middleware.zeus.service.k8s.ServiceService;
 import com.middleware.zeus.service.registry.HelmChartService;
 import com.middleware.zeus.util.middleware.InternalServiceFilterUtil;
 import com.middleware.zeus.util.middleware.MiddlewareServicePurposeUtil;
+import io.fabric8.kubernetes.api.model.IntOrString;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.ServicePort;
 import io.fabric8.kubernetes.api.model.ServiceSpec;
 import org.apache.commons.lang3.StringUtils;
@@ -29,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import static com.middleware.zeus.common.constants.NameConstant.REDIS;
 import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.EXPORTER;
 import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.HEADLESS;
 
@@ -153,6 +156,20 @@ public class ServiceServiceImpl implements ServiceService {
         return filterByMiddlewareType(clusterId, namespace, name, type, servicePortDTOS);
     }
 
+    @Override
+    public void create(String clusterId, String namespace, ServiceDo serviceDo) {
+        // 装换数据结构
+        serviceDo.setNamespace(namespace);
+        io.fabric8.kubernetes.api.model.Service service = convertServiceDo2Service(serviceDo);
+        // 创建service
+        serviceWrapper.create(clusterId, namespace, service);
+    }
+
+    @Override
+    public void delete(String clusterId, String namespace, String name) {
+        serviceWrapper.delete(clusterId, namespace, name);
+    }
+
     /**
      * 过滤掉多余的服务
      * @param middlewareName
@@ -217,6 +234,38 @@ public class ServiceServiceImpl implements ServiceService {
         List<ServicePortDTO> list = new ArrayList<>();
         list.add(servicePortDTO0);
         return list;
+    }
+
+    public io.fabric8.kubernetes.api.model.Service convertServiceDo2Service(ServiceDo serviceDo){
+        io.fabric8.kubernetes.api.model.Service service = new io.fabric8.kubernetes.api.model.Service();
+
+        ObjectMeta meta = new ObjectMeta();
+        meta.setNamespace(serviceDo.getNamespace());
+        meta.setName(serviceDo.getName());
+        meta.setLabels(serviceDo.getLabels());
+        meta.setAnnotations(serviceDo.getAnnotations());
+
+        ServiceSpec spec = new ServiceSpec();
+        List<ServicePort> servicePortList = new ArrayList<>();
+        for (PortDetailDTO portDetailDTO : serviceDo.getPortDetailDtoList()){
+            ServicePort servicePort = new ServicePort();
+            servicePort.setName(REDIS);
+            servicePort.setProtocol("TCP");
+            servicePort.setPort(Integer.valueOf(portDetailDTO.getPort()));
+            servicePort.setTargetPort(new IntOrString(Integer.valueOf(portDetailDTO.getTargetPort())));
+            if (StringUtils.isNotEmpty(portDetailDTO.getNodePort())){
+                servicePort.setNodePort(Integer.valueOf(portDetailDTO.getNodePort()));
+            }
+            servicePortList.add(servicePort);
+        }
+        spec.setPorts(servicePortList);
+        spec.setSelector(serviceDo.getSelector());
+        spec.setType(serviceDo.getType());
+
+        service.setMetadata(meta);
+        service.setSpec(spec);
+
+        return service;
     }
 
 }

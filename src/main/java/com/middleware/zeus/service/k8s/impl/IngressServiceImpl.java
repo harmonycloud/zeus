@@ -10,6 +10,7 @@ import com.middleware.zeus.common.exception.BusinessException;
 import com.middleware.zeus.common.exception.CaasRuntimeException;
 import com.middleware.zeus.common.model.IngressComponentDto;
 import com.middleware.zeus.common.model.TraefikPort;
+import com.middleware.zeus.common.model.k8s.ServiceDo;
 import com.middleware.zeus.common.model.middleware.*;
 import com.middleware.zeus.util.encrypt.PasswordUtils;
 import com.middleware.zeus.util.uuid.UUIDUtils;
@@ -42,7 +43,10 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
-import static com.middleware.zeus.common.constants.CommonConstant.NUM_ONE;
+import static com.middleware.zeus.common.constants.CommonConstant.*;
+import static com.middleware.zeus.common.constants.LdapConfigConstant.PORT;
+import static com.middleware.zeus.common.constants.NameConstant.REDIS;
+import static com.middleware.zeus.common.constants.NameConstant.SENTINEL;
 import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.*;
 import static com.middleware.zeus.common.constants.registry.HelmChartConstant.*;
 
@@ -63,10 +67,8 @@ public class IngressServiceImpl implements IngressService {
 
     @Autowired
     private IngressWrapper ingressWrapper;
-
     @Autowired
     private ConfigMapWrapper configMapWrapper;
-
     @Autowired
     private ClusterService clusterService;
     @Autowired
@@ -177,11 +179,23 @@ public class IngressServiceImpl implements IngressService {
         if (StringUtils.isBlank(ingressDTO.getMiddlewareName())) {
             ingressDTO.setMiddlewareName(middlewareName);
         }
-        // 判断端口是否已被使用
-        if (!CollectionUtils.isEmpty(ingressDTO.getServiceList())) {
+        // 跳过冲突端口
+        if (ingressDTO.getSkipPortConflict() != null && ingressDTO.getSkipPortConflict()) {
+            Set<Integer> usedPortSet = getUsedPortSet(clusterService.findById(clusterId), true);
+            for (ServiceDTO serviceDTO : ingressDTO.getServiceList()){
+                if (StringUtils.isEmpty(serviceDTO.getExposePort())){
+                    return;
+                }
+                Integer exposePort = findNextExposePort(usedPortSet, Integer.valueOf(serviceDTO.getExposePort()));
+                usedPortSet.add(exposePort);
+                serviceDTO.setExposePort(String.valueOf(exposePort));
+            }
+        } else if (!CollectionUtils.isEmpty(ingressDTO.getServiceList())) {
+            // 判断端口是否已被使用
             ingressDTO.getServiceList().forEach(ingress -> {
                 if (StringUtils.isNotBlank(ingress.getExposePort())) {
-                    verifyServicePort(clusterId, ingressDTO.getIngressClassName(), ingressDTO.getExposeType(), Integer.parseInt(ingress.getExposePort()));
+                    verifyServicePort(clusterId, ingressDTO.getIngressClassName(), ingressDTO.getExposeType(),
+                        Integer.parseInt(ingress.getExposePort()));
                 }
             });
         }
@@ -370,6 +384,17 @@ public class IngressServiceImpl implements IngressService {
         } else if (StringUtils.equals(ingressDTO.getExposeType(), MIDDLEWARE_EXPOSE_NODEPORT)) {
             serviceWrapper.delete(clusterId, namespace, name);
         }
+        // 关闭redis哨兵模式集群外访问
+        if (ingressDTO.getMiddlewareType().equals(MiddlewareTypeEnum.REDIS.getType())
+            && ingressDTO.getExternalEnable() != null && ingressDTO.getExternalEnable()) {
+            MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
+            JSONObject values = helmChartService.getInstalledValues(middlewareName, namespace, cluster);
+            Middleware middleware =
+                new Middleware(clusterId, namespace, middlewareName, ingressDTO.getMiddlewareType());
+            middleware.setChartName(ingressDTO.getMiddlewareType());
+            middleware.setChartVersion(helmChartService.getChartVersion(values, ingressDTO.getMiddlewareType()));
+            helmChartService.upgrade(middleware, "redis.externalAccess.enabled=true", cluster);
+        }
     }
 
     @Override
@@ -431,16 +456,25 @@ public class IngressServiceImpl implements IngressService {
             // service nodePort
             List<io.fabric8.kubernetes.api.model.Service> svcList = serviceWrapper.list(clusterId, namespace);
             if (!CollectionUtils.isEmpty(svcList)) {
+                List<IngressDTO> nodePortList = new ArrayList<>();
                 svcList.forEach(svc -> {
                     // 过滤不包含命名规则的中间件
-                    if (!svc.getMetadata().getName().contains(middlewareName) || !svc.getMetadata().getName().contains("nodeport") || svc.getMetadata().getLabels() == null || !svc.getMetadata().getLabels().containsKey(MIDDLEWARE_NAME) || !svc.getMetadata().getLabels().containsValue(middlewareName)) {
+                    if (!svc.getMetadata().getName().contains(middlewareName)
+                        || !svc.getMetadata().getName().contains("nodeport") || svc.getMetadata().getLabels() == null
+                        || !svc.getMetadata().getLabels().containsKey(MIDDLEWARE_NAME)
+                        || !svc.getMetadata().getLabels().containsValue(middlewareName)) {
                         return;
                     }
+                    
                     IngressDTO dto = dealNodePortRoutine(clusterId, namespace, cluster.getHost(), svc);
                     if (dto != null) {
-                        resList.add(dto);
+                        nodePortList.add(dto);
                     }
                 });
+                // 特殊处理 kafka/rocketmq/redis等集群外访问情况
+                resolveExternalSituation(new Middleware(clusterId, namespace, middlewareName, type), nodePortList);
+
+                resList.addAll(nodePortList);
             }
             // ingress tcp
             List<IngressComponentDto> ingressComponentDtoList = ingressComponentService.list(clusterId);
@@ -560,9 +594,6 @@ public class IngressServiceImpl implements IngressService {
     // 对部分中间件做特殊处理
     private void configCustomMiddleware(String clusterId, String namespace, String middlewareName, IngressDTO ingressDTO) {
         String middlewareType = ingressDTO.getMiddlewareType();
-        if ("rocketmq".equals(middlewareType) || "kafka".equals(middlewareType)) {
-            allocateMQServicePort(clusterId, ingressDTO);
-        }
         switch (middlewareType) {
             case "rocketmq":
             case "kafka":
@@ -571,6 +602,8 @@ public class IngressServiceImpl implements IngressService {
             case "mysql":
                 setMysqlServicePort(clusterId, namespace, middlewareName, ingressDTO);
                 break;
+            case "redis":
+                createRedisPodService(clusterId, namespace, middlewareName, ingressDTO);
         }
     }
 
@@ -1197,7 +1230,7 @@ public class IngressServiceImpl implements IngressService {
         if (CollectionUtils.isEmpty(servicePortList)) {
             return null;
         }
-        List<ServiceDTO> serviceDTOList = new ArrayList<>(10);
+        List<ServiceDTO> serviceDTOList = new ArrayList<>(20);
         for (ServicePort servicePort : servicePortList) {
             ServiceDTO serviceDTO = new ServiceDTO();
             serviceDTO.setServiceName(service.getMetadata().getName());
@@ -1261,6 +1294,8 @@ public class IngressServiceImpl implements IngressService {
                     .setServiceList(serviceList);
             ingressDTOList.add(ingressDTO);
         });
+        Middleware middleware = new Middleware(clusterId, namespace, crd.getSpec().getName(), middlewareCrTypeService.findTypeByCrType(crd.getSpec().getType()));
+        resolveExternalSituationInTcp(svcName, middleware, ingressDTOList, tcpRoutineMap);
         return ingressDTOList;
     }
 
@@ -1856,4 +1891,166 @@ public class IngressServiceImpl implements IngressService {
         return null;
     }
 
+    /**
+     * 创建redis pod service
+     *
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param middlewareName 中间件名称
+     * @param ingressDTO ingress对象
+     */
+    public void createRedisPodService(String clusterId, String namespace, String middlewareName, IngressDTO ingressDTO){
+        List<ServiceDTO> serviceDTOList = ingressDTO.getServiceList();
+        if(CollectionUtils.isEmpty(serviceDTOList)){
+            return;
+        }
+        // 非哨兵服务暴露返回
+        if (serviceDTOList.stream().noneMatch(serviceDTO -> serviceDTO.getServiceName().equals(middlewareName + LINE + SENTINEL))){
+            return;
+        }
+        // 判断服务是否是主机网络,是则返回
+        MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
+        JSONObject values =
+            helmChartService.getInstalledValues(middlewareName, namespace, cluster);
+        if (values == null || !values.containsKey(REDIS) || values.getJSONObject(REDIS) == null
+            || !values.getJSONObject(REDIS).containsKey("hostNetwork")
+            || values.getJSONObject(REDIS).getBoolean("hostNetwork")) {
+            return;
+        }
+
+        // 初始化serviceDo
+        PortDetailDTO portDetailDTO = new PortDetailDTO();
+        portDetailDTO.setName(REDIS);
+        portDetailDTO.setPort(values.getJSONObject(REDIS).getString(PORT));
+        portDetailDTO.setTargetPort(values.getJSONObject(REDIS).getString(PORT));
+        portDetailDTO.setProtocol("TCP");
+
+        ServiceDo serviceDo = new ServiceDo();
+        serviceDo.setClusterId(clusterId);
+        serviceDo.setNamespace(namespace);
+        serviceDo.setPortDetailDtoList(Collections.singletonList(portDetailDTO));
+
+        // 创建service
+        for (ServiceDTO serviceDTO : serviceDTOList){
+            if (serviceDTO.getServiceName().equals(middlewareName + LINE + SENTINEL)){
+                continue;
+            }
+
+            if (serviceService.get(clusterId, namespace, serviceDTO.getServiceName()) != null){
+                continue;
+            }
+            Map<String, String> selector = new HashMap<>();
+            selector.put("app", middlewareName);
+            selector.put("component", middlewareName);
+            selector.put("middleware", REDIS);
+            selector.put("statefulset.kubernetes.io/pod-name", serviceDTO.getServiceName().replace(LINE + POD, ""));
+
+            serviceDo.setName(serviceDTO.getServiceName());
+            serviceDo.setSelector(selector);
+
+            serviceService.create(clusterId, namespace, serviceDo);
+        }
+
+        // 更新redis配置，开启redis哨兵的集群外访问
+        JSONObject externalAccess = values.getJSONObject(REDIS).getJSONObject("externalAccess");
+        if (externalAccess == null){
+            externalAccess = new JSONObject();
+        }
+        externalAccess.put("enabled", TRUE);
+
+        JSONObject addresses = new JSONObject();
+        for (ServiceDTO serviceDTO : serviceDTOList){
+            if (serviceDTO.getServiceName().equals(middlewareName + LINE + SENTINEL)){
+                continue;
+            }
+            // 设置pod名称
+            String podName = serviceDTO.getServiceName().replace(LINE + POD, "");
+            // 设置redis服务暴露地址
+            String host = cluster.getHost();
+            if (ingressDTO.getExposeType().equals(MIDDLEWARE_EXPOSE_NODEPORT)){
+                host = cluster.getHost();
+            } else if (ingressDTO.getExposeType().equals(MIDDLEWARE_EXPOSE_INGRESS)){
+                List<String> ipList = listIngressIp(clusterId, ingressDTO.getIngressClassName());
+                if (!CollectionUtils.isEmpty(ipList)){
+                    host = ipList.get(0);
+                }
+            }
+            addresses.put(podName, host + ":" + serviceDTO.getExposePort());
+        }
+        externalAccess.put("addresses", addresses);
+        // 开启哨兵模式集群外访问
+        Middleware middleware = new Middleware(clusterId, namespace, middlewareName, ingressDTO.getMiddlewareType());
+        middleware.setChartName(ingressDTO.getMiddlewareType());
+        middleware.setChartVersion(helmChartService.getChartVersion(values, ingressDTO.getMiddlewareType()));
+        helmChartService.upgrade(middleware, values, values, cluster);
+    }
+    
+    public void resolveExternalSituation(Middleware middleware, List<IngressDTO> ingressDTOList){
+        if (MiddlewareTypeEnum.REDIS.getType().equals(middleware.getType())){
+            // 不包含哨兵服务暴露返回
+            if (ingressDTOList.stream()
+                .noneMatch(ingressDTO -> ingressDTO.getName().contains(middleware.getName() + LINE + SENTINEL + LINE + NODE_PORT))) {
+                return;
+            }
+            // 判断服务是否是主机网络,是则返回
+            JSONObject values = helmChartService.getInstalledValues(middleware.getName(), middleware.getNamespace(),
+                clusterService.findById(middleware.getClusterId()));
+            if (values == null || !values.containsKey(REDIS) || values.getJSONObject(REDIS) == null
+                || !values.getJSONObject(REDIS).containsKey("hostNetwork")
+                || values.getJSONObject(REDIS).getBoolean("hostNetwork")) {
+                return;
+            }
+            // 将pod service合并进哨兵服务的ingress对象内
+            for (IngressDTO ingressDTO : ingressDTOList) {
+                if (ingressDTO.getName().contains(middleware.getName() + LINE + SENTINEL + LINE + NODE_PORT)) {
+                    for (IngressDTO ing : ingressDTOList) {
+                        if (ing.getName().contains(middleware.getName() + LINE)
+                            && ing.getName().contains(LINE + POD + LINE + NODE_PORT)) {
+                            ingressDTO.getServiceList().addAll(ing.getServiceList());
+                            ingressDTO.setExternalEnable(true);
+                        }
+                    }
+                }
+            }
+            // 移除pod service的ingress对象
+            ingressDTOList.removeIf(ing -> ing.getName().endsWith(LINE + POD));
+        }
+    }
+    
+    public void resolveExternalSituationInTcp(String svcName, Middleware middleware, List<IngressDTO> ingressDTOList,
+        Map<String, List<ServiceDTO>> tcpRoutineMap) {
+        if (MiddlewareTypeEnum.REDIS.getType().equals(middleware.getType())) {
+            if (svcName.equals(middleware.getName() + LINE + SENTINEL)){
+                return;
+            }
+            // 判断服务是否是主机网络,是则返回
+            JSONObject values = helmChartService.getInstalledValues(middleware.getName(), middleware.getNamespace(),
+                    clusterService.findById(middleware.getClusterId()));
+            if (values == null || !values.containsKey(REDIS) || values.getJSONObject(REDIS) == null
+                    || !values.getJSONObject(REDIS).containsKey("hostNetwork")
+                    || values.getJSONObject(REDIS).getBoolean("hostNetwork")) {
+                return;
+            }
+
+            // 哨兵svc集群外访问 合并服务svc信息
+            for (IngressDTO ingressDTO : ingressDTOList) {
+                if (ingressDTO.getName().equals(svcName)) {
+                    for (String key : tcpRoutineMap.keySet()){
+                        if (key.startsWith(middleware.getName() + "/" + svcName) && key.endsWith(LINE + POD)){
+                            ingressDTO.getServiceList().addAll(tcpRoutineMap.get(key));
+                            ingressDTO.setExternalEnable(true);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public Integer findNextExposePort(Set<Integer> usedPortSet, Integer exposePort){
+        if (usedPortSet.contains(exposePort)){
+            exposePort++;
+            findNextExposePort(usedPortSet, exposePort);
+        }
+        return exposePort;
+    }
 }

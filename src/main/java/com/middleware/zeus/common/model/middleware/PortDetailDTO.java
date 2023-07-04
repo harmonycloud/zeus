@@ -12,7 +12,9 @@ import lombok.experimental.Accessors;
 @Data
 @ApiModel("service port detail")
 public class PortDetailDTO {
+    private String name;
     private String port;
     private String protocol;
     private String targetPort;
+    private String nodePort;
 }

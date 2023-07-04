@@ -1,8 +1,10 @@
 package com.middleware.zeus.service.k8s;
 
+import com.middleware.zeus.common.model.k8s.ServiceDo;
 import com.middleware.zeus.common.model.middleware.ServicePortDTO;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author tangtx
@@ -38,4 +40,23 @@ public interface ServiceService {
      * @return
      */
     List<ServicePortDTO> listInternalService(String clusterId, String namespace, String name, String type);
+
+
+    /**
+     * 创建service
+     *
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param serviceDo serviceDo
+     */
+    void create(String clusterId, String namespace, ServiceDo serviceDo);
+
+    /**
+     * 删除service
+     *
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param name 名称
+     */
+    void delete(String clusterId, String namespace, String name);
 }
