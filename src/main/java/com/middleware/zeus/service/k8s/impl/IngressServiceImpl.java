@@ -382,7 +382,13 @@ public class IngressServiceImpl implements IngressService {
                 }
             }
         } else if (StringUtils.equals(ingressDTO.getExposeType(), MIDDLEWARE_EXPOSE_NODEPORT)) {
-            serviceWrapper.delete(clusterId, namespace, name);
+            if (!CollectionUtils.isEmpty(ingressDTO.getServiceList())) {
+                for (ServiceDTO serviceDTO : ingressDTO.getServiceList()) {
+                    serviceWrapper.delete(clusterId, namespace, serviceDTO.getServiceName());
+                }
+            } else {
+                serviceWrapper.delete(clusterId, namespace, name);
+            }
         }
         // 关闭redis哨兵模式集群外访问
         if (ingressDTO.getMiddlewareType().equals(MiddlewareTypeEnum.REDIS.getType())
