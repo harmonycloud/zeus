@@ -1963,7 +1963,7 @@ public class IngressServiceImpl implements IngressService {
         if (externalAccess == null){
             externalAccess = new JSONObject();
         }
-        externalAccess.put("enabled", TRUE);
+        externalAccess.put("enabled", true);
 
         JSONObject addresses = new JSONObject();
         for (ServiceDTO serviceDTO : serviceDTOList){
