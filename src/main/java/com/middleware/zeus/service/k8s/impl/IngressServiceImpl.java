@@ -41,6 +41,7 @@ import org.springframework.util.CollectionUtils;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.middleware.zeus.common.constants.CommonConstant.*;
@@ -399,7 +400,7 @@ public class IngressServiceImpl implements IngressService {
                 new Middleware(clusterId, namespace, middlewareName, ingressDTO.getMiddlewareType());
             middleware.setChartName(ingressDTO.getMiddlewareType());
             middleware.setChartVersion(helmChartService.getChartVersion(values, ingressDTO.getMiddlewareType()));
-            helmChartService.upgrade(middleware, "redis.externalAccess.enabled=true", cluster);
+            helmChartService.upgrade(middleware, "redis.externalAccess.enabled=false", cluster);
         }
     }
 
@@ -1278,7 +1279,7 @@ public class IngressServiceImpl implements IngressService {
 
     private List<IngressDTO> getTcpRoutineDetail(String clusterId, String namespace, MiddlewareCR crd,
                                                  String svcName, Map<String, List<ServiceDTO>> tcpRoutineMap) {
-        String nsSvcName = namespace + "/" + svcName;
+         String nsSvcName = namespace + "/" + svcName;
         List<ServiceDTO> svcDtoList = tcpRoutineMap.get(nsSvcName);
         // 没有匹配的
         if (CollectionUtils.isEmpty(svcDtoList)) {
@@ -2026,7 +2027,7 @@ public class IngressServiceImpl implements IngressService {
     public void resolveExternalSituationInTcp(String svcName, Middleware middleware, List<IngressDTO> ingressDTOList,
         Map<String, List<ServiceDTO>> tcpRoutineMap) {
         if (MiddlewareTypeEnum.REDIS.getType().equals(middleware.getType())) {
-            if (svcName.equals(middleware.getName() + LINE + SENTINEL)){
+            if (!svcName.equals(middleware.getName() + LINE + SENTINEL)){
                 return;
             }
             // 判断服务是否是主机网络,是则返回
@@ -2040,9 +2041,10 @@ public class IngressServiceImpl implements IngressService {
 
             // 哨兵svc集群外访问 合并服务svc信息
             for (IngressDTO ingressDTO : ingressDTOList) {
-                if (ingressDTO.getName().equals(svcName)) {
-                    for (String key : tcpRoutineMap.keySet()){
-                        if (key.startsWith(middleware.getName() + "/" + svcName) && key.endsWith(LINE + POD)){
+                if (ingressDTO.getName().equals(getIngressTcpName(svcName, middleware.getNamespace()))) {
+                    for (String key : tcpRoutineMap.keySet()) {
+                        if (key.matches("^" + middleware.getNamespace() + SLASH + middleware.getName() + LINE + "[0-9]+"
+                            + LINE + POD + "$")) {
                             ingressDTO.getServiceList().addAll(tcpRoutineMap.get(key));
                             ingressDTO.setExternalEnable(true);
                         }
