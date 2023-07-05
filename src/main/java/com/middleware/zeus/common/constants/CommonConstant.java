@@ -115,4 +115,8 @@ public class CommonConstant {
 
     public static final String SKIP_PORT_CONFLICT = "skipPortConflict";
     public static final String HOST_NETWORK = "hostNetwork";
+
+    public static final String CRD_S = "crds";
+    public static final String CRD_S_V1 = "crdsv1";
+    public static final String CRD_S_V1BETA1 = "crdsv1beta1";
 }

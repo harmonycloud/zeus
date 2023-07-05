@@ -16,6 +16,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
+import static com.middleware.zeus.common.constants.CommonConstant.*;
+
 /**
  * @author dengyulong
  * @date 2020/12/24
@@ -143,8 +145,15 @@ public class HelmChartUtil {
      * @return
      */
     public static Map<String, String> getCrds(String chartFilePath, String operatorName){
-        String crdsPath = chartFilePath + File.separator + "charts" + File.separator + operatorName + File.separator + "crds" +File.separator;
-        return readFile(crdsPath);
+        String path = chartFilePath + File.separator + "charts" + File.separator + operatorName + File.separator;
+        if (new File(path + CRD_S).exists()){
+            return readFile(path + CRD_S);
+        } else if (new File(path + CRD_S_V1).exists()){
+            return readFile(path + CRD_S_V1);
+        } else if (new File(path + CRD_S_V1BETA1).exists()){
+            return readFile(path + CRD_S_V1BETA1);
+        }
+        return new HashMap<>();
     }
 
     /**
