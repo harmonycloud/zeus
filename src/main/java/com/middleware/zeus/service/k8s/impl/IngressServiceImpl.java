@@ -13,6 +13,7 @@ import com.middleware.zeus.common.model.TraefikPort;
 import com.middleware.zeus.common.model.k8s.ServiceDo;
 import com.middleware.zeus.common.model.middleware.*;
 import com.middleware.zeus.util.encrypt.PasswordUtils;
+import com.middleware.zeus.util.numeric.MathUtil;
 import com.middleware.zeus.util.uuid.UUIDUtils;
 import com.middleware.zeus.bean.BeanMiddlewareInfo;
 import com.middleware.zeus.dao.BeanMiddlewareInfoMapper;
@@ -273,27 +274,9 @@ public class IngressServiceImpl implements IngressService {
             }
         }
 
-        // 校验Nginx TCP配置文件
-        List<IngressComponentDto> nginxComponentDtoList = ingressComponentService.list(cluster.getId(), IngressEnum.NGINX.getName());
-        nginxComponentDtoList.forEach(ingress -> {
-            String ingressTcpCmName = ingress.getConfigMapName();
-            ConfigMap configMap = configMapWrapper.get(cluster.getId(),
-                    getIngressTcpNamespace(cluster, ingress.getIngressClassName()), ingressTcpCmName);
-            if (configMap == null || CollectionUtils.isEmpty(configMap.getData())) {
-                return;
-            }
-            for (ServiceDTO svc : serviceList) {
-                if (StringUtils.isBlank(svc.getExposePort())) {
-                    throw new CaasRuntimeException(ErrorMessage.INGRESS_TCP_PORT_NOT_NULL);
-                }
-
-                if (StringUtils.isNotBlank(configMap.getData().get(svc.getExposePort()))) {
-                    throw new CaasRuntimeException(ErrorMessage.INGRESS_TCP_PORT_EXIST);
-                }
-            }
-        });
-        // 校验端口是否在traefik tcp、nodeport中使用
+        // 校验端口是否在nginx/traefik tcp、nodePort中使用
         Set<Integer> usedPort = new HashSet<>();
+        usedPort.addAll(getNginxUsedPort(cluster));
         usedPort.addAll(getTraefikUsedPort(cluster));
         usedPort.addAll(getNodePortUsedPort(cluster));
 
@@ -513,7 +496,7 @@ public class IngressServiceImpl implements IngressService {
         // 设置图片
         setMiddlewareImage(clusterId, namespace, type, middlewareName, resList);
         // 特殊处理rocketmq和kafka
-        if ("rocketmq".equals(type) || "kafka".equals(type)) {
+        if ("rocketmq".equals(type) || "kafka".equals(type) || REDIS.equals(type)) {
             setExternalServiceExposeStatus(type, resList);
         }
         return resList;
@@ -596,6 +579,26 @@ public class IngressServiceImpl implements IngressService {
     @Override
     public List<IngressDTO> getHostNetworkAddress(String clusterId, String namespace, String type, String middlewareName) {
         return middlewareService.listHostNetworkAddress(clusterId, namespace, middlewareName, type);
+    }
+
+    @Override
+    public String portCheck(String clusterId, String namespace, String middlewareName, Integer startPort, Integer endPort){
+        // 获取集群对象
+        MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
+        // 初始化记录冲突端口
+        List<Integer> conflictPortList = new ArrayList<>();
+        // 统计使用中的端口
+        Set<Integer> usedPortSet = new HashSet<>();
+        usedPortSet.addAll(getTraefikUsedPort(cluster));
+        usedPortSet.addAll(getNodePortUsedPort(cluster));
+        usedPortSet.addAll(getNginxUsedPort(cluster));
+        // todo 去除修改场景下该中间件自身服务正在使用的端口
+        for (int i = startPort; i <= endPort; ++i){
+            if (usedPortSet.contains(i)){
+                conflictPortList.add(i);
+            }
+        }
+        return MathUtil.convert(conflictPortList);
     }
 
     // 对部分中间件做特殊处理
@@ -691,6 +694,28 @@ public class IngressServiceImpl implements IngressService {
             });
         }
         return traefikPortSet;
+    }
+
+    /**
+     * 获取nginx已使用端口
+     * @return Set<Integer>
+     */
+    private Set<Integer> getNginxUsedPort(MiddlewareClusterDTO cluster) {
+        Set<Integer> nginxUsedPort = new HashSet<>();
+        List<IngressComponentDto> nginxComponentDtoList =
+            ingressComponentService.list(cluster.getId(), IngressEnum.NGINX.getName());
+        nginxComponentDtoList.forEach(ingress -> {
+            String ingressTcpCmName = ingress.getConfigMapName();
+            try {
+                ConfigMap configMap = configMapWrapper.get(cluster.getId(),
+                    getIngressTcpNamespace(cluster, ingress.getIngressClassName()), ingressTcpCmName);
+                nginxUsedPort
+                    .addAll(configMap.getData().keySet().stream().map(Integer::parseInt).collect(Collectors.toList()));
+            } catch (Exception e) {
+                log.error("nginx {} 获取使用端口失败", ingressTcpCmName);
+            }
+        });
+        return nginxUsedPort;
     }
 
     /**
@@ -829,6 +854,9 @@ public class IngressServiceImpl implements IngressService {
                     if (ingressDTO.getName().contains("external")) {
                         enableExternal.set(true);
                     }
+                    break;
+                case REDIS:
+                    enableExternal.set(true);
                     break;
                 default:
             }

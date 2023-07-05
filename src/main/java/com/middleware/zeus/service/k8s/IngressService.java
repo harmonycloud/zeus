@@ -174,4 +174,13 @@ public interface IngressService {
      */
     List<IngressDTO> getHostNetworkAddress(String clusterId, String namespace, String type, String middlewareName);
 
+    /**
+     *  端口校验
+     * @param clusterId
+     * @param namespace
+     * @param middlewareName
+     * @return String
+     */
+    String portCheck(String clusterId, String namespace, String middlewareName, Integer startPort, Integer endPort);
+
 }

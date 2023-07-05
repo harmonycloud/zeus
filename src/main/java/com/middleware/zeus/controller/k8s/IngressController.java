@@ -129,4 +129,22 @@ public class IngressController {
         return BaseResult.ok(ingressService.getHostNetworkAddress(clusterId, namespace, type, middlewareName));
     }
 
+    @ApiOperation(value = "port校验", notes = "port校验")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "startPort", value = "起始端口", paramType = "query", dataTypeClass = Integer.class),
+            @ApiImplicitParam(name = "endPort", value = "末尾端口", paramType = "query", dataTypeClass = Integer.class)
+    })
+    @GetMapping("/{middlewareName}/portCheck")
+    @Authority(power = 1)
+    public BaseResult<String> portCheck(@PathVariable("clusterId") String clusterId,
+                                        @PathVariable("namespace") String namespace,
+                                        @PathVariable("middlewareName") String middlewareName,
+                                        @RequestParam("startPort") Integer startPort,
+                                        @RequestParam("endPort") Integer endPort) {
+        return BaseResult.ok(ingressService.portCheck(clusterId, namespace, middlewareName, startPort, endPort));
+    }
+
 }
