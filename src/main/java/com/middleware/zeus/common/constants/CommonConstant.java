@@ -112,4 +112,7 @@ public class CommonConstant {
 
     public static final String ASC = "asc";
     public static final String DESC = "desc";
+
+    public static final String SKIP_PORT_CONFLICT = "skipPortConflict";
+    public static final String HOST_NETWORK = "hostNetwork";
 }

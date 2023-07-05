@@ -1989,6 +1989,10 @@ public class IngressServiceImpl implements IngressService {
         Middleware middleware = new Middleware(clusterId, namespace, middlewareName, ingressDTO.getMiddlewareType());
         middleware.setChartName(ingressDTO.getMiddlewareType());
         middleware.setChartVersion(helmChartService.getChartVersion(values, ingressDTO.getMiddlewareType()));
+        // 记录跳过冲突端口
+        if (ingressDTO.getSkipPortConflict() != null){
+            values.put(SKIP_PORT_CONFLICT, ingressDTO.getSkipPortConflict());
+        }
         helmChartService.upgrade(middleware, values, values, cluster);
     }
     
@@ -2016,6 +2020,9 @@ public class IngressServiceImpl implements IngressService {
                             ingressDTO.getServiceList().addAll(ing.getServiceList());
                             ingressDTO.setExternalEnable(true);
                         }
+                    }
+                    if (values.containsKey(SKIP_PORT_CONFLICT)){
+                        ingressDTO.setSkipPortConflict(values.getBoolean(SKIP_PORT_CONFLICT));
                     }
                 }
             }
@@ -2048,6 +2055,9 @@ public class IngressServiceImpl implements IngressService {
                             ingressDTO.getServiceList().addAll(tcpRoutineMap.get(key));
                             ingressDTO.setExternalEnable(true);
                         }
+                    }
+                    if (values.containsKey(SKIP_PORT_CONFLICT)){
+                        ingressDTO.setSkipPortConflict(values.getBoolean(SKIP_PORT_CONFLICT));
                     }
                 }
             }
