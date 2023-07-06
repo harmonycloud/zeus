@@ -1,5 +1,4 @@
-FROM zeus-base-arm:1.0.0
-RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && echo "Asia/Shanghai" > /etc/timezone
+FROM demo.harmonycloud.cn:32088/library/zeus-base-arm:1.1.0
 COPY target/*.jar /zeus.jar
 COPY target/classes/components /usr/local/zeus-pv/components
 COPY target/classes/middleware /usr/local/zeus-pv/middleware

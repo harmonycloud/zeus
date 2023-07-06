@@ -3,4 +3,4 @@ appVersion: 0.9.7-filebeat-hc.6
 description: Log-pilot by Harmonycloud
 name: log-pilot
 type: application
-version: 0.9.7-filebeat-hc.6
+version: 0.9.7-filebeat-hc.7

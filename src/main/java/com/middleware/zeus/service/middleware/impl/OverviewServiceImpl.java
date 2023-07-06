@@ -46,6 +46,9 @@ import org.springframework.util.ObjectUtils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -817,7 +820,7 @@ public class OverviewServiceImpl implements OverviewService {
     @Override
     public AlertMessageDTO getAlertInfo(String clusterId, Integer current, Integer size, String level) {
         //获取异常告警信息
-        Date now = new Date();
+        Date now = Date.from(LocalDateTime.now(ZoneOffset.UTC).atZone(ZoneId.systemDefault()).toInstant());
         Date ago = DateUtil.addHour(now, -24);
         String beginTime = DateUtils.DateToString(ago, DateType.YYYY_MM_DD_HH_MM_SS.getValue());
         String endTime = DateUtils.DateToString(now, DateType.YYYY_MM_DD_HH_MM_SS.getValue());
@@ -885,7 +888,7 @@ public class OverviewServiceImpl implements OverviewService {
             return alertDTO;
         }).collect(Collectors.toList()));
 
-        List<String> hourList = DateUtil.calcHour(now);
+        List<String> hourList = DateUtil.calcHour(new Date());
         List<Map<String, Object>> criticalList = beanAlertRecordMapper.queryByTimeAndLevel(beginTime, endTime, "critical");
         List<Map<String, Object>> infoList = beanAlertRecordMapper.queryByTimeAndLevel(beginTime, endTime, "info");
         List<Map<String, Object>> warningList = beanAlertRecordMapper.queryByTimeAndLevel(beginTime, endTime, "warning");

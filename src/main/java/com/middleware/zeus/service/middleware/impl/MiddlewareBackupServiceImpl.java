@@ -1,7 +1,7 @@
 package com.middleware.zeus.service.middleware.impl;
 
 import static com.middleware.zeus.common.constants.BackupConstant.*;
-import static com.middleware.zeus.common.constants.CommonConstant.INCR;
+import static com.middleware.zeus.common.constants.CommonConstant.*;
 import static com.middleware.zeus.common.constants.NameConstant.*;
 import static com.middleware.zeus.common.enums.BackupStatusEnum.SUCCESS;
 
@@ -1065,6 +1065,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                     activeArea.equals(record.getActiveArea())).collect(Collectors.toList());
         }
         setBackupPosition(recordList);
+        setProtectBackupRecord(recordList);
         return sortAndSetAliasName(recordList, orderBy);
     }
 
@@ -1497,7 +1498,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 }
                 BigDecimal o1Size = new BigDecimal(o1.getByteSize());
                 BigDecimal o2Size = new BigDecimal(o2.getByteSize());
-                return o1Size.compareTo(o2Size) * (order[1].equals("desc") ? -1 : 1);
+                return o1Size.compareTo(o2Size) * ("desc".equals(order[1]) ? -1 : 1);
             } else if ("time".equals(order[0])) {
                 return o1.getBackupTime() == null ? 1
                         : o2.getBackupTime() == null ? -1 : o2.getBackupTime().compareTo(o1.getBackupTime()) * ("desc".equals(order[1]) ? 1 : -1);
@@ -1925,6 +1926,13 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             convertBackupToRecord(clusterId, backup, record);
             records.add(record);
         });
+        // 如果是双活备份任务，则结合两个可用区任务的状态来设置任务整体状态
+        if (records.size() == 2 && records.get(0).getActiveActive()) {
+            String taskPhrase = getTaskPhrase(records);
+            for (MiddlewareBackupRecord record : records) {
+                record.setPhrase(taskPhrase);
+            }
+        }
         return records;
     }
 
@@ -1977,7 +1985,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
         backupRecord.setAddressId(labels.get("addressId"));
         backupRecord.setSourceName(backup.getSpec().getName());
-        backupRecord.setBackupMode("single");
+        backupRecord.setBackupMode(getBackupMode(backup));
         backupRecord.setSchedule(false);
         backupRecord.setOwner(labels.get(OWNER));
         // 设置备份任务可用区别名
@@ -1988,6 +1996,20 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             backupRecord.setActiveActive(true);
         } else {
             backupRecord.setActiveActive(false);
+        }
+    }
+
+    /**
+     * 获取记录的备份类型，如果记录是由周期备份任务产生的，则为schedule
+     * @param backup
+     * @return
+     */
+    private String getBackupMode(MiddlewareBackup backup) {
+        if (backup != null && backup.getMetadata() != null && backup.getMetadata().getLabels() != null
+                && backup.getMetadata().getLabels().containsKey("owner")) {
+            return "period";
+        } else {
+            return "single";
         }
     }
 
@@ -2317,20 +2339,20 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         String phrase0 = records.get(0).getPhrase();
         String phrase1 = records.get(1).getPhrase();
 
-        if (BackupStatusEnum.RUNNING.getStatus().equals(phrase0) && BackupStatusEnum.RUNNING.getStatus().equals(phrase1)) {
-            return BackupStatusEnum.RUNNING.getStatus();
-        } else if (BackupStatusEnum.DELETING.getStatus().equals(phrase0) && BackupStatusEnum.DELETING.getStatus().equals(phrase1)) {
-            return BackupStatusEnum.DELETING.getStatus();
-        } else if (BackupStatusEnum.FAILED.getStatus().equals(phrase0) && BackupStatusEnum.FAILED.getStatus().equals(phrase1)) {
-            return BackupStatusEnum.FAILED.getStatus();
-        } else if (BackupStatusEnum.CREATING.getStatus().equals(phrase0) && BackupStatusEnum.CREATING.getStatus().equals(phrase1)) {
-            return BackupStatusEnum.CREATING.getStatus();
-        } else if (SUCCESS.getStatus().equals(phrase0) && SUCCESS.getStatus().equals(phrase1)) {
-            return SUCCESS.getStatus();
-        } else if (BackupStatusEnum.UNKNOWN.getStatus().equals(phrase0) && BackupStatusEnum.UNKNOWN.getStatus().equals(phrase1)) {
+        if (phrase0 == null && phrase1 != null) {
+            return phrase1;
+        }
+        if (phrase0 != null && phrase1 == null) {
+            return phrase0;
+        }
+        if(phrase0 == null){
             return BackupStatusEnum.UNKNOWN.getStatus();
-        } else if (BackupStatusEnum.RECYCLEFAILED.getStatus().equals(phrase0) && BackupStatusEnum.RECYCLEFAILED.getStatus().equals(phrase1)) {
-            return BackupStatusEnum.RECYCLEFAILED.getStatus();
+        }
+        if (phrase0.equals(phrase1)) {
+            return phrase0;
+        }
+        if (SUCCESS.getStatus().equals(phrase0) || SUCCESS.getStatus().equals(phrase1)) {
+            return SUCCESS.getStatus();
         } else {
             return BackupStatusEnum.RUNNING.getStatus();
         }
@@ -2453,6 +2475,40 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         recordList.sort((o1, o2) -> o1.getBackupTime() == null ? -1
                 : o2.getBackupTime() == null ? -1 : o2.getBackupTime().compareTo(o1.getBackupTime()));
         return recordList;
+    }
+
+    /***
+     * 标记不应被删除的备份记录
+     *
+     * @param recordList 备份记录列表
+     */
+    public void setProtectBackupRecord(List<MiddlewareBackupRecord> recordList){
+        if(CollectionUtils.isEmpty(recordList)){
+            return;
+        }
+        recordList.sort(Comparator.comparing(MiddlewareBackupRecord::getBackupTime, Comparator.nullsLast(Date::compareTo)).reversed());
+
+        // 分别标记可用区A和可用区B中最新的成功的全量备份任务为不可删除任务
+        boolean protectA = false;
+        boolean protectB = false;
+        for (MiddlewareBackupRecord record : recordList) {
+            if (StringUtils.isNotEmpty(record.getPhrase()) && record.getPhrase().equals(SUCCESS.getStatus())) {
+                // 在非双活场景下 找到最新的记录标记完则直接返回
+                if (StringUtils.isEmpty(record.getActiveArea()) && !protectA && !protectB) {
+                    record.setProtect(true);
+                    return;
+                } else if (record.getActiveArea().equals(ZONE_A) && !protectA) {
+                    record.setProtect(true);
+                    protectA = true;
+                } else if (record.getActiveArea().equals(ZONE_B) && !protectB) {
+                    record.setProtect(true);
+                    protectB = true;
+                }
+            }
+            if (protectA && protectB) {
+                return;
+            }
+        }
     }
 
 }

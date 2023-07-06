@@ -146,10 +146,10 @@ public class NodeServiceImpl implements NodeService {
             if (no.getMetadata() != null && !CollectionUtils.isEmpty(no.getMetadata().getLabels())) {
                 Map<String, String> labels = no.getMetadata().getLabels();
                 StringBuilder sb = new StringBuilder();
-                if ("true".equals(labels.get("system"))) {
+                if (labels.containsKey("node-role.kubernetes.io/master")) {
                     sb.append("master,");
                 }
-                if (labels.containsKey("node-role.kubernetes.io/slave")) {
+                if ("true".equals(labels.get("system")) || labels.containsKey("node-role.kubernetes.io/slave")) {
                     sb.append("slave,");
                 }
                 if (sb.length() == 0) {
@@ -194,9 +194,10 @@ public class NodeServiceImpl implements NodeService {
     public List<Node> simpleConvertToDto(List<io.fabric8.kubernetes.api.model.Node> nodes) {
         return nodes.stream().filter(node -> {
             // 过滤非work节点
-            return node.getMetadata() == null || node.getMetadata().getLabels() == null
-                    || (!node.getMetadata().getLabels().containsKey("node-role.kubernetes.io/slave")
-                    && !"true".equals(node.getMetadata().getLabels().get("system")));
+            return node.getMetadata() != null && node.getMetadata().getLabels() != null
+                    && !node.getMetadata().getLabels().containsKey("node-role.kubernetes.io/master")
+                    && !node.getMetadata().getLabels().containsKey("node-role.kubernetes.io/slave")
+                    && !"true".equals(node.getMetadata().getLabels().get("system"));
         }).map(node -> {
             String nodeName = node.getMetadata().getName();
             String IP = node.getStatus().getAddresses().stream().filter(

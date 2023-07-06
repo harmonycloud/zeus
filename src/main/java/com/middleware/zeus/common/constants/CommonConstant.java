@@ -99,6 +99,8 @@ public class CommonConstant {
     public static final String REQUEST_QUOTA = "requestQuota";
 
     public static final String ZONE = "zone";
+    public static final String ZONE_A = "zoneA";
+    public static final String ZONE_B = "zoneB";
 
     public static final String INC = "inc";
     public static final String INCR = "incr";

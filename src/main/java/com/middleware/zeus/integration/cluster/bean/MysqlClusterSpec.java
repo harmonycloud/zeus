@@ -40,6 +40,7 @@ public class MysqlClusterSpec {
     private String syncMode;
     private String version;
     private List<Map<String, Object>> volumeClaimTemplates;
+    private Object volumes;
 
     @JSONField(name = "_statefulset")
     public Map<String, Object> get_statefulset(){

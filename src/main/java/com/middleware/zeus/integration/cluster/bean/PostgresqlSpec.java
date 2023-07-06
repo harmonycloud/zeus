@@ -24,6 +24,10 @@ public class PostgresqlSpec {
 
     private Object affinity;
 
+    private Object archiveCommandMsg;
+
+    private Object archiveOnOff;
+
     private Object allowedSourceRanges;
 
     private Object clone;
@@ -45,6 +49,8 @@ public class PostgresqlSpec {
     private Boolean enableLogicalBackup;
 
     private Boolean enableReplicaConnectionPooler;
+
+    private Object enableMasterLoadBalancer;
 
     private Boolean enableReplicaLoadBalancer;
 
@@ -85,6 +91,8 @@ public class PostgresqlSpec {
     private Object resources;
 
     private String schedulerName;
+
+    private Object serviceAccount;
 
     private Object serviceAnnotations;
 

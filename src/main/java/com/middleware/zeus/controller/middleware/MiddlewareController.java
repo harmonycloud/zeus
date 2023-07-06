@@ -307,7 +307,7 @@ public class MiddlewareController {
                              @PathVariable("namespace") String namespace,
                              @PathVariable("middlewareName") String name,
                              @RequestParam("type") String type) {
-        middlewareService.reboot(clusterId, namespace, name, type, "Master");
+        middlewareService.reboot(clusterId, namespace, name, type, null);
         return BaseResult.ok();
     }
 
