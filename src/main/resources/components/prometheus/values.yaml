@@ -356,8 +356,8 @@ kubeControllerManager:
   ##
   service:
     enabled: true
-    port: 10252
-    targetPort: 10252
+    port: 10257
+    targetPort: 10257
     # selector:
     #   component: kube-controller-manager
 
@@ -374,10 +374,10 @@ kubeControllerManager:
     ## Enable scraping kube-controller-manager over https.
     ## Requires proper certs (not self-signed) and delegated authentication/authorization checks
     ##
-    https: false
+    https: true
 
     # Skip TLS certificate validation when scraping
-    insecureSkipVerify: null
+    insecureSkipVerify: true
 
     # Name of the server to use when validating TLS certificate
     serverName: null
@@ -581,8 +581,8 @@ kubeScheduler:
   ##
   service:
     enabled: true
-    port: 10251
-    targetPort: 10251
+    port: 10259
+    targetPort: 10259
     # selector:
     #   component: kube-scheduler
 
@@ -597,10 +597,10 @@ kubeScheduler:
     ## Enable scraping kube-scheduler over https.
     ## Requires proper certs (not self-signed) and delegated authentication/authorization checks
     ##
-    https: false
+    https: true
 
     ## Skip TLS certificate validation when scraping
-    insecureSkipVerify: null
+    insecureSkipVerify: true
 
     ## Name of the server to use when validating TLS certificate
     serverName: null
