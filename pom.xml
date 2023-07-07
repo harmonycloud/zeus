@@ -28,7 +28,7 @@
         <fabric8.version>6.5.1</fabric8.version>
         <swagger.version>3.0.0</swagger.version>
         <minio.version>8.0.3</minio.version>
-        <pty4j.version>0.9.6</pty4j.version>
+        <pty4j.version>0.9.8</pty4j.version>
         <log4j.version>3.0.0</log4j.version>
 
         <!-- unit test -->
