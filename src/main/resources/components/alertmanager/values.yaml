@@ -75,11 +75,9 @@ alertmanager:
     - name: Critical
       webhook_configs:
       - url: "http://zeus.zeus:8080/webhook"
-        send_resolved: false
     - name: webhook
       webhook_configs:
       - url: "http://zeus.zeus:8080/webhook"
-        send_resolved: false
   ## Pass the Alertmanager configuration directives through Helm's templating
   ## engine. If the Alertmanager configuration contains Alertmanager templates,
   ## they'll need to be properly escaped so that they are not interpreted by
