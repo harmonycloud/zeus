@@ -147,11 +147,11 @@ public class HelmChartUtil {
     public static Map<String, String> getCrds(String chartFilePath, String operatorName){
         String path = chartFilePath + File.separator + "charts" + File.separator + operatorName + File.separator;
         if (new File(path + CRD_S).exists()){
-            return readFile(path + CRD_S);
+            return readFile(path + CRD_S + File.separator);
         } else if (new File(path + CRD_S_V1).exists()){
-            return readFile(path + CRD_S_V1);
+            return readFile(path + CRD_S_V1 + File.separator);
         } else if (new File(path + CRD_S_V1BETA1).exists()){
-            return readFile(path + CRD_S_V1BETA1);
+            return readFile(path + CRD_S_V1BETA1 + File.separator);
         }
         return new HashMap<>();
     }
