@@ -363,6 +363,7 @@ public enum ErrorMessage {
     UPGRADE_NOT_SATISFY_LOWEST_VERSION(720002, "Not satisfy lowest version", "不满足升级所需最低版本"),
     UPGRADE_OPERATOR_UPDATING(720003, "Operator is updating", "Operator正在升级中"),
     UPGRADE_OPERATOR_TOO_LOWER(720004, "Current operator version is too lower,please upgrade operator", "当前中间件版本太低,请先升级operator"),
+    OPERATOR_INFO_ERROR(720005,"operator info error","对应operator信息有误"),
 
     // backup server
     FAILED_TO_SAVE_BACKUP_SERVER_DETAIL(730000, "failed to save backup server detail", "保存备份服务器详细信息失败"),

@@ -8,10 +8,13 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import cn.hutool.json.JSONUtil;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.middleware.zeus.bean.BeanClusterMiddlewareInfo;
 import com.middleware.zeus.common.enums.Protocol;
 import com.middleware.zeus.common.model.ActiveAreaAnnotationDto;
 import com.middleware.zeus.common.model.IngressComponentDto;
 import com.middleware.zeus.common.model.MiddlewareServiceNameIndex;
+import com.middleware.zeus.dao.BeanClusterMiddlewareInfoMapper;
 import com.middleware.zeus.util.cmd.CmdExecUtil;
 import com.middleware.zeus.bean.BeanCacheMiddleware;
 import com.middleware.zeus.bean.BeanMysqlUser;
@@ -54,6 +57,7 @@ import com.middleware.zeus.integration.cluster.MysqlClusterWrapper;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.util.ObjectUtils;
 
 import java.text.MessageFormat;
 
@@ -108,6 +112,8 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     private IngressService ingressService;
     @Autowired
     private NamespaceService namespaceService;
+    @Autowired
+    private BeanClusterMiddlewareInfoMapper beanClusterMiddlewareInfoMapper;
 
 
     @Override
@@ -468,8 +474,14 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
      * 手动切换
      */
     private SwitchInfo handSwitch(Middleware middleware, MysqlCluster mysqlCluster) {
-        // 判断版本
-        if (ChartVersionUtil.compare(middleware.getChartVersion(), "1.8.20") > 0) {
+        // 判断版本  根据operator版本判断切换方式
+        QueryWrapper<BeanClusterMiddlewareInfo> wrapper = new QueryWrapper<>();
+        wrapper.eq("cluster_id", middleware.getClusterId()).eq("chart_name", "mysql");
+        BeanClusterMiddlewareInfo cm = beanClusterMiddlewareInfoMapper.selectOne(wrapper);
+        if (ObjectUtils.isEmpty(cm) || cm.getChartVersion() == null) {
+            throw new BusinessException(ErrorMessage.OPERATOR_INFO_ERROR);
+        }
+        if (ChartVersionUtil.compare(cm.getChartVersion(), "1.8.20") > 0) {
             return switchByChangeCr(middleware, mysqlCluster);
         } else {
             return switchByCurl(middleware, mysqlCluster);
