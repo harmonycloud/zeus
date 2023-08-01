@@ -55,5 +55,24 @@ public interface SecretService {
      */
     void createOrReplace(String clusterId, String namespace, io.fabric8.kubernetes.api.model.Secret secret);
 
+    /**
+     * 获取secret
+     *
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param secretName  secret名称
+     * @return String
+     */
+    String getUserConf(String clusterId, String namespace, String secretName);
+
+    /**
+     * 创建secret
+     *
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param conf  user conf内容
+     */
+    void saveUserConf(String clusterId, String namespace, String name, String conf);
+
 
 }

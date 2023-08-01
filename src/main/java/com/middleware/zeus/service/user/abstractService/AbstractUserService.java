@@ -1,16 +1,37 @@
 package com.middleware.zeus.service.user.abstractService;
 
+import static com.middleware.zeus.common.constants.CommonConstant.LINE;
 import static com.middleware.zeus.common.constants.CommonConstant.NUM_TWO;
+import static com.middleware.zeus.common.constants.NameConstant.*;
 import static com.middleware.zeus.common.constants.user.UserConstant.USERNAME;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.KeyPair;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.alibaba.fastjson.JSONArray;
+import com.middleware.zeus.common.constants.CommonConstant;
+import com.middleware.zeus.common.enums.ErrorMessage;
+import com.middleware.zeus.common.enums.RoleBindingEnum;
+import com.middleware.zeus.common.exception.BusinessException;
+import com.middleware.zeus.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.zeus.common.model.middleware.Namespace;
+import com.middleware.zeus.service.k8s.CertificateSigningRequestService;
+import com.middleware.zeus.service.k8s.ClusterService;
+import com.middleware.zeus.service.k8s.RoleBindingService;
+import com.middleware.zeus.service.k8s.SecretService;
+import com.middleware.zeus.util.FileDownloadUtil;
+import com.middleware.zeus.util.OpenSSLUtil;
+import io.fabric8.kubernetes.api.model.AuthInfo;
+import io.fabric8.kubernetes.api.model.Config;
+import io.fabric8.kubernetes.api.model.NamedAuthInfo;
+import io.fabric8.kubernetes.client.internal.KubeConfigUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.ObjectUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -37,6 +58,9 @@ import com.middleware.zeus.service.user.ProjectService;
 import com.middleware.zeus.service.user.ResourceMenuService;
 import com.middleware.zeus.service.user.RoleService;
 import com.middleware.zeus.util.RequestUtil;
+import org.yaml.snakeyaml.Yaml;
+
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * @author xutianhong
@@ -60,6 +84,9 @@ public abstract class AbstractUserService {
      */
     protected abstract List<UserDto> list(String keyword);
 
+    @Value("${system.upload.path:/usr/local/zeus-pv/upload}")
+    private String uploadPath;
+
     @Autowired
     protected BeanUserMapper beanUserMapper;
     @Autowired
@@ -76,6 +103,14 @@ public abstract class AbstractUserService {
     protected ProjectService projectService;
     @Autowired
     protected ResourceMenuService resourceMenuService;
+    @Autowired
+    protected SecretService secretService;
+    @Autowired
+    protected CertificateSigningRequestService certificateSigningRequestService;
+    @Autowired
+    protected RoleBindingService roleBindingService;
+    @Autowired
+    protected ClusterService clusterService;
 
     protected String getUsername() {
         CurrentUser currentUser = CurrentUserRepository.getUser();
@@ -150,6 +185,49 @@ public abstract class AbstractUserService {
             subMenuList.add(resourceMenuDto);
         }
         return subMenuList;
+    }
+
+    public String getUserK8sConf(String clusterId, String username) throws Exception {
+        String conf = secretService.getUserConf(clusterId, ZEUS, ZEUS + LINE + username + LINE + "conf");
+        if (conf == null){
+            // 通过openssl工具生成key和csr
+            KeyPair keyPair = OpenSSLUtil.generateKeyPair();
+            String key = OpenSSLUtil.getPrivateKeyPem(keyPair);
+            String csr = OpenSSLUtil.getCertificationRequestPem(keyPair, username);
+            // 通过k8s认证生成certificate
+            String certificate = certificateSigningRequestService.generateCertificate(clusterId, username, csr, null);
+            if (certificate == null){
+                throw new BusinessException(ErrorMessage.NOT_EXIST);
+            }
+            // 根据keyPair和certificate  生成conf文件
+            MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
+            Yaml yaml = new Yaml();
+            JSONObject config = yaml.loadAs(cluster.getCert().getCertificate(), JSONObject.class);
+            // 修改config中的user对象，并转回string存入secret
+            JSONArray userArray = new JSONArray();
+            JSONObject user = new JSONObject();
+            user.put(NAME, username);
+
+            JSONObject authInfo = new JSONObject();
+            authInfo.put("client-key-data", key);
+            authInfo.put("client-certificate-data", certificate);
+
+            user.put(USER, authInfo);
+            userArray.add(user);
+            config.put("users", userArray);
+            // 初始化用户分区绑定角色
+            initK8sUserRoleBinding(clusterId, username);
+
+            conf = yaml.dumpAsMap(config);
+            // 通过secret进行保存
+            secretService.saveUserConf(clusterId, ZEUS, ZEUS + LINE + username + LINE + "conf", conf);
+        }
+        return conf;
+    }
+
+    public void downloadUserK8sConf(String clusterId, String username, HttpServletResponse response) throws Exception {
+        String conf = this.getUserK8sConf(clusterId, username);
+        FileDownloadUtil.downloadFile(response, uploadPath, username + CommonConstant.DOT + "conf", conf);
     }
 
     /**
@@ -299,6 +377,28 @@ public abstract class AbstractUserService {
             configuration.setUpdateTime(date);
             queryWrapper.eq("status", "1");
             personalMapper.update(configuration, queryWrapper);
+        }
+    }
+
+    public void initK8sUserRoleBinding(String clusterId, String username){
+        UserDto userDto = getUserDto(username, true);
+        // 该用户未绑定任何角色，返回null
+        if (CollectionUtils.isEmpty(userDto.getUserRoleList())) {
+            return;
+        }
+        // 遍历用户角色
+        for (UserRole userRole : userDto.getUserRoleList()) {
+            if (userRole.getRoleId() == null || userRole.getWeight() == null
+                    || StringUtils.isEmpty(userRole.getOrganId()) || StringUtils.isEmpty(userRole.getProjectId())) {
+                continue;
+            }
+            // 获取需要初始化的命名空间
+            List<Namespace> nsList = projectService.getNamespace(userRole.getOrganId(), userRole.getProjectId());
+            // 创建roleBinding资源并绑定用户
+            for (Namespace ns : nsList) {
+                String clusterRole = RoleBindingEnum.findByRoleId(userRole.getRoleId()).getClusterRole();
+                roleBindingService.bindUser(clusterId, ns.getName(), clusterRole, username, clusterRole);
+            }
         }
     }
 

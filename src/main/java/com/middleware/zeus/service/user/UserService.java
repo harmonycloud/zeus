@@ -11,6 +11,7 @@ import com.middleware.zeus.bean.PersonalizedConfiguration;
 import com.middleware.zeus.bean.user.BeanUser;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -191,4 +192,22 @@ public interface UserService {
      * @return List<UserDto>
      */
     List<UserDto> getUserRole(List<UserDto> userDtoList);
+
+    /**
+     * 获取用户k8s conf文件
+     *
+     * @param clusterId 集群id
+     * @param username 用户名
+     * @return String
+     */
+    String getUserK8sConf(String clusterId, String username) throws Exception;
+
+    /**
+     * 下载用户k8s conf文件
+     *
+     * @param clusterId 集群id
+     * @param username 用户名
+     * @param response 返回体
+     */
+    void downloadUserK8sConf(String clusterId, String username, HttpServletResponse response) throws Exception;
 }

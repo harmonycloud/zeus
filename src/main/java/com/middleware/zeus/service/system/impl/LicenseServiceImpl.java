@@ -34,7 +34,6 @@ import com.middleware.zeus.bean.BeanSystemConfig;
 import com.middleware.zeus.bean.LicenseInfo;
 import com.middleware.zeus.integration.cluster.NamespaceWrapper;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
-import com.middleware.zeus.schedule.SystemManageTask;
 import com.middleware.zeus.service.k8s.ClusterService;
 import com.middleware.zeus.service.k8s.MiddlewareCRService;
 import com.middleware.zeus.service.k8s.NamespaceService;
@@ -79,8 +78,6 @@ public class LicenseServiceImpl implements LicenseService {
     private MiddlewareCrTypeService middlewareCrTypeService;
     @Autowired
     private SystemConfigService systemConfigService;
-    @Autowired
-    private SystemManageTask systemManageTask;
 
     private static final String PUBLIC_KEY =
         "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDqVEhXdhVabafquPgbeYmz8Ab+2qCh0ayKrFSD7FIQG1+qetvwKo0hmFxeTmgvLBr3IeoDO6nxcx/7MusQdESCApS9vIzU8hdKgzzWmQE84HZ/FNRhcrxwbOgx8FmU1RlPVf/rjoKnhNhQ6xgFXtnd7RBzWnc8lZNxAppdVps0ZwIDAQAB";
@@ -317,11 +314,13 @@ public class LicenseServiceImpl implements LicenseService {
             initCpu();
             return 0.0;
         }
-        try {
-            systemManageTask.asyncRefreshMiddlewareResource();
-        } catch (Exception ignored){
-            log.error(ignored.getMessage());
-        }
+        ThreadPoolExecutorFactory.executor.execute(() -> {
+            try {
+                refreshMiddlewareResource();
+            } catch (Exception e) {
+                log.debug(e.getMessage());
+            }
+        });
         return Double.parseDouble(config.getConfigValue());
     }
 

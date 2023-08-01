@@ -1,12 +1,17 @@
 package com.middleware.zeus.service.k8s.impl;
 
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.middleware.zeus.common.enums.ErrorMessage;
 import com.middleware.zeus.common.exception.BusinessException;
 import com.middleware.zeus.service.k8s.SecretService;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +19,8 @@ import com.middleware.zeus.common.model.Secret;
 import com.middleware.zeus.integration.cluster.SecretWrapper;
 
 import lombok.extern.slf4j.Slf4j;
+
+import static com.middleware.zeus.common.constants.NameConstant.USER_CONF;
 
 /**
  * @author xutianhong
@@ -44,22 +51,18 @@ public class SecretServiceImpl implements SecretService {
     }
 
     @Override
-    public void create(String clusterId, String namespace, Secret secret) {
-        try {
-            io.fabric8.kubernetes.api.model.Secret sc = new io.fabric8.kubernetes.api.model.Secret();
-            sc.setData(secret.getData());
-            ObjectMeta meta = new ObjectMeta();
-            meta.setName(secret.getName());
-            meta.setNamespace(secret.getNamespace());
-            meta.setLabels(secret.getLabels());
+    public void create(String clusterId, String namespace, @NotNull Secret secret) {
+        io.fabric8.kubernetes.api.model.Secret sc = new io.fabric8.kubernetes.api.model.Secret();
+        sc.setData(secret.getData());
+        ObjectMeta meta = new ObjectMeta();
+        meta.setName(secret.getName());
+        meta.setNamespace(secret.getNamespace());
+        meta.setLabels(secret.getLabels());
 
-            sc.setMetadata(meta);
-            sc.setData(secret.getData());
+        sc.setMetadata(meta);
+        sc.setData(secret.getData());
 
-            secretWrapper.create(clusterId, namespace, sc);
-        }catch (Exception e){
-            throw new BusinessException(ErrorMessage.NOT_EXIST);
-        }
+        secretWrapper.create(clusterId, namespace, sc);
     }
 
     @Override
@@ -74,5 +77,30 @@ public class SecretServiceImpl implements SecretService {
     @Override
     public void createOrReplace(String clusterId, String namespace, io.fabric8.kubernetes.api.model.Secret secret){
         secretWrapper.createOrReplace(clusterId, namespace, secret);
+    }
+
+    @Override
+    public String getUserConf(String clusterId, String namespace, String secretName) {
+        Secret secret = this.get(clusterId, namespace, secretName);
+        if (secret != null){
+            Map<String, String> data = secret.getData();
+            if (data.containsKey(USER_CONF)){
+                return new String(Base64.getDecoder().decode(data.get(USER_CONF)));
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public void saveUserConf(String clusterId, String namespace, String name, String conf) {
+        Secret secret = new Secret();
+        secret.setName(name);
+        secret.setNamespace(namespace);
+        Map<String, String> data = new HashMap<>();
+        data.put(USER_CONF, Base64.getEncoder().encodeToString(conf.getBytes(StandardCharsets.UTF_8)));
+
+        secret.setData(data);
+
+        this.create(clusterId, namespace, secret);
     }
 }

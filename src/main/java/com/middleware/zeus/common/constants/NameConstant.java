@@ -147,4 +147,7 @@ public class NameConstant {
     public static final String MANAGER = "manager";
     public static final String NORMAL = "normal";
 
+    public static final String USER_CONF = "user.conf";
+    public static final String CLUSTER_ROLE = "ClusterRole";
+
 }

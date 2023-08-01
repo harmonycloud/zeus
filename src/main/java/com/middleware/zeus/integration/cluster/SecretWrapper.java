@@ -22,7 +22,7 @@ import java.util.List;
 public class SecretWrapper {
 
     public void create(String clusterId, String namespace, Secret secret) {
-        K8sClient.getClient(clusterId).secrets().inNamespace(namespace).create(secret);
+        K8sClient.getClient(clusterId).secrets().resource(secret).create();
     }
 
     public void createOrReplace(String clusterId, String namespace, Secret secret) {

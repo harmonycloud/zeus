@@ -1,11 +1,14 @@
 package com.middleware.zeus.service.user.impl;
 
+import static com.middleware.zeus.common.constants.CommonConstant.LINE;
 import static com.middleware.zeus.common.constants.CommonConstant.NUM_ONE;
 import static com.middleware.zeus.common.constants.NameConstant.MANAGER;
+import static com.middleware.zeus.common.constants.NameConstant.ZEUS;
 import static com.middleware.zeus.common.constants.user.UserConstant.ADMIN;
 import static com.middleware.zeus.common.constants.user.UserConstant.USERNAME;
 import static com.middleware.caas.filters.base.GlobalKey.NUM_ROLE_ADMIN;
 
+import java.security.KeyPair;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -14,10 +17,23 @@ import java.util.stream.Collectors;
 
 import com.middleware.zeus.bean.user.BeanOrganization;
 import com.middleware.zeus.bean.user.BeanProject;
+import com.middleware.zeus.common.enums.RoleBindingEnum;
+import com.middleware.zeus.common.model.Secret;
+import com.middleware.zeus.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.zeus.common.model.middleware.Namespace;
 import com.middleware.zeus.dao.user.BeanOrganizationMapper;
 import com.middleware.zeus.dao.user.BeanProjectMapper;
+import com.middleware.zeus.service.k8s.CertificateSigningRequestService;
+import com.middleware.zeus.service.k8s.ClusterService;
+import com.middleware.zeus.service.k8s.RoleBindingService;
+import com.middleware.zeus.service.k8s.SecretService;
 import com.middleware.zeus.service.system.AlertUserService;
 import com.middleware.zeus.service.user.*;
+import com.middleware.zeus.util.OpenSSLUtil;
+import io.fabric8.kubernetes.api.model.AuthInfo;
+import io.fabric8.kubernetes.api.model.Config;
+import io.fabric8.kubernetes.api.model.NamedAuthInfo;
+import io.fabric8.kubernetes.client.internal.KubeConfigUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,6 +67,7 @@ import com.middleware.zeus.service.system.SystemConfigService;
 import com.middleware.zeus.service.user.abstractService.AbstractUserService;
 
 import lombok.extern.slf4j.Slf4j;
+import org.yaml.snakeyaml.Yaml;
 
 
 /**

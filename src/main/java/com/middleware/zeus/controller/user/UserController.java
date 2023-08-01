@@ -25,6 +25,8 @@ import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletResponse;
+
 import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.ASCEND;
 
 /**
@@ -213,6 +215,29 @@ public class UserController {
     @GetMapping("/passwordExpiredDate")
     public BaseResult<SystemConfigDto> getPasswordExpiredDate() {
         return BaseResult.ok(userService.getPasswordExpiredDay());
+    }
+
+    @ApiOperation(value = "获取用户k8s conf文件", notes = "获取用户k8s conf文件")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "username", value = "用户名", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class),
+    })
+    @GetMapping("/{username}/conf")
+    public BaseResult<String> getUserK8sConf(@PathVariable("username") String username,
+                                             @RequestParam("clusterId") String clusterId) throws Exception {
+        return BaseResult.ok(userService.getUserK8sConf(clusterId, username));
+    }
+
+    @ApiOperation(value = "获取用户k8s conf文件", notes = "获取用户k8s conf文件")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "username", value = "用户名", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class),
+    })
+    @PostMapping("/{username}/conf")
+    public void downloadUserK8sConf(@PathVariable("username") String username,
+                                    @RequestParam("clusterId") String clusterId,
+                                    HttpServletResponse response) throws Exception {
+        userService.downloadUserK8sConf(clusterId, username, response);
     }
 
     /**

@@ -8,11 +8,14 @@ import static com.middleware.zeus.common.constants.user.UserConstant.USERNAME;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.github.pagehelper.util.StringUtil;
 import com.middleware.zeus.bean.user.BeanRole;
+import com.middleware.zeus.common.enums.RoleBindingEnum;
 import com.middleware.zeus.common.model.ProjectBackupServerDTO;
 import com.middleware.zeus.common.model.ResourceQuotaDo;
 import com.middleware.zeus.common.model.StorageDto;
 import com.middleware.zeus.common.model.StorageQuota;
+import com.middleware.zeus.service.k8s.*;
 import com.middleware.zeus.service.system.AlertUserService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -42,10 +45,6 @@ import com.middleware.zeus.bean.user.BeanProjectNamespace;
 import com.middleware.zeus.dao.user.BeanProjectMapper;
 import com.middleware.zeus.dao.user.BeanProjectNamespaceMapper;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
-import com.middleware.zeus.service.k8s.MiddlewareCRService;
-import com.middleware.zeus.service.k8s.NamespaceService;
-import com.middleware.zeus.service.k8s.ServiceAccountService;
-import com.middleware.zeus.service.k8s.StorageService;
 import com.middleware.zeus.service.middleware.BackupPositionService;
 import com.middleware.zeus.service.middleware.ImageRepositoryService;
 import com.middleware.zeus.service.middleware.MiddlewareInfoService;
@@ -96,6 +95,8 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
     private OrganizationService organizationService;
     @Autowired
     private AlertUserService alertUserService;
+    @Autowired
+    private RoleBindingService roleBindingService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -266,18 +267,26 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
         if (CollectionUtils.isEmpty(projectDto.getUserDtoList())){
             throw new BusinessException(ErrorMessage.PROJECT_ADD_USER_EMPTY_LIST);
         }
+        // 记录用户角色项目下绑定关系
         projectDto.getUserDtoList().forEach(
             userDto -> userRoleService.insert(projectDto.getOrganId(), projectDto.getProjectId(), userDto.getUserName(), userDto.getRoleId()));
+        // 更新用户在k8s中的角色绑定
+        refreshUserRoleBinding(projectDto.getOrganId(), projectDto.getProjectId(), null, projectDto.getUserDtoList(), true);
     }
 
     @Override
     public void updateUserRole(String organId, String projectId, UserDto userDto) {
+        // 更新用户角色项目下绑定关系
         userRoleService.update(new UserRole().setOrganId(organId).setProjectId(projectId)
             .setUserName(userDto.getUserName()).setRoleId(userDto.getRoleId()));
+        // 更新用户在k8s中的角色绑定
+        refreshUserRoleBinding(organId, projectId, null, Collections.singletonList(userDto), true);
     }
 
     @Override
     public void unbindUser(String organId, String projectId, String username) {
+        // 移除该用户在此项目下的分区中的用户角色绑定
+        refreshUserRoleBinding(organId, projectId, null, Collections.singletonList(new UserDto().setUserName(username)), false);
         // 移除项目用户绑定关系
         userRoleService.delete(username, organId, projectId, null);
         // 移除该项目下中间件告警通知
@@ -296,20 +305,23 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
         if (!CollectionUtils.isEmpty(projectDtoList) && projectDtoList.get(0).getMiddlewareCount() != 0) {
             throw new BusinessException(ErrorMessage.PROJECT_IS_NOT_EMPTY);
         }
-        // 删除项目
-        QueryWrapper<BeanProject> wrapper =
-            new QueryWrapper<BeanProject>().eq("organ_id", organId).eq("project_id", projectId);
-        beanProjectMapper.delete(wrapper);
+        // 移除项目下所有分区的k8s用户角色绑定
+        refreshUserRoleBinding(organId, projectId, null, null, false);
         // 解绑项目下分区
         unBindNamespace(organId, projectId, null, null);
         // 解绑项目下用户
         unbindUser(organId, projectId, null);
+        // 删除项目
+        QueryWrapper<BeanProject> wrapper =
+                new QueryWrapper<BeanProject>().eq("organ_id", organId).eq("project_id", projectId);
+        beanProjectMapper.delete(wrapper);
         // 回收资源
         platformQuotaService.remove(PROJECT, projectId, null, null, CPU, MEMORY, STORAGE);
         // 解绑项目下备份位置
         unBindBackupPosition(organId, projectId);
         // 解绑项目下备份服务器
         unBindBackupServer(organId, projectId);
+        
     }
 
     @Override
@@ -325,6 +337,8 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
             for (UserDto userDto : projectDto.getUserDtoList()){
                 userRoleService.insert(projectDto.getOrganId(), projectDto.getProjectId(), userDto.getUserName(), 2);
             }
+            // 更新k8s用户角色绑定
+            refreshUserRoleBinding(projectDto.getOrganId(), projectDto.getProjectId(), null, projectDto.getUserDtoList(), true);
         }
     }
 
@@ -351,6 +365,7 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
                 throw new BusinessException(ErrorMessage.NAMESPACE_IS_NOT_EMPTY);
             }
         }
+        // 解绑分区
         this.unBindNamespace(organId, projectId, clusterId, namespace);
     }
 
@@ -373,6 +388,9 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
         if (!CollectionUtils.isEmpty(beanProjectNamespaceList)) {
             beanProjectNamespaceMapper.delete(wrapper);
         }
+        // 移除分区下k8s用户角色绑定关系
+        refreshUserRoleBinding(organId, projectId,
+            Collections.singletonList(new Namespace().setName(namespace).setClusterId(clusterId)), null, false);
     }
 
     @Override
@@ -554,6 +572,9 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
         beanProjectNamespaceMapper.insert(beanProjectNamespace);
         // 给分区默认serviceAccount绑定imagePullSecret
         checkAndBindImagePullSecret(namespace.getClusterId(), namespace.getName());
+        
+        // 添加k8s用户角色绑定关系
+        refreshUserRoleBinding(namespace.getOrganId(), namespace.getProjectId(), Collections.singletonList(namespace), null, true);
     }
 
     @Override
@@ -749,6 +770,50 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
 
     public void checkResource(List<ResourceQuotaDo> resourceQuotaDoList){
 
+    }
+
+    /**
+     * 当项目下新增用户或分区时，刷新用户权限
+     * @param organId
+     * @param projectId
+     * @param nsList
+     * @param userDtoList
+     */
+    public void refreshUserRoleBinding(String organId, String projectId, List<Namespace> nsList,
+        List<UserDto> userDtoList, Boolean bind) {
+        if (StringUtils.isEmpty(organId) || StringUtils.isEmpty(projectId) || bind == null) {
+            return;
+        }
+        if (CollectionUtils.isEmpty(nsList)) {
+            nsList = this.getNamespace(organId, projectId);
+        }
+        if (CollectionUtils.isEmpty(userDtoList)) {
+            userDtoList = this.getUser(organId, projectId, false);
+        }
+
+        for (Namespace ns : nsList) {
+            if (StringUtil.isEmpty(ns.getClusterId()) || StringUtils.isEmpty(ns.getName())){
+                continue;
+            }
+            for (UserDto userDto : userDtoList) {
+                if (userDto.getRoleId() == null || StringUtils.isEmpty(userDto.getUserName())) {
+                    continue;
+                }
+                RoleBindingEnum roleBindingEnum = RoleBindingEnum.findByRoleId(userDto.getRoleId());
+                if (roleBindingEnum == null) {
+                    continue;
+                }
+
+                if (bind) {
+                    String clusterRole = roleBindingEnum.getClusterRole();
+                    roleBindingService.bindUser(ns.getClusterId(), ns.getName(), clusterRole, userDto.getUserName(),
+                        clusterRole);
+                } else {
+                    roleBindingService.removeUser(ns.getClusterId(), ns.getName(), userDto.getUserName());
+                }
+
+            }
+        }
     }
 
 }

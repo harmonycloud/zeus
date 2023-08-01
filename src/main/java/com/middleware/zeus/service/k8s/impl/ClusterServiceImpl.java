@@ -105,6 +105,8 @@ public class ClusterServiceImpl extends AbstractClusterService implements Cluste
     private GrafanaService grafanaService;
     @Autowired
     private BeanKubeConfigMapper kubeConfigMapper;
+    @Autowired
+    private RoleBindingService roleBindingService;
 
     @Value("${k8s.component.middleware:/usr/local/zeus-pv/middleware}")
     private String middlewarePath;
@@ -269,6 +271,10 @@ public class ClusterServiceImpl extends AbstractClusterService implements Cluste
         imageRepositoryService.removeImageRepository(cluster.getId());
         // 删除可用区初始化状态信息
         activeAreaService.delete(cluster.getId());
+        // 移除k8s用户角色绑定
+        Map<String, String> labels = new HashMap<>();
+        labels.put(APP, ZEUS);
+        roleBindingService.delete(cluster.getId(), null, null, labels);
         // 移除项目下分区绑定关系
         projectService.unBindNamespace(null ,null, cluster.getId(), null);
         // 删除集群和备份服务器的关联关系
