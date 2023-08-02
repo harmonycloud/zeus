@@ -47,12 +47,11 @@ public class RoleBindingServiceImpl implements RoleBindingService {
         }
         // 更新roleBinding中的用户绑定
         List<Subject> subjectList = roleBinding.getSubjects();
-        if (CollectionUtils.isEmpty(subjectList)){
+        if (CollectionUtils.isEmpty(subjectList)) {
             subjectList = new ArrayList<>();
         }
         // 若已存在当前用户 先移除
-        roleBinding.getSubjects()
-                .removeIf(subject -> USER.equals(subject.getKind()) && subject.getName().equals(username));
+        subjectList.removeIf(subject -> USER.equals(subject.getKind()) && subject.getName().equals(username));
 
         // 添加用户
         Subject subject = new Subject();

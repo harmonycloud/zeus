@@ -23,10 +23,7 @@ import com.middleware.zeus.common.model.middleware.MiddlewareClusterDTO;
 import com.middleware.zeus.common.model.middleware.Namespace;
 import com.middleware.zeus.dao.user.BeanOrganizationMapper;
 import com.middleware.zeus.dao.user.BeanProjectMapper;
-import com.middleware.zeus.service.k8s.CertificateSigningRequestService;
-import com.middleware.zeus.service.k8s.ClusterService;
-import com.middleware.zeus.service.k8s.RoleBindingService;
-import com.middleware.zeus.service.k8s.SecretService;
+import com.middleware.zeus.service.k8s.*;
 import com.middleware.zeus.service.system.AlertUserService;
 import com.middleware.zeus.service.user.*;
 import com.middleware.zeus.util.OpenSSLUtil;
@@ -102,6 +99,8 @@ public class UserServiceImpl extends AbstractUserService implements UserService 
     private BeanProjectMapper beanProjectMapper;
     @Autowired
     private AlertUserService alertUserService;
+    @Autowired
+    protected ClusterRoleBindingService clusterRoleBindingService;
 
     @Value("${system.user.passwordExpiredDate:90}")
     private Integer defaultPasswordExpiredDate;
@@ -381,6 +380,8 @@ public class UserServiceImpl extends AbstractUserService implements UserService 
                     .getString(USERNAME);
                 if (ADMIN.equals(username)) {
                     userRoleService.update(new UserRole().setUserName(userDto.getUserName()).setRoleId(NUM_ROLE_ADMIN));
+                    // 更新该用户与clusterRoleBinding zeus绑定
+                    updateUserK8sAdmin(username, true);
                 }
             } else {
                 userRoleService.update(new UserRole().setUserName(userDto.getUserName()).setRoleId(userDto.getManager()));
@@ -392,10 +393,14 @@ public class UserServiceImpl extends AbstractUserService implements UserService 
                     .getString(USERNAME);
                 if (ADMIN.equals(username)) {
                     userRoleService.delete(userDto.getUserName(), null, null, NUM_ROLE_ADMIN);
+                    // 更新该用户取消与clusterRoleBinding zeus绑定
+                    updateUserK8sAdmin(username, false);
                 }
             } else {
                 userRoleService.delete(userDto.getUserName(), null, null, currentManagerRoleId);
             }
+
+
         }
     }
 
@@ -459,6 +464,22 @@ public class UserServiceImpl extends AbstractUserService implements UserService 
                 Integer roleId = managerList.get(0).getRoleId();
                 userDto.setManager(roleId);
                 userDto.setIsAdmin(roleId == 1);
+            }
+        }
+    }
+
+    /**
+     * 更新用户在k8s中的是否admin权限
+     * @param username 用户名
+     * @param bind 绑定或删除
+     */
+    public void updateUserK8sAdmin(String username, boolean bind) {
+        List<MiddlewareClusterDTO> clusterList = clusterService.listClusters();
+        for (MiddlewareClusterDTO cluster : clusterList) {
+            if (bind) {
+                clusterRoleBindingService.addUserClusterRoleBinding(cluster.getId(), ZEUS, username, ZEUS);
+            } else {
+                clusterRoleBindingService.removeUserClusterRoleBinding(cluster.getId(), ZEUS, username);
             }
         }
     }

@@ -189,6 +189,7 @@ public class ClusterServiceImpl extends AbstractClusterService implements Cluste
                 namespaceService.save(cluster.getId(), "middleware-operator", label, null);
             }
         }
+        // todo 创建clusterRole资源
     }
 
     @Override

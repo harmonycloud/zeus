@@ -191,10 +191,8 @@ public abstract class AbstractUserService {
         String conf = secretService.getUserConf(clusterId, ZEUS, ZEUS + LINE + username + LINE + "conf");
         if (conf == null){
             MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
-            // 获取用户详情
-            UserDto userDto = getUserDto(username, true);
             // 当用户为admin时，直接返回admin证书
-            if (userDto.getIsAdmin() != null && userDto.getIsAdmin()){
+            if (username.equals(ADMIN)){
                 return cluster.getCert().getCertificate();
             }
             // 通过openssl工具生成key和csr
@@ -222,7 +220,7 @@ public abstract class AbstractUserService {
             userArray.add(user);
             config.put("users", userArray);
             // 初始化用户分区绑定角色
-            initK8sUserRoleBinding(clusterId, userDto);
+            initK8sUserRoleBinding(clusterId, username);
 
             conf = yaml.dumpAsMap(config);
             // 通过secret进行保存
@@ -386,7 +384,8 @@ public abstract class AbstractUserService {
         }
     }
 
-    public void initK8sUserRoleBinding(String clusterId, UserDto userDto){
+    public void initK8sUserRoleBinding(String clusterId, String username){
+        UserDto userDto = this.getUserDto(username, true);
         // 该用户未绑定任何角色，返回null
         if (CollectionUtils.isEmpty(userDto.getUserRoleList())) {
             return;
