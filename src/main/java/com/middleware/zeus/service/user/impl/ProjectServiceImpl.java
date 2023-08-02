@@ -804,14 +804,14 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
                     continue;
                 }
 
+                // 先移除当前用户角色
+                roleBindingService.removeUser(ns.getClusterId(), ns.getName(), userDto.getUserName());
+                // 重新根据角色进行绑定
                 if (bind) {
                     String clusterRole = roleBindingEnum.getClusterRole();
                     roleBindingService.bindUser(ns.getClusterId(), ns.getName(), clusterRole, userDto.getUserName(),
                         clusterRole);
-                } else {
-                    roleBindingService.removeUser(ns.getClusterId(), ns.getName(), userDto.getUserName());
                 }
-
             }
         }
     }

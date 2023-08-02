@@ -190,6 +190,13 @@ public abstract class AbstractUserService {
     public String getUserK8sConf(String clusterId, String username) throws Exception {
         String conf = secretService.getUserConf(clusterId, ZEUS, ZEUS + LINE + username + LINE + "conf");
         if (conf == null){
+            MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
+            // 获取用户详情
+            UserDto userDto = getUserDto(username, true);
+            // 当用户为admin时，直接返回admin证书
+            if (userDto.getIsAdmin() != null && userDto.getIsAdmin()){
+                return cluster.getCert().getCertificate();
+            }
             // 通过openssl工具生成key和csr
             KeyPair keyPair = OpenSSLUtil.generateKeyPair();
             String key = OpenSSLUtil.getPrivateKeyPem(keyPair);
@@ -200,7 +207,6 @@ public abstract class AbstractUserService {
                 throw new BusinessException(ErrorMessage.NOT_EXIST);
             }
             // 根据keyPair和certificate  生成conf文件
-            MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
             Yaml yaml = new Yaml();
             JSONObject config = yaml.loadAs(cluster.getCert().getCertificate(), JSONObject.class);
             // 修改config中的user对象，并转回string存入secret
@@ -216,7 +222,7 @@ public abstract class AbstractUserService {
             userArray.add(user);
             config.put("users", userArray);
             // 初始化用户分区绑定角色
-            initK8sUserRoleBinding(clusterId, username);
+            initK8sUserRoleBinding(clusterId, userDto);
 
             conf = yaml.dumpAsMap(config);
             // 通过secret进行保存
@@ -380,8 +386,7 @@ public abstract class AbstractUserService {
         }
     }
 
-    public void initK8sUserRoleBinding(String clusterId, String username){
-        UserDto userDto = getUserDto(username, true);
+    public void initK8sUserRoleBinding(String clusterId, UserDto userDto){
         // 该用户未绑定任何角色，返回null
         if (CollectionUtils.isEmpty(userDto.getUserRoleList())) {
             return;
@@ -397,7 +402,7 @@ public abstract class AbstractUserService {
             // 创建roleBinding资源并绑定用户
             for (Namespace ns : nsList) {
                 String clusterRole = RoleBindingEnum.findByRoleId(userRole.getRoleId()).getClusterRole();
-                roleBindingService.bindUser(clusterId, ns.getName(), clusterRole, username, clusterRole);
+                roleBindingService.bindUser(clusterId, ns.getName(), clusterRole, userDto.getUserName(), clusterRole);
             }
         }
     }
