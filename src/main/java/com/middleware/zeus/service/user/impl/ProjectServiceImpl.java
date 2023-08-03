@@ -810,13 +810,14 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
             List<String> usernameList = userDtoList.stream().map(UserDto::getUserName).collect(Collectors.toList());
             // 先移除所有用户的当前k8s角色权限绑定
             roleBindingService.removeUser(ns.getClusterId(), ns.getName(), usernameList);
-            // 过滤异常数据和非默认角色的用户
-            userDtoList = userDtoList.stream()
-                    .filter(userDto -> userDto.getRoleId() != null && StringUtils.isNotEmpty(userDto.getUserName())
-                            || RoleBindingEnum.findByRoleId(userDto.getRoleId()) != null)
-                    .collect(Collectors.toList());
             // 根据角色group用户
             if (bind) {
+                // 需重新绑定 确认数据存在角色id和为默认角色
+                userDtoList = userDtoList.stream()
+                        .filter(userDto -> userDto.getRoleId() != null && StringUtils.isNotEmpty(userDto.getUserName())
+                                || RoleBindingEnum.findByRoleId(userDto.getRoleId()) != null)
+                        .collect(Collectors.toList());
+                // 根据角色id进行group
                 Map<Integer, List<UserDto>> roleIdUsernameListMap =
                     userDtoList.stream().collect(Collectors.groupingBy(UserDto::getRoleId));
                 for (Integer roleId : roleIdUsernameListMap.keySet()) {
