@@ -1,8 +1,10 @@
 package com.middleware.zeus.service.user.impl;
 
 import static com.middleware.zeus.common.constants.AlertConstant.SERVICE;
+import static com.middleware.zeus.common.constants.CommonConstant.LINE;
 import static com.middleware.zeus.common.constants.CommonConstant.NUM_TWO;
 import static com.middleware.zeus.common.constants.NameConstant.*;
+import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.NAMESPACE;
 import static com.middleware.zeus.common.constants.user.UserConstant.USERNAME;
 
 import java.util.*;
@@ -97,6 +99,8 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
     private AlertUserService alertUserService;
     @Autowired
     private RoleBindingService roleBindingService;
+    @Autowired
+    private ClusterRoleBindingService clusterRoleBindingService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -784,7 +788,10 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
         if (StringUtils.isEmpty(organId) || StringUtils.isEmpty(projectId) || bind == null) {
             return;
         }
+        // 设置一个是否需要更新项目管理员角色绑定的flag
+        Boolean flag = false;
         if (CollectionUtils.isEmpty(nsList)) {
+            flag = true;
             nsList = this.getNamespace(organId, projectId);
         }
         if (CollectionUtils.isEmpty(userDtoList)) {
@@ -792,25 +799,49 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
         }
 
         for (Namespace ns : nsList) {
-            if (StringUtil.isEmpty(ns.getClusterId()) || StringUtils.isEmpty(ns.getName())){
+            if (StringUtil.isEmpty(ns.getClusterId()) || StringUtils.isEmpty(ns.getName())) {
                 continue;
             }
-            for (UserDto userDto : userDtoList) {
-                if (userDto.getRoleId() == null || StringUtils.isEmpty(userDto.getUserName())) {
-                    continue;
-                }
-                RoleBindingEnum roleBindingEnum = RoleBindingEnum.findByRoleId(userDto.getRoleId());
-                if (roleBindingEnum == null) {
-                    continue;
-                }
-
-                // 先移除当前用户角色
-                roleBindingService.removeUser(ns.getClusterId(), ns.getName(), userDto.getUserName());
-                // 重新根据角色进行绑定
-                if (bind) {
-                    String clusterRole = roleBindingEnum.getClusterRole();
-                    roleBindingService.bindUser(ns.getClusterId(), ns.getName(), clusterRole, userDto.getUserName(),
+            // 过滤异常数据和非默认角色的用户
+            userDtoList = userDtoList.stream()
+                .filter(userDto -> userDto.getRoleId() != null && StringUtils.isNotEmpty(userDto.getUserName())
+                    || RoleBindingEnum.findByRoleId(userDto.getRoleId()) != null)
+                .collect(Collectors.toList());
+            // 获取用户名称列表
+            List<String> usernameList = userDtoList.stream().map(UserDto::getUserName).collect(Collectors.toList());
+            // 先移除所有用户的当前k8s角色权限绑定
+            roleBindingService.removeUser(ns.getClusterId(), ns.getName(), usernameList);
+            // 根据角色group用户
+            if (bind) {
+                Map<Integer, List<UserDto>> roleIdUsernameListMap =
+                    userDtoList.stream().collect(Collectors.groupingBy(UserDto::getRoleId));
+                for (Integer roleId : roleIdUsernameListMap.keySet()) {
+                    String clusterRole = RoleBindingEnum.findByRoleId(roleId).getClusterRole();
+                    // 获取该角色下的用户名称列表
+                    List<String> currentRoleUsernameList = roleIdUsernameListMap.get(roleId).stream()
+                        .map(UserDto::getUserName).collect(Collectors.toList());
+                    roleBindingService.bindUser(ns.getClusterId(), ns.getName(), clusterRole, currentRoleUsernameList,
                         clusterRole);
+                }
+            }
+
+        }
+        // flag为true 代表仅针对分区进行绑定或解绑，与项目管理员分区权限无关
+        if (flag){
+            Set<String> clusterIdList = nsList.stream().collect(Collectors.groupingBy(Namespace::getClusterId)).keySet();
+            for (String clusterId : clusterIdList) {
+
+                String clusterRole = RoleBindingEnum.findByRoleId(2).getClusterRole() + LINE + NAMESPACE;
+                // 先移除所有项目管理员的绑定权限
+                clusterRoleBindingService.removeUserClusterRoleBinding(clusterId, clusterRole,
+                        userDtoList.stream().map(UserDto::getUserName).collect(Collectors.toList()));
+
+                // 获取需更新为项目管理员的用户名称列表
+                if (bind){
+                    List<String> usernameList =
+                            userDtoList.stream().filter(userDto -> userDto.getRoleId() != null && userDto.getRoleId() == 2)
+                                    .map(UserDto::getUserName).collect(Collectors.toList());
+                    clusterRoleBindingService.addUserClusterRoleBinding(clusterId, clusterRole, usernameList, clusterRole);
                 }
             }
         }

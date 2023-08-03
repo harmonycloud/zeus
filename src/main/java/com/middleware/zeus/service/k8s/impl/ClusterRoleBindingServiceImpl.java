@@ -35,7 +35,7 @@ public class ClusterRoleBindingServiceImpl implements ClusterRoleBindingService 
 
 
     @Override
-    public void addUserClusterRoleBinding(String clusterId, String name, String username, String clusterRole) {
+    public void addUserClusterRoleBinding(String clusterId, String name, List<String> usernameList, String clusterRole) {
         ClusterRoleBinding clusterRoleBinding = clusterRoleBindingWrapper.get(clusterId, name);
         if (clusterRoleBinding == null && StringUtils.isNotEmpty(clusterRole)){
             this.create(clusterId, name, clusterRole);
@@ -50,29 +50,32 @@ public class ClusterRoleBindingServiceImpl implements ClusterRoleBindingService 
             subjectList = new ArrayList<>();
         }
         // 若已存在当前用户 先移除
-        subjectList.removeIf(subject -> USER.equals(subject.getKind()) && subject.getName().equals(username));
+        subjectList.removeIf(subject -> USER.equals(subject.getKind())
+                && usernameList.stream().anyMatch(username -> username.equals(subject.getName())));
 
         // 添加用户
-        Subject subject = new Subject();
-        subject.setApiGroup("rbac.authorization.k8s.io");
-        subject.setKind(USER);
-        subject.setName(username);
-        subjectList.add(subject);
-
+        for (String username : usernameList) {
+            Subject subject = new Subject();
+            subject.setApiGroup("rbac.authorization.k8s.io");
+            subject.setKind(USER);
+            subject.setName(username);
+            subjectList.add(subject);
+        }
         clusterRoleBinding.setSubjects(subjectList);
 
         clusterRoleBindingWrapper.update(clusterId, clusterRoleBinding);
     }
 
     @Override
-    public void removeUserClusterRoleBinding(String clusterId, String name, String username) {
+    public void removeUserClusterRoleBinding(String clusterId, String name, List<String> usernameList) {
         ClusterRoleBinding clusterRoleBinding = clusterRoleBindingWrapper.get(clusterId, name);
         if (clusterRoleBinding == null || CollectionUtils.isEmpty(clusterRoleBinding.getSubjects())){
             return;
         }
 
-        boolean remove = clusterRoleBinding.getSubjects().removeIf(subject -> USER.equals(subject.getKind()) && subject.getName().equals(username));
-        if (!remove){
+        boolean remove = clusterRoleBinding.getSubjects().removeIf(subject -> USER.equals(subject.getKind())
+            && usernameList.stream().anyMatch(username -> username.equals(subject.getName())));
+        if (!remove) {
             return;
         }
         clusterRoleBindingWrapper.update(clusterId, clusterRoleBinding);

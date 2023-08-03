@@ -3,6 +3,7 @@ package com.middleware.zeus.service.user.abstractService;
 import static com.middleware.zeus.common.constants.CommonConstant.LINE;
 import static com.middleware.zeus.common.constants.CommonConstant.NUM_TWO;
 import static com.middleware.zeus.common.constants.NameConstant.*;
+import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.NAMESPACE;
 import static com.middleware.zeus.common.constants.user.UserConstant.USERNAME;
 
 import java.io.ByteArrayOutputStream;
@@ -19,10 +20,7 @@ import com.middleware.zeus.common.enums.RoleBindingEnum;
 import com.middleware.zeus.common.exception.BusinessException;
 import com.middleware.zeus.common.model.middleware.MiddlewareClusterDTO;
 import com.middleware.zeus.common.model.middleware.Namespace;
-import com.middleware.zeus.service.k8s.CertificateSigningRequestService;
-import com.middleware.zeus.service.k8s.ClusterService;
-import com.middleware.zeus.service.k8s.RoleBindingService;
-import com.middleware.zeus.service.k8s.SecretService;
+import com.middleware.zeus.service.k8s.*;
 import com.middleware.zeus.util.FileDownloadUtil;
 import com.middleware.zeus.util.OpenSSLUtil;
 import io.fabric8.kubernetes.api.model.AuthInfo;
@@ -111,6 +109,8 @@ public abstract class AbstractUserService {
     protected RoleBindingService roleBindingService;
     @Autowired
     protected ClusterService clusterService;
+    @Autowired
+    protected ClusterRoleBindingService clusterRoleBindingService;
 
     protected String getUsername() {
         CurrentUser currentUser = CurrentUserRepository.getUser();
@@ -401,7 +401,12 @@ public abstract class AbstractUserService {
             // 创建roleBinding资源并绑定用户
             for (Namespace ns : nsList) {
                 String clusterRole = RoleBindingEnum.findByRoleId(userRole.getRoleId()).getClusterRole();
-                roleBindingService.bindUser(clusterId, ns.getName(), clusterRole, userDto.getUserName(), clusterRole);
+                roleBindingService.bindUser(clusterId, ns.getName(), clusterRole, Collections.singletonList(username), clusterRole);
+            }
+            // 特殊处理项目管理员
+            if (userRole.getRoleId() == 2) {
+                String clusterRole = RoleBindingEnum.findByRoleId(2).getClusterRole() + LINE + NAMESPACE;
+                clusterRoleBindingService.addUserClusterRoleBinding(clusterId, clusterRole, Collections.singletonList(username), clusterRole);
             }
         }
     }

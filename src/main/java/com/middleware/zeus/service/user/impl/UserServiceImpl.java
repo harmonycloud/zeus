@@ -9,10 +9,7 @@ import static com.middleware.zeus.common.constants.user.UserConstant.USERNAME;
 import static com.middleware.caas.filters.base.GlobalKey.NUM_ROLE_ADMIN;
 
 import java.security.KeyPair;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import com.middleware.zeus.bean.user.BeanOrganization;
@@ -478,9 +475,9 @@ public class UserServiceImpl extends AbstractUserService implements UserService 
         List<MiddlewareClusterDTO> clusterList = clusterService.listClusters();
         for (MiddlewareClusterDTO cluster : clusterList) {
             if (bind) {
-                clusterRoleBindingService.addUserClusterRoleBinding(cluster.getId(), ZEUS, username, ZEUS);
+                clusterRoleBindingService.addUserClusterRoleBinding(cluster.getId(), ZEUS, Collections.singletonList(username), ZEUS);
             } else {
-                clusterRoleBindingService.removeUserClusterRoleBinding(cluster.getId(), ZEUS, username);
+                clusterRoleBindingService.removeUserClusterRoleBinding(cluster.getId(), ZEUS, Collections.singletonList(username));
             }
         }
     }

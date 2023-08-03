@@ -2,6 +2,7 @@ package com.middleware.zeus.service.k8s;
 
 import io.fabric8.kubernetes.api.model.rbac.RoleBinding;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -15,18 +16,18 @@ public interface RoleBindingService {
      * @param clusterId 集群id
      * @param namespace 分区
      * @param name 名称
-     * @param username 用户名
+     * @param usernameList 用户名
      * @param clusterRole 集群角色
      */
-    void bindUser(String clusterId, String namespace, String name, String username, String clusterRole);
+    void bindUser(String clusterId, String namespace, String name, List<String> usernameList, String clusterRole);
 
     /**
      * 移除用户绑定关系
      * @param clusterId 集群id
      * @param namespace 分区
-     * @param username 用户名
+     * @param usernameList 用户名
      */
-    void removeUser(String clusterId, String namespace, String username);
+    void removeUser(String clusterId, String namespace, List<String> usernameList);
 
     /**
      * 绑定用户
