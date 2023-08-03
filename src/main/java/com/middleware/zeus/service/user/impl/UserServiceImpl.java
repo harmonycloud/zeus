@@ -376,25 +376,26 @@ public class UserServiceImpl extends AbstractUserService implements UserService 
         // 期望分配管理类型角色
         if (userDto.getManager() != null) {
             if (userDto.getManager().equals(NUM_ONE)) {
-                String username = JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken()).getValue()
-                    .getString(USERNAME);
-                if (ADMIN.equals(username)) {
+                String currentUserName = JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken())
+                    .getValue().getString(USERNAME);
+                if (ADMIN.equals(currentUserName)) {
                     userRoleService.update(new UserRole().setUserName(userDto.getUserName()).setRoleId(NUM_ROLE_ADMIN));
                     // 更新该用户与clusterRoleBinding zeus绑定
-                    updateUserK8sAdmin(username, true);
+                    updateUserK8sAdmin(userDto.getUserName(), true);
                 }
             } else {
-                userRoleService.update(new UserRole().setUserName(userDto.getUserName()).setRoleId(userDto.getManager()));
+                userRoleService
+                    .update(new UserRole().setUserName(userDto.getUserName()).setRoleId(userDto.getManager()));
             }
             // 移除或者不期望分配管理类型角色
         } else if (currentManagerRoleId != -1) {
             if (currentManagerRoleId == NUM_ROLE_ADMIN) {
-                String username = JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken()).getValue()
-                    .getString(USERNAME);
-                if (ADMIN.equals(username)) {
+                String currentUserName = JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken())
+                    .getValue().getString(USERNAME);
+                if (ADMIN.equals(currentUserName)) {
                     userRoleService.delete(userDto.getUserName(), null, null, NUM_ROLE_ADMIN);
                     // 更新该用户取消与clusterRoleBinding zeus绑定
-                    updateUserK8sAdmin(username, false);
+                    updateUserK8sAdmin(userDto.getUserName(), false);
                 }
             } else {
                 userRoleService.delete(userDto.getUserName(), null, null, currentManagerRoleId);
