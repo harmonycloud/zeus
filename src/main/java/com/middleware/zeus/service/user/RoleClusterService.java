@@ -8,7 +8,8 @@ import java.util.List;
  * @author xutianhong
  * @Date 2021/12/14 10:05 上午
  */
-public interface ClusterRoleService {
+@Deprecated
+public interface RoleClusterService {
 
     /**
      * 添加角色集群权限

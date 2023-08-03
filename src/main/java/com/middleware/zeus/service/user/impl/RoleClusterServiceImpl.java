@@ -7,7 +7,7 @@ import com.middleware.zeus.common.model.middleware.MiddlewareClusterDTO;
 import com.middleware.zeus.common.model.middleware.Namespace;
 import com.middleware.zeus.bean.user.BeanClusterRole;
 import com.middleware.zeus.dao.user.BeanClusterRoleMapper;
-import com.middleware.zeus.service.user.ClusterRoleService;
+import com.middleware.zeus.service.user.RoleClusterService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -24,7 +24,8 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
-public class ClusterRoleServiceImpl implements ClusterRoleService {
+@Deprecated
+public class RoleClusterServiceImpl implements RoleClusterService {
 
     @Autowired
     private BeanClusterRoleMapper beanClusterRoleMapper;

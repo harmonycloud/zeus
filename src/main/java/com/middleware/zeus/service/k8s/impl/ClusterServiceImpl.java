@@ -107,11 +107,11 @@ public class ClusterServiceImpl extends AbstractClusterService implements Cluste
     private BeanKubeConfigMapper kubeConfigMapper;
     @Autowired
     private RoleBindingService roleBindingService;
+    @Autowired
+    private ClusterRoleService clusterRoleService;
 
     @Value("${k8s.component.middleware:/usr/local/zeus-pv/middleware}")
     private String middlewarePath;
-    @Value("${k8s.component.crd:/usr/local/zeus-pv/components/platform/crds/middlewarecluster-crd.yaml}")
-    private String middlewareCrdYamlPath;
 
     public static void refreshCache(){
         CLUSTER_MAP.clear();
@@ -189,7 +189,8 @@ public class ClusterServiceImpl extends AbstractClusterService implements Cluste
                 namespaceService.save(cluster.getId(), "middleware-operator", label, null);
             }
         }
-        // todo 创建clusterRole资源
+        // 创建clusterRole资源
+        clusterRoleService.initClusterRole(cluster.getId());
     }
 
     @Override
@@ -541,7 +542,7 @@ public class ClusterServiceImpl extends AbstractClusterService implements Cluste
             String execCommand;
             execCommand =
                 MessageFormat.format("kubectl apply -f {0} --server={1} --token={2} --insecure-skip-tls-verify=true",
-                    middlewareCrdYamlPath, middlewareClusterDTO.getAddress(), middlewareClusterDTO.getAccessToken());
+                    "middlewareCrdYamlPath", middlewareClusterDTO.getAddress(), middlewareClusterDTO.getAccessToken());
             log.info("执行kubectl命令：{}", execCommand);
             String[] commands = execCommand.split(" ");
             process = Runtime.getRuntime().exec(commands);

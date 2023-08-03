@@ -403,11 +403,6 @@ public abstract class AbstractUserService {
                 String clusterRole = RoleBindingEnum.findByRoleId(userRole.getRoleId()).getClusterRole();
                 roleBindingService.bindUser(clusterId, ns.getName(), clusterRole, Collections.singletonList(username), clusterRole);
             }
-            // 特殊处理项目管理员
-            if (userRole.getRoleId() == 2) {
-                String clusterRole = RoleBindingEnum.findByRoleId(2).getClusterRole() + LINE + NAMESPACE;
-                clusterRoleBindingService.addUserClusterRoleBinding(clusterId, clusterRole, Collections.singletonList(username), clusterRole);
-            }
         }
     }
 

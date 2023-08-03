@@ -59,8 +59,6 @@ public class RoleServiceImpl implements RoleService {
     @Autowired
     private UserRoleService userRoleService;
     @Autowired
-    private ClusterRoleService clusterRoleService;
-    @Autowired
     private RoleAuthorityService roleAuthorityService;
     @Autowired
     private MiddlewareInfoService middlewareInfoService;
@@ -110,8 +108,6 @@ public class RoleServiceImpl implements RoleService {
         beanRoleMapper.deleteById(roleId);
         //删除角色权限绑定
         roleAuthorityService.delete(roleId);
-        //删除角色集群绑定
-        clusterRoleService.delete(roleId);
         // 删除角色菜单绑定关系
         resourceMenuRoleService.delete(roleId);
     }

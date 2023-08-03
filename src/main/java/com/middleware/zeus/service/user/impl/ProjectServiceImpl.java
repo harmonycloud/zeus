@@ -788,10 +788,7 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
         if (StringUtils.isEmpty(organId) || StringUtils.isEmpty(projectId) || bind == null) {
             return;
         }
-        // 设置一个是否需要更新项目管理员角色绑定的flag
-        Boolean flag = false;
         if (CollectionUtils.isEmpty(nsList)) {
-            flag = true;
             nsList = this.getNamespace(organId, projectId);
         }
         if (CollectionUtils.isEmpty(userDtoList)) {
@@ -825,25 +822,6 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
                 }
             }
 
-        }
-        // flag为true 代表仅针对分区进行绑定或解绑，与项目管理员分区权限无关
-        if (flag){
-            Set<String> clusterIdList = nsList.stream().collect(Collectors.groupingBy(Namespace::getClusterId)).keySet();
-            for (String clusterId : clusterIdList) {
-
-                String clusterRole = RoleBindingEnum.findByRoleId(2).getClusterRole() + LINE + NAMESPACE;
-                // 先移除所有项目管理员的绑定权限
-                clusterRoleBindingService.removeUserClusterRoleBinding(clusterId, clusterRole,
-                        userDtoList.stream().map(UserDto::getUserName).collect(Collectors.toList()));
-
-                // 获取需更新为项目管理员的用户名称列表
-                if (bind){
-                    List<String> usernameList =
-                            userDtoList.stream().filter(userDto -> userDto.getRoleId() != null && userDto.getRoleId() == 2)
-                                    .map(UserDto::getUserName).collect(Collectors.toList());
-                    clusterRoleBindingService.addUserClusterRoleBinding(clusterId, clusterRole, usernameList, clusterRole);
-                }
-            }
         }
     }
 
