@@ -80,7 +80,7 @@ public class RoleBindingServiceImpl implements RoleBindingService {
         }
         for (RoleBinding roleBinding : roleBindingList) {
             if (CollectionUtils.isEmpty(roleBinding.getSubjects())) {
-                return;
+                continue;
             }
             boolean update = roleBinding.getSubjects().removeIf(subject -> USER.equals(subject.getKind())
                 && usernameList.stream().anyMatch(username -> username.equals(subject.getName())));
