@@ -391,6 +391,12 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
         List<BeanProjectNamespace> beanProjectNamespaceList = beanProjectNamespaceMapper.selectList(wrapper);
         if (!CollectionUtils.isEmpty(beanProjectNamespaceList)) {
             beanProjectNamespaceMapper.delete(wrapper);
+            if (StringUtils.isEmpty(organId)){
+                organId = beanProjectNamespaceList.get(0).getOrganId();
+            }
+            if (StringUtils.isEmpty(projectId)){
+                projectId = beanProjectNamespaceList.get(0).getProjectId();
+            }
         }
         // 移除分区下k8s用户角色绑定关系
         refreshUserRoleBinding(organId, projectId,
@@ -785,7 +791,7 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
      */
     public void refreshUserRoleBinding(String organId, String projectId, List<Namespace> nsList,
         List<UserDto> userDtoList, Boolean bind) {
-        if (StringUtils.isEmpty(organId) || StringUtils.isEmpty(projectId) || bind == null) {
+        if (bind == null) {
             return;
         }
         if (CollectionUtils.isEmpty(nsList)) {
@@ -799,15 +805,16 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
             if (StringUtil.isEmpty(ns.getClusterId()) || StringUtils.isEmpty(ns.getName())) {
                 continue;
             }
-            // 过滤异常数据和非默认角色的用户
-            userDtoList = userDtoList.stream()
-                .filter(userDto -> userDto.getRoleId() != null && StringUtils.isNotEmpty(userDto.getUserName())
-                    || RoleBindingEnum.findByRoleId(userDto.getRoleId()) != null)
-                .collect(Collectors.toList());
+
             // 获取用户名称列表
             List<String> usernameList = userDtoList.stream().map(UserDto::getUserName).collect(Collectors.toList());
             // 先移除所有用户的当前k8s角色权限绑定
             roleBindingService.removeUser(ns.getClusterId(), ns.getName(), usernameList);
+            // 过滤异常数据和非默认角色的用户
+            userDtoList = userDtoList.stream()
+                    .filter(userDto -> userDto.getRoleId() != null && StringUtils.isNotEmpty(userDto.getUserName())
+                            || RoleBindingEnum.findByRoleId(userDto.getRoleId()) != null)
+                    .collect(Collectors.toList());
             // 根据角色group用户
             if (bind) {
                 Map<Integer, List<UserDto>> roleIdUsernameListMap =
