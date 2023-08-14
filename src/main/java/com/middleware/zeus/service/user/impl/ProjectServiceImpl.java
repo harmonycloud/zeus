@@ -399,8 +399,10 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
             }
         }
         // 移除分区下k8s用户角色绑定关系
-        refreshUserRoleBinding(organId, projectId,
-            Collections.singletonList(new Namespace().setName(namespace).setClusterId(clusterId)), null, false);
+        if (StringUtils.isNotEmpty(organId) && StringUtils.isNotEmpty(projectId)) {
+            refreshUserRoleBinding(organId, projectId,
+                Collections.singletonList(new Namespace().setName(namespace).setClusterId(clusterId)), null, false);
+        }
     }
 
     @Override
