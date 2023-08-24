@@ -510,6 +510,10 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                     if (values.containsKey(VERSION)) {
                         middleware.setVersion(values.getString(VERSION));
                     }
+                    if (middleware.getType().equals(MiddlewareTypeEnum.REDIS.getType())) {
+                        getOperator(BaseOperator.class, BaseOperator.class, middleware).convertByHelmChart(middleware,
+                            cluster, values);
+                    }
                     middleware.setStatus("Deleted");
                 } else {
                     if (StringUtils.isEmpty(beanCacheMiddleware.getPvc())

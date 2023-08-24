@@ -537,6 +537,13 @@ public abstract class AbstractBaseOperator {
             middleware.setClusterId(cluster.getId());
         }
         JSONObject values = helmChartService.getInstalledValues(middleware, cluster);
+        return convertByHelmChart(middleware, cluster, values);
+    }
+
+    /**
+     * 从helm chart转回middleware
+     */
+    public Middleware convertByHelmChart(Middleware middleware, MiddlewareClusterDTO cluster, JSONObject values) {
         convertCommonByHelmChart(middleware, values);
         convertStoragesByHelmChart(middleware, middleware.getType(), values);
         return middleware;
