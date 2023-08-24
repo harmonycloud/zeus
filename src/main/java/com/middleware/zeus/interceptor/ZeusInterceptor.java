@@ -22,7 +22,6 @@ public class ZeusInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         // 进入controller层之前的处理
         CurrentLanguage.setLanguage(LanguageEnum.getCurrentLanguage());
-        ClusterServiceImpl.refreshCache();
         return true;
     }
 

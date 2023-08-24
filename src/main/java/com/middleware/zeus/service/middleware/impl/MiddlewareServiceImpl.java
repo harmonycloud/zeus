@@ -492,7 +492,6 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         final CountDownLatch count = new CountDownLatch(existMiddlewareList.size());
         existMiddlewareList.forEach(mw -> ThreadPoolExecutorFactory.executor.execute(() -> {
             try {
-                // todo simple convert 需解决mysql灾备信息获取的问题
                  getOperator(BaseOperator.class, BaseOperator.class, mw).convertByHelmChart(mw, cluster, mw.getValues());
             } finally {
                 count.countDown();

@@ -113,10 +113,6 @@ public class ClusterServiceImpl extends AbstractClusterService implements Cluste
     @Value("${k8s.component.middleware:/usr/local/zeus-pv/middleware}")
     private String middlewarePath;
 
-    public static void refreshCache(){
-        CLUSTER_MAP.clear();
-    }
-
     @Override
     public List<MiddlewareClusterDTO> baseListCluster(){
         return middlewareClusterService.listClusterDtos();
