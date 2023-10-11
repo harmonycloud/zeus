@@ -34,10 +34,12 @@ public class SecretServiceImpl implements SecretService {
     private SecretWrapper secretWrapper;
 
     @Override
-    public List<Secret> list(String clusterId, String namespace) {
-        List<io.fabric8.kubernetes.api.model.Secret> secretList = secretWrapper.list(clusterId, namespace);
-        return secretList.stream().map(secret -> new Secret().setClusterId(clusterId).setNamespace(namespace)
-                .setName(secret.getMetadata().getName()).setData(secret.getData())).collect(Collectors.toList());
+    public List<Secret> list(String clusterId, String namespace, Map<String, String> labels) {
+        List<io.fabric8.kubernetes.api.model.Secret> secretList = secretWrapper.list(clusterId, namespace, labels);
+        return secretList.stream()
+            .map(secret -> new Secret().setClusterId(clusterId).setNamespace(secret.getMetadata().getNamespace())
+                .setName(secret.getMetadata().getName()).setData(secret.getData()))
+            .collect(Collectors.toList());
     }
 
     @Override

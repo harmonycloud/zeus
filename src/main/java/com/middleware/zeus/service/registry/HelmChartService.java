@@ -1,6 +1,7 @@
 package com.middleware.zeus.service.registry;
 
 import com.alibaba.fastjson.JSONObject;
+import com.middleware.zeus.common.model.HelmInfoDo;
 import com.middleware.zeus.common.model.middleware.Middleware;
 import com.middleware.zeus.common.model.middleware.MiddlewareClusterDTO;
 import com.middleware.zeus.common.model.middleware.QuestionYaml;
@@ -86,6 +87,14 @@ public interface HelmChartService {
      * @return
      */
     JSONObject getInstalledValues(Middleware middleware, MiddlewareClusterDTO cluster);
+
+    /**
+     * 获取helm values列表
+     *
+     * @param clusterId 集群id
+     * @return namespace 命名空间
+     */
+    List<HelmInfoDo> listInstalledValues(String clusterId, String namespace);
 
     /**
      * 获取zeus-mysql的values

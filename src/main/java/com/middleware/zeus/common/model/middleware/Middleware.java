@@ -1,5 +1,6 @@
 package com.middleware.zeus.common.model.middleware;
 
+import com.alibaba.fastjson.JSONObject;
 import com.middleware.zeus.common.model.AffinityDTO;
 import com.middleware.zeus.common.model.MonitorResourceQuota;
 import io.swagger.annotations.ApiModel;
@@ -213,6 +214,12 @@ public class Middleware implements Serializable {
 
     @ApiModelProperty("容器gid")
     private Long containerGID;
+
+    @ApiModelProperty("部署类型 container:容器 server:虚拟机/服务器")
+    private String deployMod;
+
+    @ApiModelProperty("values.yaml")
+    private JSONObject values;
 
     public Middleware(String clusterId, String namespace, String name, String type) {
         this.clusterId = clusterId;

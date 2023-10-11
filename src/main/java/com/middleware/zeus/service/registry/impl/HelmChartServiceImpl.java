@@ -1,16 +1,36 @@
 package com.middleware.zeus.service.registry.impl;
 
+import static com.middleware.zeus.common.constants.CommonConstant.*;
+import static com.middleware.zeus.common.constants.NameConstant.*;
+import static com.middleware.zeus.common.constants.registry.HelmChartConstant.*;
+
+import java.io.*;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.ObjectUtils;
+import org.yaml.snakeyaml.Yaml;
+
 import com.alibaba.fastjson.JSONObject;
 import com.middleware.zeus.bean.BeanImageRepository;
 import com.middleware.zeus.bean.BeanMiddlewareInfo;
 import com.middleware.zeus.common.constants.CmdConstant;
 import com.middleware.zeus.common.constants.NameConstant;
 import com.middleware.zeus.common.enums.ComponentsEnum;
+import com.middleware.zeus.common.enums.DateType;
 import com.middleware.zeus.common.enums.ErrorMessage;
 import com.middleware.zeus.common.enums.middleware.MiddlewareTypeEnum;
 import com.middleware.zeus.common.enums.registry.RegistryType;
 import com.middleware.zeus.common.exception.BusinessException;
 import com.middleware.zeus.common.exception.CaasRuntimeException;
+import com.middleware.zeus.common.model.HelmInfoDo;
+import com.middleware.zeus.common.model.Secret;
 import com.middleware.zeus.common.model.middleware.*;
 import com.middleware.zeus.common.model.registry.HelmChartFile;
 import com.middleware.zeus.integration.registry.HelmChartWrapper;
@@ -20,6 +40,7 @@ import com.middleware.zeus.operator.impl.BaseOperatorImpl;
 import com.middleware.zeus.service.k8s.ClusterCertService;
 import com.middleware.zeus.service.k8s.ClusterService;
 import com.middleware.zeus.service.k8s.NamespaceService;
+import com.middleware.zeus.service.k8s.SecretService;
 import com.middleware.zeus.service.middleware.ImageRepositoryService;
 import com.middleware.zeus.service.middleware.MiddlewareInfoService;
 import com.middleware.zeus.service.middleware.MiddlewareService;
@@ -28,28 +49,11 @@ import com.middleware.zeus.service.registry.HelmChartService;
 import com.middleware.zeus.util.YamlUtil;
 import com.middleware.zeus.util.cmd.CmdExecUtil;
 import com.middleware.zeus.util.cmd.HelmChartUtil;
+import com.middleware.zeus.util.date.DateUtils;
 import com.middleware.zeus.util.file.FileUtil;
 import com.middleware.zeus.util.middleware.ChartVersionUtil;
+
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
-import org.springframework.util.ObjectUtils;
-import org.yaml.snakeyaml.Yaml;
-
-import java.io.*;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
-import static com.middleware.zeus.common.constants.CommonConstant.RESOURCE_ALREADY_EXISTED;
-import static com.middleware.zeus.common.constants.CommonConstant.SIMPLE;
-import static com.middleware.zeus.common.constants.registry.HelmChartConstant.*;
 
 /**
  * @author dengyulong
@@ -83,6 +87,8 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
     private ImageRepositoryService imageRepositoryService;
     @Autowired
     private BaseOperatorImpl baseOperator;
+    @Autowired
+    private SecretService secretService;
 
     @Value("${system.upload.path:/usr/local/zeus-pv/upload}")
     private String uploadPath;
@@ -295,13 +301,49 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
     }
 
     @Override
+    public List<HelmInfoDo> listInstalledValues(String clusterId, String namespace) {
+        List<HelmInfoDo> helmInfoDoList = new ArrayList<>();
+        Map<String, String> labels = new HashMap<>();
+        labels.put(OWNER, HELM);
+        labels.put(STATUS, DEPLOYED);
+        List<Secret> secretList = secretService.list(clusterId, namespace, labels);
+        for (Secret secret : secretList){
+            HelmInfoDo helmInfoDo = new HelmInfoDo();
+            JSONObject target = HelmChartUtil.decodeSecret(secret.getData().get(RELEASE));
+            helmInfoDo.setName(target.getString(NAME));
+
+            JSONObject chart = target.getJSONObject("chart");
+            helmInfoDo.setValues(chart.getJSONObject("values"));
+
+            JSONObject metadata = chart.getJSONObject("metadata");
+            helmInfoDo.setChartName(metadata.getString(NAME));
+            helmInfoDo.setChartVersion(metadata.getString(VERSION));
+
+            JSONObject info = target.getJSONObject(INFO);
+            Date updateTime = DateUtils.parseDate(info.getString("last_deployed").split("\\.")[0] + "Z",
+                DateType.YYYY_MM_DD_T_HH_MM_SS.getValue());
+            helmInfoDo.setUpdateTime(updateTime);
+
+            helmInfoDo.setClusterId(clusterId);
+            helmInfoDo.setNamespace(secret.getNamespace());
+
+            helmInfoDoList.add(helmInfoDo);
+        }
+        return helmInfoDoList;
+    }
+
+    @Override
     public JSONObject getInstalledValues(String name, String namespace, MiddlewareClusterDTO cluster) {
-        String yamlStr = loadYamlAsStr(name, namespace, cluster);
-        if (StringUtils.isEmpty(yamlStr)){
+        Map<String, String> labels = new HashMap<>();
+        labels.put(OWNER, HELM);
+        labels.put(STATUS, DEPLOYED);
+        labels.put(NAME, name);
+        List<Secret> secretList =secretService.list(cluster.getId(), namespace, labels);
+        if (CollectionUtils.isEmpty(secretList)){
             return null;
         }
-        Yaml yaml = new Yaml();
-        return yaml.loadAs(yamlStr, JSONObject.class);
+        JSONObject target = HelmChartUtil.decodeSecret(secretList.get(0).getData().get(RELEASE));
+        return target.getJSONObject("chart").getJSONObject("values");
     }
 
     @Override

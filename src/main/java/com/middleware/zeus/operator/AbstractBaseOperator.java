@@ -539,7 +539,6 @@ public abstract class AbstractBaseOperator {
         JSONObject values = helmChartService.getInstalledValues(middleware, cluster);
         convertCommonByHelmChart(middleware, values);
         convertStoragesByHelmChart(middleware, middleware.getType(), values);
-        // setImagePath(middleware, values);
         return middleware;
     }
 

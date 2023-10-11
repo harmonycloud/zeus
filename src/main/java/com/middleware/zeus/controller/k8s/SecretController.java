@@ -32,7 +32,7 @@ public class SecretController {
     @GetMapping
     public BaseResult list(@PathVariable("clusterId") String clusterId,
                            @PathVariable("namespace") String namespace) {
-        return BaseResult.ok(secretService.list(clusterId, namespace));
+        return BaseResult.ok(secretService.list(clusterId, namespace, null));
     }
 
 }

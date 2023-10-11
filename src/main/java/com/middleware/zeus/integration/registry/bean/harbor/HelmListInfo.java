@@ -1,5 +1,6 @@
 package com.middleware.zeus.integration.registry.bean.harbor;
 
+import com.alibaba.fastjson.JSONObject;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;

@@ -28,6 +28,8 @@ public class NameConstant {
     public static final String STARTED = "started";
     public static final String STOPPING = "stopping";
     public static final String STARTING = "starting";
+    public static final String DEPLOYED = "deployed";
+    public static final String RELEASE = "release";
 
     public static final String HTTPS_PORT = "httpsPort";
     public static final String HEALTH_PORT = "healthPort";
@@ -151,5 +153,7 @@ public class NameConstant {
     public static final String CLUSTER_ROLE = "ClusterRole";
 
     public static final String POSITION_ID = "positionId";
+
+    public static final String HELM = "helm";
 
 }

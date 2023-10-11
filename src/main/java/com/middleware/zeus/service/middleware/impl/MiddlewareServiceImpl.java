@@ -33,6 +33,7 @@ import com.middleware.zeus.service.system.LicenseService;
 import com.middleware.zeus.service.user.ProjectService;
 import com.middleware.zeus.service.user.RoleAuthorityService;
 import com.middleware.zeus.service.user.UserService;
+import com.middleware.zeus.util.DateUtil;
 import com.middleware.zeus.util.ThreadPoolExecutorFactory;
 import com.middleware.zeus.util.YamlUtil;
 import com.middleware.zeus.util.date.DateUtils;
@@ -446,49 +447,53 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     @Override
     public List<MiddlewareBriefInfoDTO> list(String clusterId, String namespace, String type, String keyword, String organId, String projectId)
         throws Exception {
-        // 获取中间件chart包信息
-        List<BeanMiddlewareInfo> beanMiddlewareInfoList = middlewareInfoService.list(true);
         // get cluster
         MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
-        // helm list 并过滤获取属于中间件的发布
-        List<HelmListInfo> helmListInfoList = helmChartService.listHelm(namespace, null, cluster).stream()
+        // 获取中间件chart包信息
+        List<BeanMiddlewareInfo> beanMiddlewareInfoList = middlewareInfoService.list(true);
+        // 获取helm list
+        List<HelmInfoDo> helmInfoDoList = helmChartService.listInstalledValues(clusterId, namespace);
+        //过滤获取属于中间件的helm release
+        List<HelmInfoDo> mwHelmInfoDoList = helmInfoDoList.stream()
             .filter(info -> beanMiddlewareInfoList.stream()
-                .anyMatch(mwInfo -> info.getChart().equals(mwInfo.getChartName() + "-" + mwInfo.getChartVersion())))
-                .filter(info -> StringUtils.isEmpty(type) || info.getChart().contains(type))
-            .collect(Collectors.toList());
+                .anyMatch(mwInfo -> info.getChartName().equals(mwInfo.getChartName()) && info.getChartVersion().equals(mwInfo.getChartVersion())))
+            .filter(info -> StringUtils.isEmpty(type) || info.getChartName().contains(type)).collect(Collectors.toList());
         // list middleware cr
         List<Middleware> middlewareList = middlewareCRService.list(clusterId, namespace, type, false);
 
-        List<HelmListInfo> finalHelmListInfoList = helmListInfoList;
-        // 过滤掉helm中没有的middleware 并设置chart-version
-        middlewareList = middlewareList.stream().filter(mw -> finalHelmListInfoList.stream().anyMatch(info -> {
+        // 从middleware list中去除不存在helm release的对象，并针对存在的对象设置chartVersion
+        List<Middleware> existMiddlewareList =
+         middlewareList.stream().filter(mw -> mwHelmInfoDoList.stream().anyMatch(info -> {
             if (info.getName().equals(mw.getName()) && info.getNamespace().equals(mw.getNamespace())) {
-                mw.setChartVersion(info.getChart().replace(info.getChart().split("-")[0] + "-", ""));
+                mw.setChartVersion(info.getChartVersion());
+                mw.setValues(info.getValues());
                 return true;
             } else {
                 return false;
             }
         })).collect(Collectors.toList());
         // 获取还未创建出middleware的release
-        List<Middleware> finalMiddlewareList = middlewareList;
-        helmListInfoList = helmListInfoList.stream()
-            .filter(info -> finalMiddlewareList.stream().noneMatch(mw -> mw.getName().equals(info.getName())))
+        List<HelmInfoDo> creatingMwHelmInfoDoList = mwHelmInfoDoList.stream()
+            .filter(info -> existMiddlewareList.stream().noneMatch(mw -> mw.getName().equals(info.getName())))
             .collect(Collectors.toList());
-        helmListInfoList.forEach(info -> {
+        creatingMwHelmInfoDoList.forEach(info -> {
             Middleware middleware =
-                new Middleware(clusterId, info.getNamespace(), info.getName(), info.getChart().split("-")[0]);
-            if (compareTime(info.getUpdateTime())) {
+                new Middleware(clusterId, info.getNamespace(), info.getName(), info.getChartName());
+            // 如果超过10分钟未能创建出middleware，则设置为创建失败
+            if (info.getUpdateTime().before(DateUtil.addMinute(new Date(), -10))) {
                 middleware.setStatus("failed");
             } else {
                 middleware.setStatus("Preparing");
             }
-            finalMiddlewareList.add(middleware);
+            middleware.setValues(info.getValues());
+            existMiddlewareList.add(middleware);
         });
         // 获取values.yaml的详情
-        final CountDownLatch count = new CountDownLatch(finalMiddlewareList.size());
-        finalMiddlewareList.forEach(mw -> ThreadPoolExecutorFactory.executor.execute(() -> {
+        final CountDownLatch count = new CountDownLatch(existMiddlewareList.size());
+        existMiddlewareList.forEach(mw -> ThreadPoolExecutorFactory.executor.execute(() -> {
             try {
-                 getOperator(BaseOperator.class, BaseOperator.class, mw).convertByHelmChart(mw, cluster);
+                // todo simple convert 需解决mysql灾备信息获取的问题
+                 getOperator(BaseOperator.class, BaseOperator.class, mw).convertByHelmChart(mw, cluster, mw.getValues());
             } finally {
                 count.countDown();
             }
@@ -517,13 +522,13 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                     }
                 }
                 // 先移除可能因为异步导致残留的原中间件信息
-                finalMiddlewareList.removeIf(mw -> mw.getName().equals(beanCacheMiddleware.getName())
+                existMiddlewareList.removeIf(mw -> mw.getName().equals(beanCacheMiddleware.getName())
                     && mw.getNamespace().equals(beanCacheMiddleware.getNamespace()));
-                finalMiddlewareList.add(middleware);
+                existMiddlewareList.add(middleware);
             }
         }
 
-        List<Middleware> result = finalMiddlewareList;
+        List<Middleware> result = new ArrayList<>(existMiddlewareList);
         // 关键词过滤
         if (StringUtils.isNotEmpty(keyword)) {
             result = result.stream()
