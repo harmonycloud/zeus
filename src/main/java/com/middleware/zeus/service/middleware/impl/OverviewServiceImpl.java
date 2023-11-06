@@ -889,18 +889,33 @@ public class OverviewServiceImpl implements OverviewService {
         }).collect(Collectors.toList()));
 
         List<String> hourList = DateUtil.calcHour(new Date());
-        List<Map<String, Object>> criticalList = beanAlertRecordMapper.queryByTimeAndLevel(beginTime, endTime, "critical");
-        List<Map<String, Object>> infoList = beanAlertRecordMapper.queryByTimeAndLevel(beginTime, endTime, "info");
-        List<Map<String, Object>> warningList = beanAlertRecordMapper.queryByTimeAndLevel(beginTime, endTime, "warning");
-
         AlertSummaryDTO alertSummaryDTO = new AlertSummaryDTO();
-        alertSummaryDTO.setCriticalList(AlertDataUtil.checkAndFillZero(criticalList, hourList));
-        alertSummaryDTO.setInfoList(AlertDataUtil.checkAndFillZero(infoList, hourList));
-        alertSummaryDTO.setWarningList(AlertDataUtil.checkAndFillZero(warningList, hourList));
-        alertSummaryDTO.setCriticalSum(AlertDataUtil.countAlertNum(criticalList));
-        alertSummaryDTO.setInfoSum(AlertDataUtil.countAlertNum(infoList));
-        alertSummaryDTO.setWarningSum(AlertDataUtil.countAlertNum(warningList));
-
+        // 统计critical告警信息
+        try {
+            List<Map<String, Object>> criticalList =
+                beanAlertRecordMapper.queryByTimeAndLevel(beginTime, endTime, "critical");
+            alertSummaryDTO.setCriticalList(AlertDataUtil.checkAndFillZero(criticalList, hourList));
+            alertSummaryDTO.setCriticalSum(AlertDataUtil.countAlertNum(criticalList));
+        } catch (Exception e) {
+            log.error("统计critical告警记录折线数据异常", e);
+        }
+        // 统计info告警信息
+        try {
+            List<Map<String, Object>> infoList = beanAlertRecordMapper.queryByTimeAndLevel(beginTime, endTime, "info");
+            alertSummaryDTO.setInfoList(AlertDataUtil.checkAndFillZero(infoList, hourList));
+            alertSummaryDTO.setInfoSum(AlertDataUtil.countAlertNum(infoList));
+        } catch (Exception e) {
+            log.error("统计info告警记录折线数据异常", e);
+        }
+        // 统计warning告警信息
+        try {
+            List<Map<String, Object>> warningList =
+                beanAlertRecordMapper.queryByTimeAndLevel(beginTime, endTime, "warning");
+            alertSummaryDTO.setWarningList(AlertDataUtil.checkAndFillZero(warningList, hourList));
+            alertSummaryDTO.setWarningSum(AlertDataUtil.countAlertNum(warningList));
+        } catch (Exception e) {
+            log.error("统计warning告警记录折线数据异常", e);
+        }
         AlertMessageDTO alertMessageDTO = new AlertMessageDTO();
         alertMessageDTO.setAlertSummary(alertSummaryDTO);
         alertMessageDTO.setAlertPageInfo(pageInfo);
