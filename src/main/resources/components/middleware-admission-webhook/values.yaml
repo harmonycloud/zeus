@@ -18,13 +18,13 @@ nodeSelector:
   node-role.kubernetes.io/master: ""
 
 tolerations:
-    - effect: NoSchedule
-      key: harm.cn/system
-    - effect: NoSchedule
-      key: harm.cn/type
-      value: active-active
-    - effect: NoSchedule
-      key: node-role.kubernetes.io/master
+  - effect: NoSchedule
+    key: harm.cn/system
+  - effect: NoSchedule
+    key: harm.cn/type
+    value: active-active
+  - effect: NoSchedule
+    key: node-role.kubernetes.io/master
 
 affinity: {}
 
