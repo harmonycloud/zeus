@@ -1,21 +1,22 @@
-group: redis.middleware.hc.cn
+group: kafka.middleware.hc.cn
 version: v1alpha1
-kind: RedisCluster
-resource: redisclusters
+kind: KafkaCluster
+resource: kafkaclusters
 
 isCommbakcup: true
 # 备份工具设置特定的环境变量
 backupTool: restic
 operatorImage:
-  "": harbor.middleware.com/middleware/middleware-backup-operator:MIDDLEWARE-729-1
+  "": {{ .Values.global.repository }}/{{ .Values.global.middlewarebackup_controller.common_path_backup.image }}:{{ .Values.global.middlewarebackup_controller.common_path_backup.tag }}
+
 
 ######中间件中挂载信息############
 # 默认数据路径
-defaultDataPath: /data/redis/cluster.local/{NAMESPACE}/{NAME}/{POD_NAME}/data
+defaultDataPath: /opt/kafka-logs/data
 # 默认挂载路径
-defaultMountPath: /data/redis/cluster.local/{NAMESPACE}/{NAME}
+defaultMountPath: /opt/kafka-logs
 # pvc格式
-pvcFormat: redis-data-{POD_NAME}
+pvcFormat: kafka-message-data-volume-{POD_NAME}
 # 实例数量资源
 replicasFieldNames:
 - "replicas"
@@ -23,24 +24,20 @@ replicasFieldNames:
 envs:
   TZ: "Asia/Shanghai"
 
-args:
-  excludeFiles: "*.conf,*temp-*.rdb"
+#args:
+#  excludeFiles: "*.conf"
 
 # 系统变量
 sysDynamicVariable:
   partition:
     default: "{POD_NAME}"
     objectType: middleware
-    jsonPath: 'def GetClusterPartition($pod): .status as {conditions: $root}|.status.conditions[]|select(.name==$pod)|if .type=="master" then .slots else . as{masterNodeId: $masterNodeId} |$root|.[]|select(.nodeId==$masterNodeId)|.slots end; def GetSetinesPartition($pod): if  .spec.predixy==null then "0" else .status.conditions[]| select(.name==$pod)|.name end; if .spec.type=="cluster" then GetClusterPartition("{POD_NAME}") else GetSetinesPartition("{POD_NAME}") end'
-    regexp: "^.+-(\\d)-\\d$|((^[1-9]\\d+|0)-[1-9]\\d+$)|(^0$)"
+    regexp: ".+?-([0-9])$"
     scope: pod
   replicas:
     objectType: middleware
     jsonPath: '.spec.replicas'
     scope: pod
-  customVolumes:
-    jsonPath: '.spec.customVolumes|map(select(.name=="redis-data"))'
-    objectType: "middleware"
 
 
 # 备份变量
@@ -117,7 +114,7 @@ restoreDynamicVariable:
     type: arg
 
 # pod选择器
-defaultSelector: "[.status.conditions[]|select(.type==\"Master\" or .type==\"master\")|.name]"
+defaultSelector: '.status.Conditions[]|select(.type=="follower" or .type=="leader")|[.name]'
 # 中间件过滤器
 defaultFilterMiddleware: ".status|select(.phase==\"Running\" or .phase==\"running\")"
 # pod过滤器
@@ -125,3 +122,4 @@ defaultFilterPod: ""
 # node过滤器
 defaultFilterNode: ""
 
+defaultRestoreSelector: '.status.Conditions[]|select(.type=="follower" or .type=="leader")|[.name]'

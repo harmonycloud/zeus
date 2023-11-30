@@ -32,6 +32,10 @@ sysDynamicVariable:
   replicas:
     objectType: middleware
     jsonPath: '.spec.replicas'
+  customVolumes:
+    jsonPath: '.spec.customVolumes|map(select(.name=="pgdb" or .name=="pgwal" ))'
+    objectType: "middleware"
+
 
 backupDynamicVariable:
   # 为full表示是全量，inc为增量
@@ -63,6 +67,14 @@ backupDynamicVariable:
   JOB_NAME:
     jsonPath: .metadata.name
     objectType: middlewarebackup
+    type: env
+  PGDATA:
+    objectType: middleware
+    jsonPath: '.spec.customVolumes[]|select(.name=="pgdb")|.mountPath'
+    type: env
+  PGWAL:
+    objectType: middleware
+    jsonPath: '.spec.customVolumes[]|select(.name=="pgwal")|.mountPath'
     type: env
 
 restoreDynamicVariable:
@@ -105,6 +117,14 @@ restoreDynamicVariable:
   backupTime:
     type: arg
     jsonPath: '.spec.customRestores[].env[]|select(.name=="RESTORE_TIME")|.value'
+  PGDATA:
+    objectType: middleware
+    jsonPath: '.spec.customVolumes[]|select(.name=="pgdb")|.mountPath'
+    type: env
+  PGWAL:
+    objectType: middleware
+    jsonPath: '.spec.customVolumes[]|select(.name=="pgwal")|.mountPath'
+    type: env
 
 # pod选择器
 defaultSelector: "[.status.conditions[]|select(.type==\"Master\" or .type==\"master\")|.name]"

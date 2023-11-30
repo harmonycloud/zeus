@@ -1,0 +1,528 @@
+
+---
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.4.1
+  creationTimestamp: null
+  name: middlewarebackups.harmonycloud.cn
+spec:
+  group: harmonycloud.cn
+  names:
+    kind: MiddlewareBackup
+    listKind: MiddlewareBackupList
+    plural: middlewarebackups
+    shortNames:
+    - bak
+    singular: middlewarebackup
+  scope: Namespaced
+  subresources:
+    status: {}
+  validation:
+    openAPIV3Schema:
+      description: MiddlewareBackup is the Schema for the middlewarebackups API
+      properties:
+        apiVersion:
+          description: 'APIVersion defines the versioned schema of this representation
+                of an object. Servers should convert recognized schemas to the latest
+                internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          type: string
+        kind:
+          description: 'Kind is a string value representing the REST resource this
+                object represents. Servers may infer this from the endpoint the client
+                submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          type: string
+        metadata:
+          type: object
+        spec:
+          description: MiddlewareBackupSpec defines the desired state of MiddlewareBackup
+          properties:
+            backendStorage:
+              type: string
+            backupDestination:
+              description: MiddlewarePod     string                   `json:"pod,omitempty"
+                yaml:"pod,omitempty" validate:"omitempty"` MiddlewarePodPvcs []string                 `json:"pvcs,omitempty"
+                yaml:"pvcs,omitempty" validate:"omitempty"`
+              properties:
+                destinationType:
+                  type: string
+                parameters:
+                  properties:
+                    backupPassword:
+                      type: string
+                    bucket:
+                      type: string
+                    bucketSubPath:
+                      type: string
+                    url:
+                      type: string
+                    userId:
+                      type: string
+                    userKey:
+                      type: string
+                  type: object
+              type: object
+            backupObjects:
+              items:
+                properties:
+                  pod:
+                    type: string
+                  pvcs:
+                    items:
+                      type: string
+                    type: array
+                type: object
+              type: array
+            customBackups:
+              items:
+                properties:
+                  args:
+                    items:
+                      type: string
+                    type: array
+                  backupObject:
+                    properties:
+                      pod:
+                        type: string
+                      pvcs:
+                        items:
+                          type: string
+                        type: array
+                    type: object
+                  commonPathBackupObjects:
+                    items:
+                      properties:
+                        partition:
+                          description: 分片
+                          type: string
+                        pod:
+                          type: string
+                        pvcObjects:
+                          items:
+                            properties:
+                              excludeFiles:
+                                type: string
+                              mountPath:
+                                description: 挂载目录
+                                type: string
+                              paths:
+                                type: string
+                              pvc:
+                                type: string
+                            type: object
+                          type: array
+                      type: object
+                    type: array
+                  env:
+                    items:
+                      description: EnvVar represents an environment variable present
+                        in a Container.
+                      properties:
+                        name:
+                          description: Name of the environment variable. Must be
+                            a C_IDENTIFIER.
+                          type: string
+                        value:
+                          description: 'Variable references $(VAR_NAME) are expanded
+                                using the previous defined environment variables in
+                                the container and any service environment variables.
+                                If a variable cannot be resolved, the reference in the
+                                input string will be unchanged. The $(VAR_NAME) syntax
+                                can be escaped with a double $$, ie: $$(VAR_NAME). Escaped
+                                references will never be expanded, regardless of whether
+                                the variable exists or not. Defaults to "".'
+                          type: string
+                        valueFrom:
+                          description: Source for the environment variable's value.
+                            Cannot be used if value is not empty.
+                          properties:
+                            configMapKeyRef:
+                              description: Selects a key of a ConfigMap.
+                              properties:
+                                key:
+                                  description: The key to select.
+                                  type: string
+                                name:
+                                  description: 'Name of the referent. More info:
+                                        https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                        TODO: Add other useful fields. apiVersion, kind,
+                                        uid?'
+                                  type: string
+                                optional:
+                                  description: Specify whether the ConfigMap or
+                                    its key must be defined
+                                  type: boolean
+                              required:
+                                - key
+                              type: object
+                            fieldRef:
+                              description: 'Selects a field of the pod: supports
+                                    metadata.name, metadata.namespace, `metadata.labels[''<KEY>'']`,
+                                    `metadata.annotations[''<KEY>'']`, spec.nodeName,
+                                    spec.serviceAccountName, status.hostIP, status.podIP,
+                                    status.podIPs.'
+                              properties:
+                                apiVersion:
+                                  description: Version of the schema the FieldPath
+                                    is written in terms of, defaults to "v1".
+                                  type: string
+                                fieldPath:
+                                  description: Path of the field to select in the
+                                    specified API version.
+                                  type: string
+                              required:
+                                - fieldPath
+                              type: object
+                            resourceFieldRef:
+                              description: 'Selects a resource of the container:
+                                    only resources limits and requests (limits.cpu,
+                                    limits.memory, limits.ephemeral-storage, requests.cpu,
+                                    requests.memory and requests.ephemeral-storage)
+                                    are currently supported.'
+                              properties:
+                                containerName:
+                                  description: 'Container name: required for volumes,
+                                        optional for env vars'
+                                  type: string
+                                divisor:
+                                  anyOf:
+                                    - type: integer
+                                    - type: string
+                                  description: Specifies the output format of the
+                                    exposed resources, defaults to "1"
+                                  pattern: ^(\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))(([KMGTPE]i)|[numkMGTPE]|([eE](\+|-)?(([0-9]+(\.[0-9]*)?)|(\.[0-9]+))))?$
+                                  x-kubernetes-int-or-string: true
+                                resource:
+                                  description: 'Required: resource to select'
+                                  type: string
+                              required:
+                                - resource
+                              type: object
+                            secretKeyRef:
+                              description: Selects a key of a secret in the pod's
+                                namespace
+                              properties:
+                                key:
+                                  description: The key of the secret to select from.  Must
+                                    be a valid secret key.
+                                  type: string
+                                name:
+                                  description: 'Name of the referent. More info:
+                                        https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                                        TODO: Add other useful fields. apiVersion, kind,
+                                        uid?'
+                                  type: string
+                                optional:
+                                  description: Specify whether the Secret or its
+                                    key must be defined
+                                  type: boolean
+                              required:
+                                - key
+                              type: object
+                          type: object
+                      required:
+                        - name
+                      type: object
+                    type: array
+                  image:
+                    type: string
+                type: object
+              type: array
+            name:
+              type: string
+            prefixHooks:
+              items:
+                description: 'Handler defines a specific action that should be taken
+                      TODO: pass structured data to these actions, and document that
+                      data here.'
+                properties:
+                  exec:
+                    description: One and only one of the following should be specified.
+                      Exec specifies the action to take.
+                    properties:
+                      command:
+                        description: Command is the command line to execute inside
+                          the container, the working directory for the command  is
+                          root ('/') in the container's filesystem. The command
+                          is simply exec'd, it is not run inside a shell, so traditional
+                          shell instructions ('|', etc) won't work. To use a shell,
+                          you need to explicitly call out to that shell. Exit status
+                          of 0 is treated as live/healthy and non-zero is unhealthy.
+                        items:
+                          type: string
+                        type: array
+                    type: object
+                  httpGet:
+                    description: HTTPGet specifies the http request to perform.
+                    properties:
+                      host:
+                        description: Host name to connect to, defaults to the pod
+                          IP. You probably want to set "Host" in httpHeaders instead.
+                        type: string
+                      httpHeaders:
+                        description: Custom headers to set in the request. HTTP
+                          allows repeated headers.
+                        items:
+                          description: HTTPHeader describes a custom header to be
+                            used in HTTP probes
+                          properties:
+                            name:
+                              description: The header field name
+                              type: string
+                            value:
+                              description: The header field value
+                              type: string
+                          required:
+                            - name
+                            - value
+                          type: object
+                        type: array
+                      path:
+                        description: Path to access on the HTTP server.
+                        type: string
+                      port:
+                        anyOf:
+                          - type: integer
+                          - type: string
+                        description: Name or number of the port to access on the
+                          container. Number must be in the range 1 to 65535. Name
+                          must be an IANA_SVC_NAME.
+                        x-kubernetes-int-or-string: true
+                      scheme:
+                        description: Scheme to use for connecting to the host. Defaults
+                          to HTTP.
+                        type: string
+                    required:
+                      - port
+                    type: object
+                  tcpSocket:
+                    description: 'TCPSocket specifies an action involving a TCP
+                          port. TCP hooks not yet supported TODO: implement a realistic
+                          TCP lifecycle hook'
+                    properties:
+                      host:
+                        description: 'Optional: Host name to connect to, defaults
+                              to the pod IP.'
+                        type: string
+                      port:
+                        anyOf:
+                          - type: integer
+                          - type: string
+                        description: Number or name of the port to access on the
+                          container. Number must be in the range 1 to 65535. Name
+                          must be an IANA_SVC_NAME.
+                        x-kubernetes-int-or-string: true
+                    required:
+                      - port
+                    type: object
+                type: object
+              type: array
+            suffixHooks:
+              items:
+                description: 'Handler defines a specific action that should be taken
+                      TODO: pass structured data to these actions, and document that
+                      data here.'
+                properties:
+                  exec:
+                    description: One and only one of the following should be specified.
+                      Exec specifies the action to take.
+                    properties:
+                      command:
+                        description: Command is the command line to execute inside
+                          the container, the working directory for the command  is
+                          root ('/') in the container's filesystem. The command
+                          is simply exec'd, it is not run inside a shell, so traditional
+                          shell instructions ('|', etc) won't work. To use a shell,
+                          you need to explicitly call out to that shell. Exit status
+                          of 0 is treated as live/healthy and non-zero is unhealthy.
+                        items:
+                          type: string
+                        type: array
+                    type: object
+                  httpGet:
+                    description: HTTPGet specifies the http request to perform.
+                    properties:
+                      host:
+                        description: Host name to connect to, defaults to the pod
+                          IP. You probably want to set "Host" in httpHeaders instead.
+                        type: string
+                      httpHeaders:
+                        description: Custom headers to set in the request. HTTP
+                          allows repeated headers.
+                        items:
+                          description: HTTPHeader describes a custom header to be
+                            used in HTTP probes
+                          properties:
+                            name:
+                              description: The header field name
+                              type: string
+                            value:
+                              description: The header field value
+                              type: string
+                          required:
+                            - name
+                            - value
+                          type: object
+                        type: array
+                      path:
+                        description: Path to access on the HTTP server.
+                        type: string
+                      port:
+                        anyOf:
+                          - type: integer
+                          - type: string
+                        description: Name or number of the port to access on the
+                          container. Number must be in the range 1 to 65535. Name
+                          must be an IANA_SVC_NAME.
+                        x-kubernetes-int-or-string: true
+                      scheme:
+                        description: Scheme to use for connecting to the host. Defaults
+                          to HTTP.
+                        type: string
+                    required:
+                      - port
+                    type: object
+                  tcpSocket:
+                    description: 'TCPSocket specifies an action involving a TCP
+                          port. TCP hooks not yet supported TODO: implement a realistic
+                          TCP lifecycle hook'
+                    properties:
+                      host:
+                        description: 'Optional: Host name to connect to, defaults
+                              to the pod IP.'
+                        type: string
+                      port:
+                        anyOf:
+                          - type: integer
+                          - type: string
+                        description: Number or name of the port to access on the
+                          container. Number must be in the range 1 to 65535. Name
+                          must be an IANA_SVC_NAME.
+                        x-kubernetes-int-or-string: true
+                    required:
+                      - port
+                    type: object
+                type: object
+              type: array
+            type:
+              type: string
+          required:
+            - name
+            - type
+          type: object
+        status:
+          description: MiddlewareStatus defines the observed state of Middleware
+          properties:
+            backupInfos:
+              items:
+                description: "type MiddlewareBackupRecord struct { \tCreationTimestamp
+                      \      metav1.Time              `json:\"creationTimestamp,omitempty\"
+                      yaml:\"creationTimestamp,omitempty\" validate:\"omitempty\"` \tMiddlewareBackupDetails
+                      []MiddlewareBackupDetail `json:\"details,omitempty\" yaml:\"details,omitempty\"
+                      validate:\"omitempty\"` } \n type MiddlewareBackupDetail struct
+                      { \tMiddlewareName   string `json:\"name\" yaml:\"name\" validate:\"required\"`
+                      \tMiddlewarePod    string `json:\"pod,omitempty\" yaml:\"pod,omitempty\"
+                      validate:\"omitempty\"` \tMiddlewarePodPvc string `json:\"pvc,omitempty\"
+                      yaml:\"pvc,omitempty\" validate:\"omitempty\"` \tVolumeSnapshot
+                      \  string `json:\"volume_snapshot,omitempty\" yaml:\"volumeSnapshot,omitempty\"
+                      validate:\"omitempty\"` \tPhase            string `json:\"phase,omitempty\"`
+                      \tReason           string `json:\"reason,omitempty\"` }"
+                properties:
+                  pvc:
+                    type: string
+                  readyToUse:
+                    type: boolean
+                  repository:
+                    type: string
+                  volumeSnapshot:
+                    type: string
+                type: object
+              type: array
+            backupResults:
+              items:
+                description: MiddlewareBackupResultSpec defines the desired state
+                  of MiddlewareBackupResult
+                properties:
+                  backendStorage:
+                    type: string
+                  backupId:
+                    type: string
+                  backupTimestamp:
+                    type: string
+                  creationTimestamp:
+                    format: date-time
+                    type: string
+                  pod:
+                    description: MiddlewareName    string      `json:"name" yaml:"name"
+                      validate:"required"` MiddlewareType    string      `json:"type"
+                      yaml:"type" validate:"required"` MiddlewarePod     string      `json:"pod"
+                      yaml:"pod" validate:"required"`
+                    type: string
+                  pvc:
+                    type: string
+                  repository:
+                    type: string
+                  size:
+                    type: string
+                  snapshotResults:
+                    items:
+                      properties:
+                        backupId:
+                          type: string
+                        creationTimestamp:
+                          format: date-time
+                          type: string
+                        path:
+                          type: string
+                        pod:
+                          type: string
+                        pvc:
+                          type: string
+                        repository:
+                          type: string
+                        size:
+                          type: string
+                      type: object
+                    type: array
+                required:
+                  - backendStorage
+                type: object
+              type: array
+            creationTimestamp:
+              format: date-time
+              type: string
+            phase:
+              type: string
+            reason:
+              type: string
+            storageProvider:
+              x-kubernetes-preserve-unknown-fields: true
+          type: object
+      type: object
+  versions:
+  - name: v1
+    served: true
+    storage: true
+  additionalPrinterColumns:
+    - JSONPath: .spec.type
+      name: middleware-type
+      type: string
+    - JSONPath: .spec.name
+      name: middleware-name
+      type: string
+    - JSONPath: .status.phase
+      name: phase
+      type: string
+    - JSONPath: .metadata.creationTimestamp
+      name: createtime
+      type: string
+    - JSONPath: .spec.customBackups[0].env[0].value
+      name: backup-type
+      type: string
+status:
+  acceptedNames:
+    kind: ""
+    plural: ""
+  conditions: []
+  storedVersions: []

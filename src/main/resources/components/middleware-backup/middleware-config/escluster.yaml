@@ -38,6 +38,9 @@ sysDynamicVariable:
   elasticHttpPort:
     jsonPath: ".spec.esHttpPort"
     objectType: middleware
+  customVolumes:
+    jsonPath: '(.status.conditions[]|select(.name=="{POD_NAME}")|.type) as $type | if $type == "master" then .spec.customVolumes|map(select(.name=="masterNode-data")) else .spec.customVolumes|map(select(.name=="dataNode-data")) end'
+    objectType: "middleware"
 
 backupDynamicVariable:
   clusterName:
@@ -56,12 +59,61 @@ backupDynamicVariable:
     jsonPath: ".spec.customBackups[].commonPathBackupObjects[]|select(.pod==\"{POD_NAME}\")|.pvcObjects[].paths"
     scope: pod
     type: arg
+  excludeFiles:
+    jsonPath: ".spec.customBackups[].commonPathBackupObjects[]|select(.pod==\"{POD_NAME}\")|.pvcObjects[].excludeFiles"
+    scope: pod
+    type: arg
   clusterType:
     jsonPath: .spec.type
     type: arg
 
+# 恢复变量
+restoreDynamicVariable:
+  OPERATION_TYPE:
+    value: restore
+    type: env
+  paths:
+    jsonPath: '.spec.customRestores[].commonPathRestoreObjects[]|select(.restorePodName=="{POD_NAME}")|.pvcObjects[0].paths'
+    scope: pod
+    type: arg
+  restorePodName:
+    default: "{POD_NAME}"
+    type: arg
+    scope: pod
+  backupPodName:
+    jsonPath: '.spec.customRestores[].commonPathRestoreObjects[]|select(.restorePodName=="{POD_NAME}")|.backupPodName'
+    type: arg
+    scope: pod
+  podName:
+    default: "{POD_NAME}"
+    type: arg
+    scope: pod
+  pvcName:
+    jsonPath: '.spec.customRestores[].commonPathRestoreObjects[]|select(.restorePodName=="{POD_NAME}")|.pvcObjects[0].pvc'
+    type: arg
+    scope: pod
+  clusterType:
+    jsonPath: .spec.type
+    type: arg
+    scope: pod
+  namespace:
+    jsonPath: .metadata.namespace
+    type: arg
+  backupNamespace:
+    jsonPath: .metadata.namespace
+    type: arg
+  restoreNamespace:
+    jsonPath: .metadata.namespace
+    type: arg
+  clusterName:
+    jsonPath: .spec.name
+    type: arg
+
 # pod选择器
 defaultSelector: 'if .spec.clusterMode=="simple" then [.status.conditions[]|select(.type=="master")|.name] else [.status.conditions[]|select(.type=="data")|.name] end'
+
+defaultRestoreSelector: 'if .spec.clusterMode=="simple" then [.status.conditions[]|select(.type=="master")|.name] else [.status.conditions[]|select(.type=="data")|.name] end'
+
 # 中间件过滤器
 defaultFilterMiddleware: ".status|select(.phase==\"Running\" or .phase==\"running\")"
 # pod过滤器

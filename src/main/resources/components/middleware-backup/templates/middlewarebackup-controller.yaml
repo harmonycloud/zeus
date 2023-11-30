@@ -143,6 +143,9 @@ spec:
         {{- if .Values.global.middlewarebackup_controller.job_creator.jobTolerations }}
         - --tolerations={{ .Values.global.middlewarebackup_controller.job_creator.jobTolerations }}
         {{- end }}
+        {{- if .Values.global.middlewarebackup_controller.job_creator.jobNodeSelector }}
+        - --jobNodeSelector={{ .Values.global.middlewarebackup_controller.job_creator.jobNodeSelector }}
+        {{- end }}
         - --job-creator-image={{ .Values.global.repository }}/{{ .Values.global.middlewarebackup_controller.job_creator.image }}:{{ .Values.global.middlewarebackup_controller.job_creator.tag }}
         - --backupJobImage={{ .Values.global.repository }}/{{ .Values.global.middlewarebackup_controller.common_path_backup.image }}:{{ .Values.global.middlewarebackup_controller.common_path_backup.tag }}
         - --job-pgsql-backup-image={{ .Values.global.repository }}/{{ .Values.global.middlewarebackup_controller.job_pgsql_backup.image }}:{{ .Values.global.middlewarebackup_controller.job_pgsql_backup.tag }}

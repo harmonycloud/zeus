@@ -4,7 +4,7 @@ global:
   middlewarebackup_controller:
     image: middlewarebackup-controller
     removeBinlog: "yes"
-    tag: v1.4.2
+    tag: v1.6.1
     resources:
       limits:
         cpu: 200m
@@ -14,9 +14,11 @@ global:
         memory: 512Mi
     nodeSelector: {}
     job_creator:
+      job_creator:
+      jobServiceAccount: default
       jobTolerations: harm.cn/type,harm.cn/system
       jobNamespace: ""
-      jobServiceAccount: default
+      # jobNodeSelector: keya=keyb
       # jobSecondsAfterFinished: 60
       # jobActiveDeadlineSeconds: 86400
       image: backup-job-creator
@@ -26,11 +28,11 @@ global:
       tag: v1.1.1-common
     job_pgsql_backup:
       image: middleware-backup-operator
-      tag: v1.1.2-pgsql
+      tag: v1.1.3-pgsql
     job_mysql_backup:
       image: middleware-backup-operator
-      tag: v1.1.1-mysql
-      mysql8tag: v1.1.1-mysql8
+      tag: v1.1.2-mysql
+      mysql8tag: v1.1.2-mysql8
   kubectl:
     installCRDs: true
     tag: 1.21
@@ -44,15 +46,15 @@ global:
     nodeSelector: {}
     tolerations: []
     affinity: {}
-podAntiAffinityTopologKey: "zone"
-#取值[hard|soft] hard:强制反亲和 soft:非强制反亲和
-podAntiAffinity: "soft"
+
+
 tolerations:
   - effect: NoSchedule
     key: harm.cn/type
     value: active-active
   - effect: NoSchedule
     key: harm.cn/system
+
 nodeAffinity:
   preferredDuringSchedulingIgnoredDuringExecution:
     - weight: 100
@@ -62,5 +64,13 @@ nodeAffinity:
             operator: In
             values:
               - "true"
+
+podAntiAffinityTopologKey: "zone"
+
+#取值[hard|soft] hard:强制反亲和 soft:非强制反亲和
+podAntiAffinity: "soft"
+
 imagePullSecrets:
   - name: registrysecret
+
+    
