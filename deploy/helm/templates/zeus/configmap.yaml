@@ -53,8 +53,6 @@ data:
       crd:
         middlewareCrdYamlPath: /usr/local/zeus-pv/middleware-crd.yaml
     system:
-      license:
-        enable: false
       upload:
         path: /usr/local/zeus-pv/upload
       images:
