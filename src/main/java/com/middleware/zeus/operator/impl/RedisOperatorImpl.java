@@ -2,9 +2,7 @@ package com.middleware.zeus.operator.impl;
 
 import static com.middleware.zeus.common.constants.NameConstant.*;
 import static com.middleware.zeus.common.constants.NameConstant.MEMORY;
-import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_EXPOSE_INGRESS;
-import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.NODE_AFFINITY;
-import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.PREDIXY;
+import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.*;
 import static com.middleware.zeus.common.enums.middleware.ElasticSearchRoleEnum.*;
 import static com.middleware.zeus.common.enums.middleware.ElasticSearchRoleEnum.COLD;
 
@@ -592,6 +590,7 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         if (namespaceService.isOpenAvailableDomain(middleware.getClusterId(), middleware.getNamespace())) {
             super.setActiveActiveConfig("redis", values);
             super.setActiveActiveToleration(middleware, values);
+            values.put(ACTIVE_ACTIVE, true);
         }
     }
 

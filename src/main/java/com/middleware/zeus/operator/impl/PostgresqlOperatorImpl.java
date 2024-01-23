@@ -4,6 +4,7 @@ import static com.middleware.zeus.common.constants.CmdConstant.*;
 import static com.middleware.zeus.common.constants.CommonConstant.*;
 import static com.middleware.zeus.common.constants.NameConstant.RESOURCES;
 import static com.middleware.zeus.common.constants.NameConstant.RUNNING;
+import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.ACTIVE_ACTIVE;
 import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.ARGS;
 
 import java.text.MessageFormat;
@@ -305,6 +306,7 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         if (namespaceService.isOpenAvailableDomain(middleware.getClusterId(), middleware.getNamespace())) {
             super.setActiveActiveConfig(null, values);
             super.setActiveActiveToleration(middleware, values);
+            values.put(ACTIVE_ACTIVE, true);
         }
     }
 
