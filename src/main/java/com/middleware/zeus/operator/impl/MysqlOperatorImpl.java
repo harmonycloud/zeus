@@ -65,8 +65,7 @@ import static com.middleware.zeus.common.constants.CmdConstant.MYSQL_HAND_SWITCH
 import static com.middleware.zeus.common.constants.CommonConstant.OFF;
 import static com.middleware.zeus.common.constants.CommonConstant.ON;
 import static com.middleware.zeus.common.constants.MysqlConstant.SLOW_QUERY_LOG;
-import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_EXPOSE_INGRESS;
-import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.SYNC_SLAVE;
+import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.*;
 
 /**
  * @author dengyulong
@@ -380,6 +379,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         if (namespaceService.isOpenAvailableDomain(middleware.getClusterId(), middleware.getNamespace())) {
             super.setActiveActiveConfig(null, values);
             super.setActiveActiveToleration(middleware, values);
+            values.put(ACTIVE_ACTIVE, true);
         }
     }
 
