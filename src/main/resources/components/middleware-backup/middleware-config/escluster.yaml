@@ -26,7 +26,7 @@ sysDynamicVariable:
   partition:
     default: "{POD_NAME}"
     objectType: middleware
-    regexp: ".*?-(\\d)"
+    regexp: ".+?-(cold-\\d+|master-\\d+|data-\\d+)"
     scope: pod
   elasticPassword:
     jsonPath: ".spec.elasticPass"
@@ -39,7 +39,7 @@ sysDynamicVariable:
     jsonPath: ".spec.esHttpPort"
     objectType: middleware
   customVolumes:
-    jsonPath: '(.status.conditions[]|select(.name=="{POD_NAME}")|.type) as $type | if $type == "master" then .spec.customVolumes|map(select(.name=="masterNode-data")) else .spec.customVolumes|map(select(.name=="dataNode-data")) end'
+    jsonPath: '(.status.conditions[]|select(.name=="{POD_NAME}")|.type) as $type | if $type == "master" then .spec.customVolumes|map(select(.name=="masterNode-data")) else if $type == "data" then .spec.customVolumes|map(select(.name=="dataNode-data")) else .spec.customVolumes|map(select(.name=="coldNode-data"))  end end|map(. + {"dataPath": "\(.mountPath)/nodes/0/indices"})'
     objectType: "middleware"
 
 backupDynamicVariable:
@@ -110,9 +110,9 @@ restoreDynamicVariable:
     type: arg
 
 # pod选择器
-defaultSelector: 'if .spec.clusterMode=="simple" then [.status.conditions[]|select(.type=="master")|.name] else [.status.conditions[]|select(.type=="data")|.name] end'
+defaultSelector: 'if .spec.clusterMode=="simple" then [.status.conditions[]|select(.type=="master" or .type=="cold")|.name] else [.status.conditions[]|select(.type=="data" or .type=="cold")|.name] end'
 
-defaultRestoreSelector: 'if .spec.clusterMode=="simple" then [.status.conditions[]|select(.type=="master")|.name] else [.status.conditions[]|select(.type=="data")|.name] end'
+defaultRestoreSelector: 'if .spec.clusterMode=="simple" then [.status.conditions[]|select(.type=="master" or .type=="cold")|.name] else [.status.conditions[]|select(.type=="data" or .type=="cold")|.name] end'
 
 # 中间件过滤器
 defaultFilterMiddleware: ".status|select(.phase==\"Running\" or .phase==\"running\")"

@@ -7,8 +7,7 @@ isCommbakcup: true
 # 备份工具设置特定的环境变量
 backupTool: restic
 operatorImage:
-  "": harbor.middleware.com/middleware/middleware-backup-operator:MIDDLEWARE-729-1
-
+  "": {{ .Values.global.repository }}/{{ .Values.global.middlewarebackup_controller.common_path_backup.image }}:{{ .Values.global.middlewarebackup_controller.common_path_backup.tag }}
 ######中间件中挂载信息############
 # 默认数据路径
 defaultDataPath: /data/redis/cluster.local/{NAMESPACE}/{NAME}/{POD_NAME}/data
