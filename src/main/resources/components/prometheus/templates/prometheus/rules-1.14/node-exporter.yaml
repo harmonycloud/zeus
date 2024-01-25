@@ -70,44 +70,6 @@ spec:
 {{ toYaml .Values.defaultRules.additionalRuleLabels | indent 8 }}
 {{- end }}
 {{- end }}
-{{- if not (.Values.defaultRules.disabled.NodeFilesystemAlmostOutOfSpace | default false) }}
-    - alert: NodeFilesystemAlmostOutOfSpace
-      annotations:
-        description: Filesystem on {{`{{`}} $labels.device {{`}}`}} at {{`{{`}} $labels.instance {{`}}`}} has only {{`{{`}} printf "%.2f" $value {{`}}`}}% available space left.
-        runbook_url: {{ .Values.defaultRules.runbookUrl }}/node/nodefilesystemalmostoutofspace
-        summary: Filesystem has less than 5% space left.
-      expr: |-
-        (
-          node_filesystem_avail_bytes{job="node-exporter",fstype!=""} / node_filesystem_size_bytes{job="node-exporter",fstype!=""} * 100 < 5
-        and
-          node_filesystem_readonly{job="node-exporter",fstype!=""} == 0
-        )
-      for: 30m
-      labels:
-        severity: warning
-{{- if .Values.defaultRules.additionalRuleLabels }}
-{{ toYaml .Values.defaultRules.additionalRuleLabels | indent 8 }}
-{{- end }}
-{{- end }}
-{{- if not (.Values.defaultRules.disabled.NodeFilesystemAlmostOutOfSpace | default false) }}
-    - alert: NodeFilesystemAlmostOutOfSpace
-      annotations:
-        description: Filesystem on {{`{{`}} $labels.device {{`}}`}} at {{`{{`}} $labels.instance {{`}}`}} has only {{`{{`}} printf "%.2f" $value {{`}}`}}% available space left.
-        runbook_url: {{ .Values.defaultRules.runbookUrl }}/node/nodefilesystemalmostoutofspace
-        summary: Filesystem has less than 3% space left.
-      expr: |-
-        (
-          node_filesystem_avail_bytes{job="node-exporter",fstype!=""} / node_filesystem_size_bytes{job="node-exporter",fstype!=""} * 100 < 3
-        and
-          node_filesystem_readonly{job="node-exporter",fstype!=""} == 0
-        )
-      for: 30m
-      labels:
-        severity: critical
-{{- if .Values.defaultRules.additionalRuleLabels }}
-{{ toYaml .Values.defaultRules.additionalRuleLabels | indent 8 }}
-{{- end }}
-{{- end }}
 {{- if not (.Values.defaultRules.disabled.NodeFilesystemFilesFillingUp | default false) }}
     - alert: NodeFilesystemFilesFillingUp
       annotations:
@@ -120,7 +82,7 @@ spec:
         and
           predict_linear(node_filesystem_files_free{job="node-exporter",fstype!=""}[6h], 24*60*60) < 0
         and
-          node_filesystem_readonly{job="node-exporter",fstype!=""} == 0
+          node_filesystem_readonly{job="node-exporter",fstype!=""} == 0w
         )
       for: 1h
       labels:

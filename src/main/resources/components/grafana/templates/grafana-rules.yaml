@@ -22,21 +22,13 @@ spec:
           expr: (sum by (pod) (rate(container_cpu_usage_seconds_total{image!="",container!~"|POD",endpoint!="", pod=~"grafana-.+",namespace="monitoring"}[5m]))) / (sum by (pod) (kube_pod_container_resource_requests{resource="cpu", container="scheduler", pod=~"grafana-.+", namespace="monitoring"})) > 0.8
           for: 5m
           labels:
-            severity: critical
+            severity: warning
         - alert: grafanaMemoryUsageHigh
           annotations:
             message: memory usage high for {{`{{ $labels.pod }}`}}
             summary: memory usage high for {{`{{ $labels.pod }}`}}
           expr: (sum by (pod)(container_memory_working_set_bytes{container!~"|POD",endpoint!="",pod=~"grafana-.+",namespace="monitoring"})) * 100 / (sum by (pod) (kube_pod_container_resource_requests{container="scheduler",resource="memory",pod=~"grafana-.+",namespace="monitoring"})) > 80
           for: 5m
-          labels:
-            severity: critical
-        - alert: grafanaInstanceNotReady
-          annotations:
-            message: grafana instance {{`{{ $labels.instance }}`}} not ready
-            summary: grafana instance {{`{{ $labels.instance }}`}} not ready
-          expr: kube_pod_container_status_ready{namespace="monitoring",pod=~"grafana-.+"} == 0
-          for: 30s
           labels:
             severity: warning
         - alert: grafanaInstanceNotRunning

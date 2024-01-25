@@ -8,17 +8,6 @@ metadata:
   namespace: monitoring
 spec:
   groups:
-  - name: node_pod.rules
-    rules:
-      - alert: Pod_all_cpu_usage
-        expr: (sum by(name)(rate(container_cpu_usage_seconds_total{image!="",container!~"|POD",endpoint!=""}[5m]))*100) > 10
-        for: 5m
-        labels:
-          severity: critical
-          service: pods
-        annotations:
-          description: container CPU > 10% , (current value is )
-          summary: Dev CPU alertmanagers
   - name: clusterNodeResource
     rules:
       - record: harmonycloud_node_cpu_total

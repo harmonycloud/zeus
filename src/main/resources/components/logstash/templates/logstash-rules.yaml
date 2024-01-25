@@ -22,21 +22,13 @@ spec:
       expr: (sum by (pod) (rate(container_cpu_usage_seconds_total{image!="",container!~"|POD",endpoint!="", pod=~"logstash.+",namespace="logging"}[5m]))) / (sum by (pod) (kube_pod_container_resource_requests{resource="cpu", pod=~"logstash.+", namespace="logging"})) > 0.8
       for: 5m
       labels:
-        severity: critical
+        severity: warning
     - alert: logstashMemoryUsageHigh
       annotations:
         message: memory usage high for {{`{{ $labels.pod }}`}}
         summary: memory usage high for {{`{{ $labels.pod }}`}}
       expr: (sum by (pod)(container_memory_working_set_bytes{container!~"|POD",endpoint!="",pod=~"logstash.+",namespace="logging"})) * 100 / (sum by (pod) (kube_pod_container_resource_requests{resource="memory",pod=~"logstash.+",namespace="logging"})) > 80
       for: 5m
-      labels:
-        severity: critical
-    - alert: logstashInstanceNotReady
-      annotations:
-        message: logstash/log-pilot instance {{`{{ $labels.instance }}`}} not ready
-        summary: logstash/log-pilot instance {{`{{ $labels.instance }}`}} not ready
-      expr: kube_pod_container_status_ready{namespace="logging",container=~"logstash",pod=~"logstash.+"} == 0
-      for: 30s
       labels:
         severity: warning
     - alert: logstashInstanceNotRunning
