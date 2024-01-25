@@ -22,21 +22,13 @@ spec:
       expr: (sum by (pod) (rate(container_cpu_usage_seconds_total{image!="",container!~"|POD",endpoint!="", pod=~"middleware-api-.+|middleware-controller-manager.+",namespace="middleware-operator"}[5m]))) / (sum by (pod) (kube_pod_container_resource_requests{resource="cpu", container=~"manager|middleware-api", pod=~"middleware-api-.+|middleware-controller-manager.+", namespace="middleware-operator"})) > 0.8
       for: 5m
       labels:
-        severity: critical
+        severity: warning
     - alert: middlewareControllerMemoryUsageHigh
       annotations:
         message: memory usage high for {{`{{ $labels.pod }}`}}
         summary: memory usage high for {{`{{ $labels.pod }}`}}
       expr: (sum by (pod)(container_memory_working_set_bytes{container!~"|POD",endpoint!="",pod=~"middleware-api-.+|middleware-controller-manager.+",namespace="middleware-operator"})) * 100 / (sum by (pod) (kube_pod_container_resource_requests{container=~"manager|middleware-api",resource="memory",pod=~"middleware-api-.+|middleware-controller-manager.+",namespace="middleware-operator"})) > 80
       for: 5m
-      labels:
-        severity: critical
-    - alert: middlewareControllerInstanceNotReady
-      annotations:
-        message: middlewareController instance {{`{{ $labels.instance }}`}} not ready
-        summary: middlewareController instance {{`{{ $labels.instance }}`}} not ready
-      expr: kube_pod_container_status_ready{namespace="middleware-operator",container=~"manager|middleware-api",pod=~"middleware-api-.+|middleware-controller-manager.+"} == 0
-      for: 30s
       labels:
         severity: warning
     - alert: middlewareControllerInstanceNotRunning
