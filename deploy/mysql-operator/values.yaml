@@ -85,7 +85,22 @@ storageProvider: {}
 #    accessKeyId: minio
 #    secretAccessKey: Hc@Cloud01
 
-nodeAffinity: {}
+nodeAffinity:
+  requiredDuringSchedulingIgnoredDuringExecution:
+    nodeSelectorTerms:
+      - matchExpressions:
+          - key: zone
+            operator: NotIn
+            values:
+              - zoneC
+  preferredDuringSchedulingIgnoredDuringExecution:
+    - preference:
+        matchExpressions:
+          - key: system
+            operator: In
+            values:
+              - "true"
+      weight: 100
 
 updateStrategy: RollingUpdate
 
@@ -99,12 +114,14 @@ statefulSetConfiguration:
   #   operator: "Exists"
   #   effect: "NoSchedule"
 
-tolerations: {}
-#- key: "example-key"
-#  operator: "Exists"
-#  effect: "NoSchedule"
+tolerations:
+  - effect: NoSchedule
+    key: harm.cn/type
+    value: active-active
+  - effect: NoSchedule
+    key: harm.cn/system
 
-podAntiAffinityTopologKey: "kubernetes.io/hostname"
+podAntiAffinityTopologKey: "zone"
 
 #取值[hard|soft] hard:强制反亲和 soft:非强制反亲和
 podAntiAffinity: "soft"
