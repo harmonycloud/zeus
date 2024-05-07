@@ -817,7 +817,7 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
                 // 需重新绑定 确认数据存在角色id和为默认角色
                 userDtoList = userDtoList.stream()
                         .filter(userDto -> userDto.getRoleId() != null && StringUtils.isNotEmpty(userDto.getUserName())
-                                || RoleBindingEnum.findByRoleId(userDto.getRoleId()) != null)
+                                && RoleBindingEnum.findByRoleId(userDto.getRoleId()) != null)
                         .collect(Collectors.toList());
                 // 根据角色id进行group
                 Map<Integer, List<UserDto>> roleIdUsernameListMap =
