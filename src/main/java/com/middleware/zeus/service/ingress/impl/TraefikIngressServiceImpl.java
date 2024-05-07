@@ -3,6 +3,7 @@ package com.middleware.zeus.service.ingress.impl;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.middleware.zeus.common.enums.ErrorMessage;
 import com.middleware.zeus.common.enums.IngressEnum;
 import com.middleware.zeus.common.exception.BusinessException;
@@ -167,8 +168,15 @@ public class TraefikIngressServiceImpl extends AbstractBaseOperator implements T
         }
         checkExist(ingressComponentDto);
         // 更新数据库
+        UpdateWrapper<BeanIngressComponents> updateWrapper =
+            new UpdateWrapper<BeanIngressComponents>().eq("id", beanIngressComponents.getId());
+        // 拷贝更新数据
         BeanUtils.copyProperties(ingressComponentDto, beanIngressComponents, "status");
-        beanIngressComponentsMapper.updateById(beanIngressComponents);
+        // 更新vip
+        if (StringUtils.isEmpty(beanIngressComponents.getAddress())){
+            updateWrapper.set("address", null);
+        }
+        beanIngressComponentsMapper.update(beanIngressComponents, updateWrapper);
         // 更新端口
         if (!CollectionUtils.isEmpty(ingressComponentDto.getTraefikPortList()) && beanIngressComponents.getStatus() != 1) {
             String path = componentsPath + File.separator + "traefik";

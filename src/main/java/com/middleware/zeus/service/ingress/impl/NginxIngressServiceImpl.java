@@ -3,6 +3,7 @@ package com.middleware.zeus.service.ingress.impl;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.middleware.zeus.common.enums.ErrorMessage;
 import com.middleware.zeus.common.enums.IngressEnum;
 import com.middleware.zeus.common.exception.BusinessException;
@@ -167,8 +168,15 @@ public class NginxIngressServiceImpl extends AbstractBaseOperator implements Ngi
         }
         checkExist(ingressComponentDto);
         // 更新数据库
-        BeanUtils.copyProperties(ingressComponentDto, beanIngressComponents);
-        beanIngressComponentsMapper.updateById(beanIngressComponents);
+        UpdateWrapper<BeanIngressComponents> updateWrapper =
+                new UpdateWrapper<BeanIngressComponents>().eq("id", beanIngressComponents.getId());
+        // 拷贝更新数据
+        BeanUtils.copyProperties(ingressComponentDto, beanIngressComponents, "status");
+        // 更新vip
+        if (StringUtils.isEmpty(beanIngressComponents.getAddress())){
+            updateWrapper.set("address", null);
+        }
+        beanIngressComponentsMapper.update(beanIngressComponents, updateWrapper);
     }
 
     @Override
