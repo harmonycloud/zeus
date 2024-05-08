@@ -83,9 +83,9 @@ public class MiddlewareServicePurposeUtil {
     }
 
     public static String convertMysql(String middlewareName, String serviceName) {
-        if (serviceName.contains("readonly")) {
+        if (serviceName.contains(middlewareName + "-readonly")) {
             return "只读";
-        } else if (serviceName.contains("proxy")) {
+        } else if (serviceName.contains(middlewareName + "-proxy")) {
             return "读写分离";
         } else if (serviceName.equals(middlewareName)) {
             return "读写";
