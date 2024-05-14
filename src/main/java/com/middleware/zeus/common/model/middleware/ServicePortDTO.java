@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.experimental.Accessors;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author tangtx
@@ -37,5 +38,10 @@ public class ServicePortDTO {
      * 中间件图片
      */
     private String imagePath;
+
+    /**
+     * selector
+     */
+    private Map<String, String> selector;
 
 }

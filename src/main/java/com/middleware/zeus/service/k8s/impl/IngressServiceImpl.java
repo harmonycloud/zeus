@@ -42,7 +42,7 @@ import org.springframework.util.CollectionUtils;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.regex.Pattern;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.middleware.zeus.common.constants.CommonConstant.*;
@@ -230,7 +230,7 @@ public class IngressServiceImpl implements IngressService {
             if (mqCheck(ingressDTO)) {
                 List<ServiceDTO> dtoList = ingressDTO.getServiceList().stream().filter(item -> {
                     String serviceName = item.getServiceName();
-                    return serviceName.contains("proxy") || serviceName.contains("kafka-external-svc");
+                    return serviceName.contains("proxy") || serviceName.contains("kafka-external-svc") || serviceName.endsWith("-master");
                 }).collect(Collectors.toList());
                 if (!CollectionUtils.isEmpty(dtoList)) {
                     serviceList = covertMQNodePortService(namespace, middlewareName, ingressDTO);
@@ -1111,14 +1111,15 @@ public class IngressServiceImpl implements IngressService {
             return null;
         }
         List<io.fabric8.kubernetes.api.model.Service> serviceList = new ArrayList<>(10);
-
         if ("rocketmq".equals(ingressDTO.getMiddlewareType())) {
             serviceDTOList = serviceDTOList.stream().filter(serviceDTO ->
-                    serviceDTO.getServiceName().contains("nameserver-proxy-svc")).collect(Collectors.toList());
+                    serviceDTO.getServiceName().contains("nameserver-proxy-svc") || serviceDTO.getServiceName().endsWith("-master")).collect(Collectors.toList());
         } else if ("kafka".equals(ingressDTO.getMiddlewareType())) {
             serviceDTOList = serviceDTOList.stream().filter(serviceDTO ->
                     serviceDTO.getServiceName().contains("kafka-external-svc")).collect(Collectors.toList());
         }
+        Map<String, ServicePortDTO> svcMap = serviceService.list(ingressDTO.getClusterId(), namespace)
+                .stream().collect(Collectors.toMap(ServicePortDTO::getServiceName, Function.identity()));
         for (ServiceDTO serviceDTO : serviceDTOList) {
             String serviceName = serviceDTO.getServiceName();
             if (StringUtils.isBlank(serviceName)) {
@@ -1138,9 +1139,9 @@ public class IngressServiceImpl implements IngressService {
             ServiceSpec spec = new ServiceSpec();
 
             List<ServicePort> servicePortList = new ArrayList<>();
-            servicePortList.add(covertMQServicePort(serviceDTO, ingressDTO.getMiddlewareType()));
+            servicePortList.add(covertMQServicePort(serviceDTO, ingressDTO.getMiddlewareType(), svcMap));
             spec.setPorts(servicePortList);
-            spec.setSelector(getMQSelector(middlewareName, ingressDTO.getMiddlewareType(), serviceName));
+            spec.setSelector(getMQSelector(middlewareName, ingressDTO.getMiddlewareType(), serviceName, svcMap));
             spec.setType(MIDDLEWARE_EXPOSE_NODEPORT);
             service.setSpec(spec);
             serviceList.add(service);
@@ -1160,11 +1161,16 @@ public class IngressServiceImpl implements IngressService {
         return labels;
     }
 
-    private Map<String, String> getMQSelector(String middlewareName, String type, String serviceName) {
+    private Map<String, String> getMQSelector(String middlewareName, String type, String serviceName, Map<String, ServicePortDTO> svcMap) {
         Map<String, String> selector = new HashMap<>();
         if ("rocketmq".equals(type)) {
-            String value = middlewareName + "namesrv-proxy-" + serviceName.substring(serviceName.lastIndexOf("-") + 1);
-            selector.put("statefulset.kubernetes.io/pod-name", value);
+            if (svcMap.containsKey(serviceName)) {
+                ServicePortDTO servicePortDTO = svcMap.get(serviceName);
+                selector.putAll(servicePortDTO.getSelector());
+            } else {
+                String value = middlewareName + "namesrv-proxy-" + serviceName.substring(serviceName.lastIndexOf("-") + 1);
+                selector.put("statefulset.kubernetes.io/pod-name", value);
+            }
         } else if ("kafka".equals(type)) {
             String value = "kafka-" + serviceName.substring(serviceName.lastIndexOf("-") + 1);
             selector.put("podIndex", value);
@@ -1200,15 +1206,21 @@ public class IngressServiceImpl implements IngressService {
         return servicePort;
     }
 
-    private ServicePort covertMQServicePort(ServiceDTO serviceDTO, String type) {
+    private ServicePort covertMQServicePort(ServiceDTO serviceDTO, String type, Map<String, ServicePortDTO> svcMap) {
         ServicePort servicePort = new ServicePort();
         if (StringUtils.isNotEmpty(serviceDTO.getExposePort())) {
             servicePort.setNodePort(Integer.parseInt(serviceDTO.getExposePort()));
         }
         servicePort.setProtocol(Protocol.TCP.getValue());
         if ("rocketmq".equals(type)) {
-            servicePort.setPort(9876);
-            servicePort.setTargetPort(new IntOrString(9876));
+            if (svcMap.containsKey(serviceDTO.getServiceName())) {
+                ServicePortDTO servicePortDTO = svcMap.get(serviceDTO.getServiceName());
+                servicePort.setPort(Integer.parseInt(servicePortDTO.getPortDetailDtoList().get(0).getPort()));
+                servicePort.setTargetPort(new IntOrString(Integer.parseInt(servicePortDTO.getPortDetailDtoList().get(0).getTargetPort())));
+            } else {
+                servicePort.setPort(9876);
+                servicePort.setTargetPort(new IntOrString(9876));
+            }
         } else {
             servicePort.setPort(9094);
             servicePort.setTargetPort(new IntOrString(9094));

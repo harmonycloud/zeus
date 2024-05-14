@@ -221,6 +221,7 @@ public class ServiceServiceImpl implements ServiceService {
         servicePortDTO.setServiceName(service.getMetadata().getName());
         servicePortDTO.setClusterIP(spec.getClusterIP());
         servicePortDTO.setPortDetailDtoList(portDetailDtoList);
+        servicePortDTO.setSelector(spec.getSelector());
         return servicePortDTO;
     }
 
