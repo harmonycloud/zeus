@@ -69,6 +69,10 @@ spec:
           mountPath: /host
           mountPropagation: Bidirectional
           readOnly: true
+        - name: appl
+          mountPath: /appl/cdb/data
+          mountPropagation: Bidirectional
+          readOnly: true
         - name: localtime
           mountPath: /etc/localtime
         - name: filebeat-config
@@ -103,6 +107,9 @@ spec:
       - name: root
         hostPath:
           path: /
+      - name: appl
+        hostPath:
+          path: /appl/cdb/data
       - name: localtime
         hostPath:
           path: /etc/localtime
