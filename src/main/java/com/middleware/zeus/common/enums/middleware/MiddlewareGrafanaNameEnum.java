@@ -17,7 +17,7 @@ public enum MiddlewareGrafanaNameEnum {
     MYSQL("mysql", "var-mc"),
     REDIS("redis", "var-redis"),
     ELASTIC_SEARCH("elasticsearch", "var-instance"),
-    ROCKET_MQ("rocketmq", "var-instance"),
+    ROCKET_MQ("rocketmq", "var-cluster"),
     POSTGRESQL("postgresql", "var-service"),
     ZOOKEEPER("zookeeper", "var-service"),
     KAFKA("kafka", "var-kafkacluster"),
