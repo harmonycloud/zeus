@@ -856,7 +856,9 @@ public class IngressServiceImpl implements IngressService {
                     }
                     break;
                 case REDIS:
-                    enableExternal.set(true);
+                    if (ingressDTO.getServiceList().size() > 1){
+                        enableExternal.set(true);
+                    }
                     break;
                 default:
             }
