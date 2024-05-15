@@ -174,7 +174,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         if (middleware.getSlowSql() != null && middleware.getSlowSql()) {
             mysqlArgs.put(SLOW_QUERY_LOG, ON);
         } else {
-            mysqlArgs.put(SLOW_QUERY_LOG, middleware.getSlowSql() ? ON : OFF);
+            mysqlArgs.put(SLOW_QUERY_LOG, OFF);
         }
 
         //配置mysql环境变量
