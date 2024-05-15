@@ -171,7 +171,9 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
             }
         }
         // 配置开启/关闭 审计日志和慢日志
-        if(middleware.getSlowSql() != null){
+        if (middleware.getSlowSql() != null && middleware.getSlowSql()) {
+            mysqlArgs.put(SLOW_QUERY_LOG, ON);
+        } else {
             mysqlArgs.put(SLOW_QUERY_LOG, middleware.getSlowSql() ? ON : OFF);
         }
 
@@ -340,8 +342,10 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         }
 
         // 慢日志更新
-        if (middleware.getSlowSql() != null){
-            sb.append("args.slow_query_log=").append(middleware.getSlowSql() ? ON : OFF).append(",");
+        if (middleware.getSlowSql() != null && middleware.getSlowSql()) {
+            sb.append("args.slow_query_log=").append(ON).append(",");
+        } else {
+            sb.append("args.slow_query_log=").append(OFF).append(",");
         }
 
         // 更新通用字段
