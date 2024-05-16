@@ -82,7 +82,7 @@ spec:
         and
           predict_linear(node_filesystem_files_free{job="node-exporter",fstype!=""}[6h], 24*60*60) < 0
         and
-          node_filesystem_readonly{job="node-exporter",fstype!=""} == 0w
+          node_filesystem_readonly{job="node-exporter",fstype!=""} == 0
         )
       for: 1h
       labels:

@@ -64,7 +64,8 @@ defaultRules:
   ## Labels for default rules
   labels: {}
   ## Annotations for default rules
-  annotations: {}
+  annotations:
+     platform: zeus
 
   ## Additional labels for PrometheusRule alerts
   additionalRuleLabels: {}
