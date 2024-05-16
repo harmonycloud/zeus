@@ -301,7 +301,7 @@ public class AlertServiceImpl implements AlertService {
         Map<String,
             List<PrometheusRule>> prometheusRuleMap = prometheusRuleList.stream()
                 .filter(prometheusRule -> prometheusRule.getMetadata().getAnnotations() != null
-                    || prometheusRule.getMetadata().getAnnotations().containsKey("target_name"))
+                    && prometheusRule.getMetadata().getAnnotations().containsKey("target_name"))
                 .collect(Collectors
                     .groupingBy(prometheusRule -> prometheusRule.getMetadata().getAnnotations().get("target_name")));
 
