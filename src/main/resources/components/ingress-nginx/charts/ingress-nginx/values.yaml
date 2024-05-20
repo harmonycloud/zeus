@@ -42,8 +42,7 @@ resources:
     cpu: 200m
     memory: 256Mi
 
-nodeSelector:
-  beta.kubernetes.io/os: linux
+nodeSelector: {}
 
 tolerations:
 - operator: Exists
