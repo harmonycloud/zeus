@@ -247,10 +247,6 @@ public class IngressServiceImpl implements IngressService {
         } else {
             throw new CaasRuntimeException(ErrorMessage.UNSUPPORT_EXPOSE_TYPE);
         }
-        // 特殊处理kafka和rocketmq(仅更新端口时)
-        if (mqCheck(ingressDTO) && ingressDTO.getServiceList() != null && checkExternalService(ingressDTO)) {
-            upgradeValues(clusterId, namespace, middlewareName, ingressDTO);
-        }
     }
 
     @Override
@@ -1170,7 +1166,15 @@ public class IngressServiceImpl implements IngressService {
                 ServicePortDTO servicePortDTO = svcMap.get(serviceName);
                 selector.putAll(servicePortDTO.getSelector());
             } else {
-                String value = middlewareName + "namesrv-proxy-" + serviceName.substring(serviceName.lastIndexOf("-") + 1);
+                String value;
+                if (serviceName.endsWith("-master")) {
+                    value = middlewareName + "-broker-" + serviceName.replace(middlewareName + "-", "").split("-")[0] + "-0";
+                } else if (serviceName.split("-")[serviceName.split("-").length - 2].equals("slave")) {
+                    value = middlewareName + "-broker-" + serviceName.replace(middlewareName + "-", "").split("-")[0]
+                            + "-" + serviceName.split("-")[serviceName.split("-").length -1];
+                } else {
+                    value = middlewareName + "namesrv-proxy-" + serviceName.substring(serviceName.lastIndexOf("-") + 1);
+                }
                 selector.put("statefulset.kubernetes.io/pod-name", value);
             }
         } else if ("kafka".equals(type)) {
