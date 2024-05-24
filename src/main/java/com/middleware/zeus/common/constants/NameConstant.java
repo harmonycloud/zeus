@@ -150,4 +150,6 @@ public class NameConstant {
     public static final String USER_CONF = "user.conf";
     public static final String CLUSTER_ROLE = "ClusterRole";
 
+    public static final String POSITION_ID = "positionId";
+
 }

@@ -72,7 +72,6 @@ public interface MiddlewareBackupScheduleCRDService {
      * @return
      */
     MiddlewareBackupScheduleList list(String clusterId, String namespace);
-
     /**
      * 根据标签查询定时备份任务
      *
