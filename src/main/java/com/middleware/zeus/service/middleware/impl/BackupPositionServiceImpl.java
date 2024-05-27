@@ -13,7 +13,11 @@ import com.middleware.zeus.bean.BeanBackupServer;
 import com.middleware.zeus.bean.BeanBackupServerDetail;
 import com.middleware.zeus.bean.BeanMiddlewareBackupName;
 import com.middleware.zeus.dao.BeanBackupPositionMapper;
+import com.middleware.zeus.integration.cluster.bean.MiddlewareBackup;
+import com.middleware.zeus.integration.cluster.bean.MiddlewareBackupSchedule;
 import com.middleware.zeus.integration.cluster.bean.Minio;
+import com.middleware.zeus.service.k8s.MiddlewareBackupCRService;
+import com.middleware.zeus.service.k8s.MiddlewareBackupScheduleCRDService;
 import com.middleware.zeus.service.k8s.NamespaceService;
 import com.middleware.zeus.service.k8s.PodService;
 import com.middleware.zeus.service.middleware.*;
@@ -24,8 +28,12 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
+
+import static com.middleware.zeus.common.constants.NameConstant.POSITION_ID;
 
 /**
  * @author liyinlong
@@ -49,6 +57,10 @@ public class BackupPositionServiceImpl implements BackupPositionService {
     private MiddlewareBackupNameService middlewareBackupNameService;
     @Autowired
     private MiddlewareService middlewareService;
+    @Autowired
+    private MiddlewareBackupCRService middlewareBackupCrService;
+    @Autowired
+    private MiddlewareBackupScheduleCRDService middlewareBackupScheduleCrService;
 
     @Override
     public List<BackupPositionDTO> list(String organId, String projectId, Integer backupServerId) {
@@ -185,12 +197,32 @@ public class BackupPositionServiceImpl implements BackupPositionService {
             ProjectDto projectDto = projectService.get(beanBackupPosition.getOrganId(), beanBackupPosition.getProjectId());
             if (projectDto != null) {
                 backupPositionDTO.setProjectName(projectDto.getAliasName());
-                // todo 修改备份任务引用数量的查询逻辑
-                backupPositionDTO.setBackupTaskNum(middlewareBackupNameService.listByPositionId(beanBackupPosition.getId()).size());
+                backupPositionDTO.setBackupTaskNum(getBackupPositionBindCount(beanBackupPosition.getBackupServerId(), beanBackupPosition.getId()));
                 positionList.add(backupPositionDTO);
             }
         }
         return positionList;
+    }
+
+    public Integer getBackupPositionBindCount(Integer backupServerId, Integer positionId){
+        // 根据backupServerId确认所属集群
+        BeanBackupServer beanBackupServer = backupServerService.get(backupServerId);
+
+        String clusterId = beanBackupServer.getClusterId();
+
+        Map<String, String> labels = new HashMap<>(1);
+        labels.put(POSITION_ID, String.valueOf(positionId));
+        List<MiddlewareBackup> middlewareBackupList = middlewareBackupCrService.list(clusterId, null, labels);
+        List<MiddlewareBackupSchedule> middlewareBackupScheduleList = middlewareBackupScheduleCrService.listByLabels(clusterId, null, labels);
+
+        int count = 0;
+        if (!CollectionUtils.isEmpty(middlewareBackupList)){
+            count += middlewareBackupList.size();
+        }
+        if (!CollectionUtils.isEmpty(middlewareBackupScheduleList)){
+            count += middlewareBackupScheduleList.size();
+        }
+        return count;
     }
 
     /**
