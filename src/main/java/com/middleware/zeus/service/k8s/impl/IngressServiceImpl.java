@@ -1115,7 +1115,8 @@ public class IngressServiceImpl implements IngressService {
         List<io.fabric8.kubernetes.api.model.Service> serviceList = new ArrayList<>(10);
         if ("rocketmq".equals(ingressDTO.getMiddlewareType())) {
             serviceDTOList = serviceDTOList.stream().filter(serviceDTO ->
-                    serviceDTO.getServiceName().contains("nameserver-proxy-svc") || serviceDTO.getServiceName().endsWith("-master")).collect(Collectors.toList());
+                    serviceDTO.getServiceName().contains("nameserver-proxy-svc") || serviceDTO.getServiceName().endsWith("-master")
+                            || serviceDTO.getServiceName().split("-")[serviceDTO.getServiceName().split("-").length - 2].equals("slave")).collect(Collectors.toList());
         } else if ("kafka".equals(ingressDTO.getMiddlewareType())) {
             serviceDTOList = serviceDTOList.stream().filter(serviceDTO ->
                     serviceDTO.getServiceName().contains("kafka-external-svc")).collect(Collectors.toList());
