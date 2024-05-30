@@ -591,10 +591,10 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             middlewareAlertsDTO.setExpr("rate(backup_failed_total{middleware_name=\"" + middlewareName + "\"}[3m]) > 0");
             middlewareAlertsDTO.setLay(SERVICE);
             middlewareAlertsDTO.setName(alertName);
-            middlewareAlertsDTO.setLevel("critical");
+            middlewareAlertsDTO.setLevel("warning");
 
             Map<String, String> labels = new HashMap<>();
-            labels.put("severity", "critical");
+            labels.put("severity", "warning");
             labels.put("clusterId", clusterId);
             labels.put("namespace", namespace);
             labels.put("middleware", type);
@@ -602,9 +602,9 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             middlewareAlertsDTO.setLabels(labels);
 
             Map<String, String> annotations = new HashMap<>();
-            annotations.put("alertLevel", "critical");
-            annotations.put("message", "job {{ $labels.name }} ,middleware {{ $labels.middleware_name }} backup failed");
-            annotations.put("summary", "job {{ $labels.name }} ,middleware {{ $labels.middleware_name }} backup failed");
+            annotations.put("alertLevel", "warning");
+            annotations.put("message", "{{ $labels.middleware }} database backup task failed. (ServiceName: {{ $labels.service }}, BackupName: {{ $labels.name }})");
+            annotations.put("summary", "{{ $labels.middleware }} database backup task failed. (ServiceName: {{ $labels.service }}, BackupName: {{ $labels.name }})");
             annotations.put("group", "backup");
             annotations.put("target_type", "backup");
             middlewareAlertsDTO.setAnnotations(annotations);
