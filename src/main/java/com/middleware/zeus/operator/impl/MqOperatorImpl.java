@@ -1,25 +1,22 @@
 package com.middleware.zeus.operator.impl;
 
-import static com.middleware.zeus.common.constants.NameConstant.CLUSTER;
-import static com.middleware.zeus.common.constants.NameConstant.MODE;
-import static com.middleware.zeus.common.constants.NameConstant.RESOURCES;
-import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.ARGS;
-
 import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import com.middleware.zeus.annotation.Operator;
 import com.middleware.zeus.common.enums.middleware.MiddlewareTypeEnum;
-import com.middleware.zeus.service.k8s.PodService;
+import com.middleware.zeus.common.enums.middleware.RocketMQModeEnum;
 import com.middleware.zeus.common.model.middleware.*;
 import com.middleware.zeus.operator.api.MqOperator;
 import com.middleware.zeus.operator.miiddleware.AbstractMqOperator;
+import com.middleware.zeus.service.k8s.PodService;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import org.apache.commons.lang3.StringUtils;
-
-import com.alibaba.fastjson.JSONObject;
-import com.middleware.zeus.common.enums.middleware.RocketMQModeEnum;
-import com.middleware.zeus.annotation.Operator;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.*;
+
+import static com.middleware.zeus.common.constants.NameConstant.*;
+import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.ARGS;
 
 /**
  * @author dengyulong
@@ -132,6 +129,12 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
             }
             rocketMQParam.setReplicas(clusterInfo.getInteger("membersPerGroup"));
             rocketMQParam.setGroup(clusterInfo.getInteger("groupReplica"));
+
+            if (values.containsKey(PROXY)) {
+                if (values.getJSONObject(PROXY).containsKey(REPLICAS)) {
+                    rocketMQParam.setProxyNum(values.getJSONObject(PROXY).getInteger(REPLICAS));
+                }
+            }
 
             // 处理特殊调度策略
             if (values.containsKey("consoleDeploymentConfiguration")){
