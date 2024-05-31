@@ -17,6 +17,7 @@ import java.util.*;
 
 import static com.middleware.zeus.common.constants.NameConstant.*;
 import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.ARGS;
+import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.NAMESERVER;
 
 /**
  * @author dengyulong
@@ -130,9 +131,9 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
             rocketMQParam.setReplicas(clusterInfo.getInteger("membersPerGroup"));
             rocketMQParam.setGroup(clusterInfo.getInteger("groupReplica"));
 
-            if (values.containsKey(PROXY)) {
-                if (values.getJSONObject(PROXY).containsKey(REPLICAS)) {
-                    rocketMQParam.setProxyNum(values.getJSONObject(PROXY).getInteger(REPLICAS));
+            if (values.containsKey(NAMESERVER)) {
+                if (values.getJSONObject(NAMESERVER).containsKey(REPLICAS)) {
+                    rocketMQParam.setNameserverProxyNum(values.getJSONObject(NAMESERVER).getInteger(REPLICAS));
                 }
             }
 

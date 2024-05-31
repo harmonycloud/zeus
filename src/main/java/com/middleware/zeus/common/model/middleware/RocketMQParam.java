@@ -34,9 +34,9 @@ public class RocketMQParam {
     private int brokerNum;
 
     /**
-     * proxy数量
+     * nameserverProxy数量
      */
-    private int proxyNum;
+    private int nameserverProxyNum;
 
     /**
      * 是否开启集群外访问
