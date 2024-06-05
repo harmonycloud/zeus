@@ -82,11 +82,9 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
             if (labels == null || annotations == null) {
                 continue;
             }
-
-            // 获取告警规则名称
-            String alertName = labels.getString("alertname");
-            // 过滤通用cpu usage告警
-            if ("Pod_all_cpu_usage".equals(alertName)){
+            // 过滤集群id platform和target_name
+            if (!labels.containsKey("platform") || !labels.containsKey("clusterId")
+                || !annotations.containsKey("target_name")) {
                 continue;
             }
             // init object

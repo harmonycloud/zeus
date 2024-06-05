@@ -603,8 +603,8 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
 
             Map<String, String> annotations = new HashMap<>();
             annotations.put("alertLevel", "warning");
-            annotations.put("message", "{{ $labels.middleware }} database backup task failed. (ServiceName: {{ $labels.service }}, BackupName: {{ $labels.name }})");
-            annotations.put("summary", "{{ $labels.middleware }} database backup task failed. (ServiceName: {{ $labels.service }}, BackupName: {{ $labels.name }})");
+            annotations.put("message", "{{ $labels.middleware }} database backup task failed. (Namespace: {{ $labels.namespace }}, ServiceName: {{ $labels.service }}, BackupName: {{ $labels.name }})");
+            annotations.put("summary", "{{ $labels.middleware }} database backup task failed. (Namespace: {{ $labels.namespace }}, ServiceName: {{ $labels.service }}, BackupName: {{ $labels.name }})");
             annotations.put("group", "backup");
             annotations.put("target_type", "backup");
             middlewareAlertsDTO.setAnnotations(annotations);

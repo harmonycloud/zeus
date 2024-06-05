@@ -231,11 +231,11 @@ public class AlertServiceImpl implements AlertService {
         if (prometheusRule.getMetadata().getAnnotations() != null){
             annotations.putAll(prometheusRule.getMetadata().getAnnotations());
         }
-        if (alertTargetDto.getName().equals(PLATFORM)) {
-            annotations.put("target_type", SYSTEM);
-        } else {
-            annotations.put("target_type", CLUSTER);
-        }
+        // 获取告警对象类型
+        AlertTargetEnum alertTargetEnum = AlertTargetEnum.getByName(alertTargetDto.getName());
+        String alertType = alertTargetEnum != null ? alertTargetEnum.getType() : CLUSTER;
+
+        annotations.put("target_type", alertType);
         annotations.put("target_name", alertTargetDto.getName());
         annotations.put("target_alias_name", alertTargetDto.getAliasName());
 
@@ -261,11 +261,8 @@ public class AlertServiceImpl implements AlertService {
                 if (prometheusRules.getAnnotations() != null){
                     ann.putAll(prometheusRules.getAnnotations());
                 }
-                if (alertTargetDto.getName().equals(PLATFORM)) {
-                    ann.put("target_type", SYSTEM);
-                } else {
-                    ann.put("target_type", CLUSTER);
-                }
+
+                ann.put("target_type", alertType);
                 ann.put("target_name", alertTargetDto.getName());
                 ann.put("target_alias_name", alertTargetDto.getAliasName());
                 prometheusRules.setAnnotations(ann);
@@ -283,11 +280,7 @@ public class AlertServiceImpl implements AlertService {
             alertTargetDto.setClusterId(clusterId);
             alertTargetDto.setName(alertTargetEnum.getName());
             alertTargetDto.setAliasName(alertTargetEnum.getAliasName());
-            if (alertTargetEnum.getName().equals(SYSTEM)){
-                alertTargetDto.setAlertType(SYSTEM);
-            } else {
-                alertTargetDto.setAlertType(CLUSTER);
-            }
+            alertTargetDto.setAlertType(alertTargetEnum.getType());
             return alertTargetDto;
         }).collect(Collectors.toList());
 
