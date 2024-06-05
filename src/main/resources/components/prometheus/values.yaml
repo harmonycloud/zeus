@@ -53,7 +53,7 @@ defaultRules:
     kubeStateMetrics: true
     network: true
     node: true
-    nodeExporterAlerting: true
+    nodeExporterAlerting: false
     nodeExporterRecording: true
     prometheus: true
     prometheusOperator: true
@@ -61,11 +61,14 @@ defaultRules:
   ## Reduce app namespace alert scope
   appNamespacesTarget: ".*"
 
+  ## Monitored file system directory
+  filesystemMountpointTarget: "/var|/appl/cdb/data"
+
   ## Labels for default rules
   labels: {}
   ## Annotations for default rules
   annotations:
-     platform: zeus
+    platform: zeus
 
   ## Additional labels for PrometheusRule alerts
   additionalRuleLabels: {}
@@ -822,7 +825,7 @@ prometheusOperator:
     patch:
       enabled: true
       image:
-        repository: k8s-deploy/kube-webhook-certgen
+        repository: harbor.middleware.com/middleware/kube-webhook-certgen
         tag: v1.2.1
         sha: ""
         pullPolicy: IfNotPresent
@@ -1037,7 +1040,7 @@ prometheusOperator:
   ## Prometheus-operator image
   ##
   image:
-    repository: k8s-deploy/prometheus-operator
+    repository: harbor.middleware.com/middleware/prometheus-operator
     tag: v0.53.1
     sha: ""
     pullPolicy: IfNotPresent
@@ -1055,7 +1058,7 @@ prometheusOperator:
   prometheusConfigReloader:
     # image to use for config and rule reloading
     image:
-      repository: k8s-deploy/prometheus-config-reloader
+      repository: harbor.middleware.com/middleware/prometheus-config-reloader
       tag: v0.53.1
       sha: ""
 
@@ -1201,7 +1204,7 @@ prometheus:
     ## Port to expose on each node
     ## Only used if service.type is 'NodePort'
     ##
-    nodePort: 30090
+    nodePort: 31901
 
     ## Loadbalancer IP
     ## Only use if service.type is "LoadBalancer"
@@ -1209,7 +1212,7 @@ prometheus:
     loadBalancerSourceRanges: []
     ## Service type
     ##
-    type: ClusterIP
+    type: NodePort
 
     ## Additional port to define in the Service
     additionalPorts: []
@@ -1476,8 +1479,8 @@ prometheus:
     ## Image of Prometheus.
     ##
     image:
-      repository: k8s-deploy/prometheus
-      tag: v2.32.1
+      repository: harbor.middleware.com/middleware/prometheus
+      tag: v2.33.1
       sha: ""
 
     ## Tolerations for use with node taints
@@ -1549,6 +1552,8 @@ prometheus:
     ## Define which Nodes the Pods are scheduled on.
     ## ref: https://kubernetes.io/docs/user-guide/node-selection/
     ##
+    nodeSelector:
+      prometheus: "true"
 
     ## Secrets is a list of Secrets in the same namespace as the Prometheus object, which shall be mounted into the Prometheus Pods.
     ## The Secrets are mounted into /etc/prometheus/secrets/. Secrets changes after initial creation of a Prometheus object are not

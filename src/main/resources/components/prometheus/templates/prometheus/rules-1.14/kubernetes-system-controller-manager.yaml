@@ -32,11 +32,11 @@ spec:
 {{- if not (.Values.defaultRules.disabled.KubeControllerManagerDown | default false) }}
     - alert: KubeControllerManagerDown
       annotations:
-        description: KubeControllerManager has disappeared from Prometheus target discovery.
+        description: KubeControllerManager {{`{{`}} $labels.pod {{`}}`}} has disappeared from Prometheus target discovery.
         runbook_url: {{ .Values.defaultRules.runbookUrl }}/kubernetes/kubecontrollermanagerdown
         summary: Target disappeared from Prometheus target discovery.
       expr: absent(up{job="kube-controller-manager"} == 1)
-      for: 15m
+      for: 5m
       labels:
         severity: critical
 {{- if .Values.defaultRules.additionalRuleLabels }}
@@ -44,4 +44,20 @@ spec:
 {{- end }}
 {{- end }}
 {{- end }}
+    - alert: controllerManagerReadinessStatusAbnormal
+      annotations:
+        message: 'controller-manager instance {{`{{`}} $labels.pod {{`}}`}} container readiness status abnormal'
+      expr: |-
+        kube_pod_container_status_ready{container="kube-controller-manager",namespace="kube-system"} == 0 
+      for: 4m
+      labels:
+        severity: warning
+    - alert: controllerManagerRunningStatusAbnormal
+      annotations:
+        message: 'controller-manager instance {{`{{`}} $labels.pod {{`}}`}} running status abnormal'
+      expr: |-
+        kube_pod_container_status_running{container="kube-controller-manager",namespace="kube-system"} == 0
+      for: 5m
+      labels:
+        severity: warning
 {{- end }}

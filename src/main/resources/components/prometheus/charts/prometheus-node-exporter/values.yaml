@@ -2,7 +2,7 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 image:
-  repository: k8s-deploy/node-exporter
+  repository: harbor.middleware.com/middleware/node-exporter
   # Overrides the image tag whose default is {{ printf "v%s" .Chart.AppVersion }}
   tag: "v1.3.1"
   pullPolicy: IfNotPresent

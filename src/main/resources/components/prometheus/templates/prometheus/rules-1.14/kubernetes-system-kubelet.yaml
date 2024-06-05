@@ -31,13 +31,13 @@ spec:
 {{- if not (.Values.defaultRules.disabled.KubeNodeNotReady | default false) }}
     - alert: KubeNodeNotReady
       annotations:
-        description: '{{`{{`}} $labels.node {{`}}`}} has been unready for more than 15 minutes.'
+        description: '{{`{{`}} $labels.node {{`}}`}} has been unready for more than 10 minutes.'
         runbook_url: {{ .Values.defaultRules.runbookUrl }}/kubernetes/kubenodenotready
         summary: Node is not ready.
       expr: kube_node_status_condition{job="kube-state-metrics",condition="Ready",status="true"} == 0
-      for: 15m
+      for: 5m
       labels:
-        severity: warning
+        severity: critical
 {{- if .Values.defaultRules.additionalRuleLabels }}
 {{ toYaml .Values.defaultRules.additionalRuleLabels | indent 8 }}
 {{- end }}
@@ -52,27 +52,6 @@ spec:
       for: 15m
       labels:
         severity: warning
-{{- if .Values.defaultRules.additionalRuleLabels }}
-{{ toYaml .Values.defaultRules.additionalRuleLabels | indent 8 }}
-{{- end }}
-{{- end }}
-{{- if not (.Values.defaultRules.disabled.KubeletTooManyPods | default false) }}
-    - alert: KubeletTooManyPods
-      annotations:
-        description: Kubelet '{{`{{`}} $labels.node {{`}}`}}' is running at {{`{{`}} $value | humanizePercentage {{`}}`}} of its Pod capacity.
-        runbook_url: {{ .Values.defaultRules.runbookUrl }}/kubernetes/kubelettoomanypods
-        summary: Kubelet is running at capacity.
-      expr: |-
-        count by(node) (
-          (kube_pod_status_phase{job="kube-state-metrics",phase="Running"} == 1) * on(instance,pod,namespace,cluster) group_left(node) topk by(instance,pod,namespace,cluster) (1, kube_pod_info{job="kube-state-metrics"})
-        )
-        /
-        max by(node) (
-          kube_node_status_capacity{job="kube-state-metrics",resource="pods"} != 1
-        ) > 0.95
-      for: 15m
-      labels:
-        severity: info
 {{- if .Values.defaultRules.additionalRuleLabels }}
 {{ toYaml .Values.defaultRules.additionalRuleLabels | indent 8 }}
 {{- end }}
@@ -105,20 +84,6 @@ spec:
 {{ toYaml .Values.defaultRules.additionalRuleLabels | indent 8 }}
 {{- end }}
 {{- end }}
-{{- if not (.Values.defaultRules.disabled.KubeletPodStartUpLatencyHigh | default false) }}
-    - alert: KubeletPodStartUpLatencyHigh
-      annotations:
-        description: Kubelet Pod startup 99th percentile latency is {{`{{`}} $value {{`}}`}} seconds on node {{`{{`}} $labels.node {{`}}`}}.
-        runbook_url: {{ .Values.defaultRules.runbookUrl }}/kubernetes/kubeletpodstartuplatencyhigh
-        summary: Kubelet Pod startup latency is too high.
-      expr: histogram_quantile(0.99, sum(rate(kubelet_pod_worker_duration_seconds_bucket{job="kubelet", metrics_path="/metrics"}[5m])) by (instance, le)) * on(instance) group_left(node) kubelet_node_name{job="kubelet", metrics_path="/metrics"} > 60
-      for: 15m
-      labels:
-        severity: warning
-{{- if .Values.defaultRules.additionalRuleLabels }}
-{{ toYaml .Values.defaultRules.additionalRuleLabels | indent 8 }}
-{{- end }}
-{{- end }}
 {{- if not (.Values.defaultRules.disabled.KubeletClientCertificateExpiration | default false) }}
     - alert: KubeletClientCertificateExpiration
       annotations:
@@ -140,33 +105,7 @@ spec:
         summary: Kubelet client certificate is about to expire.
       expr: kubelet_certificate_manager_client_ttl_seconds < 86400
       labels:
-        severity: critical
-{{- if .Values.defaultRules.additionalRuleLabels }}
-{{ toYaml .Values.defaultRules.additionalRuleLabels | indent 8 }}
-{{- end }}
-{{- end }}
-{{- if not (.Values.defaultRules.disabled.KubeletServerCertificateExpiration | default false) }}
-    - alert: KubeletServerCertificateExpiration
-      annotations:
-        description: Server certificate for Kubelet on node {{`{{`}} $labels.node {{`}}`}} expires in {{`{{`}} $value | humanizeDuration {{`}}`}}.
-        runbook_url: {{ .Values.defaultRules.runbookUrl }}/kubernetes/kubeletservercertificateexpiration
-        summary: Kubelet server certificate is about to expire.
-      expr: kubelet_certificate_manager_server_ttl_seconds < 604800
-      labels:
         severity: warning
-{{- if .Values.defaultRules.additionalRuleLabels }}
-{{ toYaml .Values.defaultRules.additionalRuleLabels | indent 8 }}
-{{- end }}
-{{- end }}
-{{- if not (.Values.defaultRules.disabled.KubeletServerCertificateExpiration | default false) }}
-    - alert: KubeletServerCertificateExpiration
-      annotations:
-        description: Server certificate for Kubelet on node {{`{{`}} $labels.node {{`}}`}} expires in {{`{{`}} $value | humanizeDuration {{`}}`}}.
-        runbook_url: {{ .Values.defaultRules.runbookUrl }}/kubernetes/kubeletservercertificateexpiration
-        summary: Kubelet server certificate is about to expire.
-      expr: kubelet_certificate_manager_server_ttl_seconds < 86400
-      labels:
-        severity: critical
 {{- if .Values.defaultRules.additionalRuleLabels }}
 {{ toYaml .Values.defaultRules.additionalRuleLabels | indent 8 }}
 {{- end }}
@@ -185,20 +124,6 @@ spec:
 {{ toYaml .Values.defaultRules.additionalRuleLabels | indent 8 }}
 {{- end }}
 {{- end }}
-{{- if not (.Values.defaultRules.disabled.KubeletServerCertificateRenewalErrors | default false) }}
-    - alert: KubeletServerCertificateRenewalErrors
-      annotations:
-        description: Kubelet on node {{`{{`}} $labels.node {{`}}`}} has failed to renew its server certificate ({{`{{`}} $value | humanize {{`}}`}} errors in the last 5 minutes).
-        runbook_url: {{ .Values.defaultRules.runbookUrl }}/kubernetes/kubeletservercertificaterenewalerrors
-        summary: Kubelet has failed to renew its server certificate.
-      expr: increase(kubelet_server_expiration_renew_errors[5m]) > 0
-      for: 15m
-      labels:
-        severity: warning
-{{- if .Values.defaultRules.additionalRuleLabels }}
-{{ toYaml .Values.defaultRules.additionalRuleLabels | indent 8 }}
-{{- end }}
-{{- end }}
 {{- if .Values.prometheusOperator.kubeletService.enabled }}
 {{- if not (.Values.defaultRules.disabled.KubeletDown | default false) }}
     - alert: KubeletDown
@@ -207,7 +132,7 @@ spec:
         runbook_url: {{ .Values.defaultRules.runbookUrl }}/kubernetes/kubeletdown
         summary: Target disappeared from Prometheus target discovery.
       expr: absent(up{job="kubelet", metrics_path="/metrics"} == 1)
-      for: 15m
+      for: 5m
       labels:
         severity: critical
 {{- if .Values.defaultRules.additionalRuleLabels }}

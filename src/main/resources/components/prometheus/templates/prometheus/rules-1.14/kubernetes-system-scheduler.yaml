@@ -32,11 +32,11 @@ spec:
 {{- if not (.Values.defaultRules.disabled.KubeSchedulerDown | default false) }}
     - alert: KubeSchedulerDown
       annotations:
-        description: KubeScheduler has disappeared from Prometheus target discovery.
+        description: KubeScheduler {{`{{`}} $labels.pod {{`}}`}} has disappeared from Prometheus target discovery.
         runbook_url: {{ .Values.defaultRules.runbookUrl }}/kubernetes/kubeschedulerdown
         summary: Target disappeared from Prometheus target discovery.
       expr: absent(up{job="kube-scheduler"} == 1)
-      for: 15m
+      for: 5m
       labels:
         severity: critical
 {{- if .Values.defaultRules.additionalRuleLabels }}
@@ -44,4 +44,20 @@ spec:
 {{- end }}
 {{- end }}
 {{- end }}
+    - alert: schedulerReadinessStatusAbnormal
+      annotations:
+        message: 'scheduler instance {{`{{`}} $labels.pod {{`}}`}} readiness status abnormal'
+      expr: |-
+       kube_pod_container_status_ready{container="kube-scheduler",namespace="kube-system"} == 0
+      for: 4m
+      labels:
+        severity: warning
+    - alert: schedulerRunningStatusAbnormal
+      annotations:
+        message: 'scheduler instance {{`{{`}} $labels.pod {{`}}`}} running status abnormal'
+      expr: |-
+        kube_pod_container_status_running{container="kube-scheduler",namespace="kube-system"} == 0
+      for: 5m
+      labels:
+        severity: warning
 {{- end }}

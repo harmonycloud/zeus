@@ -1,0 +1,60 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: kube-prometheus-stack-coredns.rules
+  namespace: {{ template "kube-prometheus-stack.namespace" . }}
+  labels:
+    app: {{ template "kube-prometheus-stack.name" . }}
+    platform: zeus
+  annotations:
+    target_alias_name: 集群监控
+    target_name: cluster
+    target_type: cluster
+spec:
+  groups:
+  - name: coredns
+    rules:
+    - alert: CoreDNSReadinessStatusAbnormal
+      annotations:
+        message: 'coredns {{`{{`}} $labels.pod {{`}}`}} readiness status abnormal'
+      expr: |-
+        kube_pod_container_status_ready{container="coredns",namespace="kube-system"} == 0
+      for: 5m
+      labels:
+        severity: warning
+    - alert: CoreDNSRunningStatusAbnormal
+      annotations:
+        message: 'coredns {{`{{`}} $labels.pod {{`}}`}} running status abnormal'
+      expr: |-
+        kube_pod_container_status_running{container="coredns",namespace="kube-system"} == 0
+      for: 5m
+      labels:
+        severity: warning
+    - alert: CoreDNSQueryErrorHigh
+      annotations:
+        message: 'coredns {{`{{`}} $labels.pod {{`}}`}} query error high,the percentage is {{`{{`}} $value {{`}}`}}'
+      expr: |-
+        100 * sum without (instance, server, zone, view, rcode, plugin) (rate(coredns_dns_responses_total{job="coredns",rcode="SERVFAIL"}[5m]))
+        /
+        sum without (instance, server, zone, view, rcode, plugin) (rate(coredns_dns_responses_total{job="coredns"}[5m])) > 3
+      for: 10m
+      labels:
+        severity: warning
+    - alert: CoreDNSForwardErrorHigh
+      annotations:
+        message: 'coredns {{`{{`}} $labels.pod {{`}}`}} forward error high,the percentage is {{`{{`}} $value {{`}}`}}'
+      expr: |-
+        100 * sum without (instance, rcode) (rate(coredns_forward_responses_total{job="coredns",rcode="SERVFAIL"}[5m]))
+        /
+        sum without (instance, rcode) (rate(coredns_forward_responses_total{job="coredns"}[5m])) > 3
+      for: 10m
+      labels:
+        severity: warning
+    - alert: CoreDnsUnavailable
+      annotations:
+        message: 'coredns has {{`{{`}} $value {{`}}`}} unavailable instance'
+      expr: |-
+        count(kube_pod_container_status_running{container="coredns",namespace="kube-system"} != 1) by(container) >= 2
+      for: 5m
+      labels:
+        severity: critical

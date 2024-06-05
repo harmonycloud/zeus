@@ -31,15 +31,31 @@ spec:
 {{- if not (.Values.defaultRules.disabled.KubeProxyDown | default false) }}
     - alert: KubeProxyDown
       annotations:
-        description: KubeProxy has disappeared from Prometheus target discovery.
+        description: KubeProxy {{`{{`}} $labels.pod {{`}}`}} has disappeared from Prometheus target discovery.
         runbook_url: {{ .Values.defaultRules.runbookUrl }}/kubernetes/kubeproxydown
         summary: Target disappeared from Prometheus target discovery.
       expr: absent(up{job="kube-proxy"} == 1)
-      for: 15m
+      for: 5m
       labels:
         severity: critical
 {{- if .Values.defaultRules.additionalRuleLabels }}
 {{ toYaml .Values.defaultRules.additionalRuleLabels | indent 8 }}
 {{- end }}
 {{- end }}
+    - alert: kubeProxyReadinessStatusAbnormal
+      annotations:
+        message: 'kube-proxy {{`{{`}} $labels.pod {{`}}`}} readiness status abnormal'
+      expr: |-
+        kube_pod_container_status_ready{pod=~"kube-proxy.*",namespace="kube-system"} == 0
+      for: 5m
+      labels:
+        severity: warning
+    - alert: kubeProxyRunningStatusAbnormal
+      annotations:
+        message: 'kube-proxy {{`{{`}} $labels.pod {{`}}`}} container running status abnormal'
+      expr: |-
+        kube_pod_container_status_running{pod=~"kube-proxy.*",namespace="kube-system"} == 0
+      for: 5m
+      labels:
+        severity: critical
 {{- end }}

@@ -42,4 +42,20 @@ spec:
 {{ toYaml .Values.defaultRules.additionalRuleLabels | indent 8 }}
 {{- end }}
 {{- end }}
+    - alert: calicoReadinessStatusAbnormal
+      annotations:
+        message: 'calico {{`{{`}} $labels.pod {{`}}`}} readiness status abnormal'
+      expr: |-
+        kube_pod_container_status_ready{pod=~"calico.*",namespace="kube-system"} == 0
+      for: 5m
+      labels:
+        severity: warning
+    - alert: calicoRunningStatusAbnormal
+      annotations:
+        message: 'calico {{`{{`}} $labels.pod {{`}}`}} running status abnormal'
+      expr: |-
+        kube_pod_container_status_running{pod=~"calico.*",namespace="kube-system"} == 0
+      for: 5m
+      labels:
+        severity: warning
 {{- end }}
