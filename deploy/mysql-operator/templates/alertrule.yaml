@@ -2,13 +2,8 @@
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
-  annotations:
-    target_alias_name: 平台系统监控
-    target_name: platform
-    target_type: system
   labels:
     prometheus: k8s
-    platform: zeus
     role: alert-rules
   name: {{ include "mysql.fullname" . }}
 spec:
@@ -17,365 +12,202 @@ spec:
     rules:
     - alert: MySQLExporterDown
       annotations:
-        alertLevel: critical
-        message: MySQL Exporter is down, This requires immediate action.
+        message: "MySQL Exporter is down. (Namespace: {{ .Release.Namespace }},  ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})"
         metric: up
         product: harmonycloud
         service: metrics
-        summary: MySQL Exporter is down
-      expr: up{service='{{ include "mysql.fullname" . }}'} == 0
-      for: 2m
-      labels:
-        severity: critical
-  - name: zeus-platfomr
-    rules:
-    - alert: zeusCpuUsageHigh
-      annotations:
-        message: cpu usage high for {{`{{ $labels.pod }}`}}
-        summary: cpu usage high for {{`{{ $labels.pod }}`}}
-      expr: (sum by (pod) (rate(container_cpu_usage_seconds_total{image!="",container!~"|POD",endpoint!="", pod=~"zeus-.+",namespace="zeus"}[5m]))) / (sum by (pod) (kube_pod_container_resource_requests{resource="cpu", container="scheduler", pod=~"zeus-.+", namespace="zeus"})) > 0.8
+      expr: up{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}'} == 0
       for: 5m
-      labels:
-        severity: critical
-    - alert: zeusMemoryUsageHigh
-      annotations:
-        message: memory usage high for {{`{{ $labels.pod }}`}}
-        summary: memory usage high for {{`{{ $labels.pod }}`}}
-      expr: (sum by (pod)(container_memory_working_set_bytes{container!~"|POD",endpoint!="",pod=~"zeus-.+",namespace="zeus"})) * 100 / (sum by (pod) (kube_pod_container_resource_requests{resource="memory",pod=~"zeus-.+",namespace="zeus"})) > 80
-      for: 5m
-      labels:
-        severity: critical
-    - alert: zeusInstanceNotReady
-      annotations:
-        message: middlewareController instance {{`{{ $labels.instance }}`}} not ready
-        summary: middlewareController instance {{`{{ $labels.instance }}`}} not ready
-      expr: kube_pod_container_status_ready{namespace="zeus",pod=~"zeus-.+"} == 0
-      for: 30s
       labels:
         severity: warning
-    - alert: zeusNotRunning
-      annotations:
-        message: middlewareController instance {{`{{ $labels.instance }}`}} not running
-        summary: middlewareController instance {{`{{ $labels.instance }}`}} not running
-      expr: kube_pod_container_status_running{namespace="zeus",pod=~"zeus-.+"} == 0
-      for: 30s
-      labels:
-        severity: critical
   - name: mysql-cluster
     rules:
-    - expr: mysql_slave_status_seconds_behind_master{service='{{ include "mysql.fullname" . }}'} - mysql_slave_status_sql_delay{service='{{ include "mysql.fullname" . }}'}
-      record: mysql_slave_lag_seconds
     - alert: MySQLReplicationNotRunning
       annotations:
-        alertLevel: critical
-        message: Slave replication (IO or SQL) has been down for more than 2 minutes.
+        message: "MySQL slave replication (IO or SQL) has been down for more than 5 minutes. (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})"
         metric: mysql_slave_status_slave_io_running
         product: harmonycloud
         service: metrics
-        summary: Slave replication is not running
-      expr: mysql_slave_status_slave_io_running{service='{{ include "mysql.fullname" . }}'} == 0 or mysql_slave_status_slave_sql_running{service='{{ include "mysql.fullname" . }}'}
+      expr: mysql_slave_status_slave_io_running{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}'} == 0 or mysql_slave_status_slave_sql_running{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}'}
         == 0
-      for: 2m
+      for: 5m
       labels:
-        severity: critical
+        severity: warning
     - alert: MySQLReplicationLag
       annotations:
-        alertLevel: critical
-        message: The mysql slave replication has fallen behind and is not recovering
+        message: "MySQL slave replication has fallen behind and is not recovering, current_value={{ `{{ $value }}` }}. (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})"
         metric: mysql_slave_lag_seconds
         product: harmonycloud
         service: metrics
-        summary: MySQL slave replication is lagging
-      expr: (mysql_slave_lag_seconds{service='{{ include "mysql.fullname" . }}'} > 30) and on(instance) (predict_linear(mysql_slave_lag_seconds{service='{{ include "mysql.fullname" . }}'}[5m],
+      expr: (mysql_slave_lag_seconds{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}'} > 30) and on(instance) (predict_linear(mysql_slave_lag_seconds{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}'}[5m],
         60 * 2) > 0)
-      for: 1m
+      for: 5m
       labels:
-        severity: critical
+        severity: warning
     - alert: MySQLInnoDBLogWaits
       annotations:
-        alertLevel: warning
-        message: The innodb logs are waiting for disk at a rate of {{`{{$value}}`}} second
+        message: "MySQL innodb logs are waiting for disk at a rate of {{`{{$value}}`}} second. (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})"
         metric: mysql_global_status_innodb_log_waits
         product: harmonycloud
         service: metrics
         summary: MySQL innodb log writes stalling
-      expr: rate(mysql_global_status_innodb_log_waits{service='{{ include "mysql.fullname" . }}'}[15m]) > 10
+      expr: rate(mysql_global_status_innodb_log_waits{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}'}[15m]) > 10
       labels:
         severity: warning
   - name: mysql-stats
     rules:
     - alert: MySQLInstanceDown
       annotations:
-        alertLevel: critical
-        message: MySQL Instance is down, This requires immediate action.
+        message: "MySQL Instance is down. (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})"
         metric: mysql_up
         product: harmonycloud
         service: metrics
-        summary: Instance {{`{{$labels.instance}}`}} MySQL is down
-      expr: mysql_up{service='{{ include "mysql.fullname" . }}'} == 0
-      for: 1m
+      expr: mysql_up{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}'} == 0 or kube_pod_container_status_running{container="mysql", namespace='{{ .Release.Namespace }}', pod=~"{{ include "mysql.fullname" . }}-[0-9]"} == 0
+      for: 5m
       labels:
         severity: critical
     - alert: MySQLOpenFilesHigh
       annotations:
-        alertLevel: warning
-        message: Open files is high, Please consider increasing open_files_limit.
+        message: 'MySQL Open files is high, Please consider increasing open_files_limit, current_value={{ `{{ printf "%.0f" $value }}` }}%. (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})'
         metric: mysql_global_status_innodb_num_open_files
         product: harmonycloud
         service: metrics
-        summary: Instance {{`{{$labels.instance}}`}} open files high
-      expr: mysql_global_status_innodb_num_open_files{service='{{ include "mysql.fullname" . }}'} > (mysql_global_variables_open_files_limit{service='{{ include "mysql.fullname" . }}'})
-        * 0.75
-      for: 1m
+      expr: mysql_global_status_innodb_num_open_files{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}'} * 100 / (mysql_global_variables_open_files_limit{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}'}) > 75
+      for: 5m
       labels:
         severity: warning
     - alert: MySQLReadBufferOutOfMaxAllow
       annotations:
-        alertLevel: warning
-        message: Read buffer size (read_buffer_size) is bigger than max. allowed packet
-          size (max_allowed_packet).This can break your replication.
+        message: "MySQl read buffer size (read_buffer_size) is bigger than max. allowed packet size (max_allowed_packet).This can break your replication. (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})"
         metric: mysql_global_variables_read_buffer_size
         product: harmonycloud
         service: metrics
-        summary: Instance {{`{{$labels.instance}}`}} Read buffer size is bigger than max.
-          allowed packet size
-      expr: mysql_global_variables_read_buffer_size{service='{{ include "mysql.fullname" . }}'} > mysql_global_variables_slave_max_allowed_packet{service='{{ include "mysql.fullname" . }}'}
-      for: 1m
-      labels:
-        severity: warning
-    - alert: MySQLSortBufferMissconfigured
-      annotations:
-        alertLevel: warning
-        message: Sort buffer size is either too big or too small. A good value for
-          sort_buffer_size is between 256k and 4M.
-        metric: mysql_global_variables_innodb_sort_buffer_size
-        product: harmonycloud
-        service: metrics
-        summary: Instance {{`{{$labels.instance}}`}} Sort buffer possibly missconfigured
-      expr: mysql_global_variables_innodb_sort_buffer_size{service='{{ include "mysql.fullname" . }}'} <256*1024 or mysql_global_variables_read_buffer_size{service='{{ include "mysql.fullname" . }}'}
-        > 4*1024*1024
-      for: 1m
-      labels:
-        severity: warning
-    - alert: MySQLThreadStackSizeTooSmall
-      annotations:
-        alertLevel: warning
-        message: Thread stack size is too small. This can cause problems when you
-          use Stored Language constructs for example. A typical is 256k for thread_stack_size.
-        metric: mysql_global_variables_thread_stack
-        product: harmonycloud
-        service: metrics
-        summary: Instance {{`{{$labels.instance}}`}} Thread stack size is too small
-      expr: mysql_global_variables_thread_stack{service='{{ include "mysql.fullname" . }}'} <196608
-      for: 1m
+      expr: mysql_global_variables_read_buffer_size{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}'} > mysql_global_variables_slave_max_allowed_packet{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}'}
+      for: 5m
       labels:
         severity: warning
     - alert: MySQLTooManyConnections
       annotations:
         alertLevel: warning
-        message: Instance {{`{{$labels.instance}}`}} Used more than 80% of max connections
-          limited
+        message: 'MySQL instance used more than 80% of max connections limited, current_value={{ `{{ printf "%.0f" $value }}` }}%. (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})'
         metric: mysql_global_status_max_used_connections
         product: harmonycloud
         service: metrics
-        summary: Instance {{`{{$labels.instance}}`}} Used more than 80% of max connections
-          limited
-      expr: mysql_global_status_max_used_connections{service='{{ include "mysql.fullname" . }}'} > mysql_global_variables_max_connections{service='{{ include "mysql.fullname" . }}'}
-        * 0.8
-      for: 1m
-      labels:
-        severity: warning
-    - alert: MySQLInnoDBForceRecoveryIsEnabled
-      annotations:
-        alertLevel: warning
-        message: InnoDB Force Recovery is enabled. This mode should be used for data
-          recovery purposes only. It prohibits writing to the data.
-        metric: mysql_global_variables_innodb_force_recovery
-        product: harmonycloud
-        service: metrics
-        summary: Instance {{`{{$labels.instance}}`}} InnoDB Force Recovery is enabled
-      expr: mysql_global_variables_innodb_force_recovery{service='{{ include "mysql.fullname" . }}'} != 0
-      for: 1m
-      labels:
-        severity: warning
-    - alert: MySQLInnoDBLogFileSizeIsTooSmall
-      annotations:
-        alertLevel: warning
-        message: The InnoDB Log File size is possibly too small. Choosing a small
-          InnoDB Log File size can have significant performance impacts.
-        metric: mysql_global_variables_innodb_log_file_size
-        product: harmonycloud
-        service: metrics
-        summary: Instance {{`{{$labels.instance}}`}} InnoDB Log File size is too small
-      expr: mysql_global_variables_innodb_log_file_size{service='{{ include "mysql.fullname" . }}'} < 16777216
-      for: 1m
-      labels:
-        severity: warning
-    - alert: MySQLTableDefinitionCacheTooSmall
-      annotations:
-        alertLevel: info
-        message: Your Table Definition Cache is possibly too small. If it is much
-          too small this can have significant performance impacts!
-        metric: mysql_global_status_open_table_definitions
-        product: harmonycloud
-        service: metrics
-        summary: Instance {{`{{$labels.instance}}`}} Table definition cache too small
-      expr: mysql_global_status_open_table_definitions{service='{{ include "mysql.fullname" . }}'} > mysql_global_variables_table_definition_cache{service='{{ include "mysql.fullname" . }}'}
-      for: 1m
-      labels:
-        severity: info
-    - alert: MySQLThreadStackSizeIsPossiblyTooSmall
-      annotations:
-        alertLevel: info
-        message: Thread stack size is possibly too small. This can cause problems
-          when you use Stored Language constructs for example. A typical is 256k for   thread_stack_size.
-        metric: mysql_global_variables_thread_stack
-        product: harmonycloud
-        service: metrics
-        summary: Instance {{`{{$labels.instance}}`}} Thread stack size is possibly too
-          small
-      expr: mysql_global_variables_thread_stack{service='{{ include "mysql.fullname" . }}'} < 262144
-      for: 1m
-      labels:
-        severity: info
-    - alert: MySQLBinaryLogIsDisabled
-      annotations:
-        alertLevel: warning
-        message: Binary Log is disabled. This prohibits you to do Point in Time Recovery
-          (PiTR).
-        metric: mysql_global_variables_log_bin
-        product: harmonycloud
-        service: metrics
-        summary: Instance {{`{{$labels.instance}}`}} Binary Log is disabled
-      expr: mysql_global_variables_log_bin{service='{{ include "mysql.fullname" . }}'} != 1
-      for: 1m
+      expr: mysql_global_status_max_used_connections{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}'} * 100/ mysql_global_variables_max_connections{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}'} > 80
+      for: 5m
       labels:
         severity: warning
     - alert: MySQLIOThreadStopped
       annotations:
-        alertLevel: critical
-        message: IO thread has stopped. This is usually because it cannot connect
-          to the Master any more.
+        message: "MySQL instance IO thread has stopped. This is usually because it cannot connect to the Master any more. (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})"
         metric: mysql_slave_status_slave_io_running
         product: harmonycloud
         service: metrics
-        summary: Instance {{`{{$labels.instance}}`}} IO thread stopped
-      expr: mysql_slave_status_slave_io_running{service='{{ include "mysql.fullname" . }}'} != 1
-      for: 1m
+      expr: mysql_slave_status_slave_io_running{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}'} != 1
+      for: 5m
       labels:
         severity: critical
     - alert: MySQLSQLThreadStopped
       annotations:
-        alertLevel: critical
-        message: SQL thread has stopped. This is usually because it cannot apply a
-          SQL statement received from the master.
+        message: "MySQL instance SQL thread has stopped. This is usually because it cannot apply a SQL statement received from the master. (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})"
         metric: mysql_slave_status_slave_sql_running
         product: harmonycloud
         service: metrics
-        summary: Instance {{`{{$labels.instance}}`}} SQL thread stopped
-      expr: mysql_slave_status_slave_sql_running{service='{{ include "mysql.fullname" . }}'} == 0
-      for: 1m
+      expr: mysql_slave_status_slave_sql_running{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}'} == 0
+      for: 5m
       labels:
         severity: critical
     - alert: MySQLSQLThreadError
       annotations:
-        alertLevel: critical
-        message: SQL thread has stopped. This is usually because it cannot apply a
-          SQL statement received from the master.
+        message: "MySQL instance SQL thread has stopped. This is usually because it cannot apply a SQL statement received from the master. (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})"
         metric: mysql_slave_status_slave_sql_running
         product: harmonycloud
         service: metrics
-        summary: Instance {{`{{$labels.instance}}`}} Sync Binlog is enabled
-      expr: mysql_slave_status_slave_sql_running{service='{{ include "mysql.fullname" . }}'} != 1
-      for: 1m
+      expr: mysql_slave_status_slave_sql_running{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}'} != 1
+      for: 5m
       labels:
         severity: critical
     - alert: MySQLSlaveLaggingBehindMaster
       annotations:
-        alertLevel: warning
-        message: Slave is lagging behind Master. Please check if Slave threads are
-          running and if there are some performance issues!
+        message: "MySQL instance Slave is lagging behind Master. Please check if Slave threads are running and if there are some performance issues, current_value={{ `{{ $value }}` }}. (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})"
         metric: mysql_slave_status_seconds_behind_master
         product: harmonycloud
         service: metrics
-        summary: Instance {{`{{$labels.instance}}`}} Slave lagging behind Master
-      expr: rate(mysql_slave_status_seconds_behind_master{service='{{ include "mysql.fullname" . }}'}[1m]) > 30
-      for: 1m
+      expr: mysql_slave_status_seconds_behind_master{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}'} > 30
+      for: 5m
       labels:
         severity: warning
-    - alert: MySQLVolumeUsage
-      expr:  (0* kube_persistentvolumeclaim_info{namespace='{{ .Release.Namespace }}', persistentvolumeclaim=~"mysql-data-{{ include "mysql.fullname" . }}-[0-9]"}) + on(volumename) group_left max(label_replace ((used_size_kb / total_size_kb),"volumename", "$1", "pv", "(.+)")) by (volumename) > 0.7
-      for: 1m
+    - alert: MySQLVolumeUsage70
+      expr:  (100 * kube_persistentvolumeclaim_info{namespace='{{ .Release.Namespace }}', persistentvolumeclaim=~"mysql-data-{{ include "mysql.fullname" . }}-[0-9]"}) * on(volumename) group_left max(label_replace ((used_size_kb / total_size_kb),"volumename", "$1", "pv", "(.+)")) by (volumename) > 70
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        product: harmonycloud
+        message: 'The disk usage of MySQL has exceeded 70%, current_value={{ `{{ printf "%.0f" $value }}` }}%.  (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Persistentvolumeclaim: {{`{{ $labels.persistentvolumeclaim }}`}})'
+
+    - alert: MySQLVolumeUsage85
+      expr: (100 * kube_persistentvolumeclaim_info{namespace='{{ .Release.Namespace }}', persistentvolumeclaim=~"mysql-data-{{ include "mysql.fullname" . }}-[0-9]"}) * on(volumename) group_left max(label_replace ((used_size_kb / total_size_kb),"volumename", "$1", "pv", "(.+)")) by (volumename) > 85
+      for: 5m
       labels:
         severity: critical
       annotations:
-        alertLevel: critical
         product: harmonycloud
-        summary: "{{`{{ $labels.persistentvolumeclaim }}`}} MySQL volume pressure"
-        message: "{{`{{ $labels.persistentvolumeclaim }}`}} MySQL volume pressure"
-        description: "{{`{{ $labels.persistentvolumeclaim }}`}} MySQL data capacity is insufficient by 30%.\n  current_value={{ `{{ $value }}` }}"
-{{- if .Values.proxy.enable }}
+        message: 'The disk usage of MySQL has exceeded 85%, current_value={{ `{{ printf "%.0f" $value }}` }}%.  (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Persistentvolumeclaim: {{`{{ $labels.persistentvolumeclaim }}`}})'
+
+
+  {{- if .Values.proxy.enable }}
   - name: proxysql
     rules:
     - alert: ProxySqlInstanceDown
       annotations:
-        alertLevel: critical
-        message: PROXYSQL is down, This requires immediate action.
+        message: "MySQL ProxySQL is down. (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})"
         metric: up
         product: harmonycloud
         service: metrics
-        summary: PROXYSQL is down
-      expr: up{service='{{ include "mysql.fullname" . }}'}== 0
-      for: 2m
+      expr: up{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}'}== 0 or kube_pod_container_status_running{container="proxysql", pod=~"{{ include "mysql.fullname" . }}-proxy.*"} == 0
+      for: 5m
       labels:
-        severity: critical
+        severity: warning
     - alert: ProxySqlConnectCheckErr
       annotations:
-        alertLevel: critical
-        message: PROXYSQL connect check err, This requires immediate action.
+        message: "MySQL ProxySQL connect check err. (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})"
         metric: up
         product: harmonycloud
         service: metrics
-        summary: PROXYSQL connect check err
-      expr: irate(proxysql_mysql_monitor_connect_check_total{service='{{ include "mysql.fullname" . }}', status="err"}[5m]) > 0
-      for: 2m
+      expr: irate(proxysql_mysql_monitor_connect_check_total{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}', status="err"}[5m]) > 0
+      for: 5m
       labels:
-        severity: critical
+        severity: warning
     - alert: ProxySqlPinCheckErr
       annotations:
-        alertLevel: critical
-        message: PROXYSQL ping check err, This requires immediate action.
+        message: "MySQL ProxySQL ping check err. (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})"
         metric: up
         product: harmonycloud
         service: metrics
-        summary: PROXYSQL ping check err
-      expr: irate(proxysql_mysql_monitor_ping_check_total{service='{{ include "mysql.fullname" . }}',status="err"}[5m]) > 0
-      for: 2m
+      expr: irate(proxysql_mysql_monitor_ping_check_total{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}',status="err"}[5m]) > 0
+      for: 5m
       labels:
-        severity: critical
+        severity: warning
     - alert: ProxySqlReadOnlyCheckErr
       annotations:
-        alertLevel: critical
-        message: PROXYSQL read only check err, This requires immediate action.
+        message: "MySQL ProxySQL read only check err. (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})"
         metric: up
         product: harmonycloud
         service: metrics
-        summary: PROXYSQL read only check err
-      expr: irate(proxysql_mysql_monitor_read_only_check_total{service='{{ include "mysql.fullname" . }}',status="err"}[5m]) > 0
-      for: 2m
+      expr: irate(proxysql_mysql_monitor_read_only_check_total{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}',status="err"}[5m]) > 0
+      for: 5m
       labels:
-        severity: critical
+        severity: warning
     - alert: ProxySqlReplicationLagCheckErr
       annotations:
-        alertLevel: critical
-        message: PROXYSQL replication lag check err, This requires immediate action.
+        message: "MySQL ProxySQL replication lag check err. (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})"
         metric: up
         product: harmonycloud
         service: metrics
-        summary: PROXYSQL replication lag check err
-      expr: irate(proxysql_mysql_monitor_replication_lag_check_total{service='{{ include "mysql.fullname" . }}', status="err"}[5m]) >0
-      for: 2m
+      expr: irate(proxysql_mysql_monitor_replication_lag_check_total{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}', status="err"}[5m]) >0
+      for: 5m
       labels:
-        severity: critical
+        severity: warning
 {{- end }}
 {{- end }}

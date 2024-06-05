@@ -1,0 +1,47 @@
+{{- if  .Capabilities.APIVersions.Has "monitoring.coreos.com/v1" }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: k8s
+    platform: zeus
+    role: alert-rules
+  annotations:
+    target_alias_name: 平台系统监控
+    target_name: platform
+    target_type: system
+  name: mysql-operator-rules
+spec:
+  groups:
+    - name: middleware-rules
+      rules:
+        - alert: mysqlOperatorCpuUsageHigh
+          annotations:
+            message: 'The cpu usage of MySQL Operator has exceeded 90%, current_value={{ `{{ printf "%.0f" $value }}` }}%.  (Namespace: {{ .Release.Namespace }}, Pod: {{`{{ $labels.pod }}`}})'
+          expr: (sum by (pod) (rate(container_cpu_usage_seconds_total{image!="",container!~"|POD",endpoint!="", pod=~"mysql-operator.+",namespace="middleware-operator"}[5m]))) * 100 / (sum by (pod) (kube_pod_container_resource_requests{resource="cpu", container=~"mysql-operator", pod=~"mysql-operator.+", namespace="middleware-operator"})) > 90
+          for: 5m
+          labels:
+            severity: warning
+        - alert: mysqlOperatorMemoryUsageHigh
+          annotations:
+            message: 'The memory usage of MySQL Operator has exceeded 90%, current_value={{ `{{ printf "%.0f" $value }}` }}%.  (Namespace: {{ .Release.Namespace }}, Pod: {{`{{ $labels.pod }}`}})'
+          expr: (sum by (pod)(container_memory_working_set_bytes{container!~"|POD",endpoint!="",pod=~"mysql-operator.+",namespace="middleware-operator"})) * 100 / (sum by (pod) (kube_pod_container_resource_requests{container=~"mysql-operator",resource="memory",pod=~"mysql-operator.+",namespace="middleware-operator"})) > 90
+          for: 5m
+          labels:
+            severity: warning
+        - alert: mysqlOperatorInstanceNotRunning
+          annotations:
+            message: "MySQL operator instances stopped working.(Namespace: {{ .Release.Namespace }}, Pod: {{`{{ $labels.pod }}`}})"
+          expr: |-
+            kube_pod_container_status_running{container="mysql-operator",namespace="middleware-operator"} == 0
+          for: 5m
+          labels:
+            severity: warning
+        - alert: multipleMySQLOperatorInstanceNotRunning
+          annotations:
+            message: "Multiple MySQL operator instances stopped running.(Namespace: {{ .Release.Namespace }}, Pod: {{`{{ $labels.pod }}`}})"
+          expr: count(kube_pod_container_status_running{container="mysql-operator",namespace="middleware-operator"} == 0) > 1
+          for: 5m
+          labels:
+            severity: critical
+  {{- end }}

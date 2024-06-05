@@ -85,22 +85,7 @@ storageProvider: {}
 #    accessKeyId: minio
 #    secretAccessKey: Hc@Cloud01
 
-nodeAffinity:
-  requiredDuringSchedulingIgnoredDuringExecution:
-    nodeSelectorTerms:
-      - matchExpressions:
-          - key: zone
-            operator: NotIn
-            values:
-              - zoneC
-  preferredDuringSchedulingIgnoredDuringExecution:
-    - preference:
-        matchExpressions:
-          - key: system
-            operator: In
-            values:
-              - "true"
-      weight: 100
+nodeAffinity: {}
 
 updateStrategy: RollingUpdate
 
