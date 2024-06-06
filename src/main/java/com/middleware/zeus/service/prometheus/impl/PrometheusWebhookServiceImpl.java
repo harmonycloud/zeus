@@ -83,8 +83,7 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
                 continue;
             }
             // 过滤集群id platform和target_name
-            if (!labels.containsKey("platform") || !labels.containsKey("clusterId")
-                || !annotations.containsKey("target_name")) {
+            if (!labels.containsKey("clusterId") || !annotations.containsKey("target_name")) {
                 continue;
             }
             // init object
