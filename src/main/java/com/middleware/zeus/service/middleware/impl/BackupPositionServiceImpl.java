@@ -4,7 +4,6 @@ import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.dtflys.forest.utils.StringUtils;
 import com.middleware.zeus.common.enums.ErrorMessage;
-import com.middleware.zeus.common.enums.ServerUsageEnum;
 import com.middleware.zeus.common.exception.BusinessException;
 import com.middleware.zeus.common.model.BackupPositionDTO;
 import com.middleware.zeus.common.model.middleware.PodInfo;
@@ -175,12 +174,7 @@ public class BackupPositionServiceImpl implements BackupPositionService {
         Minio minio = new Minio();
         String port = StringUtils.isEmpty(backupServerDetail.getPort()) ? "" : ":" + backupServerDetail.getPort();
         String endPoint = backupServerDetail.getProtocol() + "://" + backupServerDetail.getHost() + port;
-
-        String position = backupPosition.getBackupPosition();
-        if (serverUsage != null && backupPosition.getBackupPosition().contains("###")) {
-            position = serverUsage.equals(ServerUsageEnum.zoneA.getName()) ? backupPosition.getBackupPosition().split("###")[0] : backupPosition.getBackupPosition().split("###")[1];
-        }
-        minio.setBucketName(position.replace("/",""));
+        minio.setBucketName(backupPosition.getBackupPosition().replace("/",""));
         minio.setAccessKeyId(backupServerDetail.getUsername());
         minio.setSecretAccessKey(backupServerDetail.getPassword());
         minio.setEndpoint(endPoint);

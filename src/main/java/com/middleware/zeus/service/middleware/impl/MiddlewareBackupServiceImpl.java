@@ -509,18 +509,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                     getActiveAreaObjectMeta(activeAreaAnnotation, ServerUsageEnum.zoneB.getName()));
         } else {
             // 普通备份
-            ObjectMeta objectMeta = new ObjectMeta();
-            if (backupDTO.getType().equals(MiddlewareTypeEnum.MYSQL.getType())) {
-                Map<String, String> annotations = new HashMap<>();
-                annotations.put(ActiveAreaConstant.KEY_POD_SELECTOR,
-                    "[.status.conditions[]|select(.name==\"" + backupDTO.getMiddlewareName() + "-0\")|.name]");
-                objectMeta.setAnnotations(annotations);
-                createBackupTask(backupDTO, backupPositionService.getMinio(backupDTO.getBackupPositionId(), null),
-                    objectMeta);
-            } else {
-                createBackupTask(backupDTO, backupPositionService.getMinio(backupDTO.getBackupPositionId(), null),
-                    new ObjectMeta());
-            }
+            createBackupTask(backupDTO, backupPositionService.getMinio(backupDTO.getBackupPositionId(), null), new ObjectMeta());
         }
     }
 
