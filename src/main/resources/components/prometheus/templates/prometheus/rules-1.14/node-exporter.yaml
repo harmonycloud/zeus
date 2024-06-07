@@ -318,7 +318,7 @@ spec:
       annotations:
         message: 'then cpu load of host {{`{{`}} $labels.kubernetes_pod_node_name {{`}}`}} too high,the percentage of non-idle is {{`{{`}} $value {{`}}`}}'
       expr: |-
-        sum by (instance) (avg by (mode, instance) (rate(node_cpu_seconds_total{mode!="idle"}[2m]))) > 0.8
+        sum by (kubernetes_pod_node_name) (avg by (mode, kubernetes_pod_node_name) (rate(node_cpu_seconds_total{mode!="idle"}[2m]))) > 0.8
       for: 10m
       labels:
         severity: warning
@@ -326,7 +326,7 @@ spec:
       annotations:
         message: 'the iowait of host {{`{{`}} $labels.kubernetes_pod_node_name {{`}}`}} too high,the percentage in the past 5 minutes is {{`{{`}} $value {{`}}`}}'
       expr: |-
-        avg by (instance) (rate(node_cpu_seconds_total{mode="iowait"}[5m])) * 100 > 10
+        avg by (kubernetes_pod_node_name) (rate(node_cpu_seconds_total{mode="iowait"}[5m])) * 100 > 10
       for: 5m
       labels:
         severity: warning
