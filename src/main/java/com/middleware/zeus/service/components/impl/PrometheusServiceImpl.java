@@ -55,7 +55,7 @@ public class PrometheusServiceImpl extends AbstractBaseOperator implements Prome
                 ",prometheus-node-exporter.image.repository=" + repository + "/node-exporter" +
                 ",prometheusOperator.image.repository=" + repository + "/prometheus-operator" +
                 ",prometheusOperator.prometheusConfigReloader.image.repository=" + repository + "/prometheus-config-reloader" +
-                ",prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.storageClassName=" + "local-path" +
+                ",prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.storageClassName=" + "middleware-lvm" +
                 ",prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.resources.requests.storage=" + "10Gi";
        if (SIMPLE.equals(clusterComponentsDto.getType())) {
            setValues = setValues + ",prometheus.prometheusSpec.replicas=1";

@@ -64,7 +64,7 @@ public class GrafanaComponentsServiceImpl extends AbstractBaseOperator implement
         sidecar.put("image", sidecarImage);
 
         JSONObject persistence = new JSONObject();
-        persistence.put("storageClassName", "local-path");
+        persistence.put("storageClassName", "middleware-lvm");
 
         JSONObject initChownData = new JSONObject();
         JSONObject initChownDataImage = new JSONObject();

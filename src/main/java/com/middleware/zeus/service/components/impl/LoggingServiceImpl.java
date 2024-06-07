@@ -97,7 +97,7 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
                 ",nameOverride=kubernetes-logging" +
                 ",elasticsearch-operator.enabled=false" +
                 ",elasticPassword=Hc@Cloud01" +
-                ",storage.masterClass=local-path" +
+                ",storage.masterClass=middleware-lvm" +
                 ",storage.masterSize=5Gi" +
                 ",logging.collection.filelog.enable=false" +
                 ",logging.collection.stdout.enable=false" +

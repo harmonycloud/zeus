@@ -46,7 +46,7 @@ public class MinioServiceImpl extends AbstractBaseOperator implements MinioServi
     @Override
     protected String getValues(String repository, MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto) {
         String setValues = "image.repository=" + repository +
-                ",persistence.storageClass=local-path" +
+                ",persistence.storageClass=middleware-lvm" +
                 ",minioArgs.bucketName=velero" +
                 ",service.nodePort=31909";
         if (SIMPLE.equals(clusterComponentsDto.getType())) {
