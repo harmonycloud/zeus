@@ -1,25 +1,9 @@
 package com.middleware.zeus.service.system.impl;
 
-import static com.middleware.zeus.common.constants.NameConstant.*;
-
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
-import java.util.concurrent.CountDownLatch;
-import java.util.stream.Collectors;
-
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.CollectionUtils;
-
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.middleware.zeus.bean.BeanSystemConfig;
+import com.middleware.zeus.bean.LicenseInfo;
 import com.middleware.zeus.common.enums.ErrorMessage;
 import com.middleware.zeus.common.exception.BusinessException;
 import com.middleware.zeus.common.model.LicenseInfoDto;
@@ -27,11 +11,6 @@ import com.middleware.zeus.common.model.MonitorResourceQuotaBase;
 import com.middleware.zeus.common.model.middleware.Middleware;
 import com.middleware.zeus.common.model.middleware.MiddlewareClusterDTO;
 import com.middleware.zeus.common.model.middleware.Namespace;
-import com.middleware.zeus.util.ThreadPoolExecutorFactory;
-import com.middleware.zeus.util.encrypt.RSAUtils;
-import com.middleware.zeus.util.numeric.ResourceCalculationUtil;
-import com.middleware.zeus.bean.BeanSystemConfig;
-import com.middleware.zeus.bean.LicenseInfo;
 import com.middleware.zeus.integration.cluster.NamespaceWrapper;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
 import com.middleware.zeus.service.k8s.ClusterService;
@@ -43,8 +22,27 @@ import com.middleware.zeus.service.registry.HelmChartService;
 import com.middleware.zeus.service.system.LicenseService;
 import com.middleware.zeus.service.system.SystemConfigService;
 import com.middleware.zeus.util.K8sClient;
-
+import com.middleware.zeus.util.ThreadPoolExecutorFactory;
+import com.middleware.zeus.util.encrypt.RSAUtils;
+import com.middleware.zeus.util.numeric.ResourceCalculationUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Base64;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
+import java.util.stream.Collectors;
+
+import static com.middleware.zeus.common.constants.NameConstant.*;
 
 /**
  * @author xutianhong
@@ -309,7 +307,7 @@ public class LicenseServiceImpl implements LicenseService {
      * 获取使用cpu缓存
      */
     public Double getCpu(String name) {
-        BeanSystemConfig config = systemConfigService.getConfigForUpdate(name);
+        BeanSystemConfig config = systemConfigService.getConfig(name);
         if (config == null) {
             initCpu();
             return 0.0;

@@ -1,8 +1,43 @@
 package com.middleware.zeus.service.registry.impl;
 
-import static com.middleware.zeus.common.constants.CommonConstant.RESOURCE_ALREADY_EXISTED;
-import static com.middleware.zeus.common.constants.CommonConstant.SIMPLE;
-import static com.middleware.zeus.common.constants.registry.HelmChartConstant.*;
+import com.alibaba.fastjson.JSONObject;
+import com.middleware.zeus.bean.BeanImageRepository;
+import com.middleware.zeus.bean.BeanMiddlewareInfo;
+import com.middleware.zeus.common.constants.CmdConstant;
+import com.middleware.zeus.common.constants.NameConstant;
+import com.middleware.zeus.common.enums.ComponentsEnum;
+import com.middleware.zeus.common.enums.ErrorMessage;
+import com.middleware.zeus.common.enums.middleware.MiddlewareTypeEnum;
+import com.middleware.zeus.common.enums.registry.RegistryType;
+import com.middleware.zeus.common.exception.BusinessException;
+import com.middleware.zeus.common.exception.CaasRuntimeException;
+import com.middleware.zeus.common.model.middleware.*;
+import com.middleware.zeus.common.model.registry.HelmChartFile;
+import com.middleware.zeus.integration.registry.HelmChartWrapper;
+import com.middleware.zeus.integration.registry.bean.harbor.HelmListInfo;
+import com.middleware.zeus.integration.registry.bean.harbor.V1HelmChartVersion;
+import com.middleware.zeus.operator.impl.BaseOperatorImpl;
+import com.middleware.zeus.service.k8s.ClusterCertService;
+import com.middleware.zeus.service.k8s.ClusterService;
+import com.middleware.zeus.service.k8s.NamespaceService;
+import com.middleware.zeus.service.middleware.ImageRepositoryService;
+import com.middleware.zeus.service.middleware.MiddlewareInfoService;
+import com.middleware.zeus.service.middleware.MiddlewareService;
+import com.middleware.zeus.service.registry.AbstractRegistryService;
+import com.middleware.zeus.service.registry.HelmChartService;
+import com.middleware.zeus.util.YamlUtil;
+import com.middleware.zeus.util.cmd.CmdExecUtil;
+import com.middleware.zeus.util.cmd.HelmChartUtil;
+import com.middleware.zeus.util.file.FileUtil;
+import com.middleware.zeus.util.middleware.ChartVersionUtil;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+import org.springframework.util.ObjectUtils;
+import org.yaml.snakeyaml.Yaml;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -12,46 +47,9 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import com.alibaba.fastjson.JSONArray;
-import com.middleware.zeus.common.constants.CmdConstant;
-import com.middleware.zeus.common.constants.NameConstant;
-import com.middleware.zeus.common.enums.ComponentsEnum;
-import com.middleware.zeus.common.enums.middleware.MiddlewareTypeEnum;
-import com.middleware.zeus.common.model.middleware.*;
-import com.middleware.zeus.bean.BeanImageRepository;
-import com.middleware.zeus.integration.registry.HelmChartWrapper;
-import com.middleware.zeus.integration.registry.bean.harbor.HelmListInfo;
-import com.middleware.zeus.integration.registry.bean.harbor.V1HelmChartVersion;
-import com.middleware.zeus.service.k8s.NamespaceService;
-import com.middleware.zeus.service.middleware.ImageRepositoryService;
-import com.middleware.zeus.service.registry.AbstractRegistryService;
-import com.middleware.zeus.service.registry.HelmChartService;
-import com.middleware.zeus.util.middleware.ChartVersionUtil;
-import com.middleware.zeus.util.YamlUtil;
-import com.middleware.zeus.service.k8s.ClusterCertService;
-import com.middleware.zeus.service.k8s.ClusterService;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
-import org.springframework.util.ObjectUtils;
-import org.yaml.snakeyaml.Yaml;
-
-import com.alibaba.fastjson.JSONObject;
-import com.middleware.zeus.common.enums.ErrorMessage;
-import com.middleware.zeus.common.enums.registry.RegistryType;
-import com.middleware.zeus.common.exception.BusinessException;
-import com.middleware.zeus.common.exception.CaasRuntimeException;
-import com.middleware.zeus.common.model.registry.HelmChartFile;
-import com.middleware.zeus.bean.BeanMiddlewareInfo;
-import com.middleware.zeus.service.middleware.MiddlewareInfoService;
-import com.middleware.zeus.service.middleware.MiddlewareService;
-import com.middleware.zeus.util.cmd.CmdExecUtil;
-import com.middleware.zeus.util.cmd.HelmChartUtil;
-import com.middleware.zeus.util.file.FileUtil;
-
-import lombok.extern.slf4j.Slf4j;
+import static com.middleware.zeus.common.constants.CommonConstant.RESOURCE_ALREADY_EXISTED;
+import static com.middleware.zeus.common.constants.CommonConstant.SIMPLE;
+import static com.middleware.zeus.common.constants.registry.HelmChartConstant.*;
 
 /**
  * @author dengyulong
@@ -83,6 +81,8 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
     private NamespaceService namespaceService;
     @Autowired
     private ImageRepositoryService imageRepositoryService;
+    @Autowired
+    private BaseOperatorImpl baseOperator;
 
     @Value("${system.upload.path:/usr/local/zeus-pv/upload}")
     private String uploadPath;
@@ -469,6 +469,8 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
             // 删除文件
             FileUtil.deleteFile(tempValuesYamlPath, getHelmChartFilePath(chartName, chartVersion));
         }
+
+        baseOperator.updateAlerts(middleware);
     }
 
     @Override
@@ -591,6 +593,8 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
             FileUtil.deleteFile(tempValuesYamlPath, targetValuesYamlPath,
                 getHelmChartFilePath(chartName, chartVersion));
         }
+
+        baseOperator.updateAlerts(middleware);
     }
 
     @Override
