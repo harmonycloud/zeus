@@ -82,8 +82,8 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
             if (labels == null || annotations == null) {
                 continue;
             }
-            // 过滤集群id platform和target_name
-            if (!labels.containsKey("clusterId") || !annotations.containsKey("target_name")) {
+            // 过滤集群id
+            if (!labels.containsKey("clusterId")) {
                 continue;
             }
             // init object
