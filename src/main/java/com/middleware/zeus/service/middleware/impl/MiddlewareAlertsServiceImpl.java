@@ -153,13 +153,20 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
 
     @Override
     public void deleteRules(String clusterId, String namespace, String middlewareName, String alert) {
-        // 获取cr
+        // 获取原生告警规则对象
         PrometheusRule prometheusRule = prometheusRuleService.get(clusterId, namespace, middlewareName);
         prometheusRule.getSpec().getGroups().forEach(prometheusRuleGroups -> {
             prometheusRuleGroups.getRules().removeIf(prometheusRules -> !StringUtils.isEmpty(prometheusRules.getAlert())
                     && prometheusRules.getAlert().equals(alert));
         });
         prometheusRuleService.update(clusterId, prometheusRule);
+        // 获取额外告警规则对象
+        PrometheusRule zeusPrometheusRule = prometheusRuleService.get(clusterId, namespace, ZEUS + LINE + middlewareName);
+        zeusPrometheusRule.getSpec().getGroups().forEach(prometheusRuleGroups -> {
+            prometheusRuleGroups.getRules().removeIf(prometheusRules -> !StringUtils.isEmpty(prometheusRules.getAlert())
+                    && prometheusRules.getAlert().equals(alert));
+        });
+        prometheusRuleService.update(clusterId, zeusPrometheusRule);
     }
 
     @Override
