@@ -69,10 +69,12 @@ spec:
           mountPath: /host
           mountPropagation: Bidirectional
           readOnly: true
+        {{- if .Values.customVolumes }}
         - name: appl
-          mountPath: /appl/cdb/data
+          mountPath: {{ .Values.customVolumes.mountPath }}
           mountPropagation: Bidirectional
           readOnly: true
+        {{- end}}
         - name: localtime
           mountPath: /etc/localtime
         - name: filebeat-config
@@ -107,9 +109,11 @@ spec:
       - name: root
         hostPath:
           path: /
+      {{- if .Values.customVolumes }}
       - name: appl
         hostPath:
-          path: /appl/cdb/data
+          path: {{ .Values.customVolumes.hostPath }}
+      {{- end}}
       - name: localtime
         hostPath:
           path: /etc/localtime

@@ -1,0 +1,11 @@
+customVolumes:
+  mountPath: /appl/cdb/data
+  hostPath: /appl/cdb/data
+
+resources:
+  limits:
+    cpu: 2
+    memory: 8Gi
+  requests:
+    cpu: 2
+    memory: 8Gi

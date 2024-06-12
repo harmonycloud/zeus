@@ -1,26 +1,23 @@
 image:
   repository: harbor.middleware.com/middleware
   pullPolicy: IfNotPresent
-
 resources:
   limits:
-    cpu: 500m
-    memory: 512Mi
+    cpu: 2
+    memory: 8Gi
   requests:
-    cpu: 100m
-    memory: 128Mi
-
+    cpu: 2
+    memory: 8Gi
 # 日志可选择输出到logstash 或者kafka
 logging_output:
   # type: kafka
   type: logstash
   address: logstash.logging
-
 runtime:
   #  type: docker or containerd
   type: docker
   imageDockerTag: 0.9.7-filebeat-hc.4
   imageContainerdTag: 0.9.7-filebeat-hc.6
-
-
-
+customVolumes:
+  mountPath: /appl/cdb/data
+  hostPath: /appl/cdb/data
