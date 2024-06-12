@@ -40,6 +40,22 @@ public interface PrometheusRuleService {
      */
     void update(String clusterId, PrometheusRule prometheusRule);
 
+    /**
+     * 创建prometheusRule
+     *
+     * @param clusterId 集群id
+     * @param prometheusRule cr
+     */
+    void create(String clusterId, PrometheusRule prometheusRule);
+
+    /**
+     * 删除prometheusRule
+     * @param clusterId
+     * @param namespace
+     * @param name
+     */
+    void delete(String clusterId, String namespace, String name);
+
     /***
      * 封装prometheus对象
      *

@@ -90,10 +90,6 @@ public class CommonConstant {
     public static final String PROJECT_ID = "projectId";
     public static final String TYPE = "type";
     public static final String MIDDLEWARE_TYPE = "middlewareType";
-
-    public static final String TRUE = "true";
-    public static final String FALSE = "false";
-
     public static final String ASTERISK = "*";
     public static final String ALIAS_NAME = "aliasName";
     public static final String REQUEST_QUOTA = "requestQuota";

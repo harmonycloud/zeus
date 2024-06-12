@@ -74,4 +74,26 @@ public class PrometheusRuleWrapper {
         prometheusRuleClient.resource(prometheusRule).update();
     }
 
+    /**
+     * 创建告警规则
+     */
+    public void create(String clusterId, PrometheusRule prometheusRule) throws IOException {
+        // init client
+        NonNamespaceOperation<PrometheusRule, PrometheusRuleList, Resource<PrometheusRule>> prometheusRuleClient =
+                K8sClient.getClient(clusterId).resources(PrometheusRule.class, PrometheusRuleList.class);
+        // create
+        prometheusRuleClient.resource(prometheusRule).create();
+    }
+
+    /**
+     * 删除告警规则
+     */
+    public void delete(String clusterId, String namespace, String name) throws IOException {
+        // init client
+        NonNamespaceOperation<PrometheusRule, PrometheusRuleList, Resource<PrometheusRule>> prometheusRuleClient =
+                K8sClient.getClient(clusterId).resources(PrometheusRule.class, PrometheusRuleList.class).inNamespace(namespace);
+        // delete
+        prometheusRuleClient.withName(name).delete();
+    }
+
 }

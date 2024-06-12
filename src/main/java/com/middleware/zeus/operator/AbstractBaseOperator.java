@@ -68,8 +68,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.middleware.zeus.common.constants.AlertConstant.SERVICE;
-import static com.middleware.zeus.common.constants.CommonConstant.FALSE;
-import static com.middleware.zeus.common.constants.CommonConstant.TRUE;
+import static com.middleware.zeus.common.constants.CommonConstant.*;
 import static com.middleware.zeus.common.constants.NameConstant.*;
 import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.*;
 import static com.middleware.zeus.common.constants.registry.HelmChartConstant.CHART_YAML_NAME;
@@ -325,6 +324,8 @@ public abstract class AbstractBaseOperator {
         maintenanceService.delete(middleware.getClusterId(), middleware.getNamespace(), middleware.getName());
         // 删除备份相关
         middlewareBackupService.deleteMiddlewareBackupInfo(middleware.getClusterId(), middleware.getNamespace(), middleware.getType(), middleware.getName());
+        // 删除额外prometheus rules文件
+        prometheusRuleService.delete(middleware.getClusterId(), middleware.getNamespace(), ZEUS + LINE + middleware.getName());
         // 删除缓存数据
         systemConfigService.delete(middleware.toStringKey());
         removeSql(middleware);

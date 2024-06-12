@@ -62,6 +62,26 @@ public class PrometheusRuleServiceImpl implements PrometheusRuleService {
     }
 
     @Override
+    public void create(String clusterId, PrometheusRule prometheusRule) {
+        try {
+            prometheusRuleWrapper.create(clusterId, prometheusRule);
+        } catch (Exception e) {
+            log.error("集群{} 分区{} 告警规则创建失败", clusterId, prometheusRule.getMetadata().getNamespace());
+            throw new CaasRuntimeException(ErrorMessage.CREATE_RULES_FAILED);
+        }
+    }
+
+    @Override
+    public void delete(String clusterId, String namespace, String name) {
+        try {
+            prometheusRuleWrapper.delete(clusterId, namespace, name);
+        } catch (Exception e) {
+            log.error("集群{} 分区{} 告警规则删除失败", clusterId, namespace);
+            throw new CaasRuntimeException(ErrorMessage.DELETE_RULES_FAILED);
+        }
+    }
+
+    @Override
     public List<MiddlewareAlertsDTO> convertPrometheusRule(PrometheusRule prometheusRule) {
         List<MiddlewareAlertsDTO> middlewareAlertsDTOList = new ArrayList<>();
         prometheusRule.getSpec().getGroups().forEach(prometheusRuleGroups -> {

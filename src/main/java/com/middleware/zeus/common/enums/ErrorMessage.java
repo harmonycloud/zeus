@@ -295,7 +295,11 @@ public enum ErrorMessage {
 
     //alert
     PROMETHEUS_RULES_NOT_EXIST(650001, "prometheus alert rule is not exist.", "查询prometheus rule规则文件失败"),
-    UPDATE_RULES_FAILED(650002, "Failed to update  prometheus alert rules.", "更新告警规则失败"),
+    UPDATE_RULES_FAILED(650002, "Failed to update prometheus alert rules.", "更新告警规则失败"),
+
+    CREATE_RULES_FAILED(650003, "Failed to create prometheus alert rules.", "创建告警规则失败"),
+
+    DELETE_RULES_FAILED(650004, "Failed to delete prometheus alert rules.", "创建告警规则失败"),
 
     //minio
     BUCKET_ALREADY_EXISTS(650101, "Bucket already exists", "bucket已存在"),
