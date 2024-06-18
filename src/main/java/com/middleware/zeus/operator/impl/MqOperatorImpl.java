@@ -168,6 +168,7 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
             cluster = clusterService.findById(middleware.getClusterId());
         }
         StringBuilder sb = new StringBuilder();
+        StringBuilder ssb = new StringBuilder();
 
         // 实例扩容
         if (middleware.getQuota() != null && middleware.getQuota().get(middleware.getType()) != null) {
@@ -177,7 +178,7 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
             // 实例规格扩容
             // cpu
             if (StringUtils.isNotBlank(quota.getCpu())) {
-                sb.append("resources.requests.cpu=").append(quota.getCpu()).append(",resources.limits.cpu=")
+                ssb.append("resources.requests.cpu=").append(quota.getCpu()).append(",resources.limits.cpu=")
                     .append(quota.getLimitCpu()).append(",");
             }
             // memory
@@ -234,13 +235,19 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
         super.updateCommonValues(sb, middleware);
 
         // 没有修改，直接返回
-        if (sb.length() == 0) {
+
+        if (sb.length() == 0 && ssb.length() == 0) {
             return;
         }
         // 去掉末尾的逗号
-        sb.deleteCharAt(sb.length() - 1);
+        if (sb.length() > 0) {
+            sb.deleteCharAt(sb.length() - 1);
+        }
+        if (ssb.length() > 0) {
+            ssb.deleteCharAt(ssb.length() - 1);
+        }
         // 更新helm
-        helmChartService.upgrade(middleware, sb.toString(), cluster);
+        helmChartService.upgrade(middleware, sb.toString(), ssb.toString(), cluster);
     }
 
     @Override

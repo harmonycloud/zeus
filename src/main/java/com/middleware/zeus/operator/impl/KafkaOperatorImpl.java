@@ -1,8 +1,6 @@
 package com.middleware.zeus.operator.impl;
 
 import com.alibaba.fastjson.JSONObject;
-import com.middleware.zeus.common.enums.ErrorMessage;
-import com.middleware.zeus.common.exception.BusinessException;
 import com.middleware.zeus.annotation.Operator;
 import com.middleware.zeus.operator.api.KafkaOperator;
 import com.middleware.zeus.operator.miiddleware.AbstractKafkaOperator;
@@ -10,7 +8,6 @@ import com.middleware.zeus.common.model.middleware.*;
 import com.middleware.zeus.util.VersionUtil;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.util.ObjectUtils;
 
 import java.util.*;
 
@@ -153,7 +150,7 @@ public class KafkaOperatorImpl extends AbstractKafkaOperator implements KafkaOpe
         // 去掉末尾的逗号
         sb.deleteCharAt(sb.length() - 1);
         // 更新helm
-        helmChartService.upgrade(middleware, sb.toString(), cluster);
+        helmChartService.upgrade(middleware, sb.toString(), null, cluster);
     }
 
     @Override

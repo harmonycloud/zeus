@@ -150,11 +150,12 @@ public interface HelmChartService {
     /**
      * 更新已发布的helm chart
      *
-     * @param middleware   中间件信息
-     * @param updateValues 修改的values，多个值用英文逗号分隔，如aliasName=n1,test=true
-     * @param cluster      集群信息
+     * @param middleware         中间件信息
+     * @param updateValues       修改的values，多个值用英文逗号分隔，如aliasName=n1,test=true
+     * @param updateStringValues 修改的字符串的values，多个值用英文逗号分隔，如aliasName=n1,test=true
+     * @param cluster            集群信息
      */
-    void upgrade(Middleware middleware, String updateValues, MiddlewareClusterDTO cluster);
+    void upgrade(Middleware middleware, String updateValues, String updateStringValues, MiddlewareClusterDTO cluster);
 
     /**
      * 更新已发布的helm chart

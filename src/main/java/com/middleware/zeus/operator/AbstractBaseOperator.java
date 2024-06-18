@@ -379,7 +379,7 @@ public abstract class AbstractBaseOperator {
         // 去掉末尾的逗号
         sb.deleteCharAt(sb.length() - 1);
         // 更新helm
-        helmChartService.upgrade(middleware, sb.toString(), cluster);
+        helmChartService.upgrade(middleware, sb.toString(), null, cluster);
     }
     /**
      * 更新通用字段
@@ -475,7 +475,7 @@ public abstract class AbstractBaseOperator {
                 .append(",");
         }
         sb.deleteCharAt(sb.length() - 1);
-        helmChartService.upgrade(middleware, sb.toString(), clusterService.findById(middleware.getClusterId()));
+        helmChartService.upgrade(middleware, sb.toString(), null, clusterService.findById(middleware.getClusterId()));
     }
 
     public void deleteCustomConfigHistory(Middleware mw) {

@@ -383,7 +383,7 @@ public class IngressServiceImpl implements IngressService {
                 new Middleware(clusterId, namespace, middlewareName, ingressDTO.getMiddlewareType());
             middleware.setChartName(ingressDTO.getMiddlewareType());
             middleware.setChartVersion(helmChartService.getChartVersion(values, ingressDTO.getMiddlewareType()));
-            helmChartService.upgrade(middleware, "redis.externalAccess.enabled=false", cluster);
+            helmChartService.upgrade(middleware, "redis.externalAccess.enabled=false", null, cluster);
         }
     }
 
