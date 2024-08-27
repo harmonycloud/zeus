@@ -130,7 +130,6 @@ public abstract class AbstractUserService {
      * @param projectId
      * @return
      */
-
     public List<ResourceMenuDto> menu(String organId, String projectId) {
         CurrentUser currentUser = CurrentUserRepository.getUser();
         String username = JwtTokenComponent.checkToken(currentUser.getToken()).getValue().getString(USERNAME);

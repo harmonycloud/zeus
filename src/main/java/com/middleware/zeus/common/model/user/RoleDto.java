@@ -18,7 +18,7 @@ import java.util.Map;
 @Accessors(chain = true)
 @Data
 @ApiModel("角色")
-@TranslateGroupInfo(name="role",uniqueKeyName="id")
+@TranslateGroupInfo(name="role",uniqueKeyName="weight")
 public class RoleDto {
 
     @ApiModelProperty("id")

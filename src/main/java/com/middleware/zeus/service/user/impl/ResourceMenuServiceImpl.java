@@ -5,6 +5,7 @@ import com.middleware.zeus.common.model.user.ResourceMenuDto;
 import com.middleware.zeus.bean.user.BeanResourceMenu;
 import com.middleware.zeus.dao.user.BeanResourceMenuMapper;
 import com.middleware.zeus.service.user.ResourceMenuService;
+import com.skyview.language.annotations.TranslateAfterResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +45,7 @@ public class ResourceMenuServiceImpl implements ResourceMenuService {
     }
 
     @Override
+    @TranslateAfterResult
     public List<ResourceMenuDto> list(List<Integer> ids) {
         QueryWrapper<BeanResourceMenu> resourceMenuWrapper = new QueryWrapper<>();
         List<BeanResourceMenu> beanResourceMenuList = beanResourceMenuMapper.selectList(resourceMenuWrapper);

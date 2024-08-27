@@ -1,5 +1,7 @@
 package com.middleware.zeus.common.model.user;
 
+import com.skyview.language.annotations.Translate;
+import com.skyview.language.annotations.TranslateGroupInfo;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -15,6 +17,7 @@ import java.util.Objects;
 @Accessors(chain = true)
 @Data
 @ApiModel("菜单栏")
+@TranslateGroupInfo(name="resource_menu",uniqueKeyName="id")
 public class ResourceMenuDto implements Comparable<ResourceMenuDto> {
 
     @ApiModelProperty("id")
@@ -24,6 +27,7 @@ public class ResourceMenuDto implements Comparable<ResourceMenuDto> {
     private String name;
 
     @ApiModelProperty("中文名称")
+    @Translate(keyName="aliasName")
     private String aliasName;
 
     @ApiModelProperty("权重排序")
