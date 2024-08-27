@@ -12,6 +12,7 @@ import com.middleware.zeus.service.middleware.MiddlewareInfoService;
 import com.middleware.zeus.service.registry.HelmChartService;
 import com.middleware.zeus.service.system.LicenseService;
 import com.middleware.zeus.service.user.*;
+import com.skyview.language.annotations.TranslateAfterResult;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -113,6 +114,7 @@ public class RoleServiceImpl implements RoleService {
     }
 
     @Override
+    @TranslateAfterResult
     public List<RoleDto> list(String key) {
         // 获取所有角色信息
         QueryWrapper<BeanRole> roleWrapper = new QueryWrapper<>();

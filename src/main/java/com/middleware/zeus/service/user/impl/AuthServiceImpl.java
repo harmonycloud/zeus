@@ -112,7 +112,7 @@ public class AuthServiceImpl extends AbstractAuthService implements AuthService 
         Boolean switched = values.getJSONObject("args").getBoolean("disasterRecoverySwitched");
         boolean isMaster = "master-slave".equals(values.getString("type"));
         if (!isAdmin && !isMaster) {
-            throw new BusinessException(ErrorMessage.DISASTER_ONLY_ADMIN_CAN_LOGING);
+            throw new BusinessException(ErrorMessage.DISASTER_ONLY_ADMIN_CAN_LOGIN);
         }
         // 主平台切换后无法登陆
         if (switched != null && switched && !isMaster) {

@@ -1,28 +1,27 @@
 package com.middleware.zeus.filter;
 
-import com.alibaba.fastjson.JSONObject;
-import com.middleware.caas.filters.base.BaseResult;
-import com.middleware.caas.filters.exception.AuthRuntimeException;
-import com.middleware.caas.filters.token.JwtTokenComponent;
-import com.middleware.caas.filters.user.CurrentUser;
-import com.middleware.caas.filters.user.CurrentUserRepository;
-import com.middleware.zeus.skyview.client.Skyview2UserServiceClient;
-import com.middleware.zeus.util.ApplicationContextGetBeanHelper;
-import com.middleware.zeus.util.ApplicationUtil;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.util.StringUtils;
+import static com.middleware.caas.filters.base.GlobalKey.USER_TOKEN;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.Date;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
-import static com.middleware.caas.filters.base.GlobalKey.USER_TOKEN;
+import com.middleware.zeus.util.token.JwtTokenComponent;
+import org.springframework.http.HttpStatus;
+import org.springframework.util.StringUtils;
+
+import com.alibaba.fastjson.JSONObject;
+import com.middleware.caas.filters.base.BaseResult;
+import com.middleware.caas.filters.exception.AuthRuntimeException;
+import com.middleware.caas.filters.user.CurrentUser;
+import com.middleware.caas.filters.user.CurrentUserRepository;
+import com.middleware.zeus.util.ApplicationUtil;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author xutianhong
@@ -112,22 +111,17 @@ public class TokenFilter implements Filter {
     }
 
     private void dealToken(String token, HttpServletResponse httpResponse) {
-        JwtTokenComponent.JWTResultEnum resultEnum = JwtTokenComponent.checkToken(token);
-        if (JwtTokenComponent.JWTResultEnum.SUCCESS.getCode() != resultEnum.getCode()) {
-            throw new AuthRuntimeException(resultEnum.getMessage(), (Integer)null, resultEnum.getDetailMessage());
-        } else {
-            log.debug("Token 认证通过：{}", token);
-            JSONObject userMap = resultEnum.getValue();
-            if (userMap.containsKey("caasToken")) {
-                checkRefreshCaasToken(userMap);
-            }
-            long currentTime = System.currentTimeMillis();
-            httpResponse.setHeader(USER_TOKEN, JwtTokenComponent.generateToken("userInfo", userMap,
-                new Date(currentTime + (long)(ApplicationUtil.getExpire() * 3600000L)), new Date(currentTime - 300000L)));
-            CurrentUser currentUser = (new CurrentUser()).setUsername(userMap.getString("username"))
-                .setNickname(userMap.getString("aliasName")).setToken(token);
-            CurrentUserRepository.setUser(currentUser);
+        JSONObject userMap = JwtTokenComponent.checkToken(token);
+        log.debug("Token 认证通过：{}", token);
+        if (userMap.containsKey("caasToken")) {
+            checkRefreshCaasToken(userMap);
         }
+        long currentTime = System.currentTimeMillis();
+        httpResponse.setHeader(USER_TOKEN, JwtTokenComponent.generateToken("userInfo", userMap,
+                new Date(currentTime + (long)(ApplicationUtil.getExpire() * 3600000L)), new Date(currentTime - 300000L)));
+        CurrentUser currentUser = (new CurrentUser()).setUsername(userMap.getString("username"))
+                .setNickname(userMap.getString("aliasName")).setToken(token);
+        CurrentUserRepository.setUser(currentUser);
     }
 
     @Override

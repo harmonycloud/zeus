@@ -7,6 +7,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration;
 import org.springframework.boot.autoconfigure.ldap.LdapAutoConfiguration;
 import org.springframework.cloud.openfeign.EnableFeignClients;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
@@ -17,7 +18,8 @@ import springfox.documentation.oas.annotations.EnableOpenApi;
 @EnableScheduling
 @EnableFeignClients
 @EnableTransactionManagement
-@MapperScan("com.middleware.zeus.dao")
+@EnableAspectJAutoProxy
+@MapperScan({"com.middleware.zeus.dao", "com.skyview.language.mapper"})
 @ForestScan(basePackages = {"com.middleware.zeus.skyviewservice","com.middleware.zeus.httpservice", "com.middleware.zeus.integration.dashboard", "com.middleware.zeus.skyview", "com.middleware.zeus.integration.platform"})
 @SpringBootApplication(scanBasePackages = "com.middleware", exclude = {LdapAutoConfiguration.class, RedisAutoConfiguration.class})
 public class ZeusApplication {

@@ -2,6 +2,7 @@ package com.middleware.zeus.common.enums;
 
 import java.text.MessageFormat;
 
+@Deprecated
 public enum ErrorCodeMessage {
     UNKNOWN(100001, "System error, please contact Administrator.", "系统错误，请联系系统管理员"),
     INVALID_PARAMETER(100002, "Invalid parameter.", "参数错误"),

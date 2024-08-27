@@ -1,13 +1,15 @@
 package com.middleware.zeus.service.k8s.impl;
 
-import com.middleware.zeus.common.enums.ErrorCodeMessage;
-import com.middleware.zeus.common.exception.CaasRuntimeException;
-import com.middleware.zeus.service.k8s.K8sExecService;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
+
+import org.springframework.stereotype.Service;
+
+import com.middleware.zeus.common.enums.ErrorMessage;
+import com.middleware.zeus.common.exception.BusinessException;
+import com.middleware.zeus.service.k8s.K8sExecService;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author xutianhong
@@ -47,7 +49,7 @@ public class K8sExecServiceImpl implements K8sExecService {
 
         } catch (Exception e) {
             log.error("出现异常:", e);
-            throw new CaasRuntimeException(String.valueOf(ErrorCodeMessage.RUN_COMMAND_ERROR));
+            throw new BusinessException(ErrorMessage.CMD_RUN_FAILED);
         } finally {
             if (null != process) {
                 process.destroy();

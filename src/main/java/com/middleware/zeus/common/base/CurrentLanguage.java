@@ -5,6 +5,7 @@ package com.middleware.zeus.common.base;
  * @date 2021/01/21
  * 当前语言，需要初始化
  */
+@Deprecated
 public class CurrentLanguage {
 
     private static final ThreadLocal<String> currentLanguage = new ThreadLocal<>();

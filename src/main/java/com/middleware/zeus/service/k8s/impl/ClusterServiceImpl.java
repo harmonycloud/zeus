@@ -28,7 +28,6 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.middleware.zeus.common.base.BaseResult;
 import com.middleware.zeus.common.enums.DictEnum;
-import com.middleware.zeus.common.enums.ErrorCodeMessage;
 import com.middleware.zeus.common.enums.ErrorMessage;
 import com.middleware.zeus.common.exception.BusinessException;
 import com.middleware.zeus.common.exception.CaasRuntimeException;
@@ -565,7 +564,7 @@ public class ClusterServiceImpl extends AbstractClusterService implements Cluste
 
         } catch (Exception e) {
             log.error("出现异常:", e);
-            throw new CaasRuntimeException(String.valueOf(ErrorCodeMessage.RUN_COMMAND_ERROR));
+            throw new BusinessException(ErrorMessage.CMD_RUN_FAILED);
         } finally {
             if (null != process) {
                 process.destroy();

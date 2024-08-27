@@ -1,5 +1,7 @@
 package com.middleware.zeus.common.model.user;
 
+import com.skyview.language.annotations.Translate;
+import com.skyview.language.annotations.TranslateGroupInfo;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -16,11 +18,13 @@ import java.util.Map;
 @Accessors(chain = true)
 @Data
 @ApiModel("角色")
+@TranslateGroupInfo(name="role",uniqueKeyName="id")
 public class RoleDto {
 
     @ApiModelProperty("id")
     private Integer id;
     @ApiModelProperty("角色名称")
+    @Translate(keyName="name")
     private String name;
     @ApiModelProperty("角色类型: manager/normal")
     private String type;

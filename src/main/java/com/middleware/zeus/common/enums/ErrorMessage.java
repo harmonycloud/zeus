@@ -1,56 +1,42 @@
 package com.middleware.zeus.common.enums;
 
-import com.middleware.zeus.common.base.CurrentLanguage;
+import com.middleware.zeus.util.SpringContextUtils;
+import com.skyview.language.service.LanguageErrorEnumUtilService;
 
 public enum ErrorMessage {
     // common
     UNKNOWN(100001, "System error, please contact Administrator.", "系统错误，请联系系统管理员"),
     INVALID_PARAMETER(100002, "Invalid parameter.", "参数错误"),
     VALIDATE_FAILED(100003, "Validate failed.", "校验失败"),
-    DATE_FORMAT_PARSE_ERROR(100004, "Format date string to date failed", "无法转换无效的日期格式"),
-    CREATE_TEMPORARY_FILE_ERROR(100005, "Fail to create the temporary file", "创建临时文件失败"),
-    SOURCE_FILE_NOT_FOUND(100006, "Source file not found", "源文件不存在"),
-    TARGET_FILE_NOT_FOUND(100007, "Target file not found", "目标文件不存在"),
-    IO_FAILED(100008, "I/O failed", "I/O失败"),
-    AUTH_FAILED(100009, "Auth failed", "认证失败"),
-    YAML_FORMAT_WRONG(100010,"yaml format incorrect.","yaml格式不正确！"),
-    PARSE_OBJECT_TO_CONFIGMAP_FAILED(100011,"failed to parse object to configmap","转换为configmap失败"),
-    CERTIFICATE_AUTH_FAILED(100012, "Auth failed", "认证失败,您的集群证书信息可能有误"),
-    PARAMETER_NOT_COMPLETE(100013, "Parameter is not complete", "参数不全"),
-
-    NOT_SUIT_OPERATOR_IMPL(100009, "Cannot found suit operator for this interface. please contact Administrator.", "未能找到适配的操作实现类，请联系系统管理员"),
-    NOT_SUIT_FACTORY_IMPL(100010, "Cannot found suit factory for this interface. please contact Administrator.", "未能找到适配的工厂族，请联系系统管理员"),
-    QUERY_FAIL(100011, "Query failed.", "查询失败"),
-    NOT_EXIST(100012, "Not exists.", "不存在"),
-    CREATE_FAIL(100013, "Create fail.", "创建失败"),
-    UPDATE_FAIL(100014, "Update fail.", "更新失败"),
-    NOT_BLANK(100015, "Can not be blank.", "不能为空"),
-    FILE_DOWNLOAD_FAIL(100016, "File download fail.", "文件下载失败"),
+    CREATE_TEMPORARY_FILE_ERROR(100004, "Fail to create the temporary file", "创建临时文件失败"),
+    TARGET_FILE_NOT_FOUND(100005, "Target file not found", "目标文件不存在"),
+    IO_FAILED(100006, "I/O failed", "I/O失败"),
+    AUTH_FAILED(100007, "Auth failed", "认证失败"),
+    YAML_FORMAT_WRONG(100008,"yaml format incorrect.","yaml格式不正确！"),
+    PARSE_OBJECT_TO_CONFIGMAP_FAILED(10009,"failed to parse object to configmap","转换为configmap失败"),
+    CERTIFICATE_AUTH_FAILED(100010, "Auth failed", "认证失败,您的集群证书信息可能有误"),
+    PARAMETER_NOT_COMPLETE(100011, "Parameter is not complete", "参数不全"),
+    QUERY_FAIL(100012, "Query failed.", "查询失败"),
+    NOT_EXIST(100013, "Not exists.", "不存在"),
+    CREATE_FAIL(100014, "Create fail.", "创建失败"),
+    UPDATE_FAIL(100015, "Update fail.", "更新失败"),
+    NOT_BLANK(100016, "Can not be blank.", "不能为空"),
     CMD_RUN_FAILED(100017, "Cmd run failed", "命令运行失败"),
     SWITCH_FAILED(100018, "Switch fail.", "切换失败"),
     EXIST(100019, "Existing.", "已存在"),
     UPDATE_CONFIGMAP_FAILED(100020, "failed to update configmap", "更新配置文件失败"),
     NOT_EXIST_OR_NOT_RUNNING(100021, "not exist or not running", "不存在或运行异常"),
-
-    LIST_BACKUP_FAILED(100020, "list backup failed", "获取备份列表失败"),
-    CREATE_BACKUP_FAILED(100021, "create backuop failed", "创建备份失败"),
-    DELETE_BACKUP_FILE_FAILED(100022,"delete backup failed", "删除备份文件失败"),
-    BACKUP_FILE_NOT_EXIST(100023, "backup file not exist", "备份文件不存在"),
-    DELETE_BACKUP_FAILED(100024, "delete backup failed", "删除备份失败"),
-    TIME_PICK_ERROR(100025, "Time pick error, please try again", "时间选择错误，请重新选择"),
-    MIDDLEWARE_BACKUP_UPDATE_FAILED(100026, "middleware backup update failed", "中间件备份任务更新失败"),
-    INC_BACKUP_SCHEDULE_ERROR(100027, "increment middleware backup schedule error", "增量备份cr资源异常"),
-    SYNC_SLAVE_NOT_FOUND(100028,"sync_slave not found", "同步节点未找到"),
-    FIND_BACKUP_SCHEDULE_CRON_FAILED(100029,"find backup schedule cron failed","查找备份周期失败"),
-
-    FAILED_INITIALIZE(100026, "Failed to initialize", "根据license初始化资源失败"),
-    LICENSE_PRIVILEDGE_ERROR(100027, "privilege error of license", "license获取权限异常"),
-    LICENSE_DECODE_ERROR(100028, "privilege error of license", "license解密或类型转换失败"),
-    LICENSE_NULL_ERROR(100029,"license is null","license为空，请更新license"),
-    LICENSE_INVALID_TIME_ERROR(100030, "The time of License is invalida, please update the valid time.", "注册码时间已无效，请联系服务商，更新注册码的有效时间"),
-    START_DATE_AFTER_END(100031, "Date error, start date is after end date.", "开始时间大于结束时间"),
-    CALL_EXTERNAL_SERVICE_FAILED(100032, "call external service failed", "调用外部服务失败"),
-
+    LIST_BACKUP_FAILED(100022, "list backup failed", "获取备份列表失败"),
+    CREATE_BACKUP_FAILED(100023, "create backuop failed", "创建备份失败"),
+    DELETE_BACKUP_FILE_FAILED(100024,"delete backup failed", "删除备份文件失败"),
+    BACKUP_FILE_NOT_EXIST(100025, "backup file not exist", "备份文件不存在"),
+    DELETE_BACKUP_FAILED(100026, "delete backup failed", "删除备份失败"),
+    TIME_PICK_ERROR(100027, "Time pick error, please try again", "时间选择错误，请重新选择"),
+    MIDDLEWARE_BACKUP_UPDATE_FAILED(100028, "middleware backup update failed", "中间件备份任务更新失败"),
+    INC_BACKUP_SCHEDULE_ERROR(100029, "increment middleware backup schedule error", "增量备份cr资源异常"),
+    SYNC_SLAVE_NOT_FOUND(100030,"sync_slave not found", "同步节点未找到"),
+    FIND_BACKUP_SCHEDULE_CRON_FAILED(100031,"find backup schedule cron failed","查找备份周期失败"),
+    START_DATE_AFTER_END(100032, "Date error, start date is after end date.", "开始时间大于结束时间"),
     RESOURCE_METADATA_NOT_FOUND(100033, "resource metadata not found", "资源缺少metadata字段"),
     RESOURCE_KIND_NOT_FOUND(100034, "resource kind not found", "资源缺少kind字段"),
     RESOURCE_NAME_NOT_FOUND(100035, "resource name not found", "资源缺少name字段"),
@@ -60,16 +46,16 @@ public enum ErrorMessage {
     EMPTY_RESULT(100039, "result is empty", "结果为空"),
     DO_NOT_USE_CHINESE(100040, "do not use chinese", "请勿输入中文字符"),
     LOGIN_CAAS_API_FAILED(100041, "login caas api failed", "登录观云台失败"),
-
     LICENSE_CHECK_FAILED(100042, "license check failed", "license认证失败"),
     LICENSE_USED_IN_PLATFORM(100043, "license used in platform", "此license已与平台绑定"),
     LICENSE_CPU_RESOURCE_NOT_ENOUGH(100044, "license cpu resource not enough", "平台资源不足"),
-
     ACCESS_EXTERNAL_SERVICE_FAILED(100045, "Access to external service failed", "访问外部服务失败"),
     NO_AUTHORITY_WITH_EXTERNAL_SERVICE(100046, "no authority with external service", "无权限进行此操作"),
-
     BACKUP_SERVER_BOUND(100047, "backup server has bean bound", "备份服务器正在被使用"),
     SWITCH_TO_BACKUP_PLATFORM(100048, "switch to backup platform", "当前集群已由平台灾备功能进行切换，无法进行登录"),
+    ILLEGAL_TOKEN(100049, "Illegal token", "token不合法"),
+    TOKEN_TIMEOUT(100050, "Token has timed out", "token已超时"),
+    TOKEN_NOT_YET_EFFECTIVE(100051, "Token not yet effective", "token未到生效时间"),
 
     // internalService
     PARAMETER_VALUE_NOT_PROVIDE(101012, "Parameter cannot be null.", "参数不能为空"),
@@ -140,9 +126,9 @@ public enum ErrorMessage {
     RETENTION_RULE_NOT_EXIST(250001, "The retention rule not exist", "尚未创建镜像清理规则"),
 
     // target registry ping
-    TARGET_REGISTRY_INVALID(250001, "Target registry is invalid, please check metadata", "备份服务器信息有误，请检查信息填写是否有误或检查目标服务器状态"),
-    TARGET_REGISTRY_NOT_FOUND(250002, "Target registry not found", "找不到备份服务器，请检查信息填写是否有误或检查目标服务器状态"),
-    TARGET_REGISTRY_DUPLICATED(250003, "Target registry is duplicate, please check name and url", "备份服务器已存在，请检查名称和地址"),
+    TARGET_REGISTRY_INVALID(260001, "Target registry is invalid, please check metadata", "备份服务器信息有误，请检查信息填写是否有误或检查目标服务器状态"),
+    TARGET_REGISTRY_NOT_FOUND(260002, "Target registry not found", "找不到备份服务器，请检查信息填写是否有误或检查目标服务器状态"),
+    TARGET_REGISTRY_DUPLICATED(260003, "Target registry is duplicate, please check name and url", "备份服务器已存在，请检查名称和地址"),
 
     // cluster
     CLUSTER_NOT_FOUND(300001, "Cluster not found", "集群未找到"),
@@ -178,13 +164,20 @@ public enum ErrorMessage {
     STORAGE_CLASS_IS_BEING_USED(300031, "storage class is being used", "该存储正在被使用，无法删除"),
     INGRESS_CONFIGMAP_NOT_EXIST(300032, "ingress class has existed", "分区下的配置文件不存在"),
     CLUSTER_NOT_ADD_REPOSITORY(300033, "cluster not add repository", "集群未添加镜像仓库"),
-    COMPONENTS_NOT_FOUND(300033, "components not found", "组件包未找到"),
-    INGRESS_COMPONENTS_VALUES_NOT_FOUND(300033, "ingress components values not found", "负载均衡组件 values.yaml未找到"),
-    CLUSTER_NOT_SET_DEFAULT_REPOSITORY(300034, "cluster not set default repository", "集群未设置默认镜像仓库"),
-    STORAGE_NOT_ENOUGH(300036, "storage not enough", "存储不足"),
-    UPDATE_MAXIMUM_LOG_RETENTION_TIME_FAILED(300037,"update the maximum log retention time failed","更新日志最大保留时间失败"),
-    EMPTY_CLUSTER_ID(300038, "cluster id can't be empty", "集群id不能为空"),
-    CONFIGMAP_NOT_EXIST(300039, "configmap not exist", "查询配置文件失败，未找到该配置文件"),
+    COMPONENTS_NOT_FOUND(300034, "components not found", "组件包未找到"),
+    INGRESS_COMPONENTS_VALUES_NOT_FOUND(300035, "ingress components values not found", "负载均衡组件 values.yaml未找到"),
+    CLUSTER_NOT_SET_DEFAULT_REPOSITORY(300036, "cluster not set default repository", "集群未设置默认镜像仓库"),
+    STORAGE_NOT_ENOUGH(300037, "storage not enough", "存储不足"),
+    UPDATE_MAXIMUM_LOG_RETENTION_TIME_FAILED(300038,"update the maximum log retention time failed","更新日志最大保留时间失败"),
+    EMPTY_CLUSTER_ID(300039, "cluster id can't be empty", "集群id不能为空"),
+    CONFIGMAP_NOT_EXIST(300040, "configmap not exist", "查询配置文件失败，未找到该配置文件"),
+    LOG_SEARCH_TYPE_NOT_SUPPORT(300041, "search type not support.", "查询类型不支持"),
+    // pod
+    POD_NOT_EXIST(300042, "Pod not exist.", "POD不存在"),
+    NS_POD_CONTAINER_NOT_BLANK(300044, "deploy pod and container can not be blank at same.", "服务名、pod名称和容器名称不能都为空"),
+    POD_MIGRATE_FAILED(300044, "pod migrate failed", "POD迁移失败"),
+    SWITCH_FAILD_BECAUSE_DELAY(300045,"sync_slave pod have data delay","sync同步节点存在数据延迟"),
+    POD_MIGRATE_NOT_EXISTS(300046, "pod migrate info not exists", "pod迁移信息不存在"),
 
     // node 301xxx
     EDGE_NODE_PACKAGE_NOT_FOUND(301001, "Install package not found", "安装包未找到，请先生成"),
@@ -192,13 +185,6 @@ public enum ErrorMessage {
     NODE_CONTAINS_MIDDLEWARE_PODS(301003, "node contains middleware pods", "节点上存在中间件pods， 不能移除"),
 
     GRAFANA_LOGIN_FAIL(302001, "Grafana login fail.", "Grafana登录失败"),
-
-    // pod
-    POD_NOT_EXIST(400012, "Pod not exist.", "POD不存在"),
-    NS_POD_CONTAINER_NOT_BLANK(400013, "deploy pod and container can not be blank at same.", "服务名、pod名称和容器名称不能都为空"),
-    POD_MIGRATE_FAILED(400014, "pod migrate failed", "POD迁移失败"),
-    SWITCH_FAILD_BECAUSE_DELAY(400015,"sync_slave pod have data delay","sync同步节点存在数据延迟"),
-    POD_MIGRATE_NOT_EXISTS(400016, "pod migrate info not exists", "pod迁移信息不存在"),
 
     //user
     USER_NOT_EXIT(400001, "user not exit.", "用户不存在"),
@@ -227,9 +213,9 @@ public enum ErrorMessage {
     SMTP_SERVER_CONNECT_FAILED(400022, "connect to smtp server failed", "smtp邮箱服务器连接失败"),
     MAIL_INCOMPLETE_PARAMETERS(400023, "Incomplete parameters", "邮箱参数不全"),
     MAIL_ADDRESS_INVALID(400024, "invalid mail address", "邮箱地址不合法"),
-    DING_SERVER_CONNECT_FAILED(400024, "connect to ding server failed", "钉钉连接失败"),
-    DING_INCOMPLETE_PARAMETERS(400025, "Incomplete parameters", "钉钉参数不全"),
-    WEB_HOOK_REPETITION(400026,"webhook repetition","webhook重复"),
+    DING_SERVER_CONNECT_FAILED(400025, "connect to ding server failed", "钉钉连接失败"),
+    DING_INCOMPLETE_PARAMETERS(400026, "Incomplete parameters", "钉钉参数不全"),
+    WEB_HOOK_REPETITION(400027,"webhook repetition","webhook重复"),
 
     // mysql database manage
     MYSQL_INCOMPLETE_PARAMETERS(400050, "Incomplete parameters", "参数不全"),
@@ -242,9 +228,8 @@ public enum ErrorMessage {
     PROJECT_NOT_EXIST(400101, "project not exist", "项目不存在"),
     PROJECT_NAMESPACE_ALREADY_BIND(400102, "project namespace already bind", "该分区已与项目绑定"),
     PROJECT_IS_NOT_EMPTY(400103, "project is not empty", "项目下不为空，无法删除"),
-    PROJECT_NAME_EXIST(400101, "project name exist", "项目名称已存在"),
-    NAMESPACE_IS_NOT_EMPTY(400104, "namespace is not empty", "分区存在中间件，无法取消接入"),
-    PROJECT_NOT_EXIST_OR_DELETED(400105, "project not exist or deleted", "项目不存在或已被删除"),
+    PROJECT_NAME_EXIST(400104, "project name exist", "项目名称已存在"),
+    NAMESPACE_IS_NOT_EMPTY(400105, "namespace is not empty", "分区存在中间件，无法取消接入"),
     PROJECT_STORAGE_USING(400106, "project storage using", "该存储存在已分配配额于命名空间，请先取消分配"),
     PROJECT_CPU_MEMORY_USING(400107, "project cpu memory using", "该cpu memory存在已分配配额于命名空间，请先取消分配"),
     PROJECT_BACKUP_SERVER_USING(400108, "project backup server using", "该备份服务器已绑定备份位置，请先取消绑定"),
@@ -319,7 +304,6 @@ public enum ErrorMessage {
     MIDDLEWARE_SUCCESS_INGRESS_FAIL(700006, "Middleware create success, but expose fail, please try again in the detail page", "中间件创建成功，对外访问创建失败，请稍后在详情页重试"),
     MIDDLEWARE_BACKUP_STORAGE_NOT_EXIST(700007, "Middleware backup storage is not exist.", "中间件备份的存储不存在"),
     MIDDLEWARE_SIZE_LIMIT(700008, "The number of Middleware reaches the limit. Please update the license.", "中间件数量达到上限，请更新license"),
-
     MIDDLEWARE_UPLOAD_FAILED(700009, "Upload failed!","上传失败"),
     MIDDLEWARE_UPDATE_MYSQL_CONFIG_FAILED(700010, "Failed to update custom config to mysql!", "同步自定义配置至数据库失败"),
     CREATE_DYNAMIC_FORM_FAILED(700011, "Failed to create dynamic form!", "生成动态表单失败"),
@@ -331,14 +315,13 @@ public enum ErrorMessage {
     FIND_POD_IN_MIDDLEWARE_FAIL(700017, "failed to find pod in middleware", "通过middleware确认pod失败"),
     PARSE_VALUES_FAILED(700018, "failed to parse values from string to JSONObject", "将values.yaml转换为JSONObject失败"),
     MYSQL_CONFIG_UPDATE_FAILED(700019, "failed to set global for mysql", "mysql手动执行set global设置参数失败"),
-    REDIS_CONFIG_UPDATE_FAILED(700019, "failed to config set for redis", "redis手动执行config set设置参数失败"),
-    CUSTOM_CONFIG_IS_EMPTY(700020, "custom config is empty", "参数配置列表不能为空"),
-    CUSTOM_CONFIG_VALUE_IS_EMPTY(700021, "custom config values is empty", "参数配置数值不能为空"),
-    CUSTOM_CONFIG_TEMPLATE_EXIST(700022, "custom config template exist", "存在同名模板"),
-    MIDDLEWARE_CONTROLLER_NOT_INSTALL(700023, "middleware controller component not install", "中间件管理组件未安装"),
-    MIDDLEWARE_CONTROLLER_INSTALL_FAILED(700024, "middleware controller component install failed", "安装middleware-controller失败"),
-    SAME_NAME_MIDDLEWARE_STORAGE_EXIST(700025, "same name middleware storage still exist", "存在同名中间件未清除数据"),
-    FIND_MIDDLEWARE_INFO_FAILED(700026, "failed to find middleware into", "未在数据库中查询到该类型中间件的信息"),
+    REDIS_CONFIG_UPDATE_FAILED(700020, "failed to config set for redis", "redis手动执行config set设置参数失败"),
+    CUSTOM_CONFIG_IS_EMPTY(700021, "custom config is empty", "参数配置列表不能为空"),
+    CUSTOM_CONFIG_VALUE_IS_EMPTY(700022, "custom config values is empty", "参数配置数值不能为空"),
+    CUSTOM_CONFIG_TEMPLATE_EXIST(700023, "custom config template exist", "存在同名模板"),
+    MIDDLEWARE_CONTROLLER_NOT_INSTALL(700024, "middleware controller component not install", "中间件管理组件未安装"),
+    MIDDLEWARE_CONTROLLER_INSTALL_FAILED(700025, "middleware controller component install failed", "安装middleware-controller失败"),
+    SAME_NAME_MIDDLEWARE_STORAGE_EXIST(700026, "same name middleware storage still exist", "存在同名中间件未清除数据"),
     CRD_NOT_EXISTED(700027, "crd not exist", "缺少crd资源"),
     RESOURCE_ALREADY_EXISTED(700028, "the component already exists", "该组件已存在"),
     MIDDLEWARE_MANAGER_PLATFORM_NOT_SUPPORT(700029, "middleware manager platform not support", "此类型中间件暂不支持管理控制台"),
@@ -346,8 +329,7 @@ public enum ErrorMessage {
     MIDDLEWARE_PVC_ROLL_BACK_FAILED(700031, "middleware pvc roll back failed", "中间件存储回滚失败"),
     NAMESPACE_QUOTA_NOT_ENOUGH(700032, "namespace quota not enough", "分区配额不足"),
     MIDDLEWARE_MAINTENANCE_SCALE_UP_NOT_FOUND(700033, "middleware maintenance scale up not found", "中间件存储扩容 cr对象未找到"),
-    MAINTENANCE_STATUS_ERROR(700033, "maintenance status error", "扩容cr状态异常"),
-    GET_AUTOSWITCH_FAILED(700034,"get autoSwitch failed","查询自动切换状态异常"),
+    MAINTENANCE_STATUS_ERROR(700034, "maintenance status error", "扩容cr状态异常"),
     GET_CUSTOM_CONFIG_ROLE_FAILED(700035, "get custom config role failed", "获取自定义配置节点类型失败"),
     CUSTOM_CONFIG_ROLE_CAN_NOT_BE_NULL(700036, "custom config role can not be null", "参数节点类型不能为空"),
     UPDATE_CUSTOM_CONFIG_FAILED(700037, "update config config failed", "更新自定义参数失败"),
@@ -368,16 +350,6 @@ public enum ErrorMessage {
     UPGRADE_OPERATOR_UPDATING(720003, "Operator is updating", "Operator正在升级中"),
     UPGRADE_OPERATOR_TOO_LOWER(720004, "Current operator version is too lower,please upgrade operator", "当前中间件版本太低,请先升级operator"),
     OPERATOR_INFO_ERROR(720005,"operator info error","对应operator信息有误"),
-
-    // backup server
-    FAILED_TO_SAVE_BACKUP_SERVER_DETAIL(730000, "failed to save backup server detail", "保存备份服务器详细信息失败"),
-    BACKUP_SERVER_ALREADY_USED(730001, "This item has already created a backup location using this backup server, and cannot be created again", "该项目已使用该备份服务器创建过备份位置了，无法再次创建"),
-    BACKUP_SERVER_NOT_FOUND(730002, "can't found backup server", "未找到服务器"),
-    SERVER_NAME_ALREADY_EXISTS(730003,"the server name already exists","服务器名称已存在"),
-    SERVER_ADDRESS_ALREADY_EXISTS(730003,"the server address already exists","服务器地址已存在"),
-    AUTHORIZATION_FAILED(730004, "authorization failed", "用户名或密码错误"),
-    FAILED_TO_DELETE_BACKUP_SERVER(730005, "failed to delete this backup server,which a backup task used it already", "存在使用该备份服务器的备份任务，无法删除该服务器"),
-    FAILED_TO_DELETE_BACKUP_POSITION(730006, "failed to delete this backup position,which a backup task used it already", "存在使用该备份位置的备份任务，无法删除该备份位置"),
 
     // postgresql
     POSTGRESQL_CREATE_DATABASE_FAILED(730001, "postgresql create database failed", "postgresql创建数据库失败"),
@@ -420,6 +392,16 @@ public enum ErrorMessage {
     DATABASE_EXISTS(800003, "database exists", "该数据库已存在"),
     FAILED_TO_EXEC_QUERY(800004, "failed to exec query", "SQL执行失败"),
 
+    // backup server
+    FAILED_TO_SAVE_BACKUP_SERVER_DETAIL(740000, "failed to save backup server detail", "保存备份服务器详细信息失败"),
+    BACKUP_SERVER_ALREADY_USED(740001, "This item has already created a backup location using this backup server, and cannot be created again", "该项目已使用该备份服务器创建过备份位置了，无法再次创建"),
+    BACKUP_SERVER_NOT_FOUND(740002, "can't found backup server", "未找到服务器"),
+    SERVER_NAME_ALREADY_EXISTS(740003,"the server name already exists","服务器名称已存在"),
+    SERVER_ADDRESS_ALREADY_EXISTS(740004,"the server address already exists","服务器地址已存在"),
+    AUTHORIZATION_FAILED(740005, "authorization failed", "用户名或密码错误"),
+    FAILED_TO_DELETE_BACKUP_SERVER(740006, "failed to delete this backup server,which a backup task used it already", "存在使用该备份服务器的备份任务，无法删除该服务器"),
+    FAILED_TO_DELETE_BACKUP_POSITION(740007, "failed to delete this backup position,which a backup task used it already", "存在使用该备份位置的备份任务，无法删除该备份位置"),
+
     // user
     CREATE_MYSQL_USER_FAILED(810001, "failed to create user", "创建用户失败"),
     DELETE_MYSQL_USER_FAILED(810002, "failed to create user", "删除用户失败"),
@@ -446,12 +428,9 @@ public enum ErrorMessage {
     FAILED_TO_OBTAIN_TABLE_DATA(820006, "failed to obtain table data", "查询表数据失败"),
     FAILED_TO_OBTAIN_TABLE_RECORD(820007, "failed to obtain table recordd", "查询表记录数  失败"),
     INCOMPLETE_TABLE_COLUMN(820008, "a table must have at least one column", "数据表至少应包含一行列信息"),
-    // columns
-    ALTER_TABLE_COLUMN_FAILED(830001, "failed to update table columns", "更新数据表列信息失败"),
-    // indices
-    ALTER_TABLE_INDICES_FAILED(840001, "failed to update table indices", "更新数据表索引信息失败"),
-    // foreignKeys
-    ALTER_TABLE_FOREIGN_KEYS_FAILED(850001, "failed to update table foreign keys", "更新数据表外键信息失败"),
+    ALTER_TABLE_COLUMN_FAILED(820009, "failed to update table columns", "更新数据表列信息失败"),
+    ALTER_TABLE_INDICES_FAILED(820010, "failed to update table indices", "更新数据表索引信息失败"),
+    ALTER_TABLE_FOREIGN_KEYS_FAILED(820011, "failed to update table foreign keys", "更新数据表外键信息失败"),
 
     //redis
     FAILED_TO_LOGIN_REDIS(860001, "failed to login redis,maybe wrong username or password", "登录redis失败，您的用户名或密码可能有误"),
@@ -466,9 +445,9 @@ public enum ErrorMessage {
     SWITCH_PLATFORM_NOT_SUPPORT(900002,"switch platform is not support","平台灾备切换功能不支持"),
     CONNECT_REMOTE_HOST_FAILED(900003,"please check your relation cluster is running or your connection address is right","请检查您的备集群是否正常运行，或链接地址是否正确"),
     REMOTE_SWITCH_FAILED(900004,"switch failed, please contact Administrator","切换失败，请联系系统管理员"),
-    SWITCH_NO_POWER(900004,"check whether the platform is connected to the primary platform","请检查平台是否被主平台接入"),
-    DISASTER_RECOVERY_NOT_SUPPORT(900005,"the primary platform does not support the dissterRecovery","主平台不支持灾备功能"),
-    DISASTER_ONLY_ADMIN_CAN_LOGING(900006,"the current platform is standby and only the super administrator can log in","当前为备平台，仅支持超级管理员登录")
+    SWITCH_NO_POWER(900005,"check whether the platform is connected to the primary platform","请检查平台是否被主平台接入"),
+    DISASTER_RECOVERY_NOT_SUPPORT(900006,"the primary platform does not support the dissterRecovery","主平台不支持灾备功能"),
+    DISASTER_ONLY_ADMIN_CAN_LOGIN(900007,"the current platform is standby and only the super administrator can log in","当前为备平台，仅支持超级管理员登录")
     ;
 
     private final int code;
@@ -485,10 +464,20 @@ public enum ErrorMessage {
         return code;
     }
 
-    public String getMsg() {
-        return LanguageEnum.isEnglish(CurrentLanguage.getLanguage()) ? enMsg : zhMsg;
+    public  String getMsg() {
+        LanguageErrorEnumUtilService languageErrorEnumUtilService = null;
+        try {
+            languageErrorEnumUtilService = SpringContextUtils.getBeanIgnoreNotFound(LanguageErrorEnumUtilService.class);
+        } catch (Exception e) {
+            return this.zhMsg;
+        }
+        if (languageErrorEnumUtilService == null) {
+            return this.zhMsg;
+        }
+        return languageErrorEnumUtilService.translateByErrorCodeWithDefault(this.code, this.zhMsg);
     }
 
+    @Deprecated
     public String getEnMsg() {
         return enMsg;
     }
@@ -496,4 +485,5 @@ public enum ErrorMessage {
     public String getZhMsg() {
         return zhMsg;
     }
+
 }

@@ -5,7 +5,6 @@ import com.alibaba.fastjson.JSONObject;
 import com.middleware.zeus.common.base.BaseResult;
 import com.middleware.zeus.common.enums.*;
 import com.middleware.zeus.common.exception.BusinessException;
-import com.middleware.zeus.common.exception.CaasRuntimeException;
 import com.middleware.zeus.util.page.PageObject;
 import com.middleware.zeus.common.model.middleware.*;
 import com.middleware.zeus.bean.BeanLogMsg;
@@ -96,7 +95,7 @@ public class LogServiceImpl implements LogService {
         if (StringUtils.isBlank(logQuery.getMiddlewareName())
                 && StringUtils.isBlank(logQuery.getPod())
                 && StringUtils.isBlank(logQuery.getContainer())) {
-            throw new CaasRuntimeException(String.valueOf(ErrorCodeMessage.NS_POD_CONTAINER_NOT_BLANK));
+            throw new BusinessException(ErrorMessage.NS_POD_CONTAINER_NOT_BLANK);
         }
         logQuery.setPageSize(MAX_EXPORT_LENGTH);
         SearchRequest request = this.getSearchRequestBuilder(logQuery);
@@ -114,7 +113,7 @@ public class LogServiceImpl implements LogService {
                 scrollResp = client.search(request, RequestOptions.DEFAULT);
             } else {
                 logger.error("导出日志失败，", e);
-                throw new CaasRuntimeException(String.valueOf(ErrorCodeMessage.QUERY_FAIL));
+                throw new BusinessException(ErrorMessage.QUERY_FAIL);
             }
         }
         long totalHit = scrollResp.getHits().getTotalHits().value;
@@ -144,7 +143,7 @@ public class LogServiceImpl implements LogService {
     @Override
     public BaseResult getLogContents(LogQuery logQuery) throws Exception {
         if (StringUtils.isBlank(logQuery.getNamespace())) {
-            throw new CaasRuntimeException(String.valueOf(ErrorCodeMessage.PARAMETER_VALUE_NOT_PROVIDE));
+            throw new BusinessException(ErrorMessage.PARAMETER_VALUE_NOT_PROVIDE);
         }
 
         AssertUtil.notBlank(logQuery.getClusterId(), DictEnum.CLUSTER_ID);
@@ -455,7 +454,7 @@ public class LogServiceImpl implements LogService {
         Date startDate = DateUtil.StringToDate(fromDate, style);
         Date endDate = DateUtil.StringToDate(toDate, style);
         if (!endDate.after(startDate)) {
-            throw new CaasRuntimeException(String.valueOf(ErrorCodeMessage.DATE_FROM_AFTER_TO));
+            throw new BusinessException(ErrorMessage.START_DATE_AFTER_END);
         }
         indexes = this.getIndexes(startDate, endDate, logQueryDto.getClusterId(), logQueryDto.isPodLog());
         logQuery.setIndexes(indexes);
@@ -467,7 +466,7 @@ public class LogServiceImpl implements LogService {
         if (StringUtils.isBlank(logQuery.getSearchType())) {
             logQuery.setSearchType(EsSearchTypeEnum.MATCH_PHRASE.getCode());
         } else if (EsSearchTypeEnum.getByCode(logQuery.getSearchType()) == null) {
-            throw new CaasRuntimeException(String.valueOf(ErrorCodeMessage.LOG_SEARCH_TYPE_NOT_SUPPORT));
+            throw new BusinessException(ErrorMessage.LOG_SEARCH_TYPE_NOT_SUPPORT);
         }
         return logQuery;
     }
