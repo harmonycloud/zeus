@@ -36,6 +36,7 @@ import com.middleware.zeus.service.middleware.impl.MysqlBackupServiceImpl;
 import com.middleware.zeus.util.middleware.ChartVersionUtil;
 import com.middleware.zeus.util.middleware.MiddlewareResourceCalculateUtil;
 import com.middleware.zeus.util.middleware.MysqlConnectionUtil;
+import com.middleware.zeus.util.numeric.ResourceCalculationUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -941,6 +942,16 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     @Override
     public ActiveAreaAnnotationDto getActiveAreaAnnotation(String clusterId, String namespace, String type, String middlewareName) {
         return super.getActiveAreaAnnotation(clusterId, namespace, type, middlewareName);
+    }
+
+    @Override
+    public Double calculateCpuRequest(JSONObject values) {
+        JSONObject resources = values.getJSONObject(RESOURCES);
+        if (resources == null) {
+            return 0.0;
+        }
+        String cpu = resources.getJSONObject(REQUESTS).getString(CPU);
+        return ResourceCalculationUtil.getResourceValue(cpu, CPU, "") * getReplicas(values);
     }
 
     @Override
