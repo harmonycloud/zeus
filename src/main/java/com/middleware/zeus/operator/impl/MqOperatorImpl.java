@@ -1,25 +1,23 @@
 package com.middleware.zeus.operator.impl;
 
-import static com.middleware.zeus.common.constants.NameConstant.CLUSTER;
-import static com.middleware.zeus.common.constants.NameConstant.MODE;
-import static com.middleware.zeus.common.constants.NameConstant.RESOURCES;
-import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.ARGS;
-
 import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
+import com.middleware.zeus.annotation.Operator;
 import com.middleware.zeus.common.enums.middleware.MiddlewareTypeEnum;
-import com.middleware.zeus.service.k8s.PodService;
+import com.middleware.zeus.common.enums.middleware.RocketMQModeEnum;
 import com.middleware.zeus.common.model.middleware.*;
 import com.middleware.zeus.operator.api.MqOperator;
 import com.middleware.zeus.operator.miiddleware.AbstractMqOperator;
+import com.middleware.zeus.service.k8s.PodService;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import org.apache.commons.lang3.StringUtils;
-
-import com.alibaba.fastjson.JSONObject;
-import com.middleware.zeus.common.enums.middleware.RocketMQModeEnum;
-import com.middleware.zeus.annotation.Operator;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.*;
+
+import static com.middleware.zeus.common.constants.NameConstant.*;
+import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.ARGS;
+import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.NAMESERVER;
 
 /**
  * @author dengyulong
@@ -133,6 +131,12 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
             rocketMQParam.setReplicas(clusterInfo.getInteger("membersPerGroup"));
             rocketMQParam.setGroup(clusterInfo.getInteger("groupReplica"));
 
+            if (values.containsKey(NAMESERVER)) {
+                if (values.getJSONObject(NAMESERVER).containsKey(REPLICAS)) {
+                    rocketMQParam.setNameserverProxyNum(values.getJSONObject(NAMESERVER).getInteger(REPLICAS));
+                }
+            }
+
             // 处理特殊调度策略
             if (values.containsKey("consoleDeploymentConfiguration")){
                 rocketMQParam.setConsoleNodeAffinity(convertDeployConfigAffinity(values.getJSONObject("consoleDeploymentConfiguration")));
@@ -164,6 +168,7 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
             cluster = clusterService.findById(middleware.getClusterId());
         }
         StringBuilder sb = new StringBuilder();
+        StringBuilder ssb = new StringBuilder();
 
         // 实例扩容
         if (middleware.getQuota() != null && middleware.getQuota().get(middleware.getType()) != null) {
@@ -173,7 +178,7 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
             // 实例规格扩容
             // cpu
             if (StringUtils.isNotBlank(quota.getCpu())) {
-                sb.append("resources.requests.cpu=").append(quota.getCpu()).append(",resources.limits.cpu=")
+                ssb.append("resources.requests.cpu=").append(quota.getCpu()).append(",resources.limits.cpu=")
                     .append(quota.getLimitCpu()).append(",");
             }
             // memory
@@ -230,13 +235,19 @@ public class MqOperatorImpl extends AbstractMqOperator implements MqOperator {
         super.updateCommonValues(sb, middleware);
 
         // 没有修改，直接返回
-        if (sb.length() == 0) {
+
+        if (sb.length() == 0 && ssb.length() == 0) {
             return;
         }
         // 去掉末尾的逗号
-        sb.deleteCharAt(sb.length() - 1);
+        if (sb.length() > 0) {
+            sb.deleteCharAt(sb.length() - 1);
+        }
+        if (ssb.length() > 0) {
+            ssb.deleteCharAt(ssb.length() - 1);
+        }
         // 更新helm
-        helmChartService.upgrade(middleware, sb.toString(), cluster);
+        helmChartService.upgrade(middleware, sb.toString(), ssb.toString(), cluster);
     }
 
     @Override

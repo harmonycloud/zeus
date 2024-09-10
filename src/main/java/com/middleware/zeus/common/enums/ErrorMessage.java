@@ -277,6 +277,7 @@ public enum ErrorMessage {
     TCP_PORT_ALREADY_USED(600014, "external routing port already used", "该端口已被使用"),
     INGRESS_NOT_AVAILABLE(600015, "the ingress is not available", "负载均衡不可用"),
     PORT_IS_DEFINED_BY_TRAEFIK(600016, "the port is defined by traefik", "该端口已被traefik占用"),
+    INGRESS_NODEPORT_PORT_NOT_NULL(600017, "Unknown NodPort for external routing", "对外路由NodPort端口未知"),
 
     //alert
     PROMETHEUS_RULES_NOT_EXIST(650001, "prometheus alert rule is not exist.", "查询prometheus rule规则文件失败"),

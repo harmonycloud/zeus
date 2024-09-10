@@ -109,7 +109,7 @@ public class ZookeeperOperatorImpl extends AbstractZookeeperOperator implements 
         // 去掉末尾的逗号
         sb.deleteCharAt(sb.length() - 1);
         // 更新helm
-        helmChartService.upgrade(middleware, sb.toString(), cluster);
+        helmChartService.upgrade(middleware, sb.toString(), null, cluster);
     }
 
     @Override

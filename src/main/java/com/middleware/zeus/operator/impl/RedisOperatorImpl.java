@@ -3,8 +3,6 @@ package com.middleware.zeus.operator.impl;
 import static com.middleware.zeus.common.constants.NameConstant.*;
 import static com.middleware.zeus.common.constants.NameConstant.MEMORY;
 import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.*;
-import static com.middleware.zeus.common.enums.middleware.ElasticSearchRoleEnum.*;
-import static com.middleware.zeus.common.enums.middleware.ElasticSearchRoleEnum.COLD;
 
 
 import cn.hutool.core.collection.CollectionUtil;
@@ -15,7 +13,6 @@ import com.middleware.zeus.common.constants.ContainerConstant;
 import com.middleware.zeus.common.enums.DictEnum;
 import com.middleware.zeus.common.enums.ErrorMessage;
 import com.middleware.zeus.common.enums.Protocol;
-import com.middleware.zeus.common.enums.middleware.ElasticSearchRoleEnum;
 import com.middleware.zeus.common.exception.BusinessException;
 import com.middleware.zeus.common.enums.middleware.MiddlewareTypeEnum;
 import com.middleware.zeus.common.model.*;
@@ -444,7 +441,7 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
         // 去掉末尾的逗号
         sb.deleteCharAt(sb.length() - 1);
         // 更新helm
-        helmChartService.upgrade(middleware, sb.toString(), cluster);
+        helmChartService.upgrade(middleware, sb.toString(), null, cluster);
     }
 
     @Override
