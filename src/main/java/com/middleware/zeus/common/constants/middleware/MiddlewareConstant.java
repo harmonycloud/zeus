@@ -115,4 +115,6 @@ public class MiddlewareConstant {
     public static final String SLAVE = "slave";
     public static final String SYNC_SLAVE = "sync_slave";
 
+    public static final String NAMESERVER = "nameserver";
+
 }

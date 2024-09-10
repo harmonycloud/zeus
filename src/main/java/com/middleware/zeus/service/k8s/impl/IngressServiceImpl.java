@@ -383,7 +383,7 @@ public class IngressServiceImpl implements IngressService {
                 new Middleware(clusterId, namespace, middlewareName, ingressDTO.getMiddlewareType());
             middleware.setChartName(ingressDTO.getMiddlewareType());
             middleware.setChartVersion(helmChartService.getChartVersion(values, ingressDTO.getMiddlewareType()));
-            helmChartService.upgrade(middleware, "redis.externalAccess.enabled=false", cluster);
+            helmChartService.upgrade(middleware, "redis.externalAccess.enabled=false", null, cluster);
         }
     }
 
@@ -1229,8 +1229,16 @@ public class IngressServiceImpl implements IngressService {
                 servicePort.setPort(Integer.parseInt(servicePortDTO.getPortDetailDtoList().get(0).getPort()));
                 servicePort.setTargetPort(new IntOrString(Integer.parseInt(servicePortDTO.getPortDetailDtoList().get(0).getTargetPort())));
             } else {
-                servicePort.setPort(9876);
-                servicePort.setTargetPort(new IntOrString(9876));
+                if (serviceDTO.getServiceName().contains("nameserver-proxy-svc")) {
+                    servicePort.setPort(9876);
+                    servicePort.setTargetPort(new IntOrString(9876));
+                } else if (serviceDTO.getServiceName().endsWith("-master")
+                        || serviceDTO.getServiceName().split("-")[serviceDTO.getServiceName().split("-").length - 2].equals("slave")) {
+                    servicePort.setPort(10911);
+                    servicePort.setTargetPort(new IntOrString(10911));
+                } else {
+                    throw new BusinessException(ErrorMessage.INGRESS_NODEPORT_PORT_NOT_NULL);
+                }
             }
         } else {
             servicePort.setPort(9094);

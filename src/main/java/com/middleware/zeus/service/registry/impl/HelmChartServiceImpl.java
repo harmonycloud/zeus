@@ -430,7 +430,7 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
     }
 
     @Override
-    public void upgrade(Middleware middleware, String updateValues, MiddlewareClusterDTO cluster) {
+    public void upgrade(Middleware middleware, String updateValues, String updateStringValues, MiddlewareClusterDTO cluster) {
         // helm upgrade
         if (StringUtils.isBlank(updateValues)) {
             return;
@@ -463,6 +463,11 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
         String cmd = String.format("helm upgrade %s %s --values %s --set %s -n %s --kube-apiserver %s --kubeconfig %s ",
             middleware.getName(), tgzFilePath, tempValuesYamlPath, updateValues, middleware.getNamespace(),
             cluster.getAddress(), clusterCertService.getKubeConfigFilePath(cluster.getId()));
+
+        if (StringUtils.isNotBlank(updateStringValues)) {
+            cmd = cmd + " --set-string " + updateStringValues + " ";
+        }
+
         try {
             execCmd(cmd, null);
         } finally {
@@ -480,7 +485,7 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
             throw new BusinessException(ErrorMessage.EMPTY_CLUSTER_ID);
         }
         MiddlewareClusterDTO clusterDTO = clusterService.findById(middleware.getClusterId());
-        this.upgrade(middleware, updateValues, clusterDTO);
+        this.upgrade(middleware, updateValues, null, clusterDTO);
     }
 
     @Override

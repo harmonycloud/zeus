@@ -471,7 +471,7 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
             sb.deleteCharAt(sb.length() - 1);
         }
         // 更新helm
-        helmChartService.upgrade(middleware, sb.toString(), cluster);
+        helmChartService.upgrade(middleware, sb.toString(), null, cluster);
 
     }
 

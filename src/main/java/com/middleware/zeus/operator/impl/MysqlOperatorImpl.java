@@ -358,7 +358,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         // 去掉末尾的逗号
         sb.deleteCharAt(sb.length() - 1);
         // 更新helm
-        helmChartService.upgrade(middleware, sb.toString(), cluster);
+        helmChartService.upgrade(middleware, sb.toString(), null, cluster);
         if (mysqlDTO != null && mysqlDTO.getOpenDisasterRecoveryMode() != null && mysqlDTO.getOpenDisasterRecoveryMode() && mysqlDTO.getIsSource()) {
             Middleware disasterRecoverMiddleware = middleware.getRelationMiddleware();
             disasterRecoverMiddleware.setChartName(middleware.getChartName());
@@ -903,7 +903,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
                 str.append(String.format("%s.%s=%s,", MysqlConstant.ARGS, MysqlConstant.RELATION_NAMESPACE, null));
                 str.append(String.format("%s.%s=%s,", MysqlConstant.ARGS, MysqlConstant.RELATION_NAME, null));
                 str.append(String.format("%s.%s=%s", MysqlConstant.ARGS, MysqlConstant.RELATION_ALIAS_NAME, null));
-                helmChartService.upgrade(relation, str.toString(), cluster);
+                helmChartService.upgrade(relation, str.toString(), null, cluster);
             } catch (Exception e) {
                 log.error("更新关联实例信息出错了", e);
             }

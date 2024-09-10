@@ -1,16 +1,13 @@
 package com.middleware.zeus.operator.impl;
 
 import static com.middleware.zeus.common.constants.NameConstant.*;
-import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.PREDIXY;
 import static com.middleware.zeus.common.enums.middleware.ElasticSearchRoleEnum.*;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-import com.alibaba.fastjson.JSONArray;
 import com.middleware.zeus.common.constants.CommonConstant;
 import com.middleware.zeus.common.enums.middleware.MiddlewareTypeEnum;
-import com.middleware.zeus.util.K8sConvert;
 import com.middleware.zeus.util.numeric.ResourceCalculationUtil;
 import com.middleware.zeus.common.model.middleware.*;
 import com.middleware.zeus.operator.api.EsOperator;
@@ -334,7 +331,7 @@ public class EsOperatorImpl extends AbstractEsOperator implements EsOperator {
         // 去掉末尾的逗号
         sb.deleteCharAt(sb.length() - 1);
         // 更新helm
-        helmChartService.upgrade(middleware, sb.toString(), cluster);
+        helmChartService.upgrade(middleware, sb.toString(), null, cluster);
     }
 
     @Override
