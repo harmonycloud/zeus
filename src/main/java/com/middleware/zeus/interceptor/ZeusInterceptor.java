@@ -3,13 +3,12 @@ package com.middleware.zeus.interceptor;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.middleware.zeus.service.k8s.impl.ClusterServiceImpl;
 import org.springframework.lang.Nullable;
+import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 
 import com.middleware.zeus.common.base.CurrentLanguage;
-import com.middleware.caas.filters.enumm.LanguageEnum;
 
 /**
  * @author dengyulong
@@ -21,8 +20,12 @@ public class ZeusInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
         // 进入controller层之前的处理
-        CurrentLanguage.setLanguage(LanguageEnum.getCurrentLanguage());
-        ClusterServiceImpl.refreshCache();
+        String language = request.getHeader("language");
+        if (StringUtils.isEmpty(language)) {
+            language = "zh-CN";
+        }
+        CurrentLanguage.setLanguage(language);
+        //ClusterServiceImpl.refreshCache();
         return true;
     }
 

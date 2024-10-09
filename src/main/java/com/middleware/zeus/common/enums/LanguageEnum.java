@@ -7,6 +7,7 @@ import org.apache.commons.lang3.StringUtils;
  * @date 2020/07/06
  * 语言枚举类
  */
+@Deprecated
 public enum LanguageEnum {
 
     CH("Ch"),

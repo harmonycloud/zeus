@@ -120,4 +120,10 @@ public class PersonalizedConfiguration {
     @TableField (value = "platform_alias_name")
     private String platformAliasName;
 
+    /**
+     * 语言 zh-CN zh-HK en-US
+     */
+    @TableField (value = "language")
+    private String language;
+
 }

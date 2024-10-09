@@ -258,3 +258,8 @@ values('resource_menu','24','zh-HK','aliasName','組織概覽');
 -- 英语
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
 values('resource_menu','24','en-US','aliasName','Organizational Overview');
+
+-- xutianhong
+-- 20241009 个性化配置表单添加language字段
+alter table personal_config add language varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL comment '语言';
+delete from personal_config where status = '0';

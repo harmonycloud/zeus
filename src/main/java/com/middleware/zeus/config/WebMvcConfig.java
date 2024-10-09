@@ -17,9 +17,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
      */
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        // 制品服务的拦截器，只拦截middleware的请求
-        registry.addInterceptor(new ZeusInterceptor()).addPathPatterns(
-            "/clusters/**", "/middlewares/**");
+        // 制品服务的拦截器，拦截所有请求
+        registry.addInterceptor(new ZeusInterceptor()).addPathPatterns("/**");
     }
 
 }

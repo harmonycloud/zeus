@@ -68,14 +68,12 @@ public class InitPersonalImage {
         personal.setTabLogo(loadFile(tabIs,"tablogo.svg"));
         personal.setTabLogoPath("tablogo.svg");
         personal.setTitle("Zeus");
-        personal.setSlogan("让IT更美好");
-        String year = DateUtils.formatDate(new Date(), DateStyle.YYYY);
-        personal.setCopyrightNotice("Copyright © " + year + " 杭州谐云科技有限公司 All rights reserved.Copyright.");
-        personal.setPlatformName("Zeus | 中间件管理一体化平台");
-        personal.setPlatformAliasName("中间件一体化管理平台");
         personal.setCreateTime(new Date());
         personal.setStatus("0");
-        personalMapper.insert(personal);
+        // 初始化中文默认个性化配置
+        initZhCnPersonal(personal);
+        // 初始化英文默认个性化配置
+        initEnUsPersonal(personal);
     }
 
     /**
@@ -115,5 +113,25 @@ public class InitPersonalImage {
             voiceBase64 = "data:image/png;base64," + voiceBase64;
         }
         return voiceBase64;
+    }
+
+    private void initZhCnPersonal(PersonalizedConfiguration personal) {
+        personal.setSlogan("让IT更美好");
+        String year = DateUtils.formatDate(new Date(), DateStyle.YYYY);
+        personal.setCopyrightNotice("Copyright © " + year + " 杭州谐云科技有限公司 All rights reserved.Copyright.");
+        personal.setPlatformName("Zeus | 中间件管理一体化平台");
+        personal.setPlatformAliasName("中间件一体化管理平台");
+        personal.setLanguage("zh-CN");
+        personalMapper.insert(personal);
+    }
+
+    private void initEnUsPersonal(PersonalizedConfiguration personal) {
+        personal.setSlogan("让IT更美好");
+        String year = DateUtils.formatDate(new Date(), DateStyle.YYYY);
+        personal.setCopyrightNotice("Copyright © " + year + " 杭州谐云科技有限公司 All rights reserved.Copyright.");
+        personal.setPlatformName("Zeus | Middleware Management Integration Platform");
+        personal.setPlatformAliasName("Middleware Management Integration Platform");
+        personal.setLanguage("en-US");
+        personalMapper.insert(personal);
     }
 }

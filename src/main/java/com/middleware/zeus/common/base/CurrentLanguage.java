@@ -5,21 +5,20 @@ package com.middleware.zeus.common.base;
  * @date 2021/01/21
  * 当前语言，需要初始化
  */
-@Deprecated
 public class CurrentLanguage {
 
-    private static final ThreadLocal<String> currentLanguage = new ThreadLocal<>();
+    private static final ThreadLocal<String> CURRENT_LANGUAGE = new ThreadLocal<>();
 
     public static void setLanguage(String language) {
-        currentLanguage.set(language);
+        CURRENT_LANGUAGE.set(language);
     }
 
     public static String getLanguage() {
-        return currentLanguage.get();
+        return CURRENT_LANGUAGE.get();
     }
 
     public static void clear() {
-        currentLanguage.remove();
+        CURRENT_LANGUAGE.remove();
     }
 
 }

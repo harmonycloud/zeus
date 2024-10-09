@@ -112,10 +112,6 @@ public class ClusterServiceImpl extends AbstractClusterService implements Cluste
     @Value("${k8s.component.middleware:/usr/local/zeus-pv/middleware}")
     private String middlewarePath;
 
-    public static void refreshCache(){
-        CLUSTER_MAP.clear();
-    }
-
     @Override
     public List<MiddlewareClusterDTO> baseListCluster(){
         return middlewareClusterService.listClusterDtos();
@@ -530,46 +526,6 @@ public class ClusterServiceImpl extends AbstractClusterService implements Cluste
         QueryWrapper<BeanKubeConfig> wrapper = new QueryWrapper<>();
         wrapper.eq("cluster_id", clusterId);
         kubeConfigMapper.delete(wrapper);
-    }
-
-    private void createMiddlewareCrd(MiddlewareClusterDTO middlewareClusterDTO) {
-        // MiddlewareClusterDTO middlewareClusterDTO = clusterService.findById(clusterId);
-
-        boolean error = false;
-        Process process = null;
-        try {
-            String execCommand;
-            execCommand =
-                MessageFormat.format("kubectl apply -f {0} --server={1} --token={2} --insecure-skip-tls-verify=true",
-                    "middlewareCrdYamlPath", middlewareClusterDTO.getAddress(), middlewareClusterDTO.getAccessToken());
-            log.info("执行kubectl命令：{}", execCommand);
-            String[] commands = execCommand.split(" ");
-            process = Runtime.getRuntime().exec(commands);
-
-            BufferedReader stdInput = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            BufferedReader stdError = new BufferedReader(new InputStreamReader(process.getErrorStream()));
-
-            String line;
-            while ((line = stdInput.readLine()) != null) {
-                log.info("执行指令执行成功:{}", line);
-            }
-
-            while ((line = stdError.readLine()) != null) {
-                log.error("执行指令错误:{}", line);
-                error = true;
-            }
-            if (error) {
-                throw new Exception();
-            }
-
-        } catch (Exception e) {
-            log.error("出现异常:", e);
-            throw new BusinessException(ErrorMessage.CMD_RUN_FAILED);
-        } finally {
-            if (null != process) {
-                process.destroy();
-            }
-        }
     }
 
     /**

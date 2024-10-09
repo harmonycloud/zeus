@@ -1,7 +1,6 @@
 package com.middleware.zeus.service.user.abstractService;
 
-import static com.middleware.zeus.common.constants.CommonConstant.LINE;
-import static com.middleware.zeus.common.constants.CommonConstant.NUM_TWO;
+import static com.middleware.zeus.common.constants.CommonConstant.*;
 import static com.middleware.zeus.common.constants.NameConstant.*;
 import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.NAMESPACE;
 import static com.middleware.zeus.common.constants.user.UserConstant.USERNAME;
@@ -14,6 +13,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import com.alibaba.fastjson.JSONArray;
+import com.middleware.zeus.common.base.CurrentLanguage;
 import com.middleware.zeus.common.constants.CommonConstant;
 import com.middleware.zeus.common.enums.ErrorMessage;
 import com.middleware.zeus.common.enums.RoleBindingEnum;
@@ -314,17 +314,26 @@ public abstract class AbstractUserService {
      */
 
     public PersonalizedConfiguration getPersonalConfig() {
-        QueryWrapper<PersonalizedConfiguration> queryWrapper = new QueryWrapper<PersonalizedConfiguration>();
+        QueryWrapper<PersonalizedConfiguration> queryWrapper = new QueryWrapper<>();
         List<PersonalizedConfiguration> personals = personalMapper.selectList(queryWrapper);
-        if (personals.size() > 1) {
-            queryWrapper.eq("status", "1");
-            List<PersonalizedConfiguration> personalList = personalMapper.selectList(queryWrapper);
-            for (PersonalizedConfiguration personalizedConfiguration : personalList) {
-                return personalizedConfiguration;
+        // 判断是否存在非默认的个性化配置(status == 1)
+        boolean existCustomizePersonal =
+            personals.stream().anyMatch(personal -> String.valueOf(NUM_ONE).equals(personal.getStatus()));
+        // 存在非默认的个性化配置
+        if (existCustomizePersonal) {
+            // 返回存在的第一个非默认的个性化配置
+            for (PersonalizedConfiguration personalizedConfiguration : personals) {
+                if (personalizedConfiguration.getStatus().equals(String.valueOf(NUM_ONE))) {
+                    return personalizedConfiguration;
+                }
             }
         }
+        // 获取当前语言
+        String language = CurrentLanguage.getLanguage();
         for (PersonalizedConfiguration personalizedConfiguration : personals) {
-            return personalizedConfiguration;
+            if (personalizedConfiguration.getLanguage().equals(language)) {
+                return personalizedConfiguration;
+            }
         }
         return new PersonalizedConfiguration();
     }
