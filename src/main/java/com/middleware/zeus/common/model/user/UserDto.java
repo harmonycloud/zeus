@@ -1,5 +1,6 @@
 package com.middleware.zeus.common.model.user;
 
+import com.skyview.language.annotations.DirectTranslate;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -25,6 +26,7 @@ public class UserDto {
     private String userName;
 
     @ApiModelProperty("用户名")
+    @DirectTranslate(groupName="UserDto",uniqueKeyName="aliasName", keyName="aliasName")
     private String aliasName;
 
     @ApiModelProperty("密码")

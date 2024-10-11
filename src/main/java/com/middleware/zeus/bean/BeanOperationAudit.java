@@ -42,12 +42,14 @@ public class BeanOperationAudit implements Serializable {
      * 用户名称
      */
     @TableField("user_name")
+    @DirectTranslate(groupName="operation_audit",uniqueKeyName="userName", keyName="userName")
     private String userName;
 
     /**
      * 角色名称
      */
     @TableField("role_name")
+    @DirectTranslate(groupName="operation_audit",uniqueKeyName="roleName", keyName="roleName")
     private String roleName;
 
     /**

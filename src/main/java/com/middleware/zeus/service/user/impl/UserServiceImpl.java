@@ -24,6 +24,7 @@ import com.middleware.zeus.service.k8s.*;
 import com.middleware.zeus.service.system.AlertUserService;
 import com.middleware.zeus.service.user.*;
 import com.middleware.zeus.util.OpenSSLUtil;
+import com.skyview.language.annotations.TranslateAfterResult;
 import io.fabric8.kubernetes.api.model.AuthInfo;
 import io.fabric8.kubernetes.api.model.Config;
 import io.fabric8.kubernetes.api.model.NamedAuthInfo;
@@ -143,6 +144,7 @@ public class UserServiceImpl extends AbstractUserService implements UserService 
     }
 
     @Override
+    @TranslateAfterResult
     public List<UserDto> list(String keyword) {
         QueryWrapper<BeanUser> userWrapper = new QueryWrapper<>();
         // 非超级管理员角色用户 获取创建者为自身的用户

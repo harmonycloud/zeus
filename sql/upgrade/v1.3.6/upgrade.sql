@@ -280,6 +280,12 @@ insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_
 values('operation_audit','用户管理','en-US','childModuleChDesc','Users');
 -- 繁体中文
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','服务列表','zh-HK','moduleChDesc','服務列表');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','服务列表','en-US','moduleChDesc','Middlewares');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
 values('operation_audit','服务列表','zh-HK','childModuleChDesc','服務列表');
 -- 英语
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
@@ -477,6 +483,46 @@ values('operation_audit','用户认证','zh-HK','childModuleChDesc','用戶認�
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
 values('operation_audit','用户认证','en-US','childModuleChDesc','Authentication');
 
+-- 操作审计默认用户/角色翻译
+-- 超级管理员
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','超级管理员','zh-HK','userName','超級管理員');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','超级管理员','en-US','childModuleChDesc','Super Administrator');
+-- 超级管理员
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','超级管理员','zh-HK','roleName','超級管理員');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','超级管理员','en-US','roleName','Super Administrator');
+
+-- 项目管理员
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','项目管理员','zh-HK','roleName','項目管理員');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','项目管理员','en-US','roleName','Project Administrator');
+
+-- 运维人员
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','运维人员','zh-HK','roleName','運維人員');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','运维人员','en-US','roleName','O&M Member');
+
+-- 普通用户
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','普通用户','zh-HK','roleName','普通用戶');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','普通用户','en-US','roleName','Ordinary Member');
+
 -- 更新部分模块名称
 update operation_audit set module_ch_desc = '集群管理' where module_ch_desc = '平台工具箱';
 update operation_audit set module_ch_desc = '平台管理' where module_ch_desc = '系统管理' and child_module_ch_desc = '用户管理';
@@ -505,3 +551,14 @@ update operation_audit set module_ch_desc = '平台管理' where module_ch_desc 
 update operation_audit set module_ch_desc = '项目管理' where module_ch_desc = '备份服务' and child_module_ch_desc = '备份位置';
 update operation_audit set module_ch_desc = '平台管理', child_module_ch_desc = '用户认证' where action_ch_desc = '登录' or action_ch_desc = '登出';
 update operation_audit set module_ch_desc = '告警中心', child_module_ch_desc = null where module_ch_desc = '监控告警' and child_module_ch_desc = '告警中心';
+
+
+-- 用户表超级管理员国际化
+delete from sys_resource_translate_config where group_name = 'UserDto';
+-- 超级管理员
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('UserDto','超级管理员','zh-HK','aliasName','超級管理員');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('UserDto','超级管理员','en-US','aliasName','Super Administrator');
