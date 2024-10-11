@@ -18,7 +18,7 @@ import javax.servlet.http.HttpServletResponse;
  * @author dengyulong
  * @date 2021/04/02
  */
-@Api(tags = {"系统管理","用户管理"}, value = "授权认证")
+@Api(tags = {"平台管理","用户认证"}, value = "授权认证")
 @RestController
 @RequestMapping("/auth")
 public class AuthController {

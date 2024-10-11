@@ -16,7 +16,7 @@ import org.springframework.web.bind.annotation.*;
  * @date 2021/11/8 下午3:24
  */
 @Slf4j
-@Api(tags = {"邮件发送","邮件发送"}, value = "邮件发送")
+@Api(tags = {"平台管理","邮箱"}, value = "邮件发送")
 @RestController
 @RequestMapping("/mail")
 public class MailController {

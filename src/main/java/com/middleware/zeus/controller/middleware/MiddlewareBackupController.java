@@ -22,7 +22,7 @@ import java.util.List;
  * @author liyinlong
  * @date 2021/03/23
  */
-@Api(tags = {"容灾备份", "数据安全"}, value = "中间件备份", description = "中间件备份")
+@Api(tags = {"数据安全", "备份服务"}, value = "中间件备份", description = "中间件备份")
 @RestController
 @RequestMapping("/clusters/{clusterId}/namespaces/{namespace}/backup")
 public class MiddlewareBackupController {

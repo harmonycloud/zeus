@@ -14,7 +14,7 @@ import java.util.List;
  * @author xutianhong
  * @Date 2023/5/4 7:19 下午
  */
-@Api(tags = {"平台管理", "功能列表"}, value = "平台管理")
+@Api(tags = {"平台管理", "Feature列表"}, value = "平台管理")
 @RestController
 @RequestMapping("/feature")
 public class FeatureController {

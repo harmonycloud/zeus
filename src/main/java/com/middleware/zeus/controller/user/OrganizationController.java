@@ -24,7 +24,7 @@ import java.util.List;
  * @Date 2023/3/6 4:22 下午
  */
 @Slf4j
-@Api(tags = {"系统管理","组织管理"}, value = "组织", description = "组织")
+@Api(tags = {"平台管理","组织管理"}, value = "组织", description = "组织")
 @RestController
 @RequestMapping("/organizations")
 public class OrganizationController {

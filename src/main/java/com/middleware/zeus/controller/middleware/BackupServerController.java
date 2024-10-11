@@ -17,7 +17,7 @@ import java.util.List;
  * @author liyinlong
  * @since 2023/1/9 2:25 下午
  */
-@Api(tags = {"备份服务", "备份服务器"}, value = "备份服务器")
+@Api(tags = {"平台管理", "备份服务器"}, value = "备份服务器")
 @RestController
 @RequestMapping("/backup/server")
 public class BackupServerController {

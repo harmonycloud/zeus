@@ -28,7 +28,7 @@ import java.util.Set;
  * @Date 2022/3/23 5:21 下午
  */
 @Slf4j
-@Api(tags = {"系统管理","项目管理"}, value = "项目", description = "项目")
+@Api(tags = {"平台管理","项目管理"}, value = "项目", description = "项目")
 @RestController
 @RequestMapping("/organizations/{organId}/project")
 public class ProjectController {

@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
  * @author xutianhong
  * @Date 2022/9/26 11:34 上午
  */
-@Api(tags = {"系统管理", "端口范围"}, value = "端口范围")
+@Api(tags = {"平台管理", "端口范围"}, value = "端口范围")
 @RestController
 @RequestMapping("/port")
 public class TcpPortController {

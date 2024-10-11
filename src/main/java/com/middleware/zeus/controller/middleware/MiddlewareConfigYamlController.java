@@ -16,7 +16,7 @@ import java.util.List;
  * @author xutianhong
  * @Date 2021/12/23 2:21 下午
  */
-@Api(tags = {"服务列表","服务配置"}, value = "中间件配置文件yaml", description = "中间件配置文件yaml")
+@Api(tags = {"服务列表","参数管理"}, value = "中间件配置文件yaml", description = "中间件配置文件yaml")
 @RestController
 @RequestMapping("/clusters/{clusterId}/namespaces/{namespace}/configmap")
 public class MiddlewareConfigYamlController {

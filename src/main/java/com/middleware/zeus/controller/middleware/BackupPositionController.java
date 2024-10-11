@@ -16,7 +16,7 @@ import java.util.List;
  * @author liyinlong
  * @since 2023/1/12 7:48 上午
  */
-@Api(tags = {"备份服务", "备份位置"}, value = "备份位置")
+@Api(tags = {"项目管理", "备份位置"}, value = "备份位置")
 @RestController
 @RequestMapping("/organizations/{organId}/project/{projectId}/position")
 public class BackupPositionController {

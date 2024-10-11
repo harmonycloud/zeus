@@ -24,7 +24,7 @@ import java.util.List;
  * @author xutianhong
  * @Date 2021/4/26 3:51 下午
  */
-@Api(tags = {"工作台","实例列表"}, value = "prometheus告警", description = "prometheus告警")
+@Api(tags = {"监控告警"}, value = "prometheus告警", description = "prometheus告警")
 @RestController
 @RequestMapping("/webhook")
 @Slf4j

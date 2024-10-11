@@ -1,5 +1,6 @@
 package com.middleware.zeus.controller.system;
 
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.middleware.zeus.common.base.BaseResult;
 import com.middleware.zeus.common.enums.ErrorMessage;
 import com.middleware.zeus.annotation.ExcludeAuditMethod;
@@ -21,7 +22,7 @@ import org.springframework.web.bind.annotation.*;
  * @author liyinlong
  * @date 2021/7/27 2:42 下午
  */
-@Api(tags = {"系统管理", "操作审计"}, value = "操作审计")
+@Api(tags = {"平台管理", "操作审计"}, value = "操作审计")
 @RestController
 @RequestMapping("/operationAudit")
 public class OperationAuditController {
@@ -42,10 +43,10 @@ public class OperationAuditController {
     @ApiOperation(value = "查询操作审计列表", notes = "查询操作审计")
     @ResponseBody
     @RequestMapping(method = RequestMethod.POST)
-    public BaseResult listOperationAudit(@RequestBody OperationAuditQueryDto operationAuditQueryDto) {
+    public BaseResult<Page<BeanOperationAudit>> listOperationAudit(@RequestBody OperationAuditQueryDto operationAuditQueryDto) {
         try {
             log.info("查询操作审计列表:{}", operationAuditQueryDto);
-            return operationAuditService.list(operationAuditQueryDto);
+            return BaseResult.ok(operationAuditService.list(operationAuditQueryDto));
         } catch (Exception e) {
             e.printStackTrace();
             log.error("查询操作审计列表失败：", e);

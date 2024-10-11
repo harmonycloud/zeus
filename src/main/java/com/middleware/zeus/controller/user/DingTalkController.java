@@ -21,7 +21,7 @@ import java.util.List;
  * @date 2021/11/9 下午3:16
  */
 @Slf4j
-@Api(tags = {"钉钉告警","钉钉告警"}, value = "钉钉告警")
+@Api(tags = {"平台管理","钉钉"}, value = "钉钉告警")
 @RestController
 @RequestMapping("/ding")
 public class DingTalkController {

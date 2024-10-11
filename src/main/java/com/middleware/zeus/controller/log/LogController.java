@@ -28,7 +28,7 @@ import javax.servlet.http.HttpServletResponse;
  * @date 2021/6/17 5:48 下午
  */
 @RestController
-@Api(tags = {"监控告警", "日志详情"}, value = "应用日志")
+@Api(tags = {"服务列表", "日志详情"}, value = "应用日志")
 @RequestMapping("/clusters/{clusterId}/namespaces/{namespace}/middlewares/{middlewareName}/applogs")
 public class LogController {
 

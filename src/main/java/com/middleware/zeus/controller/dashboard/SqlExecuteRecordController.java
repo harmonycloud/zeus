@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
  * @author xutianhong
  * @Date 2022/11/8 10:10 上午
  */
-@Api(tags = {"中间件面板", "sql console"}, value = "sql console", description = "sql console")
+@Api(tags = {"服务列表", "sql console"}, value = "sql console", description = "sql console")
 @RestController
 @RequestMapping("/clusters/{clusterId}/namespaces/{namespace}/middlewares/{middlewareName}/sql")
 public class SqlExecuteRecordController {

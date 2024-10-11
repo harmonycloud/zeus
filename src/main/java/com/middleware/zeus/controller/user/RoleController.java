@@ -20,7 +20,7 @@ import java.util.List;
  * @author xutianhong
  * @Date 2021/7/28 1:55 下午
  */
-@Api(tags = {"系统管理","用户管理"}, value = "角色信息")
+@Api(tags = {"平台管理","角色管理"}, value = "角色信息")
 @RestController
 @RequestMapping("/role")
 public class RoleController {

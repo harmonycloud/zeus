@@ -34,7 +34,7 @@ import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant
  * @Date 2021/7/22 11:52 上午
  */
 @Slf4j
-@Api(tags = {"系统管理","用户管理"}, value = "用户信息")
+@Api(tags = {"平台管理","用户管理"}, value = "用户信息")
 @RestController
 @RequestMapping("/user")
 public class UserController {

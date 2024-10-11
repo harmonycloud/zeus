@@ -19,7 +19,7 @@ import java.util.List;
  * @author dengyulong
  * @date 2021/03/23
  */
-@Api(tags = {"中间件市场","中间件管理"}, value = "中间件信息", description = "中间件信息")
+@Api(tags = {"中间件市场"}, value = "中间件信息", description = "中间件信息")
 @RestController
 @RequestMapping("/middlewares/info")
 public class MiddlewareInfoController {

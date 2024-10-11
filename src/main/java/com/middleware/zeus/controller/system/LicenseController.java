@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
  * @author xutianhong
  * @Date 2022/10/27 11:41 上午
  */
-@Api(tags = {"系统管理", "平台认证"}, value = "平台认证")
+@Api(tags = {"平台管理", "license管理"}, value = "平台认证")
 @RestController
 @RequestMapping("/license")
 @Slf4j

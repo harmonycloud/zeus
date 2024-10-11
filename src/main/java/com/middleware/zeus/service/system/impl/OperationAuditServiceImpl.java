@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.skyview.language.annotations.TranslateAfterResult;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -37,8 +38,6 @@ public class OperationAuditServiceImpl implements OperationAuditService {
 
     @Autowired
     private BeanOperationAuditMapper operationAuditMapper;
-    @Autowired
-    private RoleService roleService;
 
     /**
      * ip地址正则表达式，仅包含数字或小数点即为ip
@@ -55,7 +54,8 @@ public class OperationAuditServiceImpl implements OperationAuditService {
     }
 
     @Override
-    public BaseResult list(OperationAuditQueryDto operationAuditQueryDto) {
+    @TranslateAfterResult
+    public Page<BeanOperationAudit> list(OperationAuditQueryDto operationAuditQueryDto) {
 
         convertOperationAudit(operationAuditQueryDto);
 
@@ -120,10 +120,11 @@ public class OperationAuditServiceImpl implements OperationAuditService {
         Page<BeanOperationAudit> page = new Page<>(operationAuditQueryDto.getCurrent(), operationAuditQueryDto.getSize());
         Page<BeanOperationAudit> beanOperationAuditPage = operationAuditMapper.selectPage(page, queryWrapper);
         
-        return BaseResult.ok(beanOperationAuditPage);
+        return beanOperationAuditPage;
     }
 
     @Override
+    @TranslateAfterResult
     public BaseResult listAllCondition() {
         Map<String, Object> res = new HashMap<>();
 

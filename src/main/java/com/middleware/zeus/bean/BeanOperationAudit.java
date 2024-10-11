@@ -4,6 +4,9 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.skyview.language.annotations.DirectTranslate;
+import com.skyview.language.annotations.Translate;
+import com.skyview.language.annotations.TranslateGroupInfo;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -63,18 +66,21 @@ public class BeanOperationAudit implements Serializable {
      * 模块名称
      */
     @TableField("module_ch_desc")
+    @DirectTranslate(groupName="operation_audit",uniqueKeyName="moduleChDesc", keyName="moduleChDesc")
     private String moduleChDesc;
 
     /**
      * 子模块名称
      */
     @TableField("child_module_ch_desc")
+    @DirectTranslate(groupName="operation_audit",uniqueKeyName="childModuleChDesc", keyName="childModuleChDesc")
     private String childModuleChDesc;
 
     /**
      * 操作名称
      */
     @TableField("action_ch_desc")
+    @DirectTranslate(groupName="operation_audit",uniqueKeyName="actionChDesc", keyName="actionChDesc")
     private String actionChDesc;
 
     /**

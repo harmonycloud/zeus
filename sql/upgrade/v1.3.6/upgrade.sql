@@ -259,7 +259,249 @@ values('resource_menu','24','zh-HK','aliasName','組織概覽');
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
 values('resource_menu','24','en-US','aliasName','Organizational Overview');
 
--- xutianhong
--- 20241009 个性化配置表单添加language字段
+-- 20241009 xutianhong
+-- 个性化配置表单添加language字段
 alter table personal_config add language varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL comment '语言';
 delete from personal_config where status = '0';
+
+-- 操作审计国际化
+delete from sys_resource_translate_config where group_name = 'operation_audit';
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','系统管理','zh-HK','moduleChDesc','系統管理');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','系统管理','en-US','moduleChDesc','Administration');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','用户管理','zh-HK','childModuleChDesc','用戶管理');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','用户管理','en-US','childModuleChDesc','Users');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','服务列表','zh-HK','childModuleChDesc','服務列表');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','服务列表','en-US','childModuleChDesc','Middlewares');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','服务管理','zh-HK','childModuleChDesc','服務管理');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','服务管理','en-US','childModuleChDesc','Middlewares');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','Mysql管理面板','zh-HK','childModuleChDesc','Mysql管理面板');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','Mysql管理面板','en-US','childModuleChDesc','Mysql Management Dashboard');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','Postgresql管理面板','zh-HK','childModuleChDesc','Postgresql管理面板');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','Postgresql管理面板','en-US','childModuleChDesc','Postgresql Management dashboard');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','Redis管理面板','zh-HK','childModuleChDesc','Redis管理面板');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','Redis管理面板','en-US','childModuleChDesc','Redis Management dashboard');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','集群管理','zh-HK','moduleChDesc','集群管理');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','集群管理','en-US','moduleChDesc','Clusters');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','基础资源','zh-HK','childModuleChDesc','基礎資源');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','基础资源','en-US','childModuleChDesc','Basic Resources');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','服务暴露','zh-HK','childModuleChDesc','服務暴露');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','服务暴露','en-US','childModuleChDesc','Services Exposure');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','实例列表','zh-HK','childModuleChDesc','實例列表');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','实例列表','en-US','childModuleChDesc','Instances');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','平台管理','zh-HK','moduleChDesc','平台管理');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','平台管理','en-US','moduleChDesc','Platform Management');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','存储管理','zh-HK','childModuleChDesc','存儲管理');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','存储管理','en-US','childModuleChDesc','StorageClasses');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','Yaml格式校验','zh-HK','childModuleChDesc','Yaml格式校驗');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','Yaml格式校验','en-US','childModuleChDesc','Yaml Format Validation');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','日志详情','zh-HK','childModuleChDesc','日誌詳情');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','日志详情','en-US','childModuleChDesc','Logs');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','项目管理','zh-HK','moduleChDesc','項目管理');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','项目管理','en-US','moduleChDesc','Projects');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','备份位置','zh-HK','childModuleChDesc','備份位置');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','备份位置','en-US','childModuleChDesc','Backup Location');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','备份服务器','zh-HK','childModuleChDesc','備份服務器');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','备份服务器','en-US','childModuleChDesc','Backup Server');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','参数管理','zh-HK','childModuleChDesc','餐數管理');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','参数管理','en-US','childModuleChDesc','Parameters');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','监控告警','zh-HK','moduleChDesc','監控告警');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','监控告警','en-US','moduleChDesc','Monitoring Alerts');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','服务告警','zh-HK','childModuleChDesc','服務告警');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','服务告警','en-US','childModuleChDesc','Middleware Alerts');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','镜像仓库','zh-HK','childModuleChDesc','鏡像倉庫');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','镜像仓库','en-US','childModuleChDesc','Image Repository');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','数据安全','zh-HK','moduleChDesc','數據安全');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','数据安全','en-US','moduleChDesc','Middleware Backup');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','备份服务','zh-HK','childModuleChDesc','備份服務');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','备份服务','en-US','childModuleChDesc','Middleware Backup');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','可用区','zh-HK','childModuleChDesc','可用區');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','可用区','en-US','childModuleChDesc','Zone');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','告警中心','zh-HK','moduleChDesc','告警中心');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','告警中心','en-US','moduleChDesc','Alerts');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','平台灾备','zh-HK','moduleChDesc','平台災備');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','平台灾备','en-US','moduleChDesc','Platform Disaster Recovery');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','Feature列表','zh-HK','childModuleChDesc','Feature列表');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','Feature列表','en-US','childModuleChDesc','Features');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','开放中心','zh-HK','childModuleChDesc','開放中心');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','开放中心','en-US','childModuleChDesc','Open Center');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','license管理','zh-HK','childModuleChDesc','License管理');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','license管理','en-US','childModuleChDesc','License');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','操作审计','zh-HK','childModuleChDesc','操作審計');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','操作审计','en-US','childModuleChDesc','ActionTrail');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','钉钉','zh-HK','childModuleChDesc','釘釘');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','钉钉','en-US','childModuleChDesc','Ding Talk');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','组织管理','zh-HK','childModuleChDesc','組織管理');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','组织管理','en-US','childModuleChDesc','Organizations');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','角色管理','zh-HK','childModuleChDesc','角色管理');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','角色管理','en-US','childModuleChDesc','Roles');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','用户认证','zh-HK','childModuleChDesc','用戶認證');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','用户认证','en-US','childModuleChDesc','Authentication');
+
+-- 更新部分模块名称
+update operation_audit set module_ch_desc = '集群管理' where module_ch_desc = '平台工具箱';
+update operation_audit set module_ch_desc = '平台管理' where module_ch_desc = '系统管理' and child_module_ch_desc = '用户管理';
+update operation_audit set module_ch_desc = '平台管理' where module_ch_desc = '存储管理' and child_module_ch_desc = '存储管理';
+update operation_audit set module_ch_desc = '服务列表' where module_ch_desc = '中间件面板' and child_module_ch_desc = 'sql console';
+update operation_audit set module_ch_desc = '平台管理' where action_ch_desc = '新增角色' or action_ch_desc = '删除角色' or action_ch_desc = '修改角色';
+update operation_audit set child_module_ch_desc = '角色管理' where action_ch_desc = '新增角色' or action_ch_desc = '删除角色' or action_ch_desc = '修改角色';
+update operation_audit set module_ch_desc = '平台管理' where module_ch_desc = '系统管理' and child_module_ch_desc = '项目管理';
+update operation_audit set module_ch_desc = '服务列表' where module_ch_desc = '中间件面板' and child_module_ch_desc = 'postgresql面板';
+update operation_audit set child_module_ch_desc = '实例列表' where module_ch_desc = '服务列表' and child_module_ch_desc = '服务实例';
+update operation_audit set module_ch_desc = '平台管理' where module_ch_desc = '系统管理' and child_module_ch_desc = '组织管理';
+update operation_audit set module_ch_desc = '平台管理' where module_ch_desc = '系统管理' and child_module_ch_desc = '操作审计';
+update operation_audit set child_module_ch_desc = null where module_ch_desc = '中间件市场' and child_module_ch_desc = '中间件管理';
+update operation_audit set child_module_ch_desc = '参数管理' where module_ch_desc = '服务列表' and child_module_ch_desc = '服务配置';
+update operation_audit set module_ch_desc = '数据安全', child_module_ch_desc = '备份服务' where module_ch_desc = '容灾备份' and child_module_ch_desc = '数据安全';
+update operation_audit set module_ch_desc = '平台管理', child_module_ch_desc = '邮箱' where module_ch_desc = '邮件发送' and child_module_ch_desc = '邮件发送';
+update operation_audit set module_ch_desc = '服务列表' where module_ch_desc = '监控告警' and child_module_ch_desc = '日志详情';
+update operation_audit set module_ch_desc = '平台管理', child_module_ch_desc = 'license管理' where module_ch_desc = '系统管理' and child_module_ch_desc = '平台认证';
+update operation_audit set module_ch_desc = '服务列表', child_module_ch_desc = '服务暴露' where module_ch_desc = '服务暴露' and child_module_ch_desc = '对外访问';
+update operation_audit set module_ch_desc = '集群管理', child_module_ch_desc = '镜像仓库' where module_ch_desc = '系统管理' and child_module_ch_desc = '集群管理';
+update operation_audit set child_module_ch_desc = 'Feature列表' where module_ch_desc = '平台管理' and child_module_ch_desc = '功能列表';
+update operation_audit set module_ch_desc = '平台灾备', child_module_ch_desc = null where module_ch_desc = '平台管理' and child_module_ch_desc = '灾备中心';
+update operation_audit set module_ch_desc = '平台管理', child_module_ch_desc = '钉钉' where module_ch_desc = '钉钉告警' and child_module_ch_desc = '钉钉告警';
+update operation_audit set child_module_ch_desc = '参数管理' where module_ch_desc = '服务列表' and child_module_ch_desc = '参数设置';
+update operation_audit set module_ch_desc = '平台管理' where module_ch_desc = '备份服务' and child_module_ch_desc = '备份服务器';
+update operation_audit set module_ch_desc = '项目管理' where module_ch_desc = '备份服务' and child_module_ch_desc = '备份位置';
+update operation_audit set module_ch_desc = '平台管理', child_module_ch_desc = '用户认证' where action_ch_desc = '登录' or action_ch_desc = '登出';
+update operation_audit set module_ch_desc = '告警中心', child_module_ch_desc = null where module_ch_desc = '监控告警' and child_module_ch_desc = '告警中心';

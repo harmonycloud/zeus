@@ -19,7 +19,7 @@ import io.swagger.annotations.ApiOperation;
  * @author xutianhong
  * @Date 2023/5/5 11:27 上午
  */
-@Api(tags = {"监控告警","告警中心"}, value = "告警中心")
+@Api(tags = {"告警中心"}, value = "告警中心")
 @RestController
 @RequestMapping("/alert")
 public class AlertController {

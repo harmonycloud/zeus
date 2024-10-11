@@ -16,7 +16,7 @@ import io.swagger.annotations.ApiOperation;
  * @author xutianhong
  * @Date 2022/11/22 1:54 下午
  */
-@Api(tags = {"平台管理", "灾备中心"}, value = "平台管理")
+@Api(tags = {"平台灾备"}, value = "平台管理")
 @RestController
 @RequestMapping("/platform/disasterRecovery")
 public class DisasterRecoveryController {
