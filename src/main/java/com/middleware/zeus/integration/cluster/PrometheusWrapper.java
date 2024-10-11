@@ -62,6 +62,9 @@ public class PrometheusWrapper {
     public PrometheusClient createApi(String clusterId, String prometheusApiVersion) {
         MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
         MiddlewareClusterMonitorInfo prometheus = getPrometheusInfo(cluster);
+        if (StringUtils.isAnyEmpty(prometheus.getProtocol(), prometheus.getHost())) {
+            throw new BusinessException(ErrorMessage.PROMETHEUS_NOT_INSTALLED);
+        }
         PrometheusClient client =
                 new PrometheusClient(prometheus.getProtocol(), prometheus.getHost(), Integer.parseInt(prometheus.getPort()),
                         prometheus.getAddress()
