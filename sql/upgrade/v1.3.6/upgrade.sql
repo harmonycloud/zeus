@@ -1165,3 +1165,48 @@ values('operation_audit','获取用户k8s conf文件','zh-HK','actionChDesc','�
 -- 英语
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
 values('operation_audit','获取用户k8s conf文件','en-US','actionChDesc','Get User k8s Conf File');
+
+-- 服务暴露purpose国际化
+delete from sys_resource_translate_config where `group_name` = 'servicePurpose';
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('servicePurpose','只读','zh-HK','servicePurpose','只讀');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('servicePurpose','只读','en-US','servicePurpose','Read Only');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('servicePurpose','读写分离','zh-HK','servicePurpose','讀寫分離');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('servicePurpose','读写分离','en-US','servicePurpose','R/W split Mode');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('servicePurpose','读写','zh-HK','servicePurpose','讀寫');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('servicePurpose','读写','en-US','servicePurpose','Read-Write');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('servicePurpose','哨兵','zh-HK','servicePurpose','哨兵');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('servicePurpose','哨兵','en-US','servicePurpose','Sentinel');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('servicePurpose','管理页面','zh-HK','servicePurpose','管理頁面');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('servicePurpose','管理页面','en-US','servicePurpose','Management');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('servicePurpose','服务连接','zh-HK','servicePurpose','服務連接');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('servicePurpose','服务连接','en-US','servicePurpose','Service Connection');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('servicePurpose','集群外访问','zh-HK','servicePurpose','集群外訪問');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('servicePurpose','集群外访问','en-US','servicePurpose','Access from outside the cluster');

@@ -1,5 +1,6 @@
 package com.middleware.zeus.common.model.middleware;
 
+import com.skyview.language.annotations.DirectTranslate;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -27,6 +28,7 @@ public class ServicePortDTO {
     /**
      * 服务用途
      */
+    @DirectTranslate(groupName="servicePurpose",uniqueKeyName="servicePurpose", keyName="servicePurpose")
     private String servicePurpose;
 
     /**

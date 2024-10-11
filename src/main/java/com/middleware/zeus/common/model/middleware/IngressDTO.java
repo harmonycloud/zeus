@@ -1,5 +1,6 @@
 package com.middleware.zeus.common.model.middleware;
 
+import com.skyview.language.annotations.DirectTranslate;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -43,6 +44,7 @@ public class IngressDTO {
     private String middlewareType;
     private String middlewareOfficialName;
     private String middlewareMode;
+    @DirectTranslate(groupName="servicePurpose",uniqueKeyName="servicePurpose", keyName="servicePurpose")
     private String servicePurpose;
     private String chartVersion;
     private String imagePath;

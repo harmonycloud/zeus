@@ -17,6 +17,7 @@ import com.middleware.zeus.service.k8s.ServiceService;
 import com.middleware.zeus.service.registry.HelmChartService;
 import com.middleware.zeus.util.middleware.InternalServiceFilterUtil;
 import com.middleware.zeus.util.middleware.MiddlewareServicePurposeUtil;
+import com.skyview.language.annotations.TranslateAfterResult;
 import io.fabric8.kubernetes.api.model.IntOrString;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.ServicePort;
@@ -58,6 +59,7 @@ public class ServiceServiceImpl implements ServiceService {
     private BeanMiddlewareInfoMapper middlewareInfoMapper;
 
     @Override
+    @TranslateAfterResult
     public List<ServicePortDTO> list(String clusterId, String namespace, String name, String type) {
         MiddlewareCR middleware = middlewareCRService.getCR(clusterId, namespace, type, name);
         if (middleware == null || middleware.getStatus() == null) {
@@ -131,6 +133,7 @@ public class ServiceServiceImpl implements ServiceService {
     }
 
     @Override
+    @TranslateAfterResult
     public List<ServicePortDTO> listInternalService(String clusterId, String namespace, String name, String type) {
         if ("rocketmq".equals(type)) {
             return getMQInternalService(name, namespace);

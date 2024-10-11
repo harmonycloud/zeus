@@ -30,6 +30,7 @@ import com.middleware.zeus.service.user.UserService;
 import com.middleware.zeus.util.DateUtil;
 import com.middleware.zeus.util.middleware.MiddlewareServicePurposeUtil;
 import com.middleware.zeus.common.model.middleware.Namespace;
+import com.skyview.language.annotations.TranslateAfterResult;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.networking.v1.*;
 import io.fabric8.kubernetes.client.KubernetesClientException;
@@ -503,6 +504,7 @@ public class IngressServiceImpl implements IngressService {
     }
 
     @Override
+    @TranslateAfterResult
     public List<IngressDTO> getMiddlewareIngress(String clusterId, String namespace, String type, String middlewareName) {
         return get(clusterId, namespace, type, middlewareName).stream().
                 filter(ingressDTO -> ingressDTO.getServicePurpose() != null && !"null".equals(ingressDTO.getServicePurpose())).
@@ -577,6 +579,7 @@ public class IngressServiceImpl implements IngressService {
     }
 
     @Override
+    @TranslateAfterResult
     public List<IngressDTO> getHostNetworkAddress(String clusterId, String namespace, String type, String middlewareName) {
         return middlewareService.listHostNetworkAddress(clusterId, namespace, middlewareName, type);
     }
@@ -1800,6 +1803,7 @@ public class IngressServiceImpl implements IngressService {
     }
 
     @Override
+    @TranslateAfterResult
     public List<IngressDTO> listAllIngress(String clusterId, String namespace, String keyword, String organId, String projectId) {
         // 获取所有ingress
         List<IngressDTO> ingressDTOLists = list(clusterId, namespace, null, organId, projectId);
@@ -1834,6 +1838,7 @@ public class IngressServiceImpl implements IngressService {
     }
 
     @Override
+    @TranslateAfterResult
     public List<IngressDTO> listAllMiddlewareIngress(String clusterId, String namespace, String keyword, String organId, String projectId) {
         return listAllIngress(clusterId, namespace, keyword, organId, projectId).stream().
                 filter(ingressDTO -> !StringUtils.isEmpty(ingressDTO.getServicePurpose())).collect(Collectors.toList());
