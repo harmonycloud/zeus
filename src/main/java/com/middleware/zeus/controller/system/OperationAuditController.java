@@ -6,6 +6,7 @@ import com.middleware.zeus.common.enums.ErrorMessage;
 import com.middleware.zeus.annotation.ExcludeAuditMethod;
 import com.middleware.zeus.bean.BeanOperationAudit;
 import com.middleware.zeus.bean.OperationAuditQueryDto;
+import com.middleware.zeus.common.model.OperationAuditConditionDto;
 import com.middleware.zeus.service.system.OperationAuditService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -63,10 +64,10 @@ public class OperationAuditController {
     @ApiOperation(value = "查询操作审计菜单", notes = "查询操作审计菜单")
     @ResponseBody
     @RequestMapping(value = "listAllCondition",method = RequestMethod.GET)
-    public BaseResult listAllCondition() {
+    public BaseResult<OperationAuditConditionDto> listAllCondition() {
         try {
             log.info("查询操作审计菜单:{}");
-            return operationAuditService.listAllCondition();
+            return BaseResult.ok(operationAuditService.listAllCondition());
         } catch (Exception e) {
             e.printStackTrace();
             log.error("查询操作审计菜单失败：", e);

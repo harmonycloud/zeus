@@ -1,11 +1,13 @@
 package com.middleware.zeus.service.system.impl;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.middleware.zeus.common.model.OperationAuditConditionDto;
 import com.skyview.language.annotations.TranslateAfterResult;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -125,36 +127,46 @@ public class OperationAuditServiceImpl implements OperationAuditService {
 
     @Override
     @TranslateAfterResult
-    public BaseResult listAllCondition() {
-        Map<String, Object> res = new HashMap<>();
+    public OperationAuditConditionDto listAllCondition() {
+        OperationAuditConditionDto operationAuditConditionDto = new OperationAuditConditionDto();
 
         QueryWrapper<BeanOperationAudit> moduleWrapper = new QueryWrapper<>();
         moduleWrapper.select("DISTINCT module_ch_desc").isNotNull("module_ch_desc");
         List<String> moduleList = operationAuditMapper.selectList(moduleWrapper).stream().
                 map(operationAudit -> operationAudit.getModuleChDesc()).collect(Collectors.toList());
-        Map<String, List<String>> moduleMenu = new HashMap<>();
+        //Map<String, List<String>> moduleMenu = new HashMap<>();
 
+        List<OperationAuditConditionDto.Modules> modulesList = new ArrayList<>();
         moduleList.forEach(item -> {
+            OperationAuditConditionDto.Modules modules = operationAuditConditionDto.new Modules();
+
             QueryWrapper<BeanOperationAudit> childModuleWrapper = new QueryWrapper<>();
             childModuleWrapper.eq("module_ch_desc", item).select("DISTINCT child_module_ch_desc").isNotNull("child_module_ch_desc");
-            List<String> childModule = operationAuditMapper.selectList(childModuleWrapper).stream().
-                    map(operationAudit -> operationAudit.getChildModuleChDesc()).collect(Collectors.toList());
-            moduleMenu.put(item, childModule);
+            List<OperationAuditConditionDto.Modules.ChildModules> childModules = operationAuditMapper.selectList(childModuleWrapper).stream().
+                    map(beanOperationAudit -> modules.new ChildModules().setName(beanOperationAudit.getChildModuleChDesc())).collect(Collectors.toList());
+
+            modules.setName(item);
+            modules.setChildModules(childModules);
+            modulesList.add(modules);
+            //moduleMenu.put(item, childModule);
         });
-        res.put("modules", moduleMenu);
+        operationAuditConditionDto.setModulesList(modulesList);
+        //res.put("modules", moduleMenu);
 
         QueryWrapper<BeanOperationAudit> roleWrapper = new QueryWrapper<>();
         roleWrapper.select("DISTINCT role_name").isNotNull("role_name");
-        List<String> roleList = operationAuditMapper.selectList(roleWrapper).stream().
-                map(operationAudit -> operationAudit.getRoleName()).collect(Collectors.toList());
-        res.put("roles", roleList);
+        List<OperationAuditConditionDto.Role> roleList = operationAuditMapper.selectList(roleWrapper).stream().
+                map(operationAudit -> operationAuditConditionDto.new Role().setName(operationAudit.getRoleName())).collect(Collectors.toList());
+        operationAuditConditionDto.setRoles(roleList);
+        //res.put("roles", roleList);
 
         QueryWrapper<BeanOperationAudit> requestMethodWrapper = new QueryWrapper<>();
         requestMethodWrapper.select("DISTINCT request_method").isNotNull("request_method");
         List<String> methodList = operationAuditMapper.selectList(requestMethodWrapper).stream().
                 map(operationAudit -> operationAudit.getRequestMethod()).collect(Collectors.toList());
-        res.put("methods", methodList);
-        return BaseResult.ok(res);
+        operationAuditConditionDto.setMethods(methodList);
+        //res.put("methods", methodList);
+        return operationAuditConditionDto;
     }
 
     /**
@@ -192,6 +204,7 @@ public class OperationAuditServiceImpl implements OperationAuditService {
     }
 
     @Override
+    @TranslateAfterResult
     public List<BeanOperationAudit> listRecent(Integer num) {
         if (num == null) {
             num = 20;
@@ -204,6 +217,7 @@ public class OperationAuditServiceImpl implements OperationAuditService {
     }
 
     @Override
+    @TranslateAfterResult
     public BeanOperationAudit get(Integer id) {
         QueryWrapper<BeanOperationAudit> wrapper = new QueryWrapper<>();
         wrapper.eq("id", id);
