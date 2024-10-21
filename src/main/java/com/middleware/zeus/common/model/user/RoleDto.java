@@ -29,6 +29,7 @@ public class RoleDto {
     @ApiModelProperty("角色类型: manager/normal")
     private String type;
     @ApiModelProperty("角色描述")
+    @Translate(keyName="description")
     private String description;
     @ApiModelProperty("权重")
     private Integer weight;

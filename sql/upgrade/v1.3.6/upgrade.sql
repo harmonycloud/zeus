@@ -45,34 +45,75 @@ values('role','1','en-US','name','Super Administrator');
 -- 项目管理员
 -- 繁体中文
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
-values('role','2','zh-HK','name','項目管理員');
+values('role','3','zh-HK','name','項目管理員');
 -- 英语
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
-values('role','2','en-US','name','Project Administrator');
+values('role','3','en-US','name','Project Administrator');
 
 -- 运维人员
 -- 繁体中文
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
-values('role','3','zh-HK','name','運維人員');
+values('role','4','zh-HK','name','運維人員');
 -- 英语
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
-values('role','3','en-US','name','O&M Member');
+values('role','4','en-US','name','O&M Member');
 
 -- 普通用户
 -- 繁体中文
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
-values('role','4','zh-HK','name','普通用戶');
+values('role','5','zh-HK','name','普通用戶');
 -- 英语
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
-values('role','4','en-US','name','Ordinary Member');
+values('role','5','en-US','name','Ordinary Member');
 
 -- 组织管理员
 -- 繁体中文
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
-values('role','5','zh-HK','name','組織管理員');
+values('role','2','zh-HK','name','組織管理員');
 -- 英语
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
-values('role','5','en-US','name','Organization Administrator');
+values('role','2','en-US','name','Organization Administrator');
+
+-- 翻译默认角色描述
+-- 超级管理员
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('role','1','zh-HK','description','擁有所有最高權限');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('role','1','en-US','description','Having all the highest permissions.');
+
+-- 项目管理员
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('role','3','zh-HK','description','擁有項目管理權限');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('role','3','en-US','description','Having project management permissions.');
+
+-- 运维人员
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('role','4','zh-HK','description','擁有中間件運維權限');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('role','4','en-US','description','Having middleware O&M permissions.');
+
+-- 普通用户
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('role','5','zh-HK','description','擁有平臺查看權限');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('role','5','en-US','description','Having platform viewing permissions.');
+
+-- 组织管理员
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('role','2','zh-HK','description','擁有組織管理權限');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('role','2','en-US','description','Having organization management permissions.');
 
 -- 翻译菜单名称
 -- 数据总览
