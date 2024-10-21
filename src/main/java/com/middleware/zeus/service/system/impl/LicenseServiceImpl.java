@@ -25,6 +25,7 @@ import com.middleware.zeus.util.K8sClient;
 import com.middleware.zeus.util.ThreadPoolExecutorFactory;
 import com.middleware.zeus.util.encrypt.RSAUtils;
 import com.middleware.zeus.util.numeric.ResourceCalculationUtil;
+import com.skyview.language.annotations.TranslateAfterResult;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -132,6 +133,7 @@ public class LicenseServiceImpl implements LicenseService {
     }
 
     @Override
+    @TranslateAfterResult
     public LicenseInfoDto info() {
         JSONObject license = getLicense();
         if (license == null) {
