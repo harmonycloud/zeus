@@ -1728,6 +1728,18 @@ values('servicePurpose','集群外访问','zh-HK','servicePurpose','集群外訪
 -- 英语
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
 values('servicePurpose','集群外访问','en-US','servicePurpose','Access from outside the cluster');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('servicePurpose','服务代理proxy-0','zh-HK','servicePurpose','服務代理proxy-0');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('servicePurpose','服务代理proxy-0','en-US','servicePurpose','Service proxy 0 port configuration');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('servicePurpose','服务代理proxy-1','zh-HK','servicePurpose','服務代理proxy-1');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('servicePurpose','服务代理proxy-1','en-US','servicePurpose','Service proxy 1 port configuration');
 
 UPDATE sys_resource_translate_config set translation='R/W split' where group_name='servicePurpose' and unique_value='读写分离'
 and language_code='en-US' and property='servicePurpose' and translation='R/W split Mode';
