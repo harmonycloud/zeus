@@ -1734,3 +1734,83 @@ and language_code='en-US' and property='servicePurpose' and translation='R/W spl
 
 UPDATE sys_resource_translate_config set translation='Read-Only' where group_name='servicePurpose' and unique_value='只读'
 and language_code='en-US' and property='servicePurpose' and translation='Read Only';
+
+-- todo 告警中心——告警规则缺少 平台系统监控
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('alert_target','logCollect','zh-HK','alias_name','日誌採集');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('alert_target','logCollect','en-US','alias_name','Log Capture');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('alert_target','elasticsearch','zh-HK','alias_name','日誌組件');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('alert_target','elasticsearch','en-US','alias_name','Log component');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('alert_target','minio','zh-HK','alias_name','備份存儲');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('alert_target','minio','en-US','alias_name','Backup Storage');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('alert_target','middlewareController','zh-HK','alias_name','中間件控制器');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('alert_target','middlewareController','en-US','alias_name','Middleware Operator');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('alert_target','middlewareBackupController','zh-HK','alias_name','備份控制器');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('alert_target','middlewareBackupController','en-US','alias_name','Backup Controller');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('alert_target','middlewareScheduler','zh-HK','alias_name','擴展調度器');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('alert_target','middlewareScheduler','en-US','alias_name','Extended Scheduler');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('alert_target','lvmController','zh-HK','alias_name','LVM控制器');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('alert_target','lvmController','en-US','alias_name','LVM Controller');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('alert_target','localPathController','zh-HK','alias_name','Local-Path控制器');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('alert_target','localPathController','en-US','alias_name','Local-Path Controller');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('alert_target','grafana','zh-HK','alias_name','監控面板');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('alert_target','grafana','en-US','alias_name','Monitor Dashboard');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('alert_target','prometheus','zh-HK','alias_name','數據監控');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('alert_target','prometheus','en-US','alias_name','Monitoring');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('alert_target','alertmanager','zh-HK','alias_name','監控告警');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('alert_target','alertmanager','en-US','alias_name','Monitoring Alerts');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('alert_target','network','zh-HK','alias_name','網絡監控');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('alert_target','network','en-US','alias_name','Network Monitoring');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('alert_target','cluster','zh-HK','alias_name','集羣監控');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('alert_target','cluster','en-US','alias_name','Cluster Monitoring');
