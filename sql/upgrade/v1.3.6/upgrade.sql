@@ -1873,6 +1873,8 @@ values('alert_target','cluster','zh-HK','alias_name','集羣監控');
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
 values('alert_target','cluster','en-US','alias_name','Cluster Monitoring');
 
+update personal_config set platform_name='Zeus | CloudDB',platform_alias_name='CloudDB' where platform_alias_name='Middleware Management Integration Platform';
+
 -- 繁体中文
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
 values('license_info','正式版','zh-HK','type','正式版');
