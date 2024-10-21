@@ -1735,7 +1735,12 @@ and language_code='en-US' and property='servicePurpose' and translation='R/W spl
 UPDATE sys_resource_translate_config set translation='Read-Only' where group_name='servicePurpose' and unique_value='只读'
 and language_code='en-US' and property='servicePurpose' and translation='Read Only';
 
--- todo 告警中心——告警规则缺少 平台系统监控
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('alert_target','platform','zh-HK','alias_name','平臺系統監控');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('alert_target','platform','en-US','alias_name','Platform System Monitoring');
 -- 繁体中文
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
 values('alert_target','logCollect','zh-HK','alias_name','日誌採集');
