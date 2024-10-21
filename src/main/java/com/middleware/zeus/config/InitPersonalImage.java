@@ -129,8 +129,8 @@ public class InitPersonalImage {
         personal.setSlogan("让IT更美好");
         String year = DateUtils.formatDate(new Date(), DateStyle.YYYY);
         personal.setCopyrightNotice("Copyright © " + year + " 杭州谐云科技有限公司 All rights reserved.Copyright.");
-        personal.setPlatformName("Zeus | Middleware Management Integration Platform");
-        personal.setPlatformAliasName("Middleware Management Integration Platform");
+        personal.setPlatformName("Zeus | CloudDB");
+        personal.setPlatformAliasName("CloudDB");
         personal.setLanguage("en-US");
         personalMapper.insert(personal);
     }

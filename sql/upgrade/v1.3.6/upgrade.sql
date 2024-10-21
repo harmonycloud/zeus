@@ -1728,3 +1728,9 @@ values('servicePurpose','集群外访问','zh-HK','servicePurpose','集群外訪
 -- 英语
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
 values('servicePurpose','集群外访问','en-US','servicePurpose','Access from outside the cluster');
+
+UPDATE sys_resource_translate_config set translation='R/W split' where group_name='servicePurpose' and unique_value='读写分离'
+and language_code='en-US' and property='servicePurpose' and translation='R/W split Mode';
+
+UPDATE sys_resource_translate_config set translation='Read-Only' where group_name='servicePurpose' and unique_value='只读'
+and language_code='en-US' and property='servicePurpose' and translation='Read Only';
