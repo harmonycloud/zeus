@@ -1282,28 +1282,10 @@ insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_
 values('operation_audit','保存数据表所有外键','en-US','actionChDesc','Save All Foreign Keys Of The Data Table');
 -- 繁体中文
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
-values('operation_audit','创建用户','zh-HK','actionChDesc','創建用戶');
--- 英语
-insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
-values('operation_audit','创建用户','en-US','actionChDesc','Create User');
--- 繁体中文
-insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
-values('operation_audit','删除用户','zh-HK','actionChDesc','刪除用戶');
--- 英语
-insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
-values('operation_audit','删除用户','en-US','actionChDesc','Delete User');
--- 繁体中文
-insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
 values('operation_audit','更新用户','zh-HK','actionChDesc','更新用戶');
 -- 英语
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
 values('operation_audit','更新用户','en-US','actionChDesc','Update User');
--- 繁体中文
-insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
-values('operation_audit','重置密码','zh-HK','actionChDesc','重置密碼');
--- 英语
-insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
-values('operation_audit','重置密码','en-US','actionChDesc','Reset Password');
 -- 繁体中文
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
 values('operation_audit','修改用户账号状态','zh-HK','actionChDesc','修改用戶賬號狀態');
@@ -1346,12 +1328,6 @@ values('operation_audit','执行sql','zh-HK','actionChDesc','執行sql');
 -- 英语
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
 values('operation_audit','执行sql','en-US','actionChDesc','Execute SQL');
--- 繁体中文
-insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
-values('operation_audit','查询审计日志','zh-HK','actionChDesc','查詢審計日誌');
--- 英语
-insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
-values('operation_audit','查询审计日志','en-US','actionChDesc','Query Audit Log');
 -- 繁体中文
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
 values('operation_audit','执行sql语句','zh-HK','actionChDesc','執行sql語句');
@@ -1448,12 +1424,6 @@ values('operation_audit','取消用户权限','zh-HK','actionChDesc','取消用�
 -- 英语
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
 values('operation_audit','取消用户权限','en-US','actionChDesc','Cancel User Permission');
--- 繁体中文
-insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
-values('operation_audit','重置密码','zh-HK','actionChDesc','重置密碼');
--- 英语
-insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
-values('operation_audit','重置密码','en-US','actionChDesc','Reset Password');
 -- 繁体中文
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
 values('operation_audit','启用/禁用用户','zh-HK','actionChDesc','啓用/禁用用戶');
@@ -1660,12 +1630,6 @@ insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_
 values('operation_audit','绑定/解绑项目','en-US','actionChDesc','Bind/Unbind Project');
 -- 繁体中文
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
-values('operation_audit','重启pod','zh-HK','actionChDesc','重啓pod');
--- 英语
-insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
-values('operation_audit','重启pod','en-US','actionChDesc','Restart Pod');
--- 繁体中文
-insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
 values('operation_audit','pod主机迁移','zh-HK','actionChDesc','pod主機遷移');
 -- 英语
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
@@ -1718,12 +1682,6 @@ values('operation_audit','查询pod日志文件列表','zh-HK','actionChDesc','�
 -- 英语
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
 values('operation_audit','查询pod日志文件列表','en-US','actionChDesc','Query The List Of Pod Log Files');
--- 繁体中文
-insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
-values('operation_audit','查询审计日志','zh-HK','actionChDesc','查詢審計日誌');
--- 英语
-insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
-values('operation_audit','查询审计日志','en-US','actionChDesc','Query Audit Logs');
 
 -- 服务暴露purpose国际化
 delete from sys_resource_translate_config where `group_name` = 'servicePurpose';
