@@ -136,9 +136,8 @@ public class AlertServiceImpl implements AlertService {
     }
 
     @Override
-    public PageInfo<AlertDTO> searchAlertRecord(AlertRecordQueryDto query) {
-        // 使用分页工具
-        PageHelper.startPage(query.getCurrent(), query.getSize());
+    @TranslateAfterResult
+    public List<BeanAlertRecord> searchAlertRecord(AlertRecordQueryDto query) {
         // 封装数据库查询逻辑
         QueryWrapper<BeanAlertRecord> wrapper = new QueryWrapper<>();
         // 根据告警记录对象查询
@@ -183,6 +182,11 @@ public class AlertServiceImpl implements AlertService {
         }
         // 查询告警记录数据
         List<BeanAlertRecord> alertRecordList = beanAlertRecordMapper.selectList(wrapper);
+        return alertRecordList;
+    }
+
+    @Override
+    public PageInfo<AlertDTO> pageAlertRecord(List<BeanAlertRecord> alertRecordList) {
         // 封装数据
         PageInfo<AlertDTO> alertDtoPageInfo = new PageInfo<>();
 
@@ -199,7 +203,7 @@ public class AlertServiceImpl implements AlertService {
                 alertDTO.setMessage(alertDTO.getSummary());
             }
             if (StringUtils.isNotEmpty(alertDTO.getClusterId())
-                && clusterAliasNameMap.containsKey(alertDTO.getClusterId())) {
+                    && clusterAliasNameMap.containsKey(alertDTO.getClusterId())) {
                 alertDTO.setNickname(clusterAliasNameMap.get(alertDTO.getClusterId()));
             }
             return alertDTO;

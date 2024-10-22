@@ -2,6 +2,7 @@ package com.middleware.zeus.controller.system;
 
 import java.util.List;
 
+import com.github.pagehelper.PageHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -62,7 +63,9 @@ public class AlertController {
         if (alertRecordQueryDto.getSize() == null){
             alertRecordQueryDto.setSize(10);
         }
-        return BaseResult.ok(alertService.searchAlertRecord(alertRecordQueryDto));
+        // 使用分页工具
+        PageHelper.startPage(alertRecordQueryDto.getCurrent(), alertRecordQueryDto.getSize());
+        return BaseResult.ok(alertService.pageAlertRecord(alertService.searchAlertRecord(alertRecordQueryDto)));
     }
 
     @ApiOperation(value = "新建/接入告警对象", notes = "新建/接入告警对象")

@@ -1,6 +1,7 @@
 package com.middleware.zeus.service.system;
 
 import com.github.pagehelper.PageInfo;
+import com.middleware.zeus.bean.BeanAlertRecord;
 import com.middleware.zeus.common.model.*;
 import com.middleware.zeus.common.model.middleware.MiddlewareAlertsDTO;
 
@@ -34,9 +35,11 @@ public interface AlertService {
      * 查询告警记录
      *
      * @param alertRecordQueryDto 告警记录查询
-     * @return List<AlertDTO>
+     * @return List<BeanAlertRecord>
      */
-    PageInfo<AlertDTO> searchAlertRecord(AlertRecordQueryDto alertRecordQueryDto);
+    List<BeanAlertRecord> searchAlertRecord(AlertRecordQueryDto alertRecordQueryDto);
+
+    PageInfo<AlertDTO> pageAlertRecord(List<BeanAlertRecord> alertRecordList);
 
     /**
      * 新建/接入告警对象
