@@ -19,6 +19,7 @@ import com.middleware.zeus.service.k8s.ActiveAreaService;
 import com.middleware.zeus.service.k8s.ClusterComponentService;
 import com.middleware.zeus.service.k8s.MiddlewareCRService;
 import com.middleware.zeus.service.k8s.NodeService;
+import com.skyview.language.annotations.TranslateAfterResult;
 import io.fabric8.kubernetes.api.model.Pod;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -185,6 +186,7 @@ public class ActiveAreaServiceImpl implements ActiveAreaService {
     }
 
     @Override
+    @TranslateAfterResult
     public List<ActiveAreaDto> list(String clusterId) {
         QueryWrapper<BeanActiveArea> wrapper = new QueryWrapper<BeanActiveArea>().eq("cluster_id", clusterId);
         List<BeanActiveArea> beanActiveAreaList;

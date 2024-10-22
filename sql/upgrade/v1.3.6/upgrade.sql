@@ -1931,3 +1931,23 @@ values('alert','集群监控','zh-HK','aliasName','集羣監控');
 -- 英语
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
 values('alert','集群监控','en-US','aliasName','Cluster Monitoring');
+
+-- 双活可用区
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('active_area','可用区A','zh-HK','aliasName','可用區A');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('active_area','可用区A','en-US','aliasName','ZoneA');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('active_area','可用区B','zh-HK','aliasName','可用區B');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('active_area','可用区B','en-US','aliasName','ZoneB');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('active_area','仲裁区','zh-HK','aliasName','仲裁區');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('active_area','仲裁区','en-US','aliasName','Arbitration Zone');
