@@ -105,6 +105,7 @@ public class UserServiceImpl extends AbstractUserService implements UserService 
 
 
     @Override
+    @TranslateAfterResult
     public UserDto getUserDto(String userName, String projectId, boolean roleDetail) {
         if (StringUtils.isEmpty(userName)) {
             userName = getUsername();
