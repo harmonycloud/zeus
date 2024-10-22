@@ -543,7 +543,7 @@ insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_
 values('operation_audit','超级管理员','zh-HK','userName','超級管理員');
 -- 英语
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
-values('operation_audit','超级管理员','en-US','childModuleChDesc','Super Administrator');
+values('operation_audit','超级管理员','en-US','userName','Super Administrator');
 -- 超级管理员
 -- 繁体中文
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
