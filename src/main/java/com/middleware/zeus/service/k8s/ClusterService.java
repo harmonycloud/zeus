@@ -250,5 +250,5 @@ public interface ClusterService {
      * @param clusterId
      * @return
      */
-    Map<String, MonitorDto> getClusterMonitors(String clusterId);
+    List<MonitorDto> getClusterMonitors(String clusterId);
 }

@@ -2124,3 +2124,26 @@ values('middleware_backup_record','仲裁区','zh-HK','areaAliasName','仲裁區
 -- 英语
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
 values('middleware_backup_record','仲裁区','en-US','areaAliasName','Arbitration Zone');
+
+-- 集群监控面板
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('cluster_monitor_dashboard','主机网络看板','zh-HK','title','主機網絡看板');
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('cluster_monitor_dashboard','主机网络看板','en-US','title','Host network dashboard');
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('cluster_monitor_dashboard','Pod资源看板','zh-HK','title','Pod資源看板');
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('cluster_monitor_dashboard','Pod资源看板','en-US','title','Pod resource dashboard');
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('cluster_monitor_dashboard','etcd看板','zh-HK','title','etcd看板');
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('cluster_monitor_dashboard','etcd看板','en-US','title','etcd dashboard');
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('cluster_monitor_dashboard','主机基础看板','zh-HK','title','主機基礎看板');
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('cluster_monitor_dashboard','主机基础看板','en-US','title','Host base dashboard');
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('cluster_monitor_dashboard','主机磁盘看板','zh-HK','title','主機磁盤看板');
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('cluster_monitor_dashboard','主机磁盘看板','en-US','title','Host disk dashboard');

@@ -14,6 +14,7 @@ import com.middleware.zeus.common.constants.DateStyle;
 import com.middleware.zeus.common.model.ClusterComponentsDto;
 import com.middleware.zeus.common.model.middleware.*;
 import com.middleware.zeus.dao.BeanKubeConfigMapper;
+import com.skyview.language.annotations.TranslateAfterResult;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -469,7 +470,8 @@ public class ClusterServiceImpl extends AbstractClusterService implements Cluste
     }
 
     @Override
-    public Map<String, MonitorDto> getClusterMonitors(String clusterId) {
+    @TranslateAfterResult
+    public List<MonitorDto> getClusterMonitors(String clusterId) {
         //获取组件信息
         ClusterComponentsDto grafana = clusterComponentService.get(clusterId, "grafana");
         if (grafana == null) {
@@ -491,7 +493,7 @@ public class ClusterServiceImpl extends AbstractClusterService implements Cluste
         HashMap<String, String> labels = new HashMap<>();
         labels.put("zeus_dashboard", "kubernetes");
         List<ConfigMap> monitorList = configMapService.list(clusterId, "monitoring", labels);
-        HashMap<String, MonitorDto> monitorMap = new HashMap<>();
+        List<MonitorDto> monitorDtoList = new ArrayList<>();
         if (CollectionUtils.isEmpty(monitorList)) {
             return null;
         }
@@ -512,10 +514,10 @@ public class ClusterServiceImpl extends AbstractClusterService implements Cluste
                 return;
             }
             String url = monitorInfo.getAddress() + "/d/" + uid;
-            MonitorDto monitorDto = new MonitorDto().setAuthorization("Bearer " + monitorInfo.getToken()).setUrl(url);
-            monitorMap.put(title, monitorDto);
+            MonitorDto monitorDto = new MonitorDto().setAuthorization("Bearer " + monitorInfo.getToken()).setUrl(url).setTitle(title);
+            monitorDtoList.add(monitorDto);
         });
-        return monitorMap;
+        return monitorDtoList;
     }
 
     /**
