@@ -40,6 +40,7 @@ import com.middleware.zeus.util.middleware.ChartVersionUtil;
 import com.middleware.zeus.util.middleware.MiddlewareModeUtil;
 import com.middleware.zeus.util.middleware.MiddlewareResourceCalculateUtil;
 import com.middleware.zeus.util.numeric.ResourceCalculationUtil;
+import com.skyview.language.annotations.TranslateAfterResult;
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.LocalObjectReference;
 import io.fabric8.kubernetes.api.model.Secret;
@@ -743,6 +744,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     }
 
     @Override
+    @TranslateAfterResult
     public MiddlewareTopologyDTO topology(String clusterId, String namespace, String name, String type) throws Exception {
         Middleware middleware = podService.list(clusterId, namespace, name, type);
         MiddlewareTopologyDTO middlewareTopologyDTO =

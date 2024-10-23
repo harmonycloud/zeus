@@ -1,6 +1,7 @@
 package com.middleware.zeus.common.model.middleware;
 
 import com.middleware.zeus.common.model.MonitorResourceQuota;
+import com.skyview.language.annotations.TranslateObject;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -45,6 +46,7 @@ public class MiddlewareTopologyDTO {
     private String provisioner;
 
     @ApiModelProperty("pod信息")
+    @TranslateObject
     private List<PodInfo> pods;
 
     @ApiModelProperty("中间件pod list组")

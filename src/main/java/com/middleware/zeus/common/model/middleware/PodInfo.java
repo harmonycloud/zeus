@@ -54,6 +54,7 @@ public class PodInfo implements Serializable {
     @ApiModelProperty("资源(源自prometheus)")
     private MonitorResourceQuota monitorResourceQuota;
     @ApiModelProperty("节点所在可用区中文名")
+    @DirectTranslate(groupName = "topology_pod_info", uniqueKeyName = "nodeZone", keyName = "nodeZone")
     private String nodeZone;
     @ApiModelProperty("可用区编码(zoneA或zoneB)")
     private String zone;

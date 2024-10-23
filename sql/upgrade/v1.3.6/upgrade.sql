@@ -2084,3 +2084,24 @@ values (@lastID, 'zh-HK', '備份進程{0}');
 -- 英语
 insert into sys_regex_resource_translate_config(`regex_id`, `language_code`, `translation`)
 values (@lastID, 'en-US', 'Backup Process{0}');
+
+-- 中间件详情页双活可用区
+-- 繁体中文
+delete from sys_resource_translate_config where group_name = 'topology_pod_info';
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('topology_pod_info','可用区A','zh-HK','nodeZone','可用區A');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('topology_pod_info','可用区A','en-US','nodeZone','ZoneA');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('topology_pod_info','可用区B','zh-HK','nodeZone','可用區B');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('topology_pod_info','可用区B','en-US','nodeZone','ZoneB');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('topology_pod_info','仲裁区','zh-HK','nodeZone','仲裁區');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('topology_pod_info','仲裁区','en-US','nodeZone','Arbitration Zone');
