@@ -2,6 +2,8 @@ package com.middleware.zeus.common.model.middleware;
 
 import com.middleware.zeus.common.model.ContainerWithStatus;
 import com.middleware.zeus.common.model.MonitorResourceQuota;
+import com.skyview.language.annotations.DirectTranslate;
+import com.skyview.language.annotations.RegexTranslate;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -66,5 +68,6 @@ public class PodInfo implements Serializable {
     @ApiModelProperty("pod容器ready status信息")
     private String readyStatus;
     @ApiModelProperty("pod别名(仅备份恢复会用到)")
+    @RegexTranslate(staticGroupName="process_pod_info")
     private String podAliasName;
 }

@@ -1,5 +1,8 @@
 package com.middleware.zeus.common.model.middleware;
 
+import com.skyview.language.annotations.DirectTranslate;
+import com.skyview.language.annotations.RegexTranslate;
+import com.skyview.language.annotations.TranslateObject;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -50,12 +53,14 @@ public class ProgressInfo {
     private Float currentProgress;
 
     @ApiModelProperty("进度描述")
+    @RegexTranslate(staticGroupName="progress_info")
     private String progressDescription;
 
     @ApiModelProperty("备份或恢复创建时间")
     private Date createTime;
 
     @ApiModelProperty("备份进程")
+    @TranslateObject
     private List<PodInfo> taskPods;
 
 }

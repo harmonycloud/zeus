@@ -1980,3 +1980,107 @@ values (@lastID, 'zh-HK', '{0}無');
 -- 英语
 insert into sys_regex_resource_translate_config(`regex_id`, `language_code`, `translation`)
 values (@lastID, 'en-US', '{0}no data');
+
+-- 备份任务详情
+-- 繁体中文
+delete from sys_regex_resource_translate_config where regex_id in (select id from sys_regex_resource_config where group_name = 'progress_info');
+delete from sys_regex_resource_config where group_name = 'progress_info';
+insert into sys_regex_resource_config(`group_name`, `regex`)
+values ('progress_info', '{0}/{1}获取恢复组件信息');
+set @lastID = (select last_insert_id());
+insert into sys_regex_resource_translate_config(`regex_id`, `language_code`, `translation`)
+values (@lastID, 'zh-HK', '{0}/{1}獲取恢復組件信息');
+-- 英语
+insert into sys_regex_resource_translate_config(`regex_id`, `language_code`, `translation`)
+values (@lastID, 'en-US', '{0}/{1}Retrieving recovery component information');
+-- 繁体中文
+insert into sys_regex_resource_config(`group_name`, `regex`)
+values ('progress_info', '{0}/{1}正在运行备份任务');
+set @lastID = (select last_insert_id());
+insert into sys_regex_resource_translate_config(`regex_id`, `language_code`, `translation`)
+values (@lastID, 'zh-HK', '{0}/{1}正在運行備份任務');
+-- 英语
+insert into sys_regex_resource_translate_config(`regex_id`, `language_code`, `translation`)
+values (@lastID, 'en-US', '{0}/{1}Running backup');
+-- 繁体中文
+insert into sys_regex_resource_config(`group_name`, `regex`)
+values ('progress_info', '{0}/{1}备份结束');
+set @lastID = (select last_insert_id());
+insert into sys_regex_resource_translate_config(`regex_id`, `language_code`, `translation`)
+values (@lastID, 'zh-HK', '{0}/{1}備份結束');
+-- 英语
+insert into sys_regex_resource_translate_config(`regex_id`, `language_code`, `translation`)
+values (@lastID, 'en-US', '{0}/{1}Backup completed');
+-- 繁体中文
+insert into sys_regex_resource_config(`group_name`, `regex`)
+values ('progress_info', '{0}/{1}等待组件启动');
+set @lastID = (select last_insert_id());
+insert into sys_regex_resource_translate_config(`regex_id`, `language_code`, `translation`)
+values (@lastID, 'zh-HK', '{0}/{1}等待組件啓動');
+-- 英语
+insert into sys_regex_resource_translate_config(`regex_id`, `language_code`, `translation`)
+values (@lastID, 'en-US', '{0}/{1}Waiting for component startup');
+-- 繁体中文
+insert into sys_regex_resource_config(`group_name`, `regex`)
+values ('progress_info', '{0}/{1}获取组件信息');
+set @lastID = (select last_insert_id());
+insert into sys_regex_resource_translate_config(`regex_id`, `language_code`, `translation`)
+values (@lastID, 'zh-HK', '{0}/{1}獲取組件信息');
+-- 英语
+insert into sys_regex_resource_translate_config(`regex_id`, `language_code`, `translation`)
+values (@lastID, 'en-US', '{0}/{1}Retrieving component information');
+-- 繁体中文
+insert into sys_regex_resource_config(`group_name`, `regex`)
+values ('progress_info', '{0}/{1}开始停止组件');
+set @lastID = (select last_insert_id());
+insert into sys_regex_resource_translate_config(`regex_id`, `language_code`, `translation`)
+values (@lastID, 'zh-HK', '{0}/{1}開始停止組件');
+-- 英语
+insert into sys_regex_resource_translate_config(`regex_id`, `language_code`, `translation`)
+values (@lastID, 'en-US', '{0}/{1}Starting to stop the component');
+-- 繁体中文
+insert into sys_regex_resource_config(`group_name`, `regex`)
+values ('progress_info', '{0}/{1}等待组件完全停止');
+set @lastID = (select last_insert_id());
+insert into sys_regex_resource_translate_config(`regex_id`, `language_code`, `translation`)
+values (@lastID, 'zh-HK', '{0}/{1}等待組件完全停止');
+-- 英语
+insert into sys_regex_resource_translate_config(`regex_id`, `language_code`, `translation`)
+values (@lastID, 'en-US', '{0}/{1}Waiting for the components to completely stop');
+-- 繁体中文
+insert into sys_regex_resource_config(`group_name`, `regex`)
+values ('progress_info', '{0}/{1}正在运行恢复任务');
+set @lastID = (select last_insert_id());
+insert into sys_regex_resource_translate_config(`regex_id`, `language_code`, `translation`)
+values (@lastID, 'zh-HK', '{0}/{1}正在運行恢復任務');
+-- 英语
+insert into sys_regex_resource_translate_config(`regex_id`, `language_code`, `translation`)
+values (@lastID, 'en-US', '{0}/{1}Running backup recovery');
+-- 繁体中文
+insert into sys_regex_resource_config(`group_name`, `regex`)
+values ('progress_info', '{0}/{1}数据恢复完毕，正在启动组件');
+set @lastID = (select last_insert_id());
+insert into sys_regex_resource_translate_config(`regex_id`, `language_code`, `translation`)
+values (@lastID, 'zh-HK', '{0}/{1}數據恢復完畢，正在啓動組件');
+-- 英语
+insert into sys_regex_resource_translate_config(`regex_id`, `language_code`, `translation`)
+values (@lastID, 'en-US', '{0}/{1}Data recovery is complete, and the component is starting');
+-- 繁体中文
+insert into sys_regex_resource_config(`group_name`, `regex`)
+values ('progress_info', '{0}/{1}恢复完成');
+set @lastID = (select last_insert_id());
+insert into sys_regex_resource_translate_config(`regex_id`, `language_code`, `translation`)
+values (@lastID, 'zh-HK', '{0}/{1}恢復完成');
+-- 英语
+insert into sys_regex_resource_translate_config(`regex_id`, `language_code`, `translation`)
+values (@lastID, 'en-US', '{0}/{1}Recovery completely');
+
+-- 繁体中文
+insert into sys_regex_resource_config(`group_name`, `regex`)
+values ('process_pod_info', '备份进程{0}');
+set @lastID = (select last_insert_id());
+insert into sys_regex_resource_translate_config(`regex_id`, `language_code`, `translation`)
+values (@lastID, 'zh-HK', '備份進程{0}');
+-- 英语
+insert into sys_regex_resource_translate_config(`regex_id`, `language_code`, `translation`)
+values (@lastID, 'en-US', 'Backup Process{0}');
