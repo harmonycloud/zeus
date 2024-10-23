@@ -5,6 +5,7 @@ import com.middleware.zeus.common.base.BaseResult;
 import com.middleware.zeus.common.constants.CommonConstant;
 import com.middleware.zeus.common.enums.middleware.MiddlewareTypeEnum;
 import com.middleware.zeus.common.model.MysqlAccessInfo;
+import com.middleware.zeus.common.model.MysqlDRAccessInfo;
 import com.middleware.zeus.common.model.MysqlDbDTO;
 import com.middleware.zeus.common.model.MysqlUserDTO;
 import com.middleware.zeus.util.date.DateUtils;
@@ -22,6 +23,7 @@ import com.middleware.zeus.service.middleware.MysqlService;
 import com.middleware.zeus.service.mysql.MysqlUserService;
 import com.middleware.zeus.util.encrypt.MyAESUtil;
 import com.middleware.zeus.util.middleware.MysqlConnectionUtil;
+import com.skyview.language.annotations.TranslateAfterResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -57,6 +59,8 @@ public class MysqlServiceImpl implements MysqlService {
     private NodeService nodeService;
     @Autowired
     private ClusterService clusterService;
+    @Autowired
+    private MysqlService mysqlService;
 
     private final static Map<String, String> titleMap = new HashMap<String, String>(7) {
         {
@@ -82,18 +86,22 @@ public class MysqlServiceImpl implements MysqlService {
     }
 
     @Override
-    public BaseResult queryAccessInfo(String clusterId, String namespace, String middlewareName) {
+    public MysqlDRAccessInfo queryAccessInfo(String clusterId, String namespace, String middlewareName) {
         // 获取对外访问信息
         Middleware middleware = middlewareService.detail(clusterId, namespace, middlewareName, MiddlewareTypeEnum.MYSQL.getType());
-        JSONObject res = new JSONObject();
+        MysqlDRAccessInfo res = new MysqlDRAccessInfo();
         MysqlDTO mysqlDTO = middleware.getMysqlDTO();
         if (mysqlDTO != null) {
             Boolean isSource = mysqlDTO.getIsSource();
-            MysqlAccessInfo source = queryBasicAccessInfo(clusterId, namespace, middlewareName, middleware);
+            MysqlAccessInfo source = mysqlService.queryBasicAccessInfo(clusterId, namespace, middlewareName, middleware);
             source.setClusterId(clusterId);
             source.setNamespace(namespace);
             source.setMiddlewareName(middlewareName);
-            res.put(getInstanceType(isSource, mysqlDTO.getOpenDisasterRecoveryMode()), source);
+            if (getInstanceType(isSource, mysqlDTO.getOpenDisasterRecoveryMode()).equals("source")) {
+                res.setSource(source);
+            } else {
+                res.setDisasterRecovery(source);
+            }
             if (isSource != null && mysqlDTO.getOpenDisasterRecoveryMode() != null && mysqlDTO.getOpenDisasterRecoveryMode()) {
                 String relationClusterId = mysqlDTO.getRelationClusterId();
                 String relationNamespace = mysqlDTO.getRelationNamespace();
@@ -103,17 +111,21 @@ public class MysqlServiceImpl implements MysqlService {
                     relationMiddleware = middlewareService.detail(relationClusterId, relationNamespace, relationName, MiddlewareTypeEnum.MYSQL.getType());
                 } catch (Exception e) {
                     log.error("关联实例不存在", e);
-                    return BaseResult.ok(res);
+                    return res;
                 }
                 MysqlAccessInfo relation;
-                relation = queryBasicAccessInfo(relationClusterId, relationNamespace, relationName, middleware);
+                relation = mysqlService.queryBasicAccessInfo(relationClusterId, relationNamespace, relationName, middleware);
                 relation.setClusterId( relationClusterId);
                 relation.setNamespace(relationNamespace);
                 relation.setMiddlewareName( relationName);
-                res.put(getInstanceType(!isSource, relationMiddleware.getMysqlDTO().getOpenDisasterRecoveryMode()), relation);
+                if (getInstanceType(!isSource, relationMiddleware.getMysqlDTO().getOpenDisasterRecoveryMode()).equals("source")) {
+                    res.setSource(source);
+                } else {
+                    res.setDisasterRecovery(source);
+                }
             }
         }
-        return BaseResult.ok(res);
+        return res;
     }
 
     @Override
@@ -157,6 +169,8 @@ public class MysqlServiceImpl implements MysqlService {
         return slowSqlDTOS;
     }
 
+    @Override
+    @TranslateAfterResult
     public MysqlAccessInfo queryBasicAccessInfo(String clusterId, String namespace, String middlewareName, Middleware middleware) {
         if (middleware == null) {
             middleware = middlewareService.detail(clusterId, namespace, middlewareName, MiddlewareTypeEnum.MYSQL.getType());

@@ -1951,3 +1951,23 @@ values('active_area','仲裁区','zh-HK','aliasName','仲裁區');
 -- 英语
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
 values('active_area','仲裁区','en-US','aliasName','Arbitration Zone');
+
+-- mysql灾备翻译
+-- 繁体中文
+insert into sys_regex_resource_config(`group_name`, `regex`)
+values ('mysql_access_info', '{0}(集群内部)');
+set @lastID = (select last_insert_id());
+insert into sys_regex_resource_translate_config(`regex_id`, `language_code`, `translation`)
+values (@lastID, 'zh-HK', '{0}(集羣內部)');
+-- 英语
+insert into sys_regex_resource_translate_config(`regex_id`, `language_code`, `translation`)
+values (@lastID, 'en-US', '{0}(Within the Cluster)');
+-- 繁体中文
+insert into sys_regex_resource_config(`group_name`, `regex`)
+values ('mysql_access_info', '{0}(集群外部)');
+set @lastID = (select last_insert_id());
+insert into sys_regex_resource_translate_config(`regex_id`, `language_code`, `translation`)
+values (@lastID, 'zh-HK', '{0}(集羣外部)');
+-- 英语
+insert into sys_regex_resource_translate_config(`regex_id`, `language_code`, `translation`)
+values (@lastID, 'en-US', '{0}(Outside the cluster)');

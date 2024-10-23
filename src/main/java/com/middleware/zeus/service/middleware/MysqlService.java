@@ -1,6 +1,9 @@
 package com.middleware.zeus.service.middleware;
 
 import com.middleware.zeus.common.base.BaseResult;
+import com.middleware.zeus.common.model.MysqlAccessInfo;
+import com.middleware.zeus.common.model.MysqlDRAccessInfo;
+import com.middleware.zeus.common.model.middleware.Middleware;
 import com.middleware.zeus.common.model.middleware.MysqlLogDTO;
 import com.middleware.zeus.common.model.middleware.MiddlewareLogQuery;
 import com.middleware.zeus.util.page.PageObject;
@@ -30,7 +33,7 @@ public interface MysqlService {
      * @param namespace      命名空间
      * @param middlewareName 中间件名称
      */
-    BaseResult queryAccessInfo(String clusterId, String namespace, String middlewareName);
+    MysqlDRAccessInfo queryAccessInfo(String clusterId, String namespace, String middlewareName);
 
     /**
      * mysql慢日志查询
@@ -56,4 +59,14 @@ public interface MysqlService {
      * @throws Exception
      */
     PageObject<MysqlLogDTO> auditSql(MiddlewareLogQuery auditLogQuery);
+
+    /**
+     * 获取mysql灾备信息
+     * @param clusterId
+     * @param namespace
+     * @param middlewareName
+     * @param middleware
+     * @return
+     */
+    MysqlAccessInfo queryBasicAccessInfo(String clusterId, String namespace, String middlewareName, Middleware middleware);
 }
