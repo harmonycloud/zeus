@@ -1971,3 +1971,12 @@ values (@lastID, 'zh-HK', '{0}(集羣外部)');
 -- 英语
 insert into sys_regex_resource_translate_config(`regex_id`, `language_code`, `translation`)
 values (@lastID, 'en-US', '{0}(Outside the cluster)');
+-- 繁体中文
+insert into sys_regex_resource_config(`group_name`, `regex`)
+values ('mysql_access_info', '{0}无');
+set @lastID = (select last_insert_id());
+insert into sys_regex_resource_translate_config(`regex_id`, `language_code`, `translation`)
+values (@lastID, 'zh-HK', '{0}無');
+-- 英语
+insert into sys_regex_resource_translate_config(`regex_id`, `language_code`, `translation`)
+values (@lastID, 'en-US', '{0}no data');
