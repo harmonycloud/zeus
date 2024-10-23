@@ -1037,6 +1037,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
+    @TranslateAfterResult
     public List<MiddlewareBackupRecord> backupRecords(String clusterId, String namespace, String middlewareName, String type,
                                                       String backupId, String backupMode, String orderBy, String activeArea) {
         // 获取所有备份记录：包含单次备份、周期备份定时创建的、增量备份定时创建的
