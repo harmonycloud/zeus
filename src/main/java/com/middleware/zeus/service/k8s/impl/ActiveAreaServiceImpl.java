@@ -238,6 +238,7 @@ public class ActiveAreaServiceImpl implements ActiveAreaService {
     }
 
     @Override
+    @TranslateAfterResult
     public ActiveAreaDto getAreaResource(String clusterId, String areaName) {
         Map<String, String> labels = new HashMap<>();
         labels.put(zoneKey, areaName);
