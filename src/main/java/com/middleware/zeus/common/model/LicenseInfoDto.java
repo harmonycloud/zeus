@@ -1,5 +1,7 @@
 package com.middleware.zeus.common.model;
 
+import com.skyview.language.annotations.DirectTranslate;
+import com.skyview.language.annotations.TranslateGroupInfo;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -16,6 +18,7 @@ public class LicenseInfoDto {
     private String user;
 
     @ApiModelProperty("授权类型")
+    @DirectTranslate(groupName="license_info",uniqueKeyName="type", keyName="type")
     private String type;
 
     @ApiModelProperty("识别码")

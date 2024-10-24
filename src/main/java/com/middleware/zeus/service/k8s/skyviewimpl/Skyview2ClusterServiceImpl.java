@@ -80,7 +80,7 @@ public class Skyview2ClusterServiceImpl extends AbstractClusterService implement
     }
 
     @Override
-    public Map<String, MonitorDto> getClusterMonitors(String clusterId) {
+    public List<MonitorDto> getClusterMonitors(String clusterId) {
         return null;
     }
 

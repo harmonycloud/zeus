@@ -37,6 +37,7 @@ import com.middleware.zeus.service.user.RoleAuthorityService;
 import com.middleware.zeus.service.user.UserService;
 import com.middleware.zeus.util.numeric.MathUtil;
 import com.middleware.zeus.util.middleware.MiddlewareBackupTrimUtil;
+import com.skyview.language.annotations.TranslateAfterResult;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -1036,6 +1037,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
+    @TranslateAfterResult
     public List<MiddlewareBackupRecord> backupRecords(String clusterId, String namespace, String middlewareName, String type,
                                                       String backupId, String backupMode, String orderBy, String activeArea) {
         // 获取所有备份记录：包含单次备份、周期备份定时创建的、增量备份定时创建的
@@ -1070,6 +1072,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
+    @TranslateAfterResult
     public ProgressInfo getBackupProgress(String clusterId, String namespace, String middlewareName, String backupName) {
         // 查询backup cr
         MiddlewareBackup backup = backupCRDService.get(clusterId, namespace, backupName);
@@ -1108,6 +1111,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
+    @TranslateAfterResult
     public ProgressInfo getRestoreProgress(String clusterId, String namespace, String middlewareName, String restoreName) {
         ProgressInfo progressInfo = new ProgressInfo();
         progressInfo.setClusterId(clusterId);

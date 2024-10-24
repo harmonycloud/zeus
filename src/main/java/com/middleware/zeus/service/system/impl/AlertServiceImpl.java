@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import com.middleware.zeus.util.date.DateUtils;
 import com.middleware.zeus.integration.cluster.bean.prometheus.PrometheusRuleGroups;
 import com.middleware.zeus.integration.cluster.bean.prometheus.PrometheusRules;
+import com.skyview.language.annotations.TranslateAfterResult;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -135,9 +136,8 @@ public class AlertServiceImpl implements AlertService {
     }
 
     @Override
-    public PageInfo<AlertDTO> searchAlertRecord(AlertRecordQueryDto query) {
-        // 使用分页工具
-        PageHelper.startPage(query.getCurrent(), query.getSize());
+    @TranslateAfterResult
+    public List<BeanAlertRecord> searchAlertRecord(AlertRecordQueryDto query) {
         // 封装数据库查询逻辑
         QueryWrapper<BeanAlertRecord> wrapper = new QueryWrapper<>();
         // 根据告警记录对象查询
@@ -182,6 +182,11 @@ public class AlertServiceImpl implements AlertService {
         }
         // 查询告警记录数据
         List<BeanAlertRecord> alertRecordList = beanAlertRecordMapper.selectList(wrapper);
+        return alertRecordList;
+    }
+
+    @Override
+    public PageInfo<AlertDTO> pageAlertRecord(List<BeanAlertRecord> alertRecordList) {
         // 封装数据
         PageInfo<AlertDTO> alertDtoPageInfo = new PageInfo<>();
 
@@ -198,7 +203,7 @@ public class AlertServiceImpl implements AlertService {
                 alertDTO.setMessage(alertDTO.getSummary());
             }
             if (StringUtils.isNotEmpty(alertDTO.getClusterId())
-                && clusterAliasNameMap.containsKey(alertDTO.getClusterId())) {
+                    && clusterAliasNameMap.containsKey(alertDTO.getClusterId())) {
                 alertDTO.setNickname(clusterAliasNameMap.get(alertDTO.getClusterId()));
             }
             return alertDTO;
@@ -273,6 +278,7 @@ public class AlertServiceImpl implements AlertService {
     }
 
     @Override
+    @TranslateAfterResult
     public List<AlertTargetDto> alertTargetList(String clusterId) {
         // 初始化平台默认告警对象
         List<AlertTargetDto> alertTargetDtoList = Arrays.stream(AlertTargetEnum.values()).map(alertTargetEnum -> {

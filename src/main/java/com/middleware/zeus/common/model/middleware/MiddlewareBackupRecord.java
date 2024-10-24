@@ -1,5 +1,6 @@
 package com.middleware.zeus.common.model.middleware;
 
+import com.skyview.language.annotations.DirectTranslate;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -168,6 +169,7 @@ public class MiddlewareBackupRecord {
     private String activeArea;
 
     @ApiModelProperty("可用区别名")
+    @DirectTranslate(groupName = "middleware_backup_record", uniqueKeyName = "areaAliasName", keyName = "areaAliasName")
     private String areaAliasName;
 
     @ApiModelProperty("是否定时备份")

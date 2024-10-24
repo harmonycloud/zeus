@@ -61,7 +61,7 @@ public class MysqlController {
     public BaseResult queryAccessInfo(@PathVariable("clusterId") String clusterId,
                                       @RequestParam("namespace") String namespace,
                                       @PathVariable("middlewareName") String middlewareName) {
-        return mysqlService.queryAccessInfo(clusterId, namespace, middlewareName);
+        return BaseResult.ok(mysqlService.queryAccessInfo(clusterId, namespace, middlewareName));
     }
 
     @ApiOperation(value = "慢日志查询", notes = "慢日志查询")

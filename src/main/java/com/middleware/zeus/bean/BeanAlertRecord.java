@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.skyview.language.annotations.DirectTranslate;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -46,6 +47,7 @@ public class BeanAlertRecord implements Serializable {
      * 别名
      */
     @TableField("alias_name")
+    @DirectTranslate(groupName="alert",uniqueKeyName="aliasName", keyName="aliasName")
     private String aliasName;
     /**
      * 中间件类型

@@ -1,5 +1,6 @@
 package com.middleware.zeus.common.model;
 
+import com.skyview.language.annotations.DirectTranslate;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -20,6 +21,7 @@ public class ActiveAreaDto {
     private String name;
 
     @ApiModelProperty("可用区别名")
+    @DirectTranslate(groupName="active_area",uniqueKeyName="aliasName", keyName="aliasName")
     private String aliasName;
 
     @ApiModelProperty("集群id")

@@ -1,5 +1,6 @@
 package com.middleware.zeus.common.model;
 
+import com.skyview.language.annotations.RegexTranslate;
 import lombok.Data;
 
 /**
@@ -20,6 +21,7 @@ public class MysqlAccessInfo {
      */
     private boolean openService;
 
+    @RegexTranslate(staticGroupName = "mysql_access_info")
     private String address;
 
     private String host;
