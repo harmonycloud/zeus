@@ -228,7 +228,7 @@ public enum ErrorMessage {
     PROJECT_IS_NOT_EMPTY(400103, "project is not empty", "项目下不为空，无法删除"),
     PROJECT_NAME_EXIST(400104, "project name exist", "项目名称已存在"),
     NAMESPACE_IS_NOT_EMPTY(400105, "namespace is not empty", "分区存在中间件，无法取消接入"),
-    PROJECT_STORAGE_USING(400106, "project storage using", "该存储存在已分配配额于命名空间，请先取消分配"),
+    PROJECT_STORAGE_USING(400106, "The storage has assigned quotas to namespaces; please cancel the assignment first", "该存储存在已分配配额于命名空间，请先取消分配"),
     PROJECT_CPU_MEMORY_USING(400107, "project cpu memory using", "该cpu memory存在已分配配额于命名空间，请先取消分配"),
     PROJECT_BACKUP_SERVER_USING(400108, "project backup server using", "该备份服务器已绑定备份位置，请先取消绑定"),
     PROJECT_ADD_USER_EMPTY_LIST(400109, "project add user list is empty", "添加失败，请选择新增的成员"),
