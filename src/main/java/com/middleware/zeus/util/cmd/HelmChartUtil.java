@@ -2,14 +2,12 @@ package com.middleware.zeus.util.cmd;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import com.alibaba.fastjson.JSONObject;
 import com.middleware.zeus.util.collection.MapUtils;
+import com.middleware.zeus.util.encrypt.GzipUtils;
 import com.middleware.zeus.util.file.FileUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -179,6 +177,10 @@ public class HelmChartUtil {
                     return "";
                 }
             }));
+    }
+
+    public static JSONObject decodeSecret(String data){
+        return JSONObject.parseObject(GzipUtils.uncompressToString(Base64.getDecoder().decode(Base64.getDecoder().decode(data))), JSONObject.class);
     }
 
 }

@@ -61,6 +61,16 @@ public interface BaseOperator {
     Middleware convertByHelmChart(Middleware middleware, MiddlewareClusterDTO cluster);
 
     /**
+     * 根据helm chart转换
+     *
+     * @param middleware 中间件信息
+     * @param cluster 集群对象
+     * @param values    集群信息
+     * @return Middleware
+     */
+    Middleware convertByHelmChart(Middleware middleware, MiddlewareClusterDTO cluster, JSONObject values);
+
+    /**
      * 创建中间件
      *
      * @param middleware 中间件信息

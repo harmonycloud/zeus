@@ -10,9 +10,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 
 /**
  * @author dengyulong
@@ -29,12 +27,15 @@ public class SecretWrapper {
         K8sClient.getClient(clusterId).secrets().inNamespace(namespace).createOrReplace(secret);
     }
 
-    public List<Secret> list(String clusterId, String namespace) {
+    public List<Secret> list(String clusterId, String namespace, Map<String, String> labels) {
+        if (CollectionUtils.isEmpty(labels)){
+            labels = new HashMap<>();
+        }
         MixedOperation<Secret, SecretList, Resource<Secret>> secretClient = K8sClient.getClient(clusterId).secrets();
         if (StringUtils.isNotEmpty(namespace)) {
             secretClient.inNamespace(namespace);
         }
-        SecretList list = secretClient.list();
+        SecretList list = secretClient.withLabels(labels).list();
         if (list == null || CollectionUtils.isEmpty(list.getItems())) {
             return new ArrayList<>(0);
         }

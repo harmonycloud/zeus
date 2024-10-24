@@ -3,6 +3,7 @@ package com.middleware.zeus.service.k8s;
 import com.middleware.zeus.common.model.Secret;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author xutianhong
@@ -17,7 +18,7 @@ public interface SecretService {
      * @param namespace 分区
      * @return List<Secret>
      */
-    List<Secret> list(String clusterId, String namespace);
+    List<Secret> list(String clusterId, String namespace, Map<String, String> labels);
 
     /**
      * 获取secret
