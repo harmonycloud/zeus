@@ -187,7 +187,7 @@ public enum ErrorMessage {
 
     //user
     USER_NOT_EXIT(400001, "user not exit.", "用户不存在"),
-    USER_ROLE_EXIST(400002, "user has bound with role", "用户已与角色绑定"),
+    USER_ROLE_EXIST(400002, "User has bound with role", "用户已与角色绑定"),
     USER_ROLE_NOT_EXIT(400003,"user has not bound with role,please contact administrator to bind role.", "该用户尚未关联角色，请联系管理员关联一个角色。"),
     ROLE_NOT_EXIST(400004, "role not exist", "角色不存在"),
     USERNAME_SHOULD_NOT_BE_NULL(400005, "username should not be null", "用户名不得为空"),
@@ -223,8 +223,8 @@ public enum ErrorMessage {
             " one external service exposure is available", "连接mysql失败，请检查服务暴露，确保至少有一个对外服务暴露可用"),
 
     // project
-    PROJECT_NOT_EXIST(400101, "project not exist", "项目不存在"),
-    PROJECT_NAMESPACE_ALREADY_BIND(400102, "project namespace already bind", "该分区已与项目绑定"),
+    PROJECT_NOT_EXIST(400101, "Project not exist", "项目不存在"),
+    PROJECT_NAMESPACE_ALREADY_BIND(400102, "This namespace is already bound to a project", "该分区已与项目绑定"),
     PROJECT_IS_NOT_EMPTY(400103, "project is not empty", "项目下不为空，无法删除"),
     PROJECT_NAME_EXIST(400104, "project name exist", "项目名称已存在"),
     NAMESPACE_IS_NOT_EMPTY(400105, "namespace is not empty", "分区存在中间件，无法取消接入"),
