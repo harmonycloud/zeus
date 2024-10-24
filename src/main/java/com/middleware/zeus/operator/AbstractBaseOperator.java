@@ -813,7 +813,7 @@ public abstract class AbstractBaseOperator {
             array.forEach(item -> {
                 CustomVolume customVolume = null;
                 try {
-                    LinkedHashMap<String, Object> obj = (LinkedHashMap<String, Object>) item;
+                    JSONObject obj = (JSONObject) item;
                     customVolume = new CustomVolume();
                     customVolume.setName(obj.get("name").toString());
                     customVolume.setMountPath(obj.get("mountPath").toString());
