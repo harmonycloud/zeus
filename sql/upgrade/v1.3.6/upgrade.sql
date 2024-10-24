@@ -1763,7 +1763,7 @@ insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_
 values('alert_target','elasticsearch','zh-HK','alias_name','日誌組件');
 -- 英语
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
-values('alert_target','elasticsearch','en-US','alias_name','Log component');
+values('alert_target','elasticsearch','en-US','alias_name','Log Component');
 -- 繁体中文
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
 values('alert_target','minio','zh-HK','alias_name','備份存儲');
