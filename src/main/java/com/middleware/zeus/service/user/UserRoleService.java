@@ -75,4 +75,12 @@ public interface UserRoleService {
      * @param userRole 用户角色信息
      */
     void update(UserRole userRole);
+
+    /**
+     * 更新用户角色关联
+     *
+     * @param organId 组织id
+     * @param projectId  项目id
+     */
+    void updateProjectManager2Normal(String organId, String projectId);
 }

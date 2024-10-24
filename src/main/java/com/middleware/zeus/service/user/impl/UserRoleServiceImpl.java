@@ -222,4 +222,13 @@ public class UserRoleServiceImpl implements UserRoleService {
         }
     }
 
+    @Override
+    public void updateProjectManager2Normal(String organId, String projectId) {
+        QueryWrapper<BeanUserRole> wrapper =
+                new QueryWrapper<BeanUserRole>().eq("organ_id", organId).eq("project_id", projectId).eq("role_id", 2);
+        BeanUserRole beanUserRole = new BeanUserRole();
+        beanUserRole.setRoleId(4);
+        beanUserRoleMapper.update(beanUserRole, wrapper);
+    }
+
 }
