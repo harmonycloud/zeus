@@ -187,7 +187,7 @@ public enum ErrorMessage {
 
     //user
     USER_NOT_EXIT(400001, "user not exit.", "用户不存在"),
-    USER_ROLE_EXIST(400002, "user has bound with role", "用户已与角色绑定"),
+    USER_ROLE_EXIST(400002, "User has bound with role", "用户已与角色绑定"),
     USER_ROLE_NOT_EXIT(400003,"user has not bound with role,please contact administrator to bind role.", "该用户尚未关联角色，请联系管理员关联一个角色。"),
     ROLE_NOT_EXIST(400004, "role not exist", "角色不存在"),
     USERNAME_SHOULD_NOT_BE_NULL(400005, "username should not be null", "用户名不得为空"),
