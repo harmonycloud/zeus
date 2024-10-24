@@ -2,8 +2,8 @@ package com.middleware.zeus.operator.impl;
 
 import static com.middleware.zeus.common.constants.CmdConstant.*;
 import static com.middleware.zeus.common.constants.CommonConstant.*;
-import static com.middleware.zeus.common.constants.NameConstant.RESOURCES;
-import static com.middleware.zeus.common.constants.NameConstant.RUNNING;
+import static com.middleware.zeus.common.constants.NameConstant.*;
+import static com.middleware.zeus.common.constants.NameConstant.CPU;
 import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.ACTIVE_ACTIVE;
 import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.ARGS;
 
@@ -34,6 +34,7 @@ import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
 import com.middleware.zeus.operator.api.PostgresqlOperator;
 import com.middleware.zeus.operator.miiddleware.AbstractPostgresqlOperator;
 import com.middleware.zeus.util.middleware.ChartVersionUtil;
+import com.middleware.zeus.util.numeric.ResourceCalculationUtil;
 import io.fabric8.kubernetes.api.model.Service;
 import io.fabric8.kubernetes.api.model.ServicePort;
 import org.apache.commons.lang3.StringUtils;
@@ -178,7 +179,7 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         middleware.setPassword(values.getJSONObject("userPasswords").getString("postgres"));
 
         if (middleware.getQuota() != null && middleware.getQuota().containsKey(middleware.getType())){
-            middleware.getQuota().get(middleware.getType()).setNum(values.getInteger("instances") - 1);
+            middleware.getQuota().get(middleware.getType()).setNum(getReplicas(values) - 1);
         }
 
         List<MiddlewareQuota> storageClasses = getMiddlewareStorageClasses(cluster.getId(), middleware, values);
@@ -402,6 +403,21 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
     @Override
     public ActiveAreaAnnotationDto getActiveAreaAnnotation(String clusterId, String namespace, String type, String middlewareName) {
         return super.getActiveAreaAnnotation(clusterId, namespace, type, middlewareName);
+    }
+
+    @Override
+    public Double calculateCpuRequest(JSONObject values) {
+        JSONObject resources = values.getJSONObject(RESOURCES);
+        if (resources == null) {
+            return 0.0;
+        }
+        String cpu = resources.getJSONObject(REQUESTS).getString(CPU);
+        return ResourceCalculationUtil.getResourceValue(cpu, CPU, "") * getReplicas(values);
+    }
+
+    @Override
+    public Integer getReplicas(JSONObject values) {
+        return values.getIntValue("instances");
     }
 
     @Override

@@ -243,15 +243,20 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
     @Override
     public Middleware convertByHelmChart(Middleware middleware, MiddlewareClusterDTO cluster) {
         JSONObject values = helmChartService.getInstalledValues(middleware, cluster);
+        return convertByHelmChart(middleware, cluster, values);
+    }
+
+    @Override
+    public Middleware convertByHelmChart(Middleware middleware, MiddlewareClusterDTO cluster, JSONObject values) {
         super.convertCommonByHelmChart(middleware, values);
         super.convertStoragesByHelmChart(middleware, middleware.getType(), values);
         super.convertRegistry(middleware, values);
         super.convertCustomVolumesByHelmChart(middleware, values);
-        convertRedisParamByHelmChart(middleware,values);
+        convertRedisParamByHelmChart(middleware, values);
 
         // 处理redis特有参数
         if (values != null) {
-            if (checkUserAuthority(MiddlewareTypeEnum.REDIS.getType())){
+            if (checkUserAuthority(MiddlewareTypeEnum.REDIS.getType())) {
                 middleware.setPassword(values.getString("redisPassword"));
             }
             middleware.setPort(values.getInteger("port"));
@@ -260,7 +265,7 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
             middleware.getQuota().get(middleware.getType()).setNum(redisQuota.getInteger(REPLICAS));
             // 读写分离
             if (values.containsKey("predixy") && values.getJSONObject("predixy").getBoolean("enableProxy") != null
-                    && values.getJSONObject("predixy").getBoolean("enableProxy")) {
+                && values.getJSONObject("predixy").getBoolean("enableProxy")) {
                 JSONObject predixy = values.getJSONObject("predixy");
                 ReadWriteProxy readWriteProxy = new ReadWriteProxy();
                 readWriteProxy.setEnabled(predixy.getBoolean("enableProxy"));
