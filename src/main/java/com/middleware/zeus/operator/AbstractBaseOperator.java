@@ -537,9 +537,15 @@ public abstract class AbstractBaseOperator {
             middleware.setClusterId(cluster.getId());
         }
         JSONObject values = helmChartService.getInstalledValues(middleware, cluster);
+        return convertByHelmChart(middleware, cluster, values);
+    }
+
+    /**
+     * 从helm chart转回middleware
+     */
+    public Middleware convertByHelmChart(Middleware middleware, MiddlewareClusterDTO cluster, JSONObject values) {
         convertCommonByHelmChart(middleware, values);
         convertStoragesByHelmChart(middleware, middleware.getType(), values);
-        // setImagePath(middleware, values);
         return middleware;
     }
 
@@ -807,7 +813,7 @@ public abstract class AbstractBaseOperator {
             array.forEach(item -> {
                 CustomVolume customVolume = null;
                 try {
-                    LinkedHashMap<String, Object> obj = (LinkedHashMap<String, Object>) item;
+                    JSONObject obj = (JSONObject) item;
                     customVolume = new CustomVolume();
                     customVolume.setName(obj.get("name").toString());
                     customVolume.setMountPath(obj.get("mountPath").toString());

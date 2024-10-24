@@ -199,7 +199,7 @@ public enum ErrorMessage {
     CREATE_ROLE_FAILED(400011, "failed to create role", "创建角色失败"),
     ROLE_EXIST(400012, "role name has been used", "角色名已存在"),
     UPDATE_ROLE_FAILED(400013, "failed to update role", "更新角色失败"),
-    ROLE_HAS_BEEN_BOUND(400014, "role has been bound", "该角色已于用户绑定"),
+    ROLE_HAS_BEEN_BOUND(400014, "role has been bound", "该角色已与用户绑定"),
     ROLE_PERMISSION_IS_EMPTY(400015, "role permission is empty", "该用户绑定的角色权限为空"),
     ROLE_NAMESPACE_PERMISSION_EMPTY(400016, "role namespace perimission should not be empty", "角色分区权限不能为空"),
     LOGIN_FAILED(400017, "Login failed", "您的账户或密码有误，请重试"),
