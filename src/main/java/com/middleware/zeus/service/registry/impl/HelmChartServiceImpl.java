@@ -332,7 +332,7 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
                 helmInfoDo.setUpdateTime(updateTime);
             }
             // 设置release 名称
-            if (CollectionUtils.isEmpty(secret.getLabels())) {
+            if (!CollectionUtils.isEmpty(secret.getLabels())) {
                 if (secret.getLabels().containsKey(NAME)) {
                     helmInfoDo.setName(secret.getLabels().get(NAME));
                 }
