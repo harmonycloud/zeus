@@ -51,6 +51,7 @@ public class UserDto {
     private Integer roleId;
 
     @ApiModelProperty("关联角色")
+    @DirectTranslate(groupName="operation_audit",uniqueKeyName="roleName", keyName="roleName")
     private String roleName;
 
     @ApiModelProperty("角色权限")

@@ -18,6 +18,7 @@ import com.middleware.zeus.service.k8s.ClusterService;
 import com.middleware.zeus.service.middleware.BackupServerService;
 import com.middleware.zeus.service.middleware.ProjectBackupServerService;
 import com.middleware.zeus.service.user.abstractService.AbstractOrganizationService;
+import com.skyview.language.annotations.TranslateAfterResult;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -289,6 +290,7 @@ public class OrganizationServiceImpl extends AbstractOrganizationService impleme
     }
 
     @Override
+    @TranslateAfterResult
     public List<UserDto> listOrganUser(String organId, Boolean allocatable) {
         // 获取组织下用户列表
         Map<String, BeanOrganizationUser> userMap = organizationUserService.list(organId).stream().collect(Collectors.toMap(BeanOrganizationUser::getUsername, u -> u));
