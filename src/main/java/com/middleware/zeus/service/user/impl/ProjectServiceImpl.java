@@ -336,9 +336,11 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
         beanProject.setDescription(projectDto.getDescription());
         beanProjectMapper.updateById(beanProject);
         // 绑定用户角色
-        if (!CollectionUtils.isEmpty(projectDto.getUserDtoList())) {
-            userRoleService.delete(null, projectDto.getOrganId(), projectDto.getProjectId(), 2);
+        if (projectDto.getUserDtoList() != null) {
+            // 清理项目管理员用户
+            userRoleService.updateProjectManager2Normal(projectDto.getOrganId(), projectDto.getProjectId());
             for (UserDto userDto : projectDto.getUserDtoList()){
+                userRoleService.delete(userDto.getUserName(), projectDto.getOrganId(), projectDto.getProjectId(), null);
                 userRoleService.insert(projectDto.getOrganId(), projectDto.getProjectId(), userDto.getUserName(), 2);
             }
             // 更新k8s用户角色绑定
