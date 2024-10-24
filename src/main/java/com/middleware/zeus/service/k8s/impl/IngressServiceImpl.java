@@ -380,13 +380,36 @@ public class IngressServiceImpl implements IngressService {
         // 关闭redis哨兵模式集群外访问
         if (ingressDTO.getMiddlewareType().equals(MiddlewareTypeEnum.REDIS.getType())
             && ingressDTO.getExternalEnable() != null && ingressDTO.getExternalEnable()) {
+            // traefik 删除额外服务暴露
+            IngressRouteTcpList ingressRouteTcpList = ingressRouteTCPWrapper.list(clusterId, namespace,
+                getIngressTCPLabels(middlewareName, ingressDTO.getMiddlewareType(), ingressDTO.getIngressClassName()));
+            if (!CollectionUtils.isEmpty(ingressRouteTcpList.getItems())) {
+                for (IngressRouteTcp ingressRouteTcp : ingressRouteTcpList.getItems()) {
+                    String ingressRouteTcpName = ingressRouteTcp.getMetadata().getName();
+                    if (!CollectionUtils.isEmpty(ingressDTO.getServiceList())
+                        && ingressDTO.getServiceList().stream().anyMatch(serviceDTO -> ingressRouteTcpName
+                            .matches("^" + serviceDTO.getServiceName() + LINE + TCP + LINE + ".+" + "$"))) {
+                        ingressRouteTCPWrapper.delete(clusterId, namespace, ingressRouteTcpName);
+                    }
+                }
+            }
+
+            // 更新values.yaml
             MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
             JSONObject values = helmChartService.getInstalledValues(middlewareName, namespace, cluster);
             Middleware middleware =
                 new Middleware(clusterId, namespace, middlewareName, ingressDTO.getMiddlewareType());
             middleware.setChartName(ingressDTO.getMiddlewareType());
             middleware.setChartVersion(helmChartService.getChartVersion(values, ingressDTO.getMiddlewareType()));
-            helmChartService.upgrade(middleware, "redis.externalAccess.enabled=false", null, cluster);
+            helmChartService.upgrade(middleware, "redis.externalAccess.enabled=false", cluster.getId());
+            // 删除代码创建的svc
+            if (!CollectionUtils.isEmpty(ingressDTO.getServiceList())) {
+                for (int i = 0; i < ingressDTO.getServiceList().size(); ++i) {
+                    serviceService.delete(clusterId, namespace, middlewareName + LINE + i + LINE + POD);
+                    serviceService.delete(clusterId, namespace,
+                        middlewareName + LINE + i + LINE + POD + LINE + "16379");
+                }
+            }
         }
     }
 
