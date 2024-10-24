@@ -399,7 +399,7 @@ public enum ErrorMessage {
     SERVER_ADDRESS_ALREADY_EXISTS(740004,"the server address already exists","服务器地址已存在"),
     AUTHORIZATION_FAILED(740005, "authorization failed", "用户名或密码错误"),
     FAILED_TO_DELETE_BACKUP_SERVER(740006, "failed to delete this backup server,which a backup task used it already", "存在使用该备份服务器的备份任务，无法删除该服务器"),
-    FAILED_TO_DELETE_BACKUP_POSITION(740007, "failed to delete this backup position,which a backup task used it already", "存在使用该备份位置的备份任务，无法删除该备份位置"),
+    FAILED_TO_DELETE_BACKUP_POSITION(740007, "There are backup tasks that use this backup location, and it cannot be deleted", "存在使用该备份位置的备份任务，无法删除该备份位置"),
 
     // user
     CREATE_MYSQL_USER_FAILED(810001, "failed to create user", "创建用户失败"),
