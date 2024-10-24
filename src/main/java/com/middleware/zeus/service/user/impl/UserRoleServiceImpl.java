@@ -157,7 +157,7 @@ public class UserRoleServiceImpl implements UserRoleService {
     public void insert(String organId, String projectId, String username, Integer roleId) {
         QueryWrapper<BeanUserRole> wrapper =
             new QueryWrapper<BeanUserRole>().eq("username", username);
-        if (StringUtils.isNotEmpty(projectId)){
+        if (StringUtils.isNotEmpty(organId)){
             wrapper.eq("organ_id", organId);
         }
         if (StringUtils.isNotEmpty(projectId)){
