@@ -453,7 +453,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         // 获取中间件chart包信息
         List<BeanMiddlewareInfo> beanMiddlewareInfoList = middlewareInfoService.list(true);
         // 获取helm list
-        List<HelmInfoDo> helmInfoDoList = helmChartService.listInstalledValues(clusterId, namespace);
+        List<HelmInfoDo> helmInfoDoList = helmChartService.listInstalledValues(clusterId, namespace, true);
         //过滤获取属于中间件的helm release
         List<HelmInfoDo> mwHelmInfoDoList = helmInfoDoList.stream()
             .filter(info -> beanMiddlewareInfoList.stream()

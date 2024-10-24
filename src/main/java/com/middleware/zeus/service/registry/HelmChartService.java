@@ -94,7 +94,7 @@ public interface HelmChartService {
      * @param clusterId 集群id
      * @return namespace 命名空间
      */
-    List<HelmInfoDo> listInstalledValues(String clusterId, String namespace);
+    List<HelmInfoDo> listInstalledValues(String clusterId, String namespace, Boolean decode);
 
     /**
      * 获取zeus-mysql的values
