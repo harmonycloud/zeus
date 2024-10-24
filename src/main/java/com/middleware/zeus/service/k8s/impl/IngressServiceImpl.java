@@ -47,6 +47,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.middleware.zeus.common.constants.CommonConstant.*;
+import static com.middleware.zeus.common.constants.CommonConstant.TCP;
 import static com.middleware.zeus.common.constants.LdapConfigConstant.PORT;
 import static com.middleware.zeus.common.constants.NameConstant.REDIS;
 import static com.middleware.zeus.common.constants.NameConstant.SENTINEL;
@@ -487,7 +488,12 @@ public class IngressServiceImpl implements IngressService {
                     } else if (IngressEnum.TRAEFIK.getName().equals(ingress.getType())) {
                         IngressRouteTcpList routeTCPList = ingressRouteTCPWrapper.list(clusterId, namespace,
                                 getIngressTCPLabels(middlewareName, type, ingress.getName()));
-                        resList.addAll(convertIngressDTOList(ingress, routeTCPList, null));
+
+                        List<IngressDTO> ingressDTOList = convertIngressDTOList(ingress, routeTCPList, null);
+                        // 处理redis场景
+                        resolveExternalSituationInTraefik(new Middleware(clusterId, namespace, middlewareName, type), ingressDTOList);
+
+                        resList.addAll(ingressDTOList);
                     }
                 }
             }
@@ -793,7 +799,9 @@ public class IngressServiceImpl implements IngressService {
             // 设置服务暴露的网络模型 4层或7层
             setServiceNetworkModel(ingressDTO);
             // 设置服务用途
-            ingressDTO.setServicePurpose(MiddlewareServicePurposeUtil.convertChinesePurpose(ingressDTO));
+            if (ingressDTO.getServicePurpose() == null) {
+                ingressDTO.setServicePurpose(MiddlewareServicePurposeUtil.convertChinesePurpose(ingressDTO));
+            }
         });
     }
 
@@ -2124,6 +2132,66 @@ public class IngressServiceImpl implements IngressService {
                         ingressDTO.setSkipPortConflict(values.getBoolean(SKIP_PORT_CONFLICT));
                     }
                 }
+            }
+        }
+    }
+
+    public void resolveExternalSituationInTraefik(Middleware middleware, List<IngressDTO> ingressDTOList){
+        if (MiddlewareTypeEnum.REDIS.getType().equals(middleware.getType())){
+            // 判断服务是否是主机网络,是则返回
+            JSONObject values = helmChartService.getInstalledValues(middleware.getName(), middleware.getNamespace(),
+                    clusterService.findById(middleware.getClusterId()));
+            if (values == null || !values.containsKey(REDIS) || values.getJSONObject(REDIS) == null
+                    || !values.getJSONObject(REDIS).containsKey("hostNetwork")
+                    || values.getJSONObject(REDIS).getBoolean("hostNetwork")) {
+                return;
+            }
+
+            // 哨兵模式服务暴露处理
+            if (ingressDTOList.stream().anyMatch(ingressDTO -> ingressDTO.getName().matches(
+                    "^" + middleware.getName() + LINE + SENTINEL + LINE + TCP + LINE + ".+" + "$"))) {
+                IngressDTO ingressDTO = ingressDTOList.get(0);
+                ingressDTO.setExternalEnable(true);
+                // 记录无需整合的临时IngressList
+                List<IngressDTO> tempIngressList = new ArrayList<>();
+                // 将pod service合并进哨兵服务的ingress对象内
+                List<ServiceDTO> serviceList = new ArrayList<>();
+                for (IngressDTO ing : ingressDTOList) {
+                    if (ing.getName()
+                        .matches("^" + middleware.getName() + LINE + SENTINEL + LINE + TCP + LINE + ".+" + "$")
+                        || ing.getName().matches("^" + middleware.getName() + LINE + "[0-9]+" + LINE + POD + LINE + TCP
+                            + LINE + ".+" + "$")) {
+                        serviceList.addAll(ing.getServiceList());
+                        ingressDTO.setServiceList(serviceList);
+                    } else {
+                        tempIngressList.add(ing);
+                    }
+                }
+                if (values.containsKey(SKIP_PORT_CONFLICT)) {
+                    ingressDTO.setSkipPortConflict(values.getBoolean(SKIP_PORT_CONFLICT));
+                }
+                ingressDTO.setServicePurpose("哨兵");
+
+                ingressDTOList.clear();
+                ingressDTOList.addAll(tempIngressList);
+                ingressDTOList.add(ingressDTO);
+                return;
+            }
+
+            // 集群模式服务暴露处理
+            if (ingressDTOList.stream().anyMatch(ingressDTO -> ingressDTO.getName().matches("^" + middleware.getName()
+                    + LINE + "[0-9]+" + LINE + POD + LINE + "16379" + LINE + TCP + LINE + ".+" + "$"))) {
+                IngressDTO ingressDTO = ingressDTOList.get(0);
+                ingressDTO.setExternalEnable(true);
+                ingressDTOList.remove(0);
+                for (IngressDTO ing : ingressDTOList) {
+                    ingressDTO.getServiceList().addAll(ing.getServiceList());
+                }
+                if (values.containsKey(SKIP_PORT_CONFLICT)) {
+                    ingressDTO.setSkipPortConflict(values.getBoolean(SKIP_PORT_CONFLICT));
+                }
+                ingressDTOList.clear();
+                ingressDTOList.add(ingressDTO);
             }
         }
     }
