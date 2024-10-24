@@ -1,5 +1,6 @@
 package com.middleware.zeus.service.k8s.impl;
 
+import cn.hutool.core.collection.CollectionUtil;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -2162,11 +2163,24 @@ public class IngressServiceImpl implements IngressService {
                         || ing.getName().matches("^" + middleware.getName() + LINE + "[0-9]+" + LINE + POD + LINE + TCP
                             + LINE + ".+" + "$")) {
                         serviceList.addAll(ing.getServiceList());
-                        ingressDTO.setServiceList(serviceList);
                     } else {
                         tempIngressList.add(ing);
                     }
                 }
+                // 对serviceList进行排序， 将名称带有sentinel字段的排在第一个
+                CollectionUtil.sort(serviceList, (s1, s2) -> {
+                    String pattern = "^" + middleware.getName() + LINE + SENTINEL + "$";
+                    if (s1.getServiceName().matches(pattern)) {
+                        return -1;
+                    }
+                    if (s2.getServiceName().matches(pattern)) {
+                        return 1;
+                    }
+                    // 对其余字符串进行字典顺序排序
+                    return Comparator.comparing(ServiceDTO::getServiceName).compare(s1, s2);
+                });
+                ingressDTO.setServiceList(serviceList);
+                // 设置是否包含跳过冲突端口
                 if (values.containsKey(SKIP_PORT_CONFLICT)) {
                     ingressDTO.setSkipPortConflict(values.getBoolean(SKIP_PORT_CONFLICT));
                 }
