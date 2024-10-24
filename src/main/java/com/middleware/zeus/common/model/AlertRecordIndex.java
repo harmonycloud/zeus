@@ -1,5 +1,6 @@
 package com.middleware.zeus.common.model;
 
+import com.skyview.language.annotations.DirectTranslate;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -18,6 +19,7 @@ public class AlertRecordIndex {
     private String targetName;
 
     @ApiModelProperty("告警对象别名")
+    @DirectTranslate(groupName="alert",uniqueKeyName="targetAliasName", keyName="aliasName")
     private String targetAliasName;
 
     @ApiModelProperty("集群id")
