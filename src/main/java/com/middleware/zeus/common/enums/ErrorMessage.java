@@ -223,8 +223,8 @@ public enum ErrorMessage {
             " one external service exposure is available", "连接mysql失败，请检查服务暴露，确保至少有一个对外服务暴露可用"),
 
     // project
-    PROJECT_NOT_EXIST(400101, "project not exist", "项目不存在"),
-    PROJECT_NAMESPACE_ALREADY_BIND(400102, "project namespace already bind", "该分区已与项目绑定"),
+    PROJECT_NOT_EXIST(400101, "Project not exist", "项目不存在"),
+    PROJECT_NAMESPACE_ALREADY_BIND(400102, "This namespace is already bound to a project", "该分区已与项目绑定"),
     PROJECT_IS_NOT_EMPTY(400103, "project is not empty", "项目下不为空，无法删除"),
     PROJECT_NAME_EXIST(400104, "project name exist", "项目名称已存在"),
     NAMESPACE_IS_NOT_EMPTY(400105, "namespace is not empty", "分区存在中间件，无法取消接入"),
