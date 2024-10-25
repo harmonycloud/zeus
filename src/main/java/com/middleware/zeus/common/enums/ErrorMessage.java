@@ -56,6 +56,7 @@ public enum ErrorMessage {
     ILLEGAL_TOKEN(100049, "Illegal token", "token不合法"),
     TOKEN_TIMEOUT(100050, "Token has timed out", "token已超时"),
     TOKEN_NOT_YET_EFFECTIVE(100051, "Token not yet effective", "token未到生效时间"),
+    DOES_NOT_EXIST(100052, "does not exist.", "不存在"),
 
     // internalService
     PARAMETER_VALUE_NOT_PROVIDE(101012, "Parameter cannot be null.", "参数不能为空"),
