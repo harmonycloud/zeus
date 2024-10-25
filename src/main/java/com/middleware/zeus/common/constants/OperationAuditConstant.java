@@ -12,5 +12,7 @@ public class OperationAuditConstant {
     public final static String MODULE_CH_DESC = "moduleChDesc";
     public static final String USER_NAME = "userName";
     public final static String OPERATION_AUDIT = "operation_audit";
+    public final static String ROLE_NAME = "roleName";
+
     
 }

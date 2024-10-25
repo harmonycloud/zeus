@@ -1,6 +1,8 @@
 package com.middleware.zeus.service.system.impl;
 
 import static com.middleware.zeus.common.constants.OperationAuditConstant.*;
+import static java.lang.Boolean.FALSE;
+import static java.lang.Boolean.TRUE;
 
 import java.util.*;
 import java.util.regex.Pattern;
@@ -184,7 +186,14 @@ public class OperationAuditServiceImpl implements OperationAuditService {
             && !StringUtils.equals(LanguageContext.getLanguage(), ZH_CN)) {
             // 获取匹配的翻译后内容
             operationAuditQueryDto.setChildModules(getTranslateSearch(OPERATION_AUDIT,
-                operationAuditQueryDto.getChildModules(), Arrays.asList(MODULE_CH_DESC, CHILD_MODULE_CH_DESC)));
+                operationAuditQueryDto.getChildModules(), List.of(MODULE_CH_DESC, CHILD_MODULE_CH_DESC), TRUE));
+        }
+
+        if (!CollectionUtils.isEmpty(operationAuditQueryDto.getRoles())
+            && !StringUtils.equals(LanguageContext.getLanguage(), ZH_CN)) {
+            // 获取匹配的翻译后内容
+            operationAuditQueryDto.setRoles(
+                getTranslateSearch(OPERATION_AUDIT, operationAuditQueryDto.getRoles(), List.of(ROLE_NAME), TRUE));
         }
 
         // 设置默认页码
@@ -213,7 +222,7 @@ public class OperationAuditServiceImpl implements OperationAuditService {
             // 主要针对搜索超级管理员时，进行匹配搜索处理
             if (!StringUtils.equals(LanguageContext.getLanguage(), ZH_CN)) {
                 operationAuditQueryDto.setSearchKeyWord(getTranslateSearch(OPERATION_AUDIT,
-                    List.of(operationAuditQueryDto.getSearchKeyWord()), List.of(USER_NAME)).get(0));
+                        List.of(operationAuditQueryDto.getSearchKeyWord()), List.of(USER_NAME), FALSE).get(0));
             }
         }
         return operationAuditQueryDto;
@@ -244,7 +253,7 @@ public class OperationAuditServiceImpl implements OperationAuditService {
         return beanOperationAudits.get(0);
     }
     
-    private List<String> getTranslateSearch(String groupName, List<String> list, List<String> property) {
+    private List<String> getTranslateSearch(String groupName, List<String> list, List<String> property, Boolean all) {
         // 获取当前语言的翻译配置
         List<BeanSysResourceTranslateConfig> translateConfigList =
             translateService.list(groupName, null, property, List.of(LanguageContext.getLanguage()));
@@ -258,9 +267,14 @@ public class OperationAuditServiceImpl implements OperationAuditService {
         if (CollectionUtils.isEmpty(matchedTranslateConfigList)) {
             return list;
         }
-
-        return matchedTranslateConfigList.stream().map(BeanSysResourceTranslateConfig::getUniqueValue)
-            .collect(Collectors.toList());
+        // 集合所有字段
+        List<String> allPropertyList = matchedTranslateConfigList.stream()
+            .map(BeanSysResourceTranslateConfig::getUniqueValue).collect(Collectors.toList());
+        // 不携带原信息可能导致部分本无需翻译的关键词丢失
+        if (all) {
+            allPropertyList.addAll(list);
+        }
+        return allPropertyList;
     }
 
 }
