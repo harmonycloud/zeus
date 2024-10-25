@@ -72,8 +72,8 @@ public class OperationAuditServiceImpl implements OperationAuditService {
                     queryWrapper.like("url", operationAuditQueryDto.getSearchKeyWord());
                     break;
                 case OperationAuditConstant.SEARCH_TYPE_OTHER:
-                    queryWrapper.like("user_name", operationAuditQueryDto.getSearchKeyWord());
-                    queryWrapper.or().like("account", operationAuditQueryDto.getSearchKeyWord());
+                    queryWrapper.and(wrapper -> wrapper.like("user_name", operationAuditQueryDto.getSearchKeyWord())
+                        .or().like("account", operationAuditQueryDto.getSearchKeyWord()));
                 default:
                     break;
             }
@@ -84,8 +84,8 @@ public class OperationAuditServiceImpl implements OperationAuditService {
         }
 
         if (CollectionUtils.isNotEmpty(operationAuditQueryDto.getChildModules())) {
-            queryWrapper.in("module_ch_desc", operationAuditQueryDto.getChildModules());
-            queryWrapper.or().in("child_module_ch_desc", operationAuditQueryDto.getChildModules());
+            queryWrapper.and(wrapper -> wrapper.in("module_ch_desc", operationAuditQueryDto.getChildModules()).or()
+                .in("child_module_ch_desc", operationAuditQueryDto.getChildModules()));
         }
 
         if (CollectionUtils.isNotEmpty(operationAuditQueryDto.getRoles())) {
