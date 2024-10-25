@@ -4,12 +4,14 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.github.pagehelper.PageInfo;
 import com.middleware.zeus.common.model.user.ResourceMenuDto;
 import com.middleware.zeus.common.model.user.SystemConfigDto;
 import com.middleware.zeus.bean.PersonalizedConfiguration;
 import com.middleware.zeus.service.user.UserService;
+import com.middleware.zeus.util.page.PageUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,10 +71,18 @@ public class UserController {
                                               @RequestParam(value = "size", required = false) Integer size,
                                               @RequestParam(value = "order", required = false) String order) {
         List<UserDto> userDtoList = userService.list(keyword);
+        if (StringUtils.isNotEmpty(keyword)) {
+            userDtoList = userDtoList.stream()
+                .filter(userDto -> StringUtils.containsIgnoreCase(userDto.getUserName(), keyword)
+                    || StringUtils.containsIgnoreCase(userDto.getAliasName(), keyword)
+                    || StringUtils.containsIgnoreCase(userDto.getEmail(), keyword)
+                    || StringUtils.containsIgnoreCase(userDto.getPhone(), keyword))
+                .collect(Collectors.toList());
+        }
         // 排序
         sort(userDtoList, order);
-        if (current != null && size != null){
-            return BaseResult.ok(convertPage(userDtoList, current, size));
+        if (current != null && size != null) {
+            return BaseResult.ok(PageUtil.convertPage(userDtoList, current, size));
         }
         return BaseResult.ok(userDtoList);
     }
@@ -251,31 +261,6 @@ public class UserController {
                         : ASCEND.equals(order) ? o1.getCreateTime().compareTo(o2.getCreateTime())
                             : o2.getCreateTime().compareTo(o1.getCreateTime()));
         }
-    }
-
-    /**
-     * 用户列表分页
-     */
-    public PageInfo<UserDto> convertPage(List<UserDto> userDtoList, Integer current, Integer size){
-        List<UserDto> res = new ArrayList<>();
-        for (int i = (current - 1) * size ; i < userDtoList.size() && i < current * size; ++i) {
-            res.add(userDtoList.get(i));
-        }
-        PageInfo<UserDto> userDtoPageInfo = new PageInfo<>(res);
-        userDtoPageInfo.setPageNum(current);
-        userDtoPageInfo.setTotal(userDtoList.size());
-        userDtoPageInfo.setSize(res.size());
-        userDtoPageInfo.setPageSize(size);
-        userDtoPageInfo.setPrePage(current - 1);
-        userDtoPageInfo.setNextPage(userDtoPageInfo.getList().size() == size ?  current + 1 : 0);
-        double endPageNum = Math.ceil((double) userDtoList.size() / size);
-        int[] pageNum = new int[(int)endPageNum];
-        for (int i = 1; i <= endPageNum; ++i){
-            pageNum[i - 1] = i;
-        }
-        userDtoPageInfo.setNavigatepageNums(pageNum);
-
-        return userDtoPageInfo;
     }
 
 }

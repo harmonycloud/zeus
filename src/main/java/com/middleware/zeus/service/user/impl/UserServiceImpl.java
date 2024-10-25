@@ -162,14 +162,14 @@ public class UserServiceImpl extends AbstractUserService implements UserService 
             return userDto;
         }).collect(Collectors.toList());
         // 过滤
-        if (StringUtils.isNotEmpty(keyword)) {
-            userDtoList = userDtoList.stream()
-                    .filter(userDto -> StringUtils.containsIgnoreCase(userDto.getUserName(), keyword)
-                            || StringUtils.containsIgnoreCase(userDto.getAliasName(), keyword)
-                            || StringUtils.containsIgnoreCase(userDto.getEmail(), keyword)
-                            || StringUtils.containsIgnoreCase(userDto.getPhone(), keyword))
-                    .collect(Collectors.toList());
-        }
+//        if (StringUtils.isNotEmpty(keyword)) {
+//            userDtoList = userDtoList.stream()
+//                    .filter(userDto -> StringUtils.containsIgnoreCase(userDto.getUserName(), keyword)
+//                            || StringUtils.containsIgnoreCase(userDto.getAliasName(), keyword)
+//                            || StringUtils.containsIgnoreCase(userDto.getEmail(), keyword)
+//                            || StringUtils.containsIgnoreCase(userDto.getPhone(), keyword))
+//                    .collect(Collectors.toList());
+//        }
         return userDtoList;
     }
 

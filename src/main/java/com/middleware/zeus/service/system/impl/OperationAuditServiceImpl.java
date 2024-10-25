@@ -1,31 +1,29 @@
 package com.middleware.zeus.service.system.impl;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import static com.middleware.zeus.common.constants.OperationAuditConstant.*;
+
+import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import com.middleware.zeus.common.model.OperationAuditConditionDto;
-import com.skyview.language.annotations.TranslateAfterResult;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.middleware.zeus.common.base.BaseResult;
-import com.middleware.zeus.common.constants.CommonConstant;
-import com.middleware.zeus.common.constants.OperationAuditConstant;
 import com.middleware.zeus.bean.BeanOperationAudit;
 import com.middleware.zeus.bean.OperationAuditQueryDto;
+import com.middleware.zeus.bean.user.BeanSysResourceTranslateConfig;
+import com.middleware.zeus.common.constants.CommonConstant;
+import com.middleware.zeus.common.constants.OperationAuditConstant;
+import com.middleware.zeus.common.model.OperationAuditConditionDto;
 import com.middleware.zeus.dao.BeanOperationAuditMapper;
 import com.middleware.zeus.service.system.OperationAuditService;
-import com.middleware.zeus.service.user.RoleService;
+import com.middleware.zeus.service.translate.TranslateService;
+import com.skyview.language.annotations.TranslateAfterResult;
+import com.skyview.language.context.LanguageContext;
 
 /**
  * 操作审计服务
@@ -35,11 +33,12 @@ import com.middleware.zeus.service.user.RoleService;
  */
 @Service
 public class OperationAuditServiceImpl implements OperationAuditService {
-
-    private Logger log = LoggerFactory.getLogger(this.getClass());
+    
 
     @Autowired
     private BeanOperationAuditMapper operationAuditMapper;
+    @Autowired
+    private TranslateService translateService;
 
     /**
      * ip地址正则表达式，仅包含数字或小数点即为ip
@@ -49,6 +48,8 @@ public class OperationAuditServiceImpl implements OperationAuditService {
      * url路径正则表达式，包含下划线即为url路径
      */
     private final static Pattern urlPattern = Pattern.compile(".*/.*");
+    
+    private final static String ZH_CN = "zh-CN";
 
     @Override
     public void insert(BeanOperationAudit beanOperationAudit) {
@@ -82,12 +83,9 @@ public class OperationAuditServiceImpl implements OperationAuditService {
             queryWrapper.in("request_method", operationAuditQueryDto.getRequestMethods());
         }
 
-        if (CollectionUtils.isNotEmpty(operationAuditQueryDto.getModules())) {
-            queryWrapper.in("module_ch_desc", operationAuditQueryDto.getModules());
-        }
-
         if (CollectionUtils.isNotEmpty(operationAuditQueryDto.getChildModules())) {
-            queryWrapper.in("child_module_ch_desc", operationAuditQueryDto.getChildModules());
+            queryWrapper.in("module_ch_desc", operationAuditQueryDto.getChildModules());
+            queryWrapper.or().in("child_module_ch_desc", operationAuditQueryDto.getChildModules());
         }
 
         if (CollectionUtils.isNotEmpty(operationAuditQueryDto.getRoles())) {
@@ -117,11 +115,13 @@ public class OperationAuditServiceImpl implements OperationAuditService {
                 queryWrapper.orderByDesc("status");
             }
         }
-        queryWrapper.select(BeanOperationAudit.class, tableFieldInfo
-                -> !tableFieldInfo.getColumn().equals("request_params") && !tableFieldInfo.getColumn().equals("response"));
-        Page<BeanOperationAudit> page = new Page<>(operationAuditQueryDto.getCurrent(), operationAuditQueryDto.getSize());
+        queryWrapper.select(BeanOperationAudit.class,
+            tableFieldInfo -> !tableFieldInfo.getColumn().equals("request_params")
+                && !tableFieldInfo.getColumn().equals("response"));
+        Page<BeanOperationAudit> page =
+            new Page<>(operationAuditQueryDto.getCurrent(), operationAuditQueryDto.getSize());
         Page<BeanOperationAudit> beanOperationAuditPage = operationAuditMapper.selectPage(page, queryWrapper);
-        
+
         return beanOperationAuditPage;
     }
 
@@ -178,27 +178,43 @@ public class OperationAuditServiceImpl implements OperationAuditService {
      */
     private OperationAuditQueryDto convertOperationAudit(OperationAuditQueryDto operationAuditQueryDto) {
 
+        // 处理查询条件
+        // 将查询条件中的子模块、角色翻译为中文
+        if (!CollectionUtils.isEmpty(operationAuditQueryDto.getChildModules())
+            && !StringUtils.equals(LanguageContext.getLanguage(), ZH_CN)) {
+            // 获取匹配的翻译后内容
+            operationAuditQueryDto.setChildModules(getTranslateSearch(OPERATION_AUDIT,
+                operationAuditQueryDto.getChildModules(), Arrays.asList(MODULE_CH_DESC, CHILD_MODULE_CH_DESC)));
+        }
+
+        // 设置默认页码
         if (operationAuditQueryDto.getCurrent() == 0) {
             operationAuditQueryDto.setCurrent(CommonConstant.NUM_ONE);
         }
-
         if (operationAuditQueryDto.getSize() == 0) {
             operationAuditQueryDto.setSize(CommonConstant.DEFAULT_PAGE_SIZE_10);
         }
 
+        // 若无关键词搜索 直接返回
         if (StringUtils.isBlank(operationAuditQueryDto.getSearchKeyWord())) {
             return operationAuditQueryDto;
         }
 
+        // 判断关键词搜索类型，IP/URL/OTHER, OTHER主要指代username和account
         if (ipPattern.matcher(operationAuditQueryDto.getSearchKeyWord()).matches()) {
-            //关键词为ip
+            // 关键词为ip
             operationAuditQueryDto.setSearchType(OperationAuditConstant.SEARCH_TYPE_IP);
         } else if (urlPattern.matcher(operationAuditQueryDto.getSearchKeyWord()).matches()) {
-            //关键词为路径
+            // 关键词为路径
             operationAuditQueryDto.setSearchType(OperationAuditConstant.SEARCH_TYPE_URL);
         } else {
-            //关键词类型为账户或用户名
+            // 关键词类型为账户或用户名
             operationAuditQueryDto.setSearchType(OperationAuditConstant.SEARCH_TYPE_OTHER);
+            // 主要针对搜索超级管理员时，进行匹配搜索处理
+            if (!StringUtils.equals(LanguageContext.getLanguage(), ZH_CN)) {
+                operationAuditQueryDto.setSearchKeyWord(getTranslateSearch(OPERATION_AUDIT,
+                    List.of(operationAuditQueryDto.getSearchKeyWord()), List.of(USER_NAME)).get(0));
+            }
         }
         return operationAuditQueryDto;
     }
@@ -226,6 +242,25 @@ public class OperationAuditServiceImpl implements OperationAuditService {
             return null;
         }
         return beanOperationAudits.get(0);
+    }
+    
+    private List<String> getTranslateSearch(String groupName, List<String> list, List<String> property) {
+        // 获取当前语言的翻译配置
+        List<BeanSysResourceTranslateConfig> translateConfigList =
+            translateService.list(groupName, null, property, List.of(LanguageContext.getLanguage()));
+
+        // 根据当前语言进行匹配搜索
+        List<BeanSysResourceTranslateConfig> matchedTranslateConfigList = translateConfigList.stream()
+            .filter(translate -> list.stream()
+                .anyMatch(target -> StringUtils.containsIgnoreCase(translate.getTranslation(), target)))
+            .collect(Collectors.toList());
+        // 若无匹配结果，直接返回
+        if (CollectionUtils.isEmpty(matchedTranslateConfigList)) {
+            return list;
+        }
+
+        return matchedTranslateConfigList.stream().map(BeanSysResourceTranslateConfig::getUniqueValue)
+            .collect(Collectors.toList());
     }
 
 }

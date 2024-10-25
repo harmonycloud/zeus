@@ -1,21 +1,28 @@
 package com.middleware.zeus.controller.system;
 
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.middleware.zeus.common.base.BaseResult;
-import com.middleware.zeus.common.enums.ErrorMessage;
-import com.middleware.zeus.annotation.ExcludeAuditMethod;
-import com.middleware.zeus.bean.BeanOperationAudit;
-import com.middleware.zeus.bean.OperationAuditQueryDto;
-import com.middleware.zeus.common.model.OperationAuditConditionDto;
-import com.middleware.zeus.service.system.OperationAuditService;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiImplicitParam;
-import io.swagger.annotations.ApiImplicitParams;
-import io.swagger.annotations.ApiOperation;
+import java.util.regex.Pattern;
+
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.middleware.zeus.annotation.ExcludeAuditMethod;
+import com.middleware.zeus.bean.BeanOperationAudit;
+import com.middleware.zeus.bean.OperationAuditQueryDto;
+import com.middleware.zeus.common.base.BaseResult;
+import com.middleware.zeus.common.constants.CommonConstant;
+import com.middleware.zeus.common.constants.OperationAuditConstant;
+import com.middleware.zeus.common.enums.ErrorMessage;
+import com.middleware.zeus.common.model.OperationAuditConditionDto;
+import com.middleware.zeus.service.system.OperationAuditService;
+
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiImplicitParam;
+import io.swagger.annotations.ApiImplicitParams;
+import io.swagger.annotations.ApiOperation;
 
 /**
  * 操作审计
@@ -27,6 +34,15 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/operationAudit")
 public class OperationAuditController {
+
+    /**
+     * ip地址正则表达式，仅包含数字或小数点即为ip
+     */
+    private final static Pattern ipPattern = Pattern.compile("[0-9\\.]*");
+    /**
+     * url路径正则表达式，包含下划线即为url路径
+     */
+    private final static Pattern urlPattern = Pattern.compile(".*/.*");
 
     private Logger log = LoggerFactory.getLogger(this.getClass());
 
