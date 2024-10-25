@@ -111,6 +111,7 @@ public class AlertServiceImpl implements AlertService {
     }
 
     @Override
+    @TranslateAfterResult
     public List<AlertRecordIndex> alertRecordFilter(String alertType, String clusterId) {
         // 封装数据库查询逻辑
         QueryWrapper<BeanAlertRecord> wrapper =

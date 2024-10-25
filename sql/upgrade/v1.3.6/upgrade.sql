@@ -393,10 +393,10 @@ insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_
 values('operation_audit','存储管理','en-US','childModuleChDesc','StorageClasses');
 -- 繁体中文
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
-values('operation_audit','yaml格式校验','zh-HK','childModuleChDesc','Yaml格式校驗');
+values('operation_audit','Yaml格式校验','zh-HK','childModuleChDesc','Yaml格式校驗');
 -- 英语
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
-values('operation_audit','yaml格式校验','en-US','childModuleChDesc','Yaml Format Validation');
+values('operation_audit','Yaml格式校验','en-US','childModuleChDesc','Yaml Format Validation');
 -- 繁体中文
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
 values('operation_audit','日志详情','zh-HK','childModuleChDesc','日誌詳情');
@@ -575,6 +575,14 @@ values('operation_audit','普通用户','zh-HK','roleName','普通用戶');
 -- 英语
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
 values('operation_audit','普通用户','en-US','roleName','Ordinary Member');
+
+-- 组织管理员
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','组织管理员','zh-HK','roleName','組織管理員');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','组织管理员','en-US','roleName','Organization Administrator');
 
 -- 更新部分模块名称
 update operation_audit set module_ch_desc = '集群管理',child_module_ch_desc = 'Yaml格式校验' where module_ch_desc = '平台工具箱' and child_module_ch_desc = '格式校验';
@@ -1666,10 +1674,10 @@ insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_
 values('operation_audit','更新存储信息','en-US','actionChDesc','Update Storage Information');
 -- 繁体中文
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
-values('operation_audit','yaml格式校验','zh-HK','actionChDesc','yaml格式校驗');
+values('operation_audit','Yaml格式校验','zh-HK','actionChDesc','yaml格式校驗');
 -- 英语
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
-values('operation_audit','yaml格式校验','en-US','actionChDesc','YAML Format Verification');
+values('operation_audit','Yaml格式校验','en-US','actionChDesc','YAML Format Verification');
 -- 繁体中文
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
 values('operation_audit','查询日志','zh-HK','actionChDesc','查詢日誌');

@@ -9,6 +9,7 @@ import com.middleware.zeus.bean.BeanMiddlewareInfo;
 import com.middleware.zeus.bean.user.BeanRoleAuthority;
 import com.middleware.zeus.common.base.BaseResult;
 import com.middleware.zeus.common.constants.NameConstant;
+import com.middleware.zeus.common.enums.DictEnum;
 import com.middleware.zeus.common.enums.ErrorMessage;
 import com.middleware.zeus.common.enums.middleware.MiddlewareGrafanaNameEnum;
 import com.middleware.zeus.common.enums.middleware.MiddlewareTypeEnum;
@@ -1202,7 +1203,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     public List<MiddlewareInfo> listMiddlewarePod(String clusterId, String namespace, String type, String middlewareName) {
         MiddlewareCR middlewareCR = middlewareCRService.getCR(clusterId, namespace, type, middlewareName);
         if (middlewareCR == null) {
-            throw new BusinessException(ErrorMessage.MIDDLEWARE_NOT_EXIST);
+            throw new BusinessException(DictEnum.MIDDLEWARE, middlewareName, ErrorMessage.DOES_NOT_EXIST);
         }
         if (middlewareCR.getStatus() == null || middlewareCR.getStatus().getInclude() == null) {
             throw new BusinessException(ErrorMessage.MIDDLEWARE_CLUSTER_STATUS_ABNORMAL);
@@ -1214,7 +1215,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     public List<MiddlewareInfo> listMiddlewareService(String clusterId, String namespace, String type, String middlewareName) {
         MiddlewareCR middlewareCR = middlewareCRService.getCR(clusterId, namespace, type, middlewareName);
         if (middlewareCR == null || middlewareCR.getStatus() == null || middlewareCR.getStatus().getInclude() == null) {
-            throw new BusinessException(ErrorMessage.MIDDLEWARE_NOT_EXIST);
+            throw new BusinessException(DictEnum.MIDDLEWARE, middlewareName, ErrorMessage.DOES_NOT_EXIST);
         }
         return middlewareCR.getStatus().getInclude().get("services");
     }

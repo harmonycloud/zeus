@@ -56,6 +56,7 @@ public enum ErrorMessage {
     ILLEGAL_TOKEN(100049, "Illegal token", "token不合法"),
     TOKEN_TIMEOUT(100050, "Token has timed out", "token已超时"),
     TOKEN_NOT_YET_EFFECTIVE(100051, "Token not yet effective", "token未到生效时间"),
+    DOES_NOT_EXIST(100052, "does not exist.", "不存在"),
 
     // internalService
     PARAMETER_VALUE_NOT_PROVIDE(101012, "Parameter cannot be null.", "参数不能为空"),
@@ -228,7 +229,7 @@ public enum ErrorMessage {
     PROJECT_IS_NOT_EMPTY(400103, "project is not empty", "项目下不为空，无法删除"),
     PROJECT_NAME_EXIST(400104, "project name exist", "项目名称已存在"),
     NAMESPACE_IS_NOT_EMPTY(400105, "namespace is not empty", "分区存在中间件，无法取消接入"),
-    PROJECT_STORAGE_USING(400106, "project storage using", "该存储存在已分配配额于命名空间，请先取消分配"),
+    PROJECT_STORAGE_USING(400106, "The storage has assigned quotas to namespaces; please cancel the assignment first", "该存储存在已分配配额于命名空间，请先取消分配"),
     PROJECT_CPU_MEMORY_USING(400107, "project cpu memory using", "该cpu memory存在已分配配额于命名空间，请先取消分配"),
     PROJECT_BACKUP_SERVER_USING(400108, "project backup server using", "该备份服务器已绑定备份位置，请先取消绑定"),
     PROJECT_ADD_USER_EMPTY_LIST(400109, "project add user list is empty", "添加失败，请选择新增的成员"),
@@ -399,7 +400,7 @@ public enum ErrorMessage {
     SERVER_ADDRESS_ALREADY_EXISTS(740004,"the server address already exists","服务器地址已存在"),
     AUTHORIZATION_FAILED(740005, "authorization failed", "用户名或密码错误"),
     FAILED_TO_DELETE_BACKUP_SERVER(740006, "failed to delete this backup server,which a backup task used it already", "存在使用该备份服务器的备份任务，无法删除该服务器"),
-    FAILED_TO_DELETE_BACKUP_POSITION(740007, "failed to delete this backup position,which a backup task used it already", "存在使用该备份位置的备份任务，无法删除该备份位置"),
+    FAILED_TO_DELETE_BACKUP_POSITION(740007, "There are backup tasks that use this backup location, and it cannot be deleted", "存在使用该备份位置的备份任务，无法删除该备份位置"),
 
     // user
     CREATE_MYSQL_USER_FAILED(810001, "failed to create user", "创建用户失败"),
