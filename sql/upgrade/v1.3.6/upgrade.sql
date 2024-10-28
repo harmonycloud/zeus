@@ -1680,6 +1680,12 @@ insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_
 values('operation_audit','Yaml格式校验','en-US','actionChDesc','YAML Format Verification');
 -- 繁体中文
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','yaml格式校验','zh-HK','actionChDesc','yaml格式校驗');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','yaml格式校验','en-US','actionChDesc','YAML Format Verification');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
 values('operation_audit','查询日志','zh-HK','actionChDesc','查詢日誌');
 -- 英语
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
