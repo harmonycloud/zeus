@@ -19,6 +19,7 @@ import com.middleware.zeus.common.model.StorageDto;
 import com.middleware.zeus.common.model.StorageQuota;
 import com.middleware.zeus.service.k8s.*;
 import com.middleware.zeus.service.system.AlertUserService;
+import com.skyview.language.annotations.TranslateAfterResult;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -138,6 +139,7 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
     }
 
     @Override
+    @TranslateAfterResult
     public List<ProjectDto> list(String organId, String keyword) {
         // 查询项目列表
         List<ProjectDto> list = this.list(organId);

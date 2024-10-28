@@ -1,6 +1,8 @@
 package com.middleware.zeus.common.model.user;
 
 import com.middleware.zeus.common.model.middleware.MiddlewareClusterDTO;
+import com.skyview.language.annotations.Translate;
+import com.skyview.language.annotations.TranslateGroupInfo;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -16,6 +18,7 @@ import java.util.List;
 @Accessors(chain = true)
 @Data
 @ApiModel("项目")
+@TranslateGroupInfo(name="role",uniqueKeyName="roleWeight")
 public class ProjectDto {
 
     @ApiModelProperty("名称")
@@ -52,6 +55,7 @@ public class ProjectDto {
     private Integer roleId;
 
     @ApiModelProperty("用户项目中对应角色名称")
+    @Translate(keyName="name")
     private String roleName;
 
     @ApiModelProperty("用户项目中对应角色")
