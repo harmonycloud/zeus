@@ -1,6 +1,7 @@
 package com.middleware.zeus.common.model.user;
 
 import com.skyview.language.annotations.DirectTranslate;
+import com.skyview.language.annotations.TranslateObject;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -45,6 +46,7 @@ public class UserDto {
     private Date passwordTime;
 
     @ApiModelProperty("角色列表")
+    @TranslateObject
     List<UserRole> userRoleList;
 
     @ApiModelProperty("关联角色id")

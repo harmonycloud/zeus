@@ -1,5 +1,7 @@
 package com.middleware.zeus.common.model.user;
 
+import com.skyview.language.annotations.Translate;
+import com.skyview.language.annotations.TranslateGroupInfo;
 import io.swagger.annotations.ApiModel;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -13,6 +15,7 @@ import java.util.Map;
 @Accessors(chain = true)
 @Data
 @ApiModel("用户角色信息表")
+@TranslateGroupInfo(name="role",uniqueKeyName="weight")
 public class UserRole {
 
     private String userName;
@@ -23,6 +26,7 @@ public class UserRole {
 
     private Integer roleId;
 
+    @Translate(keyName="name")
     private String roleName;
 
     private String roleType;
