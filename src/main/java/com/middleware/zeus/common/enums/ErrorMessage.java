@@ -308,7 +308,7 @@ public enum ErrorMessage {
     MIDDLEWARE_UPDATE_MYSQL_CONFIG_FAILED(700010, "Failed to update custom config to mysql!", "同步自定义配置至数据库失败"),
     CREATE_DYNAMIC_FORM_FAILED(700011, "Failed to create dynamic form!", "生成动态表单失败"),
     CREATE_MIDDLEWARE_OPERATOR_FAILED(700012, "Failed to create middleware operator", "创建operator失败"),
-    MIDDLEWARE_STILL_BE_USED(700013, "Failed to dalete middleware", "该版本正在被其余集群使用，不能下架"),
+    MIDDLEWARE_STILL_BE_USED(700013, "This version is being used by other cluster and cannot be taken down", "该版本正在被其余集群使用，不能下架"),
     MIDDLEWARE_SERVICE_EXIST(700014, "Exist released middleware service", "存在已发布中间件服务，不能删除"),
     FIND_CACHE_MIDDLEWARE_FAILED(700015, "failed to fing cache middleware", "查询已删除中间件缓存记录失败"),
     MIDDLEWARE_REBOOT_FAILED(700016, "failed to restart middleware", "服务重启失败"),
