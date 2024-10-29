@@ -178,6 +178,7 @@ public enum ErrorMessage {
     POD_MIGRATE_FAILED(300045, "pod migrate failed", "POD迁移失败"),
     SWITCH_FAILD_BECAUSE_DELAY(300046,"sync_slave pod have data delay","sync同步节点存在数据延迟"),
     POD_MIGRATE_NOT_EXISTS(300047, "pod migrate info not exists", "pod迁移信息不存在"),
+    THE_CONNECTION_ADDRESS_FOR_PROMETHEUS_IS_INCORRECT(300048, "The connection address for Prometheus is incorrect.", "获取prometheus连接地址错误"),
 
     // node 301xxx
     EDGE_NODE_PACKAGE_NOT_FOUND(301001, "Install package not found", "安装包未找到，请先生成"),
