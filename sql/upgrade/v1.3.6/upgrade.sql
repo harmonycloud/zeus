@@ -336,7 +336,7 @@ insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_
 values('operation_audit','服务管理','zh-HK','childModuleChDesc','服務管理');
 -- 英语
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
-values('operation_audit','服务管理','en-US','childModuleChDesc','Middlewares');
+values('operation_audit','服务管理','en-US','childModuleChDesc','Service Management');
 -- 繁体中文
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
 values('operation_audit','Mysql管理面板','zh-HK','childModuleChDesc','Mysql管理面板');
@@ -411,6 +411,12 @@ insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_
 values('operation_audit','项目管理','en-US','moduleChDesc','Projects');
 -- 繁体中文
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','项目空间管理','zh-HK','moduleChDesc','項目空間管理');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('operation_audit','项目空间管理','en-US','moduleChDesc','Project Space Management');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
 values('operation_audit','项目管理','zh-HK','childModuleChDesc','項目管理');
 -- 英语
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
@@ -456,13 +462,13 @@ insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_
 values('operation_audit','数据安全','zh-HK','moduleChDesc','數據安全');
 -- 英语
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
-values('operation_audit','数据安全','en-US','moduleChDesc','Middleware Backup');
+values('operation_audit','数据安全','en-US','moduleChDesc','Backup');
 -- 繁体中文
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
 values('operation_audit','备份服务','zh-HK','childModuleChDesc','備份服務');
 -- 英语
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
-values('operation_audit','备份服务','en-US','childModuleChDesc','Middleware Backup');
+values('operation_audit','备份服务','en-US','childModuleChDesc','Middleware Backup Service');
 -- 繁体中文
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
 values('operation_audit','可用区','zh-HK','childModuleChDesc','可用區');
@@ -2161,3 +2167,6 @@ insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_
 values('cluster_monitor_dashboard','主机磁盘看板','zh-HK','title','主機磁盤看板');
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
 values('cluster_monitor_dashboard','主机磁盘看板','en-US','title','Host disk dashboard');
+
+-- 操作审计筛选项第一条项目管理更名为项目空间管理
+update operation_audit set module_ch_desc = '项目空间管理' where module_ch_desc = '项目管理';
