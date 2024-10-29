@@ -162,7 +162,7 @@ public enum DictEnum {
     ACCESS_KEY_SECRET("access key secret", "访问密钥"),
     KOK_CLUSTER("KOK Cluster", "KOK集群"),
 
-    MIDDLEWARE("middleware ", "中间件"),
+    MIDDLEWARE("Middleware ", "中间件"),
     MYSQL_CLUSTER("mysql cluster ", "mysql集群"),
     REDIS_CLUSTER("redis cluster ", "redis集群"),
     ES_CLUSTER("ElasticSearch cluster ", "ElasticSearch集群"),

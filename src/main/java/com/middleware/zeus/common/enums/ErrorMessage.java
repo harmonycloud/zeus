@@ -17,7 +17,7 @@ public enum ErrorMessage {
     CERTIFICATE_AUTH_FAILED(100010, "Auth failed", "认证失败,您的集群证书信息可能有误"),
     PARAMETER_NOT_COMPLETE(100011, "Parameter is not complete", "参数不全"),
     QUERY_FAIL(100012, "Query failed.", "查询失败"),
-    NOT_EXIST(100013, " does not exist", "不存在"),
+    NOT_EXIST(100013, "does not exist", "不存在"),
     CREATE_FAIL(100014, "Create fail.", "创建失败"),
     UPDATE_FAIL(100015, "Update fail.", "更新失败"),
     NOT_BLANK(100016, "Can not be blank.", "不能为空"),
