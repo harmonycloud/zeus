@@ -2170,3 +2170,17 @@ values('cluster_monitor_dashboard','主机磁盘看板','en-US','title','Host di
 
 -- 操作审计筛选项第一条项目管理更名为项目空间管理
 update operation_audit set module_ch_desc = '项目空间管理' where module_ch_desc = '项目管理';
+
+-- 个性化菜单
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('personal_config','中间件一体化管理平台','zh-HK','platform_alias_name','中間件一體化管理平台');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('personal_config','中间件一体化管理平台','en-US','platform_alias_name','CloudDB');
+-- 繁体中文
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('personal_config','Zeus | 中间件管理一体化平台','zh-HK','platform_name','Zeus | 中間件管理一體化平台');
+-- 英语
+insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
+values('personal_config','Zeus | 中间件管理一体化平台','en-US','platform_name','Zeus | CloudDB');

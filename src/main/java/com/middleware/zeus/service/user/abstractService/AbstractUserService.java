@@ -23,6 +23,7 @@ import com.middleware.zeus.common.model.middleware.Namespace;
 import com.middleware.zeus.service.k8s.*;
 import com.middleware.zeus.util.FileDownloadUtil;
 import com.middleware.zeus.util.OpenSSLUtil;
+import com.skyview.language.annotations.TranslateAfterResult;
 import io.fabric8.kubernetes.api.model.AuthInfo;
 import io.fabric8.kubernetes.api.model.Config;
 import io.fabric8.kubernetes.api.model.NamedAuthInfo;
@@ -313,6 +314,7 @@ public abstract class AbstractUserService {
      * @throws IOException
      */
 
+    @TranslateAfterResult
     public PersonalizedConfiguration getPersonalConfig() {
         QueryWrapper<PersonalizedConfiguration> queryWrapper = new QueryWrapper<>();
         List<PersonalizedConfiguration> personals = personalMapper.selectList(queryWrapper);
