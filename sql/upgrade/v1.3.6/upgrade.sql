@@ -2170,3 +2170,5 @@ values('cluster_monitor_dashboard','主机磁盘看板','en-US','title','Host di
 
 -- 操作审计筛选项第一条项目管理更名为项目空间管理
 update operation_audit set module_ch_desc = '项目空间管理' where module_ch_desc = '项目管理';
+-- 翻译修改
+update sys_resource_translate_config SET translation='Marketplace' where translation='Middleware Market';
