@@ -17,7 +17,7 @@ RUN apk add curl --no-cache &&\
 # install kubectl
 RUN mkdir -p /tmp/kubectl &&\
     cd /tmp/kubectl &&\
-    curl -LO "https://storage.googleapis.com/kubernetes-release/release/v1.17.2/bin/linux/amd64/kubectl" && \
+    curl -LO "https://storage.googleapis.com/kubernetes-release/release/v1.29.8/bin/linux/amd64/kubectl" && \
     cp /tmp/kubectl/kubectl /usr/local/bin/kubectl && \
     chmod +x /usr/local/bin/kubectl && \
     rm -rf /tmp/kubectl
@@ -25,8 +25,8 @@ RUN mkdir -p /tmp/kubectl &&\
 # install helm
 RUN mkdir -p /tmp/helm &&\
     cd /tmp/helm &&\
-    curl -LO https://get.helm.sh/helm-v3.4.2-linux-amd64.tar.gz &&\
-    tar -zxvf helm-v3.4.2-linux-amd64.tar.gz && \
+    curl -LO https://get.helm.sh/helm-v3.16.2-linux-amd64.tar.gz &&\
+    tar -zxvf helm-v3.16.2-linux-amd64.tar.gz && \
     cp /tmp/helm/linux-amd64/helm /usr/local/bin/helm && \
     chmod +x /usr/local/bin/helm &&\
     rm -rf /tmp/helm
