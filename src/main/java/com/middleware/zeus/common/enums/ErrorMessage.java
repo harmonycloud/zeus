@@ -17,7 +17,7 @@ public enum ErrorMessage {
     CERTIFICATE_AUTH_FAILED(100010, "Auth failed", "认证失败,您的集群证书信息可能有误"),
     PARAMETER_NOT_COMPLETE(100011, "Parameter is not complete", "参数不全"),
     QUERY_FAIL(100012, "Query failed.", "查询失败"),
-    NOT_EXIST(100013, "Not exists.", "不存在"),
+    NOT_EXIST(100013, "does not exist", "不存在"),
     CREATE_FAIL(100014, "Create fail.", "创建失败"),
     UPDATE_FAIL(100015, "Update fail.", "更新失败"),
     NOT_BLANK(100016, "Can not be blank.", "不能为空"),
@@ -56,6 +56,7 @@ public enum ErrorMessage {
     ILLEGAL_TOKEN(100049, "Illegal token", "token不合法"),
     TOKEN_TIMEOUT(100050, "Token has timed out", "token已超时"),
     TOKEN_NOT_YET_EFFECTIVE(100051, "Token not yet effective", "token未到生效时间"),
+    DOES_NOT_EXIST(100052, "does not exist.", "不存在"),
 
     // internalService
     PARAMETER_VALUE_NOT_PROVIDE(101012, "Parameter cannot be null.", "参数不能为空"),
@@ -177,6 +178,7 @@ public enum ErrorMessage {
     POD_MIGRATE_FAILED(300045, "pod migrate failed", "POD迁移失败"),
     SWITCH_FAILD_BECAUSE_DELAY(300046,"sync_slave pod have data delay","sync同步节点存在数据延迟"),
     POD_MIGRATE_NOT_EXISTS(300047, "pod migrate info not exists", "pod迁移信息不存在"),
+    THE_CONNECTION_ADDRESS_FOR_PROMETHEUS_IS_INCORRECT(300048, "The connection address for Prometheus is incorrect.", "获取prometheus连接地址错误"),
 
     // node 301xxx
     EDGE_NODE_PACKAGE_NOT_FOUND(301001, "Install package not found", "安装包未找到，请先生成"),
@@ -187,7 +189,7 @@ public enum ErrorMessage {
 
     //user
     USER_NOT_EXIT(400001, "user not exit.", "用户不存在"),
-    USER_ROLE_EXIST(400002, "user has bound with role", "用户已与角色绑定"),
+    USER_ROLE_EXIST(400002, "User has bound with role", "用户已与角色绑定"),
     USER_ROLE_NOT_EXIT(400003,"user has not bound with role,please contact administrator to bind role.", "该用户尚未关联角色，请联系管理员关联一个角色。"),
     ROLE_NOT_EXIST(400004, "role not exist", "角色不存在"),
     USERNAME_SHOULD_NOT_BE_NULL(400005, "username should not be null", "用户名不得为空"),
@@ -199,7 +201,7 @@ public enum ErrorMessage {
     CREATE_ROLE_FAILED(400011, "failed to create role", "创建角色失败"),
     ROLE_EXIST(400012, "role name has been used", "角色名已存在"),
     UPDATE_ROLE_FAILED(400013, "failed to update role", "更新角色失败"),
-    ROLE_HAS_BEEN_BOUND(400014, "role has been bound", "该角色已于用户绑定"),
+    ROLE_HAS_BEEN_BOUND(400014, "role has been bound", "该角色已与用户绑定"),
     ROLE_PERMISSION_IS_EMPTY(400015, "role permission is empty", "该用户绑定的角色权限为空"),
     ROLE_NAMESPACE_PERMISSION_EMPTY(400016, "role namespace perimission should not be empty", "角色分区权限不能为空"),
     LOGIN_FAILED(400017, "Login failed", "您的账户或密码有误，请重试"),
@@ -223,12 +225,12 @@ public enum ErrorMessage {
             " one external service exposure is available", "连接mysql失败，请检查服务暴露，确保至少有一个对外服务暴露可用"),
 
     // project
-    PROJECT_NOT_EXIST(400101, "project not exist", "项目不存在"),
-    PROJECT_NAMESPACE_ALREADY_BIND(400102, "project namespace already bind", "该分区已与项目绑定"),
+    PROJECT_NOT_EXIST(400101, "Project not exist", "项目不存在"),
+    PROJECT_NAMESPACE_ALREADY_BIND(400102, "This namespace is already bound to a project", "该分区已与项目绑定"),
     PROJECT_IS_NOT_EMPTY(400103, "project is not empty", "项目下不为空，无法删除"),
     PROJECT_NAME_EXIST(400104, "project name exist", "项目名称已存在"),
     NAMESPACE_IS_NOT_EMPTY(400105, "namespace is not empty", "分区存在中间件，无法取消接入"),
-    PROJECT_STORAGE_USING(400106, "project storage using", "该存储存在已分配配额于命名空间，请先取消分配"),
+    PROJECT_STORAGE_USING(400106, "The storage has assigned quotas to namespaces; please cancel the assignment first", "该存储存在已分配配额于命名空间，请先取消分配"),
     PROJECT_CPU_MEMORY_USING(400107, "project cpu memory using", "该cpu memory存在已分配配额于命名空间，请先取消分配"),
     PROJECT_BACKUP_SERVER_USING(400108, "project backup server using", "该备份服务器已绑定备份位置，请先取消绑定"),
     PROJECT_ADD_USER_EMPTY_LIST(400109, "project add user list is empty", "添加失败，请选择新增的成员"),
@@ -307,7 +309,7 @@ public enum ErrorMessage {
     MIDDLEWARE_UPDATE_MYSQL_CONFIG_FAILED(700010, "Failed to update custom config to mysql!", "同步自定义配置至数据库失败"),
     CREATE_DYNAMIC_FORM_FAILED(700011, "Failed to create dynamic form!", "生成动态表单失败"),
     CREATE_MIDDLEWARE_OPERATOR_FAILED(700012, "Failed to create middleware operator", "创建operator失败"),
-    MIDDLEWARE_STILL_BE_USED(700013, "Failed to dalete middleware", "该版本正在被其余集群使用，不能下架"),
+    MIDDLEWARE_STILL_BE_USED(700013, "This version is being used by other cluster and cannot be taken down", "该版本正在被其余集群使用，不能下架"),
     MIDDLEWARE_SERVICE_EXIST(700014, "Exist released middleware service", "存在已发布中间件服务，不能删除"),
     FIND_CACHE_MIDDLEWARE_FAILED(700015, "failed to fing cache middleware", "查询已删除中间件缓存记录失败"),
     MIDDLEWARE_REBOOT_FAILED(700016, "failed to restart middleware", "服务重启失败"),
@@ -399,7 +401,7 @@ public enum ErrorMessage {
     SERVER_ADDRESS_ALREADY_EXISTS(740004,"the server address already exists","服务器地址已存在"),
     AUTHORIZATION_FAILED(740005, "authorization failed", "用户名或密码错误"),
     FAILED_TO_DELETE_BACKUP_SERVER(740006, "failed to delete this backup server,which a backup task used it already", "存在使用该备份服务器的备份任务，无法删除该服务器"),
-    FAILED_TO_DELETE_BACKUP_POSITION(740007, "failed to delete this backup position,which a backup task used it already", "存在使用该备份位置的备份任务，无法删除该备份位置"),
+    FAILED_TO_DELETE_BACKUP_POSITION(740007, "There are backup tasks that use this backup location, and it cannot be deleted", "存在使用该备份位置的备份任务，无法删除该备份位置"),
 
     // user
     CREATE_MYSQL_USER_FAILED(810001, "failed to create user", "创建用户失败"),

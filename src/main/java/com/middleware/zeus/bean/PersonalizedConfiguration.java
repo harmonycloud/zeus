@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.skyview.language.annotations.DirectTranslate;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -76,6 +77,7 @@ public class PersonalizedConfiguration {
      * 平台名称
      */
     @TableField (value = "platform_name")
+    @DirectTranslate(groupName = "personal_config", keyName = "platform_name", uniqueKeyName = "platformName")
     private String platformName;
 
     /**
@@ -118,6 +120,7 @@ public class PersonalizedConfiguration {
      * 平台别称
      */
     @TableField (value = "platform_alias_name")
+    @DirectTranslate(groupName = "personal_config", keyName = "platform_alias_name", uniqueKeyName = "platformAliasName")
     private String platformAliasName;
 
     /**

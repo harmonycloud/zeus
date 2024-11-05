@@ -31,6 +31,8 @@ public class HelmInfoDo {
     private String chartName;
     @ApiModelProperty("chart包版本")
     private String chartVersion;
+    @ApiModelProperty("release版本")
+    private String releaseVersion;
     @ApiModelProperty("values.yaml")
     private JSONObject values;
 

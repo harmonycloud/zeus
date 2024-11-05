@@ -47,7 +47,13 @@ public class PrometheusWrapper {
         if (!CollectionUtils.isEmpty(client.getAuthentications())){
             authName = ADMIN;
         }
-        return new PrometheusApi(client).get("", queryMap, authName);
+        PrometheusResponse prometheusResponse;
+        try {
+            prometheusResponse = new PrometheusApi(client).get("", queryMap, authName);
+        } catch (IllegalArgumentException e) {
+            throw new BusinessException(ErrorMessage.THE_CONNECTION_ADDRESS_FOR_PROMETHEUS_IS_INCORRECT);
+        }
+        return prometheusResponse;
     }
 
     public PrometheusRulesResponse getRules(String clusterId, String prometheusApiVersion) throws Exception {

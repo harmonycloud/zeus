@@ -157,7 +157,7 @@ public class UserRoleServiceImpl implements UserRoleService {
     public void insert(String organId, String projectId, String username, Integer roleId) {
         QueryWrapper<BeanUserRole> wrapper =
             new QueryWrapper<BeanUserRole>().eq("username", username);
-        if (StringUtils.isNotEmpty(projectId)){
+        if (StringUtils.isNotEmpty(organId)){
             wrapper.eq("organ_id", organId);
         }
         if (StringUtils.isNotEmpty(projectId)){
@@ -220,6 +220,15 @@ public class UserRoleServiceImpl implements UserRoleService {
         } else {
             beanUserRoleMapper.update(beanUserRole, wrapper);
         }
+    }
+
+    @Override
+    public void updateProjectManager2Normal(String organId, String projectId) {
+        QueryWrapper<BeanUserRole> wrapper =
+                new QueryWrapper<BeanUserRole>().eq("organ_id", organId).eq("project_id", projectId).eq("role_id", 2);
+        BeanUserRole beanUserRole = new BeanUserRole();
+        beanUserRole.setRoleId(4);
+        beanUserRoleMapper.update(beanUserRole, wrapper);
     }
 
 }

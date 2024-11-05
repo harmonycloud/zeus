@@ -275,7 +275,7 @@ public abstract class AbstractBaseOperator {
         // check exist
         List<HelmListInfo> list = helmChartService.listHelm(middleware.getNamespace(), middleware.getName(), cluster);
         if (CollectionUtils.isEmpty(list)) {
-            throw new BusinessException(ErrorMessage.MIDDLEWARE_NOT_EXIST);
+            throw new BusinessException(DictEnum.MIDDLEWARE, middleware.getName(), ErrorMessage.DOES_NOT_EXIST);
         }
         ingressService.delete(middleware.getClusterId(), middleware.getNamespace(), middleware.getType(),
             middleware.getName());
@@ -813,7 +813,7 @@ public abstract class AbstractBaseOperator {
             array.forEach(item -> {
                 CustomVolume customVolume = null;
                 try {
-                    LinkedHashMap<String, Object> obj = (LinkedHashMap<String, Object>) item;
+                    JSONObject obj = (JSONObject) item;
                     customVolume = new CustomVolume();
                     customVolume.setName(obj.get("name").toString());
                     customVolume.setMountPath(obj.get("mountPath").toString());

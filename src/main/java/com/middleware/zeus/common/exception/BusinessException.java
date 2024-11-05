@@ -31,7 +31,7 @@ public class BusinessException extends RuntimeException {
     }
 
     public BusinessException(DictEnum dictEnum, String name, ErrorMessage errorMessage) {
-        super(dictEnum.phrase() + name + errorMessage.getMsg());
+        super(dictEnum.phrase() + name + " " + errorMessage.getMsg());
         this.code = errorMessage.getCode();
     }
 

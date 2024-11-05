@@ -3,6 +3,10 @@
 package com.middleware.zeus.common.enums;
 
 
+import com.middleware.zeus.util.SpringContextUtils;
+import com.skyview.language.context.LanguageContext;
+import com.skyview.language.service.LanguageErrorEnumUtilService;
+
 public enum DictEnum {
 
     NAME("name", "名称"),
@@ -158,7 +162,7 @@ public enum DictEnum {
     ACCESS_KEY_SECRET("access key secret", "访问密钥"),
     KOK_CLUSTER("KOK Cluster", "KOK集群"),
 
-    MIDDLEWARE("middleware ", "中间件"),
+    MIDDLEWARE("Middleware ", "中间件"),
     MYSQL_CLUSTER("mysql cluster ", "mysql集群"),
     REDIS_CLUSTER("redis cluster ", "redis集群"),
     ES_CLUSTER("ElasticSearch cluster ", "ElasticSearch集群"),
@@ -183,8 +187,12 @@ public enum DictEnum {
     }
 
     public String phrase() {
-       return chPhrase;
-
+        String language = LanguageContext.getLanguage();
+        if (language.equals("en-US")) {
+            return enPhrase;
+        } else {
+            return chPhrase;
+        }
     }
 
     public String getEnPhrase() {

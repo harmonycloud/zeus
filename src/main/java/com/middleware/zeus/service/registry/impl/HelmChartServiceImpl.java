@@ -301,7 +301,7 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
     }
 
     @Override
-    public List<HelmInfoDo> listInstalledValues(String clusterId, String namespace) {
+    public List<HelmInfoDo> listInstalledValues(String clusterId, String namespace, Boolean decode) {
         List<HelmInfoDo> helmInfoDoList = new ArrayList<>();
         Map<String, String> labels = new HashMap<>();
         labels.put(OWNER, HELM);
@@ -309,20 +309,37 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
         List<Secret> secretList = secretService.list(clusterId, namespace, labels);
         for (Secret secret : secretList){
             HelmInfoDo helmInfoDo = new HelmInfoDo();
-            JSONObject target = HelmChartUtil.decodeSecret(secret.getData().get(RELEASE));
-            helmInfoDo.setName(target.getString(NAME));
+            if (decode){
+                JSONObject target = HelmChartUtil.decodeSecret(secret.getData().get(RELEASE));
+                helmInfoDo.setName(target.getString(NAME));
 
-            JSONObject chart = target.getJSONObject("chart");
-            helmInfoDo.setValues(chart.getJSONObject("values"));
+                JSONObject chart = target.getJSONObject("chart");
+                JSONObject values = target.getJSONObject("chart").getJSONObject("values");
+                if (target.containsKey("config")) {
+                    for (String key : target.getJSONObject("config").keySet()){
+                        values.put(key, target.getJSONObject("config").get(key));
+                    }
+                }
+                helmInfoDo.setValues(values);
 
-            JSONObject metadata = chart.getJSONObject("metadata");
-            helmInfoDo.setChartName(metadata.getString(NAME));
-            helmInfoDo.setChartVersion(metadata.getString(VERSION));
+                JSONObject metadata = chart.getJSONObject("metadata");
+                helmInfoDo.setChartName(metadata.getString(NAME));
+                helmInfoDo.setChartVersion(metadata.getString(VERSION));
 
-            JSONObject info = target.getJSONObject(INFO);
-            Date updateTime = DateUtils.parseDate(info.getString("last_deployed").split("\\.")[0] + "Z",
-                DateType.YYYY_MM_DD_T_HH_MM_SS.getValue());
-            helmInfoDo.setUpdateTime(updateTime);
+                JSONObject info = target.getJSONObject(INFO);
+                Date updateTime = DateUtils.parseDate(info.getString("last_deployed").split("\\.")[0] + "Z",
+                        DateType.YYYY_MM_DD_T_HH_MM_SS.getValue());
+                helmInfoDo.setUpdateTime(updateTime);
+            }
+            // 设置release 名称
+            if (!CollectionUtils.isEmpty(secret.getLabels())) {
+                if (secret.getLabels().containsKey(NAME)) {
+                    helmInfoDo.setName(secret.getLabels().get(NAME));
+                }
+                if (secret.getLabels().containsKey(VERSION)) {
+                    helmInfoDo.setReleaseVersion(secret.getLabels().get(VERSION));
+                }
+            }
 
             helmInfoDo.setClusterId(clusterId);
             helmInfoDo.setNamespace(secret.getNamespace());
@@ -338,12 +355,18 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
         labels.put(OWNER, HELM);
         labels.put(STATUS, DEPLOYED);
         labels.put(NAME, name);
-        List<Secret> secretList =secretService.list(cluster.getId(), namespace, labels);
+        List<Secret> secretList = secretService.list(cluster.getId(), namespace, labels);
         if (CollectionUtils.isEmpty(secretList)){
             return null;
         }
         JSONObject target = HelmChartUtil.decodeSecret(secretList.get(0).getData().get(RELEASE));
-        return target.getJSONObject("chart").getJSONObject("values");
+        JSONObject values = target.getJSONObject("chart").getJSONObject("values");
+        if (target.containsKey("config")) {
+            for (String key : target.getJSONObject("config").keySet()){
+                values.put(key, target.getJSONObject("config").get(key));
+            }
+        }
+        return values;
     }
 
     @Override

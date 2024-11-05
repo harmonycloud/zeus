@@ -11,6 +11,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -41,7 +42,12 @@ public class RoleController {
     @ApiOperation(value = "获取角色列表", notes = "获取角色列表")
     @GetMapping("/list")
     public BaseResult<List<RoleDto>> list(@RequestParam(value = "key", required = false) String key) {
-        return BaseResult.ok(roleService.list(key));
+        return BaseResult.ok(roleService.list(key).stream().filter(roleDto -> {
+            if (StringUtils.isNotEmpty(key)) {
+                return roleDto.getName().contains(key) || roleDto.getDescription().contains(key);
+            }
+            return true;
+        }));
     }
 
     @ApiOperation(value = "删除角色", notes = "删除角色")
