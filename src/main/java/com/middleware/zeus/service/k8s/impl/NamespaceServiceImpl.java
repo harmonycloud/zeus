@@ -12,6 +12,7 @@ import com.middleware.zeus.dao.user.BeanProjectNamespaceMapper;
 import com.middleware.zeus.service.k8s.*;
 import com.middleware.zeus.service.middleware.ImageRepositoryService;
 import com.middleware.zeus.service.user.ProjectService;
+import com.middleware.zeus.util.ThreadPoolExecutorFactory;
 import io.fabric8.kubernetes.api.model.LocalObjectReference;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.ServiceAccount;
@@ -244,9 +245,7 @@ public class NamespaceServiceImpl implements NamespaceService {
         // 修改数据表 project_namespace 中分区中文名
         updateAliasName(clusterId, name, namespace.getAliasName());
         // 给分区添加imagepullsecret
-        Executors.newSingleThreadExecutor().execute(()->{
-            bindImagePullSecret(clusterId, name);
-        });
+        ThreadPoolExecutorFactory.executor.execute(()-> bindImagePullSecret(clusterId, name));
     }
 
     @Override
@@ -375,9 +374,7 @@ public class NamespaceServiceImpl implements NamespaceService {
         } catch (InterruptedException e) {
             log.error("线程等待异常");
         }
-        Executors.newSingleThreadExecutor().execute(()->{
-            checkAndBindImagePullSecret(clusterId, namespace, null);
-        });
+        ThreadPoolExecutorFactory.executor.execute(()-> checkAndBindImagePullSecret(clusterId, namespace, null));
     }
 
     /**

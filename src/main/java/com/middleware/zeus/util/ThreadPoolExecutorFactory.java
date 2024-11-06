@@ -11,7 +11,7 @@ import java.util.concurrent.Executors;
  */
 public class ThreadPoolExecutorFactory {
 
-    public static final ExecutorService executor = Executors.newFixedThreadPool(40);
+    public static final ExecutorService executor = Executors.newFixedThreadPool(30);
 
 
 }

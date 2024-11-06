@@ -11,6 +11,7 @@ import com.middleware.zeus.common.exception.BusinessException;
 import com.middleware.zeus.common.model.middleware.ImageRepositoryDTO;
 import com.middleware.zeus.common.model.middleware.Namespace;
 import com.middleware.zeus.common.model.middleware.Registry;
+import com.middleware.zeus.util.ThreadPoolExecutorFactory;
 import com.middleware.zeus.util.uuid.UUIDUtils;
 import com.middleware.zeus.bean.BeanImageRepository;
 import com.middleware.zeus.dao.BeanImageRepositoryMapper;
@@ -75,9 +76,7 @@ public class ImageRepositoryServiceImpl implements ImageRepositoryService {
         beanImageRepositoryMapper.insert(beanImageRepository);
         // 更新分区secret(imagePUllSecret)
         if (updateNamespaceDefaultSecret) {
-            Executors.newSingleThreadExecutor().execute(() -> {
-                saveImagePullSecret(clusterId, imageRepositoryDTO.getId());
-            });
+            ThreadPoolExecutorFactory.executor.execute(() -> saveImagePullSecret(clusterId, imageRepositoryDTO.getId()));
         }
     }
 
@@ -128,9 +127,7 @@ public class ImageRepositoryServiceImpl implements ImageRepositoryService {
         beanImageRepositoryMapper.updateById(beanImageRepository);
         // 更新分区secret(imagePUllSecret)
         if (updateNamespaceDefaultSecret) {
-            Executors.newSingleThreadExecutor().execute(() -> {
-                saveImagePullSecret(clusterId, imageRepositoryDTO.getId());
-            });
+            ThreadPoolExecutorFactory.executor.execute(() -> saveImagePullSecret(clusterId, imageRepositoryDTO.getId()));
         }
     }
 

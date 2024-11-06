@@ -18,6 +18,7 @@ import com.middleware.zeus.common.model.middleware.IngressDTO;
 import com.middleware.zeus.common.model.middleware.MiddlewareClusterDTO;
 import com.middleware.zeus.common.model.middleware.PodInfo;
 import com.middleware.zeus.common.model.middleware.ServiceDTO;
+import com.middleware.zeus.util.ThreadPoolExecutorFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -85,9 +86,7 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
             log.error("es组建创建nodePort失败", e);
         }
         //初始化es索引模板,安装log-pilot
-        Executors.newSingleThreadExecutor().execute(() -> {
-            tryCreateEsTemplate(cluster, clusterComponentsDto);
-        });
+        ThreadPoolExecutorFactory.executor.execute(() -> tryCreateEsTemplate(cluster, clusterComponentsDto));
     }
 
     @Override
