@@ -523,10 +523,10 @@ public class ExcelUtil {
         DecimalFormat df2 = new DecimalFormat("0.00");  //格式化数字
 */
         switch (cell.getCellType()) {
-            case Cell.CELL_TYPE_STRING:
+            case STRING:
                 value = cell.getRichStringCellValue().getString();
                 break;
-            case Cell.CELL_TYPE_NUMERIC:
+            case NUMERIC:
                 if ("General".equals(cell.getCellStyle().getDataFormatString())) {
                     value = df.format(cell.getNumericCellValue());
                 }/*else if("m/d/yy".equals(cell.getCellStyle().getDataFormatString())){
@@ -535,10 +535,10 @@ public class ExcelUtil {
                     value = df2.format(cell.getNumericCellValue());
                 }*/
                 break;
-            case Cell.CELL_TYPE_BOOLEAN:
+            case BOOLEAN:
                 value = cell.getBooleanCellValue();
                 break;
-            case Cell.CELL_TYPE_BLANK:
+            case BLANK:
                 value = "";
                 break;
             default:
