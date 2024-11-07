@@ -64,10 +64,8 @@ public class BackupPositionController {
     @PutMapping
     public BaseResult update(@PathVariable("organId") String organId,
                              @PathVariable("projectId") String projectId,
-                             @RequestBody BackupPositionDTO backupPositionDTO) {
-        backupPositionDTO.setOrganId(organId);
-        backupPositionDTO.setProjectId(projectId);
-        backupPositionService.update(backupPositionDTO);
+                             @RequestBody List<BackupPositionDTO> backupPositionDTOList) {
+        backupPositionService.update(organId, projectId, backupPositionDTOList);
         return BaseResult.ok();
     }
 

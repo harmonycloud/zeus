@@ -38,15 +38,15 @@ public interface BackupPositionService {
 
     /**
      * 创建备份位置
-     * @param backupPositionDTO 备份位置对象
+     * @param backupPositionDTOList 备份位置对象
      */
     void create(String organId, String projectId, List<BackupPositionDTO> backupPositionDTOList);
 
     /**
      * 更新备份位置信息
-     * @param backupPositionDTO 备份位置对象
+     * @param backupPositionDTOList 备份位置对象
      */
-    void update(BackupPositionDTO backupPositionDTO);
+    void update(String organId, String projectId, List<BackupPositionDTO> backupPositionDTOList);
 
     /**
      * 根据备份位置id删除备份位置
