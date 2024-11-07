@@ -1,6 +1,7 @@
 package com.middleware.zeus.controller.middleware;
 
 import com.middleware.zeus.common.base.BaseResult;
+import com.middleware.zeus.common.model.BackupRestoreTimeDto;
 import com.middleware.zeus.common.model.MiddlewareBackupDTO;
 import com.middleware.zeus.common.model.MiddlewareIncBackupDto;
 import com.middleware.zeus.common.model.MiddlewareTaskDTO;
@@ -16,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -322,6 +324,37 @@ public class MiddlewareBackupController {
                                           @RequestParam(value = "forceDelete", required = false, defaultValue = "false") Boolean forceDelete) {
         middlewareBackupService.deleteRestoreRecord(clusterId, namespace, restoreName, forceDelete);
         return BaseResult.ok();
+    }
+
+    @ApiOperation(value = "禁用/启用备份任务", notes = "禁用/启用备份任务")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "backupId", value = "备份任务id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "enable", value = "", paramType = "query", dataTypeClass = String.class),
+    })
+    @PutMapping("{backupId}/enable")
+    public BaseResult enableBackup(@PathVariable("clusterId") String clusterId,
+                                   @PathVariable("namespace") String namespace,
+                                   @PathVariable("backupId") String backupId,
+                                   @RequestParam("enable") Boolean enable) {
+        middlewareBackupService.enableBackup(clusterId, namespace, backupId, enable);
+        return BaseResult.ok();
+    }
+
+    @ApiOperation(value = "获取备份任务可恢复时间", notes = "获取备份任务可恢复时间")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "backupId", value = "备份任务id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "date", required = false, value = "", paramType = "query", dataTypeClass = String.class),
+    })
+    @GetMapping("{backupId}/restoreTime")
+    public BaseResult<BackupRestoreTimeDto> restoreTime(@PathVariable("clusterId") String clusterId,
+                                                        @PathVariable("namespace") String namespace,
+                                                        @PathVariable("backupId") String backupId,
+                                                        @RequestParam(value = "date", required = false) Date date) {
+        return BaseResult.ok(middlewareBackupService.restoreTime(clusterId, namespace, backupId, date));
     }
 
 }
