@@ -30,9 +30,7 @@ import com.middleware.zeus.operator.BaseOperator;
 import com.middleware.zeus.operator.api.MysqlOperator;
 import com.middleware.zeus.operator.miiddleware.AbstractMysqlOperator;
 import com.middleware.zeus.service.middleware.BackupService;
-import com.middleware.zeus.service.middleware.MysqlScheduleBackupService;
 import com.middleware.zeus.service.middleware.impl.MiddlewareServiceImpl;
-import com.middleware.zeus.service.middleware.impl.MysqlBackupServiceImpl;
 import com.middleware.zeus.util.middleware.ChartVersionUtil;
 import com.middleware.zeus.util.middleware.MiddlewareResourceCalculateUtil;
 import com.middleware.zeus.util.middleware.MysqlConnectionUtil;
@@ -85,8 +83,6 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     @Autowired
     private BackupService backupService;
     @Autowired
-    private MysqlScheduleBackupService mysqlScheduleBackupService;
-    @Autowired
     private ImageRepositoryService imageRepositoryService;
     @Autowired
     private ClusterService clusterService;
@@ -96,8 +92,6 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     private MiddlewareServiceImpl middlewareService;
     @Autowired
     private BaseOperatorImpl baseOperator;
-    @Autowired
-    private MysqlBackupServiceImpl mysqlBackupService;
     @Autowired
     private IngressComponentService ingressComponentService;
     @Autowired
@@ -393,12 +387,6 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         this.deleteDisasterRecoveryInfo(middleware);
         super.deleteStorage(middleware);
         clearDbManageData(middleware);
-        if (middleware.getDeleteBackupInfo() == null || middleware.getDeleteBackupInfo()) {
-            // 删除备份相关
-            mysqlBackupService.deleteMiddlewareBackupInfo(middleware.getClusterId(), middleware.getNamespace(), middleware.getType(), middleware.getName());
-            // 删除定时备份任务
-            mysqlScheduleBackupService.delete(middleware.getClusterId(), middleware.getNamespace(), middleware.getName());
-        }
     }
 
     @Override
