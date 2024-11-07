@@ -24,7 +24,8 @@ public enum MiddlewareOfficialNameEnum {
     MINIO("MINIO", "Minio"),
     HARBOR("HARBOR", "Harbor"),
     POSTGRESQL("POSTGRESQL", "PostgreSQL"),
-    INGRESSNGINX("INGRESS-NGINX","Ingress-Nginx")
+    INGRESSNGINX("INGRESS-NGINX","Ingress-Nginx"),
+    RABBITMQ("RABBITMQ", "RabbitMQ")
     ;
 
     private final String upperName;
