@@ -81,8 +81,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Autowired
     private MiddlewareCRService middlewareCRService;
     @Autowired
-    private MysqlBackupServiceImpl mysqlAdapterService;
-    @Autowired
     private MiddlewareCrTypeService middlewareCrTypeService;
     @Autowired
     private BeanMiddlewareBackupNameMapper middlewareBackupNameMapper;
@@ -135,8 +133,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 recordList.add(backupRecord);
             }
         }
-        // 查询mysql备份列表(旧)
-        recordList.addAll(mysqlAdapterService.listBackup(clusterId, namespace, middlewareName, type));
         return recordList;
     }
 
@@ -268,54 +264,50 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             && "off".equalsIgnoreCase(incrBaks.getSpec().getPause())) {
             checkTimeLawful(backupDTO.getCron(), backupDTO.getRetentionTime());
         }
-        // 是否为mysqlBackup
-        if (backupDTO.getMysqlBackup() != null && backupDTO.getMysqlBackup()) {
-            mysqlAdapterService.updateBackupSchedule(backupDTO);
-        } else {
-            MiddlewareBackupSchedule middlewareBackupSchedule = backupScheduleCRDService
-                    .get(backupDTO.getClusterId(), backupDTO.getNamespace(), backupDTO.getBackupName());
-            MiddlewareBackupScheduleSpec spec = middlewareBackupSchedule.getSpec();
-            // 更新cron表达式
-            if (StringUtils.isNotEmpty(backupDTO.getCron())) {
-                spec.getSchedule().setCron(CronUtils.parseCron(backupDTO.getCron(), -8 + timezone));
+
+        MiddlewareBackupSchedule middlewareBackupSchedule = backupScheduleCRDService
+                .get(backupDTO.getClusterId(), backupDTO.getNamespace(), backupDTO.getBackupName());
+        MiddlewareBackupScheduleSpec spec = middlewareBackupSchedule.getSpec();
+        // 更新cron表达式
+        if (StringUtils.isNotEmpty(backupDTO.getCron())) {
+            spec.getSchedule().setCron(CronUtils.parseCron(backupDTO.getCron(), -8 + timezone));
+        }
+        // 更新备份保留时间
+        if (backupDTO.getRetentionTime() != null && StringUtils.isNotEmpty(backupDTO.getDateUnit())) {
+            spec.getSchedule().setRetentionTime(calRetentionTime(backupDTO));
+            middlewareBackupSchedule.getMetadata().getLabels().put("unit", backupDTO.getDateUnit());
+        }
+        try {
+            backupScheduleCRDService.update(backupDTO.getClusterId(), middlewareBackupSchedule);
+        } catch (Exception e) {
+            log.error("中间件{}备份设置更新失败", backupDTO.getMiddlewareName());
+            throw new BusinessException(ErrorMessage.MIDDLEWARE_BACKUP_UPDATE_FAILED);
+        }
+        // 增量备份更新
+        if (backupDTO.getIncrement() != null && backupDTO.getIncrement()) {
+            MiddlewareBackupSchedule incBackupScheduleCr = backupScheduleCRDService.get(backupDTO.getClusterId(),
+                    backupDTO.getNamespace(), backupDTO.getBackupName() + "-" + INCR);
+            if (incBackupScheduleCr == null) {
+                throw new BusinessException(ErrorMessage.BACKUP_FILE_NOT_EXIST);
+            }
+            // 更新开启/关闭
+            if (backupDTO.getTurnOff() != null && backupDTO.getTurnOff()) {
+                incBackupScheduleCr.getSpec().setPause("on");
+            }
+            // 更新时间(cron)
+            if (StringUtils.isNotEmpty(backupDTO.getTime())) {
+                incBackupScheduleCr.getSpec().getSchedule()
+                        .setCron(CronUtils.convertTimeToCron(backupDTO.getTime()));
             }
             // 更新备份保留时间
             if (backupDTO.getRetentionTime() != null && StringUtils.isNotEmpty(backupDTO.getDateUnit())) {
-                spec.getSchedule().setRetentionTime(calRetentionTime(backupDTO));
-                middlewareBackupSchedule.getMetadata().getLabels().put("unit", backupDTO.getDateUnit());
+                incBackupScheduleCr.getSpec().getSchedule().setRetentionTime(calRetentionTime(backupDTO));
             }
             try {
-                backupScheduleCRDService.update(backupDTO.getClusterId(), middlewareBackupSchedule);
+                backupScheduleCRDService.update(backupDTO.getClusterId(), incBackupScheduleCr);
             } catch (Exception e) {
-                log.error("中间件{}备份设置更新失败", backupDTO.getMiddlewareName());
+                log.error("中间件{}增量备份设置更新失败", backupDTO.getMiddlewareName());
                 throw new BusinessException(ErrorMessage.MIDDLEWARE_BACKUP_UPDATE_FAILED);
-            }
-            // 增量备份更新
-            if (backupDTO.getIncrement() != null && backupDTO.getIncrement()) {
-                MiddlewareBackupSchedule incBackupScheduleCr = backupScheduleCRDService.get(backupDTO.getClusterId(),
-                        backupDTO.getNamespace(), backupDTO.getBackupName() + "-" + INCR);
-                if (incBackupScheduleCr == null) {
-                    throw new BusinessException(ErrorMessage.BACKUP_FILE_NOT_EXIST);
-                }
-                // 更新开启/关闭
-                if (backupDTO.getTurnOff() != null && backupDTO.getTurnOff()) {
-                    incBackupScheduleCr.getSpec().setPause("on");
-                }
-                // 更新时间(cron)
-                if (StringUtils.isNotEmpty(backupDTO.getTime())) {
-                    incBackupScheduleCr.getSpec().getSchedule()
-                            .setCron(CronUtils.convertTimeToCron(backupDTO.getTime()));
-                }
-                // 更新备份保留时间
-                if (backupDTO.getRetentionTime() != null && StringUtils.isNotEmpty(backupDTO.getDateUnit())) {
-                    incBackupScheduleCr.getSpec().getSchedule().setRetentionTime(calRetentionTime(backupDTO));
-                }
-                try {
-                    backupScheduleCRDService.update(backupDTO.getClusterId(), incBackupScheduleCr);
-                } catch (Exception e) {
-                    log.error("中间件{}增量备份设置更新失败", backupDTO.getMiddlewareName());
-                    throw new BusinessException(ErrorMessage.MIDDLEWARE_BACKUP_UPDATE_FAILED);
-                }
             }
         }
     }
@@ -325,12 +317,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         try {
             backupCRDService.delete(clusterId, namespace, backupName, forceDelete);
         } catch (Exception e) {
-            if (MiddlewareTypeEnum.MYSQL.getType().equals(type)) {
-                mysqlAdapterService.deleteRecord(clusterId, namespace, type, backupName, forceDelete);
-                log.info("mysql备份删除成功");
-            } else {
-                log.error("删除备份记录失败");
-            }
+            log.error("删除备份记录失败");
         }
     }
 
@@ -820,8 +807,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 }
             }
         });
-        // 查询遗留mysqlBackup内容
-        recordList.addAll(mysqlAdapterService.listBackupSchedule(clusterId, namespace, type, middlewareName));
         return recordList;
     }
 
@@ -835,9 +820,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             } catch (Exception ignored) {
             }
         } catch (Exception e) {
-            if (MiddlewareTypeEnum.MYSQL.getType().equals(type)) {
-                mysqlAdapterService.deleteSchedule(clusterId, namespace, type, backupScheduleName);
-            }
             log.error("定时备份删除失败；{}", backupScheduleName, e);
         }
     }
@@ -853,18 +835,12 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 log.error("删除失败", ignored);
             }
         } catch (Exception e) {
-            if (MiddlewareTypeEnum.MYSQL.getType().equals(type)) {
-                mysqlAdapterService.deleteSchedule(clusterId, namespace, type, backupScheduleName);
-            }
             log.error("定时备份删除失败；{}", backupScheduleName, e);
         }
     }
 
     @Override
     public boolean checkIfAlreadyBackup(String clusterId, String namespace, String type, String middlewareName) {
-        if (MiddlewareTypeEnum.MYSQL.getType().equals(type)) {
-            return mysqlAdapterService.checkIfAlreadyBackup(clusterId, namespace, type, middlewareName);
-        }
         MiddlewareBackupScheduleList scheduleList = backupScheduleCRDService.list(clusterId, namespace);
         if (scheduleList != null && !CollectionUtils.isEmpty(scheduleList.getItems())) {
             return true;
@@ -1196,15 +1172,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         return Collections.emptyList();
     }
 
-    @Override
-    public void deleteRestoreRecord(String clusterId, String namespace, String restoreName) {
-        try {
-            restoreCRDService.delete(clusterId, namespace, restoreName);
-        } catch (Exception e) {
-            log.error("删除克隆记录失败", e);
-            throw new BusinessException(ErrorMessage.FAILED_TO_DELETE_BACKUP_POSITION);
-        }
-    }
 
     @Override
     public void deleteRestoreRecord(String clusterId, String namespace, String restoreName, Boolean forceDelete) {
@@ -1287,6 +1254,31 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Override
     public boolean checkSchedule(String clusterId, String namespace, String type, String middlewareName) {
         return checkBackupScheduleExist(clusterId, namespace, middlewareName, null);
+    }
+
+    @Override
+    public void enableBackup(String clusterId, String namespace, String backupId, Boolean enable){
+
+    }
+
+    @Override
+    public BackupRestoreTimeDto restoreTime(String clusterId, String namespace, String backupId, Date date) {
+        BackupRestoreTimeDto restoreTime = new BackupRestoreTimeDto();
+        restoreTime.setBackupId(backupId);
+        // 根据backupId查询增量备份任务
+
+        // 判断date是否为null
+        if (date != null){
+            // 获取date指定的日期的可恢复时间
+            // 判断storageProvider.postgresql.timeRange是否存在
+            // 如果存在, 获取timeRange中对应date所在天的可恢复时间
+
+            // 如果不存在，默认当天全天可做恢复
+
+        } else {
+            // 直接返回startTime - endTime
+        }
+        return restoreTime;
     }
 
     @Override

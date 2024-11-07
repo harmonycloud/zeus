@@ -1,14 +1,12 @@
 package com.middleware.zeus.service.middleware;
 
-import com.middleware.zeus.common.model.MiddlewareBackupDTO;
-import com.middleware.zeus.common.model.MiddlewareIncBackup;
-import com.middleware.zeus.common.model.MiddlewareIncBackupDto;
-import com.middleware.zeus.common.model.MiddlewareTaskDTO;
+import com.middleware.zeus.common.model.*;
 import com.middleware.zeus.common.model.middleware.*;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareBackupSchedule;
 import com.middleware.zeus.integration.cluster.bean.Minio;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -282,13 +280,6 @@ public interface MiddlewareBackupService {
      */
     ProgressInfo getRestoreProgress(String clusterId, String namespace, String middlewareName, String restoreName);
 
-    /**
-     * 删除恢复记录
-     * @param clusterId
-     * @param namespace
-     * @param restoreName
-     */
-    void deleteRestoreRecord(String clusterId, String namespace, String restoreName);
 
     /**
      * 删除恢复记录
@@ -343,6 +334,25 @@ public interface MiddlewareBackupService {
      * @return
      */
     boolean checkSchedule(String clusterId, String namespace, String type, String middlewareName);
+
+    /**
+     * 开启/禁用周期备份任务
+     * @param clusterId 集群id
+     * @param namespace 命名空间
+     * @param backupId 备份任务id
+     * @param enable true:开启 false:禁用
+     */
+    void enableBackup(String clusterId, String namespace, String backupId, Boolean enable);
+
+    /**
+     * 获取备份任务可恢复时间
+     * @param clusterId 集群id
+     * @param namespace 命名空间
+     * @param backupId 备份任务id
+     * @param date 指定时间
+     * @return BackupRestoreTimeDto 可恢复时间
+     */
+    BackupRestoreTimeDto restoreTime(String clusterId, String namespace, String backupId, Date date);
 
     /**
      * 检查增量备份任务开关
