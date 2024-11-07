@@ -28,6 +28,9 @@ public class BackupPositionDTO {
     @ApiModelProperty("备份服务器id")
     private Integer backupServerId;
 
+    @ApiModelProperty("备份服务器详情id")
+    private Integer backupServerDetailId;
+
     @ApiModelProperty("备份服务器名称")
     private String backupServerName;
 

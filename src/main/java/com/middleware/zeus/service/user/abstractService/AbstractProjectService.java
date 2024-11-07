@@ -7,6 +7,7 @@ import com.middleware.zeus.common.exception.BusinessException;
 import com.middleware.zeus.common.model.BackupPositionDTO;
 import com.middleware.zeus.common.model.BackupServerDTO;
 import com.middleware.zeus.common.model.ProjectBackupServerDTO;
+import com.middleware.zeus.common.model.middleware.BackupServerDetailDTO;
 import com.middleware.zeus.common.model.middleware.MiddlewareResourceInfo;
 import com.middleware.zeus.common.model.middleware.Namespace;
 import com.middleware.zeus.common.model.middleware.ProjectMiddlewareResourceInfo;
@@ -103,9 +104,11 @@ public abstract class AbstractProjectService {
         if (position) {
             List<BackupPositionDTO> backupPositionDTOList = backupPositionService.list(organId, projectId, null);
             Map<Integer, List<BackupPositionDTO>> backupPositionMap =
-                backupPositionDTOList.stream().collect(Collectors.groupingBy(BackupPositionDTO::getBackupServerId));
+                backupPositionDTOList.stream().collect(Collectors.groupingBy(BackupPositionDTO::getBackupServerDetailId));
             for (BackupServerDTO backupServerDTO : backupServerDTOList) {
-                backupServerDTO.setPositionList(backupPositionMap.get(backupServerDTO.getId()));
+                for (BackupServerDetailDTO backupServerDetailDTO:backupServerDTO.getServerDetailList()) {
+                    backupServerDetailDTO.setPositionList(backupPositionMap.get(backupServerDetailDTO.getId()));
+                }
             }
         }
         

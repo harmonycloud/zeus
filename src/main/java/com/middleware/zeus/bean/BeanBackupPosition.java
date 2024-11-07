@@ -6,6 +6,8 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import java.time.LocalDateTime;
 import com.baomidou.mybatisplus.annotation.TableField;
 import java.io.Serializable;
+
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -62,6 +64,12 @@ public class BeanBackupPosition implements Serializable {
      */
     @TableField("create_time")
     private LocalDateTime createTime;
+
+    /**
+     * 备份服务器详情id
+     */
+    @TableField("backup_server_detail_id")
+    private Integer backupServerDetailId;
 
 
 }
