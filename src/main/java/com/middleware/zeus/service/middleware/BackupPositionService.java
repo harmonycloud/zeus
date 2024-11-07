@@ -50,9 +50,9 @@ public interface BackupPositionService {
 
     /**
      * 根据备份位置id删除备份位置
-     * @param id 备份位置id
+     * @param backupServerId 备份服务器id
      */
-    void delete(Integer id);
+    void delete(String organId, String projectId, Integer backupServerId);
 
     /**
      * 根据备份服务器id删除备份位置

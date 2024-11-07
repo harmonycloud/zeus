@@ -46,9 +46,11 @@ public class BackupPositionController {
             @ApiImplicitParam(name = "backupServerId", value = "备份位服务器id", paramType = "path", dataTypeClass = Integer.class),
             @ApiImplicitParam(name = "backupPositionId", value = "备份位置id", paramType = "path", dataTypeClass = Integer.class),
     })
-    @DeleteMapping("/{backupPositionId}")
-    public BaseResult delete(@PathVariable("backupPositionId") Integer backupPositionId) {
-        backupPositionService.delete(backupPositionId);
+    @DeleteMapping("/{backupServerId}")
+    public BaseResult delete(@PathVariable("organId") String organId,
+                             @PathVariable("projectId") String projectId,
+                             @PathVariable("backupServerId") Integer backupServerId) {
+        backupPositionService.delete(organId, projectId, backupServerId);
         return BaseResult.ok();
     }
 

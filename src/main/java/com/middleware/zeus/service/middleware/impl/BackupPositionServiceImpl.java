@@ -127,10 +127,13 @@ public class BackupPositionServiceImpl implements BackupPositionService {
     }
 
     @Override
-    public void delete(Integer id) {
+    public void delete(String organId, String projectId, Integer backupServerId) {
+        QueryWrapper<BeanBackupPosition> wrapper = new QueryWrapper<>();
+        wrapper.eq("organ_id", organId).eq("project_id", projectId).eq("backup_server_id", backupServerId);
+        List<BeanBackupPosition> beanBackupPositions = backupPositionMapper.selectList(wrapper);
+        beanBackupPositions.forEach(position -> backupPositionDeletionCheck(position.getId()));
         // 检查备份位置是否已被备份任务使用
-        backupPositionDeletionCheck(id);
-        backupPositionMapper.deleteById(id);
+        backupPositionMapper.deleteBatchIds(beanBackupPositions.stream().map(BeanBackupPosition::getId).collect(Collectors.toList()));
     }
 
     @Override
