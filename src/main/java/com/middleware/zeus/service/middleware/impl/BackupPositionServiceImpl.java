@@ -105,14 +105,18 @@ public class BackupPositionServiceImpl implements BackupPositionService {
     }
 
     @Override
-    public void create(BackupPositionDTO backupPositionDTO) {
+    public void create(String organId, String projectId, List<BackupPositionDTO> backupPositionDTOList) {
         // 校验该项目是否已使用该备份服务器创建备份位置
-        if (this.getBackupPosition(backupPositionDTO.getBackupServerId(), backupPositionDTO.getOrganId(), backupPositionDTO.getProjectId()) != null) {
+        if (this.getBackupPosition(backupPositionDTOList.get(0).getBackupServerId(), organId, projectId) != null) {
             throw new BusinessException(ErrorMessage.BACKUP_SERVER_ALREADY_USED);
         }
-        BeanBackupPosition backupPosition = new BeanBackupPosition();
-        BeanUtil.copyProperties(backupPositionDTO, backupPosition);
-        backupPositionMapper.insert(backupPosition);
+        for (BackupPositionDTO backupPositionDTO: backupPositionDTOList) {
+            BeanBackupPosition backupPosition = new BeanBackupPosition();
+            BeanUtil.copyProperties(backupPositionDTO, backupPosition);
+            backupPosition.setOrganId(organId);
+            backupPosition.setProjectId(projectId);
+            backupPositionMapper.insert(backupPosition);
+        }
     }
 
     @Override

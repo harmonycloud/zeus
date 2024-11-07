@@ -40,7 +40,7 @@ public interface BackupPositionService {
      * 创建备份位置
      * @param backupPositionDTO 备份位置对象
      */
-    void create(BackupPositionDTO backupPositionDTO);
+    void create(String organId, String projectId, List<BackupPositionDTO> backupPositionDTOList);
 
     /**
      * 更新备份位置信息

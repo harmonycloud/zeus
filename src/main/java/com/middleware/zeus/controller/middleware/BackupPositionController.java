@@ -34,10 +34,8 @@ public class BackupPositionController {
     @PostMapping
     public BaseResult create(@PathVariable("organId") String organId,
                              @PathVariable("projectId") String projectId,
-                             @RequestBody BackupPositionDTO backupPositionDTO) {
-        backupPositionDTO.setOrganId(organId);
-        backupPositionDTO.setProjectId(projectId);
-        backupPositionService.create(backupPositionDTO);
+                             @RequestBody List<BackupPositionDTO> backupPositionDTOList) {
+        backupPositionService.create(organId, projectId, backupPositionDTOList);
         return BaseResult.ok();
     }
 
