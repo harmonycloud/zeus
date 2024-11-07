@@ -132,6 +132,23 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
 
         }
 
+        //连接池配置
+        if(middleware.getPostgresqlParam()!=null){
+            PostgresqlParam pgParam = middleware.getPostgresqlParam();
+            values.put("enableConnectionPooler", pgParam.getEnableConnectionPooler());
+            JSONObject connectionPooler = values.getJSONObject("connectionPooler");
+            if(pgParam.getEnableConnectionPooler()&&connectionPooler!=null){
+                connectionPooler.put("numberOfInstances",pgParam.getPoolerInstanceNum());
+                JSONObject resources = connectionPooler.getJSONObject("resources");
+                JSONObject limits = resources.getJSONObject("limits");
+                JSONObject requests = resources.getJSONObject("requests");
+                limits.put("cpu",pgParam.getConnectionPoolerCpu());
+                limits.put("memory",pgParam.getConnectionPoolerMemory());
+                requests.put("cpu",pgParam.getConnectionPoolerCpu());
+                requests.put("memory",pgParam.getConnectionPoolerMemory());
+            }
+        }
+
         // 备份恢复
         if (StringUtils.isNotEmpty(middleware.getBackupFileName())){
             try {

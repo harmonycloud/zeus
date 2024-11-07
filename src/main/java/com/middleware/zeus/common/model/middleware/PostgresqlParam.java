@@ -31,4 +31,15 @@ public class PostgresqlParam {
     @ApiModelProperty("进程监控端口")
     private Integer bgMonPort;
 
+    @ApiModelProperty("主库连接池开关")
+    private Boolean enableConnectionPooler;
+
+    @ApiModelProperty("连接池实例数")
+    private Integer poolerInstanceNum;
+
+    @ApiModelProperty("连接池实例cpu")
+    private String connectionPoolerCpu;
+
+    @ApiModelProperty("连接池实例memory")
+    private String connectionPoolerMemory;
 }
