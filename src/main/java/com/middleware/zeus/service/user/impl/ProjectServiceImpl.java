@@ -100,8 +100,6 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
     private AlertUserService alertUserService;
     @Autowired
     private RoleBindingService roleBindingService;
-    @Autowired
-    private ClusterRoleBindingService clusterRoleBindingService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)

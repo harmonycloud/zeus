@@ -45,8 +45,6 @@ public class K8sClient {
     private ClusterService clusterService;
     @Autowired
     private ClusterCertService clusterCertService;
-    @Autowired
-    private MiddlewareClusterService middlewareClusterService;
 
     public static String getClusterId(MiddlewareClusterDTO cluster) {
         return cluster.getDcId() + "--" + cluster.getName();
