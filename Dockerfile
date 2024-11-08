@@ -1,5 +1,5 @@
 FROM 10.10.101.22:8443/library/zeus-base:1.3.0
-RUN sudo apk upgrade zlib
+RUN apk upgrade zlib
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && echo "Asia/Shanghai" > /etc/timezone
 COPY target/*.jar /zeus.jar
 COPY error-num-language-pkg /error-num-language-pkg
