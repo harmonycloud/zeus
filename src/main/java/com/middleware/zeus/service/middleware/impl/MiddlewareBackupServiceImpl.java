@@ -501,12 +501,24 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             server.getServerDetailList().forEach(detail -> {
                 ServerUsageEnum zone = detail.getServerUsage().equals("A") ? ServerUsageEnum.zoneA : ServerUsageEnum.zoneB;
                 // 创建两个可用区的备份
-                createBackupTask(backupDTO, backupPositionService.getMinio(detail.getPositionList().get(0).getId(), zone.getName()),
+                Map<String, String> labels = backupDTO.getLabels();
+                if (CollectionUtils.isEmpty(labels)) {
+                    labels = new HashMap<>();
+                }
+                Integer positionId = detail.getPositionList().get(0).getId();
+                labels.put("positionId", positionId.toString());
+                createBackupTask(backupDTO, backupPositionService.getMinio(positionId, zone.getName()),
                         getActiveAreaObjectMeta(activeAreaAnnotation, zone.getName()));
             });
         } else {
             // 普通备份
-            createBackupTask(backupDTO, backupPositionService.getMinio(server.getServerDetailList().get(0).getPositionList().get(0).getId(), null), new ObjectMeta());
+            Map<String, String> labels = backupDTO.getLabels();
+            if (CollectionUtils.isEmpty(labels)) {
+                labels = new HashMap<>();
+            }
+            Integer positionId = server.getServerDetailList().get(0).getPositionList().get(0).getId();
+            labels.put("positionId", positionId.toString());
+            createBackupTask(backupDTO, backupPositionService.getMinio(positionId, null), new ObjectMeta());
         }
     }
 
@@ -1233,7 +1245,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         backupName.setBackupId(backupId);
         backupName.setClusterId(clusterId);
         backupName.setBackupType(backupType);
-        backupName.setPositionId(positionId);
         middlewareBackupNameMapper.insert(backupName);
     }
 
@@ -1747,7 +1758,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         Map<String, String> backupLabel = getBackupLabel(middlewareName, type);
         String backupId = UUIDUtils.get16UUID();
         backupLabel.put("backupId", backupId);
-        backupLabel.put("positionId", backupDTO.getBackupPositionId().toString());
         backupLabel.put("type", backupDTO.getType());
         backupLabel.put("unit", backupDTO.getDateUnit());
         backupDTO.setLabels(backupLabel);
@@ -1792,7 +1802,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             backupType = "schedule";
         }
         saveBackupName(backupDTO.getClusterId(), backupDTO.getTaskName(), backupDTO.getLabels().get("backupId"),
-                backupType, backupDTO.getBackupPositionId());
+                backupType, null);
     }
 
     /**

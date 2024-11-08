@@ -58,9 +58,6 @@ public class MiddlewareBackupDTO {
     @ApiModelProperty("备份服务器id")
     private Integer backupServerId;
 
-    @ApiModelProperty("备份地址id")
-    private Integer backupPositionId;
-
     @ApiModelProperty("备份保留个数")
     private Integer limitRecord;
 
