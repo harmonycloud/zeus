@@ -223,6 +223,15 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
             .setBgMonPort(bgMonPort == null ? 8080 : Integer.parseInt(bgMonPort))
             .setPgPort(pgPort == null ? 5432 : Integer.parseInt(pgPort))
             .setExporterPort(exporterPort == null ? 9187 : Integer.parseInt(exporterPort));
+
+        //pool
+        pgParam.setEnableConnectionPooler(values.getBoolean("enableConnectionPooler"));
+        JSONObject connectionPooler = values.getJSONObject("connectionPooler");
+        pgParam.setPoolerInstanceNum(connectionPooler.getInteger("numberOfInstances"));
+        JSONObject resources = connectionPooler.getJSONObject("resources");
+        JSONObject limits = resources.getJSONObject("limits");
+        pgParam.setConnectionPoolerCpu(limits.getString("cpu"));
+        pgParam.setConnectionPoolerMemory(limits.getString("memory"));
         middleware.setPostgresqlParam(pgParam);
     }
 
