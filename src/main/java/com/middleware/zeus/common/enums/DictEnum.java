@@ -175,6 +175,7 @@ public enum DictEnum {
 
     VG_NAME("vg name", "vg名称"),
     SIZE("storage limit", "存储限额"),
+    BACKUP_POSITION("backup server", "备份位置"),
     ;
 
 
