@@ -6,6 +6,7 @@ import com.dtflys.forest.utils.StringUtils;
 import com.middleware.zeus.common.enums.ErrorMessage;
 import com.middleware.zeus.common.exception.BusinessException;
 import com.middleware.zeus.common.model.BackupPositionDTO;
+import com.middleware.zeus.common.model.dashboard.BackupPositionDTOList;
 import com.middleware.zeus.common.model.middleware.PodInfo;
 import com.middleware.zeus.common.model.user.ProjectDto;
 import com.middleware.zeus.bean.BeanBackupPosition;
@@ -105,12 +106,12 @@ public class BackupPositionServiceImpl implements BackupPositionService {
     }
 
     @Override
-    public void create(String organId, String projectId, List<BackupPositionDTO> backupPositionDTOList) {
+    public void create(String organId, String projectId, BackupPositionDTOList backupPositionDTOList) {
         // 校验该项目是否已使用该备份服务器创建备份位置
-        if (this.getBackupPosition(backupPositionDTOList.get(0).getBackupServerId(), organId, projectId) != null) {
+        if (this.getBackupPosition(backupPositionDTOList.getBackupPositionDTOList().get(0).getBackupServerId(), organId, projectId) != null) {
             throw new BusinessException(ErrorMessage.BACKUP_SERVER_ALREADY_USED);
         }
-        for (BackupPositionDTO backupPositionDTO: backupPositionDTOList) {
+        for (BackupPositionDTO backupPositionDTO: backupPositionDTOList.getBackupPositionDTOList()) {
             BeanBackupPosition backupPosition = new BeanBackupPosition();
             BeanUtil.copyProperties(backupPositionDTO, backupPosition);
             backupPosition.setOrganId(organId);
@@ -120,8 +121,8 @@ public class BackupPositionServiceImpl implements BackupPositionService {
     }
 
     @Override
-    public void update(String organId, String projectId, List<BackupPositionDTO> backupPositionDTOList) {
-        for (BackupPositionDTO backupPositionDTO : backupPositionDTOList) {
+    public void update(String organId, String projectId, BackupPositionDTOList backupPositionDTOList) {
+        for (BackupPositionDTO backupPositionDTO : backupPositionDTOList.getBackupPositionDTOList()) {
             BeanBackupPosition backupPosition = new BeanBackupPosition();
             BeanUtil.copyProperties(backupPositionDTO, backupPosition);
             backupPositionMapper.updateById(backupPosition);

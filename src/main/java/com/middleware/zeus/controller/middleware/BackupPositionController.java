@@ -2,6 +2,7 @@ package com.middleware.zeus.controller.middleware;
 
 import com.middleware.zeus.common.base.BaseResult;
 import com.middleware.zeus.common.model.BackupPositionDTO;
+import com.middleware.zeus.common.model.dashboard.BackupPositionDTOList;
 import com.middleware.zeus.service.middleware.BackupPositionService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -34,7 +35,7 @@ public class BackupPositionController {
     @PostMapping
     public BaseResult create(@PathVariable("organId") String organId,
                              @PathVariable("projectId") String projectId,
-                             @RequestBody List<BackupPositionDTO> backupPositionDTOList) {
+                             @RequestBody BackupPositionDTOList backupPositionDTOList) {
         backupPositionService.create(organId, projectId, backupPositionDTOList);
         return BaseResult.ok();
     }
@@ -64,7 +65,7 @@ public class BackupPositionController {
     @PutMapping
     public BaseResult update(@PathVariable("organId") String organId,
                              @PathVariable("projectId") String projectId,
-                             @RequestBody List<BackupPositionDTO> backupPositionDTOList) {
+                             @RequestBody BackupPositionDTOList backupPositionDTOList) {
         backupPositionService.update(organId, projectId, backupPositionDTOList);
         return BaseResult.ok();
     }

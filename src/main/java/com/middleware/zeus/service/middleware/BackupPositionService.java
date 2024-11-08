@@ -3,6 +3,7 @@ package com.middleware.zeus.service.middleware;
 import com.middleware.zeus.common.model.BackupPositionDTO;
 import com.middleware.zeus.bean.BeanBackupPosition;
 import com.middleware.zeus.bean.BeanBackupServer;
+import com.middleware.zeus.common.model.dashboard.BackupPositionDTOList;
 import com.middleware.zeus.integration.cluster.bean.Minio;
 
 import java.util.List;
@@ -40,13 +41,13 @@ public interface BackupPositionService {
      * 创建备份位置
      * @param backupPositionDTOList 备份位置对象
      */
-    void create(String organId, String projectId, List<BackupPositionDTO> backupPositionDTOList);
+    void create(String organId, String projectId, BackupPositionDTOList backupPositionDTOList);
 
     /**
      * 更新备份位置信息
      * @param backupPositionDTOList 备份位置对象
      */
-    void update(String organId, String projectId, List<BackupPositionDTO> backupPositionDTOList);
+    void update(String organId, String projectId, BackupPositionDTOList backupPositionDTOList);
 
     /**
      * 根据备份位置id删除备份位置
