@@ -485,7 +485,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
      * @param backupDTO
      */
     private void createBackupByTaskType(MiddlewareBackupDTO backupDTO) {
-        List<BackupServerDTO> backupServerDTOList = projectService.getBackupServer(backupDTO.getOrganId(), backupDTO.getOrganId(), null, false, true)
+        List<BackupServerDTO> backupServerDTOList = projectService.getBackupServer(backupDTO.getOrganId(), backupDTO.getProjectId(), null, false, true)
                 .stream().filter(server -> server.getId().equals(backupDTO.getBackupServerId()))
                 .collect(Collectors.toList());
         if (CollectionUtils.isEmpty(backupServerDTOList)) {
