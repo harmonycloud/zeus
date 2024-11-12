@@ -6,6 +6,7 @@ import com.dtflys.forest.utils.StringUtils;
 import com.middleware.zeus.common.enums.ErrorMessage;
 import com.middleware.zeus.common.exception.BusinessException;
 import com.middleware.zeus.common.model.BackupPositionDTO;
+import com.middleware.zeus.common.model.dashboard.BackupPositionDTOList;
 import com.middleware.zeus.common.model.middleware.PodInfo;
 import com.middleware.zeus.common.model.user.ProjectDto;
 import com.middleware.zeus.bean.BeanBackupPosition;
@@ -105,31 +106,37 @@ public class BackupPositionServiceImpl implements BackupPositionService {
     }
 
     @Override
-    public void create(BackupPositionDTO backupPositionDTO) {
+    public void create(String organId, String projectId, BackupPositionDTOList backupPositionDTOList) {
         // 校验该项目是否已使用该备份服务器创建备份位置
-        if (this.getBackupPosition(backupPositionDTO.getBackupServerId(), backupPositionDTO.getOrganId(), backupPositionDTO.getProjectId()) != null) {
+        if (this.getBackupPosition(backupPositionDTOList.getBackupPositionDTOList().get(0).getBackupServerId(), organId, projectId) != null) {
             throw new BusinessException(ErrorMessage.BACKUP_SERVER_ALREADY_USED);
         }
-        BeanBackupPosition backupPosition = new BeanBackupPosition();
-        BeanUtil.copyProperties(backupPositionDTO, backupPosition);
-        backupPositionMapper.insert(backupPosition);
-    }
-
-    @Override
-    public void update(BackupPositionDTO backupPositionDTO) {
-        BeanBackupPosition backupPosition = new BeanBackupPosition();
-        BeanUtil.copyProperties(backupPositionDTO, backupPosition);
-        backupPositionMapper.updateById(backupPosition);
-    }
-
-    @Override
-    public void delete(Integer backupServerId, Integer backupPositionId) {
-        // 检查备份位置是否已被备份任务使用
-        Integer middlewareCount =  getBackupPositionBindCount(backupServerId, backupPositionId);
-        if (middlewareCount > 0) {
-            throw new BusinessException(ErrorMessage.FAILED_TO_DELETE_BACKUP_POSITION);
+        for (BackupPositionDTO backupPositionDTO: backupPositionDTOList.getBackupPositionDTOList()) {
+            BeanBackupPosition backupPosition = new BeanBackupPosition();
+            BeanUtil.copyProperties(backupPositionDTO, backupPosition);
+            backupPosition.setOrganId(organId);
+            backupPosition.setProjectId(projectId);
+            backupPositionMapper.insert(backupPosition);
         }
-        backupPositionMapper.deleteById(backupPositionId);
+    }
+
+    @Override
+    public void update(String organId, String projectId, BackupPositionDTOList backupPositionDTOList) {
+        for (BackupPositionDTO backupPositionDTO : backupPositionDTOList.getBackupPositionDTOList()) {
+            BeanBackupPosition backupPosition = new BeanBackupPosition();
+            BeanUtil.copyProperties(backupPositionDTO, backupPosition);
+            backupPositionMapper.updateById(backupPosition);
+        }
+    }
+
+    @Override
+    public void delete(String organId, String projectId, Integer backupServerId) {
+        QueryWrapper<BeanBackupPosition> wrapper = new QueryWrapper<>();
+        wrapper.eq("organ_id", organId).eq("project_id", projectId).eq("backup_server_id", backupServerId);
+        List<BeanBackupPosition> beanBackupPositions = backupPositionMapper.selectList(wrapper);
+        beanBackupPositions.forEach(position -> backupPositionDeletionCheck(position.getId()));
+        // 检查备份位置是否已被备份任务使用
+        backupPositionMapper.deleteBatchIds(beanBackupPositions.stream().map(BeanBackupPosition::getId).collect(Collectors.toList()));
     }
 
     @Override

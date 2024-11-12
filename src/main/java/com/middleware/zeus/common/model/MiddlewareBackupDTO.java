@@ -28,6 +28,12 @@ public class MiddlewareBackupDTO {
     @ApiModelProperty("中间件名称")
     private String middlewareName;
 
+    @ApiModelProperty("组织id")
+    private String organId;
+
+    @ApiModelProperty("项目id")
+    private String projectId;
+
     @ApiModelProperty("中间件类型")
     private String type;
 
@@ -49,8 +55,8 @@ public class MiddlewareBackupDTO {
     @ApiModelProperty("时间单位")
     private String dateUnit;
 
-    @ApiModelProperty("备份地址id")
-    private Integer backupPositionId;
+    @ApiModelProperty("备份服务器id")
+    private Integer backupServerId;
 
     @ApiModelProperty("备份保留个数")
     private Integer limitRecord;

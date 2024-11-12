@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 
 import com.alibaba.fastjson.JSONObject;
 import com.middleware.zeus.common.constants.ActiveAreaConstant;
+import com.middleware.zeus.common.constants.NameConstant;
 import com.middleware.zeus.common.model.user.UserRole;
 import com.middleware.caas.filters.user.CurrentUserRepository;
 import com.middleware.zeus.util.RequestUtil;
@@ -484,20 +485,40 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
      * @param backupDTO
      */
     private void createBackupByTaskType(MiddlewareBackupDTO backupDTO) {
-        if (activeActiveBackupCheck(backupDTO)) {
+        List<BackupServerDTO> backupServerDTOList = projectService.getBackupServer(backupDTO.getOrganId(), backupDTO.getProjectId(), null, false, true)
+                .stream().filter(server -> server.getId().equals(backupDTO.getBackupServerId()))
+                .collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(backupServerDTOList)) {
+            throw new BusinessException(DictEnum.BACKUP_POSITION, ErrorMessage.NOT_FOUND);
+        }
+        BackupServerDTO server = backupServerDTOList.get(0);
+
+        if (activeActiveBackupCheck(backupDTO) && server.getServerDetailList().size() == 2) {
             // 双活备份
             // 获取可用区annotation
             ActiveAreaAnnotationDto activeAreaAnnotation = middlewareService.getActiveAreaAnnotation(backupDTO.getClusterId(),
                     backupDTO.getNamespace(), backupDTO.getType(), backupDTO.getMiddlewareName());
-            // 创建A可用区备份
-            createBackupTask(backupDTO, backupPositionService.getMinio(backupDTO.getBackupPositionId(), ServerUsageEnum.zoneA.getName()),
-                    getActiveAreaObjectMeta(activeAreaAnnotation, ServerUsageEnum.zoneA.getName()));
-            // 创建B可用区备份
-            createBackupTask(backupDTO, backupPositionService.getMinio(backupDTO.getBackupPositionId(), ServerUsageEnum.zoneB.getName()),
-                    getActiveAreaObjectMeta(activeAreaAnnotation, ServerUsageEnum.zoneB.getName()));
+            server.getServerDetailList().forEach(detail -> {
+                ServerUsageEnum zone = detail.getServerUsage().equals("A") ? ServerUsageEnum.zoneA : ServerUsageEnum.zoneB;
+                // 创建两个可用区的备份
+                Map<String, String> labels = backupDTO.getLabels();
+                if (CollectionUtils.isEmpty(labels)) {
+                    labels = new HashMap<>();
+                }
+                Integer positionId = detail.getPositionList().get(0).getId();
+                labels.put("positionId", positionId.toString());
+                createBackupTask(backupDTO, backupPositionService.getMinio(positionId, zone.getName()),
+                        getActiveAreaObjectMeta(activeAreaAnnotation, zone.getName()));
+            });
         } else {
             // 普通备份
-            createBackupTask(backupDTO, backupPositionService.getMinio(backupDTO.getBackupPositionId(), null), new ObjectMeta());
+            Map<String, String> labels = backupDTO.getLabels();
+            if (CollectionUtils.isEmpty(labels)) {
+                labels = new HashMap<>();
+            }
+            Integer positionId = server.getServerDetailList().get(0).getPositionList().get(0).getId();
+            labels.put("positionId", positionId.toString());
+            createBackupTask(backupDTO, backupPositionService.getMinio(positionId, null), new ObjectMeta());
         }
     }
 
@@ -549,9 +570,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         String namespace = backupDTO.getNamespace();
         String middlewareName = backupDTO.getMiddlewareName();
         boolean activeActiveNamespace = namespaceService.isOpenAvailableDomain(clusterId, namespace);
-        BeanBackupServer backupServer = backupPositionService.getBackupServer(backupDTO.getBackupPositionId());
         boolean activeMiddleware = middlewareService.activeActiveMiddlewareCheck(clusterId, namespace, middlewareName, backupDTO.getType());
-        if (activeActiveNamespace && (backupServer.getType() == 2) && activeMiddleware) {
+        if (activeActiveNamespace && activeMiddleware) {
             String type = backupDTO.getType();
             return type.equals(MiddlewareTypeEnum.MYSQL.getType()) || type.equals(MiddlewareTypeEnum.POSTGRESQL.getType()) || type.equals(MiddlewareTypeEnum.REDIS.getType());
         }
@@ -1225,7 +1245,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         backupName.setBackupId(backupId);
         backupName.setClusterId(clusterId);
         backupName.setBackupType(backupType);
-        backupName.setPositionId(positionId);
         middlewareBackupNameMapper.insert(backupName);
     }
 
@@ -1739,7 +1758,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         Map<String, String> backupLabel = getBackupLabel(middlewareName, type);
         String backupId = UUIDUtils.get16UUID();
         backupLabel.put("backupId", backupId);
-        backupLabel.put("positionId", backupDTO.getBackupPositionId().toString());
         backupLabel.put("type", backupDTO.getType());
         backupLabel.put("unit", backupDTO.getDateUnit());
         backupDTO.setLabels(backupLabel);
@@ -1784,7 +1802,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             backupType = "schedule";
         }
         saveBackupName(backupDTO.getClusterId(), backupDTO.getTaskName(), backupDTO.getLabels().get("backupId"),
-                backupType, backupDTO.getBackupPositionId());
+                backupType, null);
     }
 
     /**

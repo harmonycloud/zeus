@@ -2,6 +2,7 @@ package com.middleware.zeus.controller.middleware;
 
 import com.middleware.zeus.common.base.BaseResult;
 import com.middleware.zeus.common.model.BackupPositionDTO;
+import com.middleware.zeus.common.model.dashboard.BackupPositionDTOList;
 import com.middleware.zeus.service.middleware.BackupPositionService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
@@ -34,10 +35,8 @@ public class BackupPositionController {
     @PostMapping
     public BaseResult create(@PathVariable("organId") String organId,
                              @PathVariable("projectId") String projectId,
-                             @RequestBody BackupPositionDTO backupPositionDTO) {
-        backupPositionDTO.setOrganId(organId);
-        backupPositionDTO.setProjectId(projectId);
-        backupPositionService.create(backupPositionDTO);
+                             @RequestBody BackupPositionDTOList backupPositionDTOList) {
+        backupPositionService.create(organId, projectId, backupPositionDTOList);
         return BaseResult.ok();
     }
 
@@ -48,10 +47,11 @@ public class BackupPositionController {
             @ApiImplicitParam(name = "backupServerId", value = "备份位服务器id", paramType = "path", dataTypeClass = Integer.class),
             @ApiImplicitParam(name = "backupPositionId", value = "备份位置id", paramType = "path", dataTypeClass = Integer.class),
     })
-    @DeleteMapping("/{backupPositionId}")
-    public BaseResult delete(@PathVariable("backupPositionId") Integer backupPositionId,
-                             @RequestParam("backupServerId") Integer backupServerId) {
-        backupPositionService.delete(backupServerId, backupPositionId);
+    @DeleteMapping("/{backupServerId}")
+    public BaseResult delete(@PathVariable("organId") String organId,
+                             @PathVariable("projectId") String projectId,
+                             @PathVariable("backupServerId") Integer backupServerId) {
+        backupPositionService.delete(organId, projectId, backupServerId);
         return BaseResult.ok();
     }
 
@@ -65,10 +65,8 @@ public class BackupPositionController {
     @PutMapping
     public BaseResult update(@PathVariable("organId") String organId,
                              @PathVariable("projectId") String projectId,
-                             @RequestBody BackupPositionDTO backupPositionDTO) {
-        backupPositionDTO.setOrganId(organId);
-        backupPositionDTO.setProjectId(projectId);
-        backupPositionService.update(backupPositionDTO);
+                             @RequestBody BackupPositionDTOList backupPositionDTOList) {
+        backupPositionService.update(organId, projectId, backupPositionDTOList);
         return BaseResult.ok();
     }
 

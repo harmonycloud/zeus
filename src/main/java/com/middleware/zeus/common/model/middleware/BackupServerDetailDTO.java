@@ -1,11 +1,13 @@
 package com.middleware.zeus.common.model.middleware;
 
+import com.middleware.zeus.common.model.BackupPositionDTO;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * @author yushuaikang
@@ -45,5 +47,8 @@ public class BackupServerDetailDTO {
 
     @ApiModelProperty("创建时间")
     private Date createTime;
+
+    @ApiModelProperty("备份位置列表")
+    private List<BackupPositionDTO> positionList;
 
 }
