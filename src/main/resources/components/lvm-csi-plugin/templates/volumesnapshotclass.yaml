@@ -1,3 +1,4 @@
+{{- if .Values.storage.default }}
 ---
 apiVersion: v1
 kind: Secret
@@ -21,3 +22,4 @@ parameters:
   csi.storage.k8s.io/snapshotter-secret-namespace: {{ .Release.Namespace }}
   type: {{ .Values.volumeSnapshotClass.type }}
   url: {{ .Values.volumeSnapshotClass.url }}
+{{- end }}

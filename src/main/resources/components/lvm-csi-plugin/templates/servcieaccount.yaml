@@ -54,6 +54,7 @@ rules:
   - persistentvolumes
   - nodes
   - events
+  - pods
   verbs:
   - get
   - list
