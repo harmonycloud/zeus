@@ -134,7 +134,12 @@ public class BackupPositionServiceImpl implements BackupPositionService {
         QueryWrapper<BeanBackupPosition> wrapper = new QueryWrapper<>();
         wrapper.eq("organ_id", organId).eq("project_id", projectId).eq("backup_server_id", backupServerId);
         List<BeanBackupPosition> beanBackupPositions = backupPositionMapper.selectList(wrapper);
-        beanBackupPositions.forEach(position -> backupPositionDeletionCheck(position.getId()));
+        for (BeanBackupPosition beanBackupPosition : beanBackupPositions) {
+            Integer count = getBackupPositionBindCount(backupServerId, beanBackupPosition.getId());
+            if (count > 0) {
+                throw new BusinessException(ErrorMessage.FAILED_TO_DELETE_BACKUP_POSITION);
+            }
+        }
         // 检查备份位置是否已被备份任务使用
         backupPositionMapper.deleteBatchIds(beanBackupPositions.stream().map(BeanBackupPosition::getId).collect(Collectors.toList()));
     }
