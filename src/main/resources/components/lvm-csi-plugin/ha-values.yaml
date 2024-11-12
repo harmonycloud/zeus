@@ -1,0 +1,12 @@
+nodeSelector:
+  system: "true"
+
+# Tolerations to use for the lvm-provisioner deployment. Optional.
+tolerations:
+  - operator: Exists
+
+storage:
+  default: false
+  vgName: logvg02
+  storageClassName: middleware-lvm
+  size: 100

@@ -15,15 +15,15 @@ spec:
       tolerations:
       - operator: "Exists"
       affinity:
-        nodeAffinity:
-          preferredDuringSchedulingIgnoredDuringExecution:
-            - preference:
-                matchExpressions:
-                  - key: system
-                    operator: In
-                    values:
-                      - "true"
-              weight: 100
+        podAntiAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+              - key: app
+                operator: In
+                values:
+                - {{ include "lvm.fullname" . }}-provisioner
+            topologyKey: kubernetes.io/hostname
       priorityClassName: system-node-critical
       serviceAccount: {{ include "lvm.fullname" . }}
       hostNetwork: true
@@ -38,10 +38,9 @@ spec:
             - "--strict-topology=true"
             - "--timeout=600s"
             - "--extra-create-metadata=true"
-            - "--enable-leader-election=true"
-            - "--leader-election-type=leases"
+            - "--leader-election=true"
             - "--retry-interval-start=500ms"
-            #- "--default-fstype=ext4"
+            # - "--default-fstype=ext4"
             - "--v=5"
           env:
             - name: ADDRESS
