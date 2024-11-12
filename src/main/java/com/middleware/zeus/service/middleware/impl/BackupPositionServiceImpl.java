@@ -123,10 +123,13 @@ public class BackupPositionServiceImpl implements BackupPositionService {
     }
 
     @Override
-    public void delete(Integer id) {
+    public void delete(Integer backupServerId, Integer backupPositionId) {
         // 检查备份位置是否已被备份任务使用
-        backupPositionDeletionCheck(id);
-        backupPositionMapper.deleteById(id);
+        Integer middlewareCount =  getBackupPositionBindCount(backupServerId, backupPositionId);
+        if (middlewareCount > 0) {
+            throw new BusinessException(ErrorMessage.FAILED_TO_DELETE_BACKUP_POSITION);
+        }
+        backupPositionMapper.deleteById(backupPositionId);
     }
 
     @Override
@@ -225,15 +228,5 @@ public class BackupPositionServiceImpl implements BackupPositionService {
         return count;
     }
 
-    /**
-     * 检查指定备份位置是否已被备份任务使用
-     * @param positionId
-     */
-    private void backupPositionDeletionCheck(Integer positionId) {
-        List<BeanMiddlewareBackupName> middlewareBackupNames = middlewareBackupNameService.listByPositionId(positionId);
-        if (!CollectionUtils.isEmpty(middlewareBackupNames)) {
-            throw new BusinessException(ErrorMessage.FAILED_TO_DELETE_BACKUP_POSITION);
-        }
-    }
 
 }
