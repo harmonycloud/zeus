@@ -505,6 +505,11 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
             }
         }
 
+        //连接池参数
+        if (middleware.getPostgresqlParam()!=null&&middleware.getPostgresqlParam().getPoolerInstanceNum()!=null){
+            sb.append("connectionPooler.numberOfInstances=").append(middleware.getPostgresqlParam().getPoolerInstanceNum()).append(",");
+        }
+
         if (sb.length() == 0) {
             return;
         }
