@@ -52,6 +52,8 @@ data:
         path: /usr/local/kubeconfig
       crd:
         middlewareCrdYamlPath: /usr/local/zeus-pv/middleware-crd.yaml
+      containerd:
+        enable: true
     system:
       upload:
         path: /usr/local/zeus-pv/upload
@@ -80,6 +82,14 @@ data:
         storages: localplugin.csi.alibabacloud.com
       privateRegistry:
         updateNamespaceDefaultSecret: false
+      feature:
+        storageModify: true
+        podMigrate: true
+        dataPartition: false
+        maintenanceDashboard: false
+        customPort: false
+        hostNetWork: false
+        extendScheduler: false
 
     overview:
       overall:

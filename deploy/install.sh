@@ -28,8 +28,10 @@ function deploy_kubernetes() {
 function deploy_helm() {
 
   kubectl apply -f deploy/namespaces.yaml
+  # install lvm
+  helm upgrade -i -n kube-system lvm-csi-plugin src/main/resources/components/lvm-csi-plugin --set image.repository=$IMAGE_REPO  -f src/main/resources/components/lvm-csi-plugin/values.yaml -f src/main/resources/components/lvm-csi-plugin/ha-values.yaml
   # install mysql-operator
-  helm install -n middleware-operator mysql-operator deploy/mysql-operator/charts/mysql-operator --set image.repository=$IMAGE_REPO"/middleware"
+  helm install -n middleware-operator mysql-operator deploy/mysql-operator/charts/mysql-operator --set image.repository=$IMAGE_REPO -f deploy/mysql-operator/charts/mysql-operator/values.yaml -f deploy/mysql-operator/charts/mysql-operator/values-active-active.yaml
   # install mysql instance
   MYSQL_REPLICATE="replicaCount=1"
   if [ $HA == "true" ]; then
@@ -40,14 +42,14 @@ function deploy_helm() {
   if [ $DISASTER == "slave" ]; then
       MYSQL_TYPE="type=slave-slave"
   fi
-  helm install -n zeus zeus-mysql deploy/mysql-operator --set mysql-operator.enabled=false,image.repository=$IMAGE_REPO"/middleware",args.root_password="ZeuS@Middleware01",storageClassName=$STORAGE_CLASS,storageSize=10Gi,$MYSQL_REPLICATE,$MYSQL_TYPE
+  helm install -n zeus zeus-mysql deploy/mysql-operator --set mysql-operator.enabled=false,image.repository=$IMAGE_REPO,args.root_password="ZeuS@Middleware01",storageClassName=$STORAGE_CLASS,storageSize=10Gi,$MYSQL_REPLICATE,$MYSQL_TYPE -f deploy/mysql-operator/values.yaml -f deploy/mysql-operator/values-active-active.yaml
 
   # install zeus platform
   HELM_ARGS="global.replicaCount=1"
   if [ $HA == "true" ]; then
     HELM_ARGS="global.replicaCount=3"
   fi
-  helm install -n zeus zeus deploy/helm --set global.repository=$IMAGE_REPO"/middleware",global.storageClass=$STORAGE_CLASS,$HELM_ARGS
+  helm install -n zeus zeus deploy/helm --set global.repository=$IMAGE_REPO,global.storageClass=$STORAGE_CLASS,$HELM_ARGS
 }
 
 if [ $DEPLOY_TYPE == "docker-compose" ]; then
