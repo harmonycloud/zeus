@@ -135,6 +135,11 @@ spec:
           configMap:
             name: {{ template "logstash.fullname" . }}-pipeline
         {{- end }}
+        {{- if .Values.multiplePipelines }}
+        - name: multiplepipelines
+          configMap:
+            name: {{ template "logstash.fullname" . }}-multiple-pipelines
+        {{- end }}        
         {{- if .Values.logstashPattern }}
         - name: logstashpattern
           configMap:
@@ -202,6 +207,11 @@ spec:
           {{- range $path, $config := .Values.logstashPipeline }}
           - name: logstashpipeline
             mountPath: /usr/share/logstash/pipeline/{{ $path }}
+            subPath: {{ $path }}
+          {{- end -}}
+          {{- range $path, $config := .Values.multiplePipelines }}
+          - name: multiplepipelines
+            mountPath: /usr/share/logstash/config/{{ $path }}
             subPath: {{ $path }}
           {{- end -}}
           {{- if .Values.logstashPattern }}

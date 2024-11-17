@@ -238,6 +238,11 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
             log.error("更新日志组件缓存出错了", e);
         }
         try {
+            esService.initEsIndexTemplate(clusterComponentsDto.getClusterId());
+        } catch (Exception e) {
+            log.error("初始化日志模板失败", e);
+        }
+        try {
             esService.createOrUpdateLogSaveTime(clusterComponentsDto.getClusterId(), clusterComponentsDto.getLogSaveTime());
         } catch (Exception e) {
             log.error("更新日志保留时间出错了");

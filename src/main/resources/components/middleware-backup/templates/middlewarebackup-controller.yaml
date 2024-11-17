@@ -116,7 +116,7 @@ metadata:
     control-plane: backup-controller
   name: middlewarebackup-controller
 spec:
-  replicas: 1
+  replicas: 3
   selector:
     matchLabels:
       control-plane: backup-controller

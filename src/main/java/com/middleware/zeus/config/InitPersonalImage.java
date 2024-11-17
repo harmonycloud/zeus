@@ -5,6 +5,7 @@ import com.middleware.zeus.common.constants.DateStyle;
 import com.middleware.zeus.bean.PersonalizedConfiguration;
 import com.middleware.zeus.dao.user.PersonalMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.SerializationUtils;
 import org.apache.http.client.utils.DateUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -71,9 +72,10 @@ public class InitPersonalImage {
         personal.setCreateTime(new Date());
         personal.setStatus("0");
         // 初始化中文默认个性化配置
-        initZhCnPersonal(personal);
+
+        initZhCnPersonal(SerializationUtils.clone(personal));
         // 初始化英文默认个性化配置
-        initEnUsPersonal(personal);
+        initEnUsPersonal(SerializationUtils.clone(personal));
     }
 
     /**

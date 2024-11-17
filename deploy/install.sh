@@ -31,7 +31,7 @@ function deploy_helm() {
   # install lvm
   helm upgrade -i -n kube-system lvm-csi-plugin src/main/resources/components/lvm-csi-plugin --set image.repository=$IMAGE_REPO  -f src/main/resources/components/lvm-csi-plugin/values.yaml -f src/main/resources/components/lvm-csi-plugin/ha-values.yaml
   # install mysql-operator
-  helm install -n middleware-operator mysql-operator deploy/mysql-operator/charts/mysql-operator --set image.repository=$IMAGE_REPO -f deploy/mysql-operator/charts/mysql-operator/values.yaml -f deploy/mysql-operator/charts/mysql-operator/values-active-active.yaml
+  helm install -n middleware-operator mysql-operator deploy/mysql-operator/charts/mysql-operator --set image.repository=$IMAGE_REPO,replicaCount=3 -f deploy/mysql-operator/charts/mysql-operator/values.yaml -f deploy/mysql-operator/charts/mysql-operator/values-active-active.yaml
   # install mysql instance
   MYSQL_REPLICATE="replicaCount=1"
   if [ $HA == "true" ]; then
@@ -50,6 +50,23 @@ function deploy_helm() {
     HELM_ARGS="global.replicaCount=3"
   fi
   helm install -n zeus zeus deploy/helm --set global.repository=$IMAGE_REPO,global.storageClass=$STORAGE_CLASS,$HELM_ARGS
+
+  # 创建logging命名空间
+  kubectl create ns logging
+  # 安装es operator
+  helm install elasticsearch-opeartor -n middleware-operator src/main/resources/components/elasticsearch/charts/elasticsearch-operator --set image.repository=$IMAGE_REPO,replicaCount=3 -f src/main/resources/components/elasticsearch/charts/elasticsearch-operator/values.yaml -f src/main/resources/components/elasticsearch/charts/elasticsearch-operator/values-active-active.yaml
+  # 安装es
+  helm install kubernetes-logging -n logging src/main/resources/components/elasticsearch --set image.repository=$IMAGE_REPO,aliasName=kubernetes-logging,nameOverride=kubernetes-logging,elasticsearch-operator.enabled=false,elasticPassword=Hc@Cloud01,storage.masterClass=$STORAGE_CLASS,storage.masterSize=30Gi,logging.collection.filelog.enable=false,logging.collection.stdout.enable=false,resources.master.limits.cpu=1,resources.master.limits.memory=4Gi,esJavaOpts.xmx=2048m,esJavaOpts.xms=2048m,cluster.masterReplacesCount=3,resources.master.requests.cpu=1,resources.master.requests.memory=4Gi -f src/main/resources/components/elasticsearch/values.yaml -f src/main/resources/components/elasticsearch/values-active-active.yaml
+
+  # 创建monitoring命名空间
+  kubectl create ns monitoring
+  # 获取etcd证书
+  kubectl create secret generic etcd-certs --from-file=/etc/kubernetes/pki/etcd/healthcheck-client.crt --from-file=/etc/kubernetes/pki/etcd/healthcheck-client.key --from-file=/etc/kubernetes/pki/etcd/ca.crt -n monitoring --dry-run -oyaml  > src/main/resources/components/prometheus/templates/prometheus/etcd-certs.yaml
+  # 安装prometheus
+  helm install prometheus -n monitoring src/main/resources/components/prometheus --set prometheus.prometheusSpec.image.repository=$IMAGE_REPO/prometheus,kube-state-metrics.image.repository=$IMAGE_REPO/kube-state-metrics,prometheus-node-exporter.image.repository=$IMAGE_REPO/node-exporter,prometheusOperator.image.repository=$IMAGE_REPO/prometheus-operator,prometheusOperator.prometheusConfigReloader.image.repository=$IMAGE_REPO/prometheus-config-reloader,prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.storageClassName=$STORAGE_CLASS,prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.resources.requests.storage=30Gi,prometheus.prometheusSpec.replicas=3 -f src/main/resources/components/prometheus/values.yaml
+  # 安装alertmanager
+  helm install alertmanager -n monitoring src/main/resources/components/alertmanager --set alertmanager.alertmanagerSpec.image.repository=$IMAGE_REPO/alertmanager,alertmanager.alertmanagerSpec.replicas=3 -f src/main/resources/components/alertmanager/values.yaml -f src/main/resources/components/alertmanager/values-active-active.yaml
+
 }
 
 if [ $DEPLOY_TYPE == "docker-compose" ]; then
