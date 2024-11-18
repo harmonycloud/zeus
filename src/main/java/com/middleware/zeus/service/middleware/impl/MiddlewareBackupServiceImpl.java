@@ -1367,14 +1367,20 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 }
                 restoreTime.setTimeRange(timeRangeList);
             } else {
-                // 如果不存在，默认当天全天可做恢复
-                // 根据date字段生成当天的0点 - 23点59分的对象
-                Date start = DateUtils.parseUTCDate(DateUtils.dateToString(date, DateUtils.YYYY_MM_DD) + "T00:00:00Z");
-                Date end = DateUtils.parseUTCDate(DateUtils.dateToString(date, DateUtils.YYYY_MM_DD) + "T23:59:59Z");
-                // 数据结构封装
+                // 如果不存在，使用startTime和endTime当做阈值
+                Date start = DateUtils.parseUTCDate(time.getString("startTime"));
+                Date end = DateUtils.parseUTCDate(time.getString("endTime"));
+                // 当日期完全不符合时 返回数据
+                if (endOfDay.before(start) || startOfDay.after(end)) {
+                    return restoreTime;
+                }
+                // 获取符合位于date所在日期的阈值
+                Date intervalStart = (startOfDay.after(start)) ? startOfDay : start;
+                Date intervalEnd = (endOfDay.before(end)) ? endOfDay : end;
+                // 封装数据
                 BackupRestoreTimeDto.TimeRange timeRangeDto = new BackupRestoreTimeDto.TimeRange();
-                timeRangeDto.setStart(start);
-                timeRangeDto.setEnd(end);
+                timeRangeDto.setStart(intervalStart);
+                timeRangeDto.setEnd(intervalEnd);
                 restoreTime.setTimeRange(Collections.singletonList(timeRangeDto));
             }
         } else {
