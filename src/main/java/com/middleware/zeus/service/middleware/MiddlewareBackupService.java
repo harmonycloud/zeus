@@ -342,7 +342,7 @@ public interface MiddlewareBackupService {
      * @param backupId 备份任务id
      * @param enable true:开启 false:禁用
      */
-    void enableBackup(String clusterId, String namespace, String backupId, Boolean enable);
+    void enableBackup(String clusterId, String namespace, String middlewareName, String type, String backupId, Boolean enable);
 
     /**
      * 获取备份任务可恢复时间

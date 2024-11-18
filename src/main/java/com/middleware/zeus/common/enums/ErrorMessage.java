@@ -344,6 +344,8 @@ public enum ErrorMessage {
     MIDDLEWARE_BACKUP_CRON_ILLEGAL(710006, "The max cron interval must small than retentionTime","备份最大间隔时间必须小于备份保留时间"),
     BACKUP_NOT_EXISTS(710007, "backup record not exists", "备份记录不存在"),
     FAILED_TO_DELETE_BACKUP_RESTORE(710008, "failed to delete backup restore", "删除克隆记录失败"),
+    RUNNING_SCHEDULE_BACKUP_EXISTED(710009, "There is an ongoing schedule backup task.", "存在运行中的周期备份任务"),
+    INCREMENTAL_BACKUP_NOT_EXIST(710010, "Incremental backup not exist", "增量备份任务不存在"),
 
     UPGRADE_LOWER_VERSION_FAILED(720000, "Can't upgrade to lower version", "不能升级到更低版本"),
     UPGRADE_OVER_VERSION_FAILED(720001, "Can't upgrade over big version", "不能跨大版本升级"),

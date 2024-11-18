@@ -26,6 +26,8 @@ public class DateUtils {
 
     public static final String YYYY_MM_DD_HH_MM_SS = "yyyy-MM-dd HH:mm:ss";
 
+    public static final String YYYY_MM_DD = "yyyy-MM-dd";
+
     public static long convertUTCStr2Num(String date) throws ParseException {
         SimpleDateFormat sdf = new SimpleDateFormat(YYYY_MM_DD_T_HH_MM_SS_Z);
         return sdf.parse(date).getTime();

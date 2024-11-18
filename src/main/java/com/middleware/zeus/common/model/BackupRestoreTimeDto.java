@@ -40,10 +40,10 @@ public class BackupRestoreTimeDto {
     public static class TimeRange {
 
         @ApiModelProperty("开始时间")
-        private String start;
+        private Date start;
 
         @ApiModelProperty("结束时间")
-        private String end;
+        private Date end;
 
     }
 

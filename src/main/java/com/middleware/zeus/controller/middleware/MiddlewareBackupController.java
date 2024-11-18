@@ -337,8 +337,10 @@ public class MiddlewareBackupController {
     public BaseResult enableBackup(@PathVariable("clusterId") String clusterId,
                                    @PathVariable("namespace") String namespace,
                                    @PathVariable("backupId") String backupId,
+                                   @RequestParam("middlewareName") String middlewareName,
+                                   @RequestParam("type") String type,
                                    @RequestParam("enable") Boolean enable) {
-        middlewareBackupService.enableBackup(clusterId, namespace, backupId, enable);
+        middlewareBackupService.enableBackup(clusterId, namespace, middlewareName, type, backupId, enable);
         return BaseResult.ok();
     }
 

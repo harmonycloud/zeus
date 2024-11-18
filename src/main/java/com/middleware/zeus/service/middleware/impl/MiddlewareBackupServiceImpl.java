@@ -12,6 +12,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.middleware.zeus.common.constants.ActiveAreaConstant;
 import com.middleware.zeus.common.constants.NameConstant;
@@ -332,7 +333,11 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
      */
     @Override
     public void createBackupSchedule(MiddlewareBackupDTO backupDTO, Minio minio, ObjectMeta objectMeta) {
-        checkBackupScheduleExist(backupDTO);
+        // 判断是否已存在周期备份任务
+        String pause = OFF;
+        if (checkBackupScheduleExist(backupDTO.getClusterId(), backupDTO.getNamespace(), backupDTO.getMiddlewareName(), null)) {
+            pause = ON;
+        }
         MiddlewareBackupSchedule crd = new MiddlewareBackupSchedule();
         ObjectMeta meta = getMiddlewareBackupMeta(backupDTO, objectMeta);
         crd.setMetadata(meta);
@@ -360,7 +365,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
         MiddlewareBackupScheduleSpec spec =
                 new MiddlewareBackupScheduleSpec(destination, customBackups, backupDTO.getMiddlewareName(),
-                        backupDTO.getCrdType(), "off", CronUtils.parseCron(backupDTO.getCron(), -8 + timezone),
+                        backupDTO.getCrdType(), pause, CronUtils.parseCron(backupDTO.getCron(), -8 + timezone),
                         backupDTO.getLimitRecord(), calRetentionTime(backupDTO));
         crd.setSpec(spec);
         try {
@@ -1276,8 +1281,48 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public void enableBackup(String clusterId, String namespace, String backupId, Boolean enable){
-
+    public void enableBackup(String clusterId, String namespace, String middlewareName, String type, String backupId, Boolean enable){
+        // 获取备份任务
+        List<MiddlewareBackupSchedule> middlewareBackupScheduleList = backupScheduleCRDService.listByLabels(clusterId, namespace, getBackupLabel(middlewareName, type));
+        if (CollectionUtils.isEmpty(middlewareBackupScheduleList)) {
+            return;
+        }
+        // 若enable 为true，判断是否存在pause为off对周期备份任务
+        if (enable){
+            for (MiddlewareBackupSchedule schedule : middlewareBackupScheduleList){
+                if (schedule.getSpec().getPause().equalsIgnoreCase(OFF)){
+                    throw new BusinessException(ErrorMessage.RUNNING_SCHEDULE_BACKUP_EXISTED);
+                }
+            }
+            // 若不存在当前pause为OFF的周期备份任务，则将对应backupId的周期备份任务的pause修改为OFF
+            for (MiddlewareBackupSchedule schedule : middlewareBackupScheduleList){
+                // 空指针过滤
+                if (schedule.getMetadata() == null || schedule.getMetadata().getLabels() == null ||
+                        !schedule.getMetadata().getLabels().containsKey(BACKUP_ID)) {
+                    continue;
+                }
+                // 对backupId匹配的周期备份任务进行更新
+                if (schedule.getMetadata().getLabels().get(BACKUP_ID).equalsIgnoreCase(backupId)){
+                    schedule.getSpec().setPause(OFF);
+                    backupScheduleCRDService.update(clusterId, schedule);
+                }
+            }
+        } else {
+            // 若enable为false  找到匹配backupId的周期备份任务，其如果其pause为OFF，修改为on
+            for (MiddlewareBackupSchedule schedule : middlewareBackupScheduleList) {
+                // 空指针过滤
+                if (schedule.getMetadata() == null || schedule.getMetadata().getLabels() == null ||
+                        !schedule.getMetadata().getLabels().containsKey(BACKUP_ID)) {
+                    continue;
+                }
+                // 对backupId匹配的周期备份任务进行更新
+                if (schedule.getMetadata().getLabels().get(BACKUP_ID).equalsIgnoreCase(backupId)
+                        && schedule.getSpec().getPause().equalsIgnoreCase(OFF)) {
+                    schedule.getSpec().setPause(ON);
+                    backupScheduleCRDService.update(clusterId, schedule);
+                }
+            }
+        }
     }
 
     @Override
@@ -1285,17 +1330,56 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         BackupRestoreTimeDto restoreTime = new BackupRestoreTimeDto();
         restoreTime.setBackupId(backupId);
         // 根据backupId查询增量备份任务
-
+        List<MiddlewareBackupSchedule> scheduleCRList = listMiddlewareBackupSchedule(clusterId, namespace, backupId);
+        // 根据名称是否以-incr结尾判断是否为增量备份任务
+        MiddlewareBackupSchedule incr = scheduleCRList.stream().filter(schedule -> schedule.getMetadata().getName().endsWith(LINE + INCR)).findFirst().orElse(null);
+        if (incr == null || incr.getStatus() == null || incr.getStatus().getStorageProvider() == null){
+            return restoreTime;
+        }
+        // 数据结构解析
+        JSONObject storageProvider = incr.getStatus().getStorageProvider();
+        JSONObject time = storageProvider.getJSONObject(incr.getSpec().getType());
         // 判断date是否为null
         if (date != null){
             // 获取date指定的日期的可恢复时间
             // 判断storageProvider.postgresql.timeRange是否存在
-            // 如果存在, 获取timeRange中对应date所在天的可恢复时间
-
-            // 如果不存在，默认当天全天可做恢复
-
+            if (time.getJSONArray("timeRange") != null){
+                JSONArray timeRange = time.getJSONArray("timeRange");
+                // 获取timeRange中对应date所在天的可恢复时间
+                List<BackupRestoreTimeDto.TimeRange> timeRangeList = new ArrayList<>();
+                for (int i = 0; i < timeRange.size(); i++){
+                    // 获取时间阈值
+                    JSONObject timeRangeItem = timeRange.getJSONObject(i);
+                    // 获取阈值内的开始时间和结束时间
+                    Date start  = DateUtils.parseUTCDate(timeRangeItem.getString("Start"));
+                    Date end = DateUtils.parseUTCDate(timeRangeItem.getString("End"));
+                    // 判断date是否在阈值内
+                    if (date.after(start) && date.before(end)){
+                        // 封装数据
+                        BackupRestoreTimeDto.TimeRange timeRangeDto = new BackupRestoreTimeDto.TimeRange();
+                        timeRangeDto.setStart(start);
+                        timeRangeDto.setEnd(end);
+                        timeRangeList.add(timeRangeDto);
+                    }
+                }
+                restoreTime.setTimeRange(timeRangeList);
+            } else {
+                // 如果不存在，默认当天全天可做恢复
+                // 根据date字段生成当天的0点 - 23点59分的对象
+                Date start = DateUtils.parseUTCDate(DateUtils.dateToString(date, DateUtils.YYYY_MM_DD) + "T00:00:00Z");
+                Date end = DateUtils.parseUTCDate(DateUtils.dateToString(date, DateUtils.YYYY_MM_DD) + "T23:59:59Z");
+                // 数据结构封装
+                BackupRestoreTimeDto.TimeRange timeRangeDto = new BackupRestoreTimeDto.TimeRange();
+                timeRangeDto.setStart(start);
+                timeRangeDto.setEnd(end);
+                restoreTime.setTimeRange(Collections.singletonList(timeRangeDto));
+            }
         } else {
-            // 直接返回startTime - endTime
+            if (time != null && time.containsKey("startTime") && time.containsKey("endTime")) {
+                Date startTime = DateUtils.parseUTCDate(time.getString("startTime"));
+                Date endTime = DateUtils.parseUTCDate(time.getString("endTime"));
+                restoreTime.setStartTime(startTime).setEndTime(endTime);
+            }
         }
         return restoreTime;
     }
