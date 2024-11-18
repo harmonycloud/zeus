@@ -98,7 +98,6 @@ public class CommonConstant {
     public static final String ZONE_A = "zoneA";
     public static final String ZONE_B = "zoneB";
 
-    public static final String INC = "inc";
     public static final String INCR = "incr";
 
     public static final String MIDDLEWARE_VERSION_PLACEHOLDER_STRING = "middleware_version_placeHolder_string";

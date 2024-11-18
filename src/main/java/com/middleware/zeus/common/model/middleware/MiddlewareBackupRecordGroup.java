@@ -40,6 +40,9 @@ public class MiddlewareBackupRecordGroup {
     @ApiModelProperty("备份状态")
     private String phrase;
 
+    @ApiModelProperty("是否停止")
+    private String pause;
+
     @ApiModelProperty("备份任务类型（1：普通，2：双活）")
     private Integer taskType;
 

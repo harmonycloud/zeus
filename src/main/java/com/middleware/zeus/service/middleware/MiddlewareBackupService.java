@@ -317,15 +317,6 @@ public interface MiddlewareBackupService {
     void saveBackupName(String clusterId, String taskName, String backupId, String backupType, Integer positionId);
 
     /**
-     * 根据备份位置id查询备份任务(含单次备份和周期备份)
-     * @param clusterId
-     * @param namespace
-     * @param labels
-     * @return
-     */
-    List<MiddlewareBackupRecord> listBackupTask(String clusterId, String namespace, Map<String, String> labels);
-
-    /**
      * 检查中间件是否已创建周期备份任务
      * @param clusterId
      * @param namespace
@@ -349,10 +340,10 @@ public interface MiddlewareBackupService {
      * @param clusterId 集群id
      * @param namespace 命名空间
      * @param backupId 备份任务id
-     * @param date 指定时间
+     * @param dateStr 指定时间
      * @return BackupRestoreTimeDto 可恢复时间
      */
-    BackupRestoreTimeDto restoreTime(String clusterId, String namespace, String backupId, Date date);
+    BackupRestoreTimeDto restoreTime(String clusterId, String namespace, String backupId, String dateStr);
 
     /**
      * 检查增量备份任务开关

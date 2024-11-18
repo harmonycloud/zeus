@@ -1,6 +1,8 @@
 package com.middleware.zeus.service.middleware.impl;
 
 import static com.middleware.zeus.common.constants.BackupConstant.*;
+import static com.middleware.zeus.common.constants.BackupConstant.OFF;
+import static com.middleware.zeus.common.constants.BackupConstant.ON;
 import static com.middleware.zeus.common.constants.CommonConstant.*;
 import static com.middleware.zeus.common.constants.NameConstant.*;
 import static com.middleware.zeus.common.enums.BackupStatusEnum.SUCCESS;
@@ -15,7 +17,6 @@ import java.util.stream.Collectors;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.middleware.zeus.common.constants.ActiveAreaConstant;
-import com.middleware.zeus.common.constants.NameConstant;
 import com.middleware.zeus.common.model.user.UserRole;
 import com.middleware.caas.filters.user.CurrentUserRepository;
 import com.middleware.zeus.util.RequestUtil;
@@ -112,12 +113,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     private UserService userService;
     @Autowired
     private PodService podService;
-    @Autowired
-    private BeanCustomConfigMapper beanCustomConfigMapper;
-    @Autowired
-    private StatefulSetWrapper statefulSetWrapper;
-    @Autowired
-    private DeploymenentWrapper deploymenentWrapper;
 
     // <可用区英文名,可用区别名>
     private static final Map<String, String> activeAreaMap = new HashMap<>();
@@ -338,9 +333,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         if (checkBackupScheduleExist(backupDTO.getClusterId(), backupDTO.getNamespace(), backupDTO.getMiddlewareName(), null)) {
             pause = ON;
         }
-        MiddlewareBackupSchedule crd = new MiddlewareBackupSchedule();
+        MiddlewareBackupSchedule schedule = new MiddlewareBackupSchedule();
         ObjectMeta meta = getMiddlewareBackupMeta(backupDTO, objectMeta);
-        crd.setMetadata(meta);
+        schedule.setMetadata(meta);
         // 将minio账号密码转换为base64
         String base64AccessKeyId =
                 Base64.getEncoder().encodeToString(minio.getAccessKeyId().getBytes(StandardCharsets.UTF_8));
@@ -367,15 +362,15 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 new MiddlewareBackupScheduleSpec(destination, customBackups, backupDTO.getMiddlewareName(),
                         backupDTO.getCrdType(), pause, CronUtils.parseCron(backupDTO.getCron(), -8 + timezone),
                         backupDTO.getLimitRecord(), calRetentionTime(backupDTO));
-        crd.setSpec(spec);
+        schedule.setSpec(spec);
         try {
-            backupScheduleCRDService.create(backupDTO.getClusterId(), crd);
+            backupScheduleCRDService.create(backupDTO.getClusterId(), schedule);
         } catch (IOException e) {
             log.error("备份创建失败", e);
         }
         // 创建增量备份
         if (backupDTO.getIncrement() != null && StringUtils.isNotEmpty(backupDTO.getTime()) && backupDTO.getIncrement()) {
-            createOrReplaceIncBackup(backupDTO.getClusterId(), backupDTO.getNamespace(), meta.getName(), backupDTO.getTime(), "on", crd);
+            createOrReplaceIncBackup(backupDTO.getClusterId(), backupDTO.getNamespace(), meta.getName(), backupDTO.getTime(), ON, schedule);
         }
     }
 
@@ -435,7 +430,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         String time = middlewareIncBackup.getTime();
         String pause = middlewareIncBackup.getPause();
         if (StringUtils.isEmpty(pause)) {
-            pause = "on";
+            pause = ON;
         }
         Map<String, String> annotations = middlewareIncBackup.getAnnotations();
         MiddlewareBackupSchedule cr = backupScheduleCRDService.get(clusterId, namespace, backupName);
@@ -1254,28 +1249,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public List<MiddlewareBackupRecord> listBackupTask(String clusterId, String namespace, Map<String, String> labels) {
-        List<MiddlewareBackupRecord> records = new ArrayList<>();
-        List<MiddlewareBackupSchedule> scheduleCRS = backupScheduleCRDService.listByLabels(clusterId, namespace, labels);
-        if (!CollectionUtils.isEmpty(scheduleCRS)) {
-            for (MiddlewareBackupSchedule scheduleCR : scheduleCRS) {
-                MiddlewareBackupRecord record = new MiddlewareBackupRecord();
-                convertBackupScheduleToRecord(scheduleCR, record);
-                records.add(record);
-            }
-        }
-        List<MiddlewareBackup> backupCRList = backupCRDService.list(clusterId, namespace, labels);
-        if (!CollectionUtils.isEmpty(backupCRList)) {
-            for (MiddlewareBackup backupCR : backupCRList) {
-                MiddlewareBackupRecord record = new MiddlewareBackupRecord();
-                convertBackupToRecord(clusterId, backupCR, record);
-                records.add(record);
-            }
-        }
-        return records;
-    }
-
-    @Override
     public boolean checkSchedule(String clusterId, String namespace, String type, String middlewareName) {
         return checkBackupScheduleExist(clusterId, namespace, middlewareName, null);
     }
@@ -1301,6 +1274,11 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                         !schedule.getMetadata().getLabels().containsKey(BACKUP_ID)) {
                     continue;
                 }
+                // 判断若为增量备份任务，不通过此逻辑开启备份，将在平台的周期循环任务中判断是否开启
+                // 理论上 上述backupId字段是否存在已过滤增量备份任务
+                if (schedule.getMetadata().getName().endsWith(LINE + INCR)){
+                    continue;
+                }
                 // 对backupId匹配的周期备份任务进行更新
                 if (schedule.getMetadata().getLabels().get(BACKUP_ID).equalsIgnoreCase(backupId)){
                     schedule.getSpec().setPause(OFF);
@@ -1316,23 +1294,40 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                     continue;
                 }
                 // 对backupId匹配的周期备份任务进行更新
-                if (schedule.getMetadata().getLabels().get(BACKUP_ID).equalsIgnoreCase(backupId)
-                        && schedule.getSpec().getPause().equalsIgnoreCase(OFF)) {
+                if (schedule.getMetadata().getLabels().get(BACKUP_ID).equalsIgnoreCase(backupId)) {
+                    // 修改pause字段，并执行更新
                     schedule.getSpec().setPause(ON);
                     backupScheduleCRDService.update(clusterId, schedule);
+                    // 判断该周期备份任务是否存在增量备份任务，若存在，则也修改pause字段并更新，并添加label FULL_BACKUP_WAITING
+                    middlewareBackupScheduleList.stream()
+                        .filter(inc -> inc.getMetadata().getLabels() != null
+                            && inc.getMetadata().getLabels().containsKey(OWNER)
+                            && inc.getMetadata().getLabels().get(OWNER).equals(schedule.getMetadata().getName()))
+                        .findFirst().ifPresent(incr -> {
+                            incr.getMetadata().getLabels().put(FULL_BACKUP_WAITING, TRUE);
+                            incr.getSpec().setPause(ON);
+                            backupScheduleCRDService.update(clusterId, incr);
+                        });
+                    
                 }
             }
         }
     }
 
     @Override
-    public BackupRestoreTimeDto restoreTime(String clusterId, String namespace, String backupId, Date date) {
+    public BackupRestoreTimeDto restoreTime(String clusterId, String namespace, String backupId, String dateStr) {
         BackupRestoreTimeDto restoreTime = new BackupRestoreTimeDto();
         restoreTime.setBackupId(backupId);
-        // 根据backupId查询增量备份任务
+        // 根据backupId查询全量备份任务
         List<MiddlewareBackupSchedule> scheduleCRList = listMiddlewareBackupSchedule(clusterId, namespace, backupId);
+        if (CollectionUtils.isEmpty(scheduleCRList)){
+            return restoreTime;
+        }
+        // 根据schedule name查询对应的增量备份任务
+        // 双活场景下如何选择恢复时间？todo
+        MiddlewareBackupSchedule schedule = scheduleCRList.get(0);
         // 根据名称是否以-incr结尾判断是否为增量备份任务
-        MiddlewareBackupSchedule incr = scheduleCRList.stream().filter(schedule -> schedule.getMetadata().getName().endsWith(LINE + INCR)).findFirst().orElse(null);
+        MiddlewareBackupSchedule incr = backupScheduleCRDService.listByLabels(clusterId, namespace, Map.of(OWNER, schedule.getMetadata().getName())).stream().findFirst().orElse(null);
         if (incr == null || incr.getStatus() == null || incr.getStatus().getStorageProvider() == null){
             return restoreTime;
         }
@@ -1340,7 +1335,11 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         JSONObject storageProvider = incr.getStatus().getStorageProvider();
         JSONObject time = storageProvider.getJSONObject(incr.getSpec().getType());
         // 判断date是否为null
-        if (date != null){
+
+        if (dateStr != null){
+            Date date = DateUtils.parseDate(dateStr, DateUtils.YYYY_MM_DD);
+            Date startOfDay = DateUtils.getStartOfDay(date);
+            Date endOfDay = DateUtils.getEndOfDay(date);
             // 获取date指定的日期的可恢复时间
             // 判断storageProvider.postgresql.timeRange是否存在
             if (time.getJSONArray("timeRange") != null){
@@ -1353,14 +1352,18 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                     // 获取阈值内的开始时间和结束时间
                     Date start  = DateUtils.parseUTCDate(timeRangeItem.getString("Start"));
                     Date end = DateUtils.parseUTCDate(timeRangeItem.getString("End"));
-                    // 判断date是否在阈值内
-                    if (date.after(start) && date.before(end)){
-                        // 封装数据
-                        BackupRestoreTimeDto.TimeRange timeRangeDto = new BackupRestoreTimeDto.TimeRange();
-                        timeRangeDto.setStart(start);
-                        timeRangeDto.setEnd(end);
-                        timeRangeList.add(timeRangeDto);
+                    // 当日期完全不符合时 跳过该阈值
+                    if (endOfDay.before(start) || startOfDay.after(end)) {
+                        continue;
                     }
+                    // 获取符合位于date所在日期的阈值
+                    Date intervalStart = (startOfDay.after(start)) ? startOfDay : start;
+                    Date intervalEnd = (endOfDay.before(end)) ? endOfDay : end;
+                    // 封装数据
+                    BackupRestoreTimeDto.TimeRange timeRangeDto = new BackupRestoreTimeDto.TimeRange();
+                    timeRangeDto.setStart(intervalStart);
+                    timeRangeDto.setEnd(intervalEnd);
+                    timeRangeList.add(timeRangeDto);
                 }
                 restoreTime.setTimeRange(timeRangeList);
             } else {
@@ -1386,25 +1389,53 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
     @Override
     public void checkSchedule() {
+        // 遍历所有集群
         List<MiddlewareClusterDTO> clusterList = clusterService.listClusters();
-        Map<String, String> labels = new HashMap<>();
-        labels.put("fullBackupWaiting", "true");
-        for (MiddlewareClusterDTO cluster : clusterList){
-            List<MiddlewareBackupSchedule> middlewareBackupScheduleList = backupScheduleCRDService.listByLabels(cluster.getId(), null, labels);
-            for (MiddlewareBackupSchedule inc : middlewareBackupScheduleList){
-                MiddlewareBackupSchedule schedule = backupScheduleCRDService.get(cluster.getId(), inc.getMetadata().getNamespace(), inc.getMetadata().getName().replace("-incr", ""));
-                if (!CollectionUtils.isEmpty(schedule.getMetadata().getLabels())){
+        for (MiddlewareClusterDTO cluster : clusterList) {
+            // 查询所有周期备份任务
+            List<MiddlewareBackupSchedule> middlewareBackupScheduleList =
+                backupScheduleCRDService.listByLabels(cluster.getId(), null, null);
+            
+            // 获取其中labels字段包含FULL_BACKUP_WAITING=true的备份任务
+            List<MiddlewareBackupSchedule> incrScheduleList = middlewareBackupScheduleList.stream()
+                .filter(schedule -> schedule.getMetadata().getLabels() != null
+                    && schedule.getMetadata().getLabels().containsKey(FULL_BACKUP_WAITING)
+                    && schedule.getMetadata().getLabels().get(FULL_BACKUP_WAITING).equalsIgnoreCase(TRUE))
+                .collect(Collectors.toList());
+            // 若不存在未开启的增量备份任务  结束此集群的检查
+            if (CollectionUtils.isEmpty(incrScheduleList)){
+                return;
+            }
+            for (MiddlewareBackupSchedule inc : incrScheduleList) {
+                // 根据被查询到的增量备份任务  获取其中的全量备份任务
+                MiddlewareBackupSchedule schedule = middlewareBackupScheduleList.stream()
+                    .filter(bak -> inc.getMetadata().getLabels().containsKey(OWNER)
+                        && inc.getMetadata().getLabels().get(OWNER).equals(bak.getMetadata().getName()))
+                    .findFirst().orElse(null);
+                if (schedule == null){
+                    continue;
+                }
+                // 若当前全量周期备份任务的状态为暂停，则不修改增量周期备份任务的状态
+                if (schedule.getSpec().getPause().equals(ON)){
+                    continue;
+                }
+                // 根据匹配到的全量备份任务  查找是否存在运行成功的备份记录
+                if (!CollectionUtils.isEmpty(schedule.getMetadata().getLabels())) {
                     Map<String, String> ownMap = new HashMap<>();
-                    ownMap.put("owner", schedule.getMetadata().getName());
+                    ownMap.put(OWNER, schedule.getMetadata().getName());
 
-                    List<MiddlewareBackup> middlewareBackupList = backupCRDService.list(cluster.getId(), schedule.getMetadata().getNamespace(), ownMap);
-                    if (CollectionUtils.isEmpty(middlewareBackupList)){
+                    List<MiddlewareBackup> middlewareBackupList =
+                        backupCRDService.list(cluster.getId(), schedule.getMetadata().getNamespace(), ownMap);
+                    if (CollectionUtils.isEmpty(middlewareBackupList)) {
                         continue;
                     }
-                    boolean fullBackup = middlewareBackupList.stream().anyMatch(middlewareBackup -> middlewareBackup.getStatus() != null && StringUtils.isNotEmpty(middlewareBackup.getStatus().getPhase()) && middlewareBackup.getStatus().getPhase().equalsIgnoreCase(SUCCESS.getStatus()));
-                    if (fullBackup){
-                        inc.getSpec().setPause("off");
-                        inc.getMetadata().getLabels().remove("fullBackupWaiting");
+                    boolean fullBackup = middlewareBackupList.stream()
+                        .anyMatch(middlewareBackup -> middlewareBackup.getStatus() != null
+                            && StringUtils.isNotEmpty(middlewareBackup.getStatus().getPhase())
+                            && middlewareBackup.getStatus().getPhase().equalsIgnoreCase(SUCCESS.getStatus()));
+                    if (fullBackup) {
+                        inc.getSpec().setPause(OFF);
+                        inc.getMetadata().getLabels().remove(FULL_BACKUP_WAITING);
                         backupScheduleCRDService.update(cluster.getId(), inc);
                     }
                 }
@@ -1937,7 +1968,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         if (schedule == null) {
             throw new BusinessException(ErrorMessage.BACKUP_NOT_EXISTS);
         }
-        MiddlewareBackupScheduleStatus backupStatus = schedule.getStatus();
         // 获取备份创建时间
         Date creationTime = DateUtils.parseUTCDate(schedule.getMetadata().getCreationTimestamp());
         backupRecord.setCreationTime(creationTime);
@@ -1959,6 +1989,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         // 设置备份源名称、类型
         backupRecord.setSourceName(schedule.getSpec().getName());
         backupRecord.setSourceType(middlewareCrTypeService.findTypeByCrType(spec.getType()));
+        // 设置是否停止
+        backupRecord.setPause(spec.getPause());
         // 获取labels参数
         Map<String, String> labels = schedule.getMetadata().getLabels();
         Map<String, String> annotations = schedule.getMetadata().getLabels();
@@ -2400,6 +2432,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             recordGroup.setSourceName(record.getSourceName());
             recordGroup.setSourceType(record.getSourceType());
             recordGroup.setPhrase(getTaskPhrase(records));
+            recordGroup.setPause(record.getPause());
             recordGroup.setTaskType(getTaskType(records));
             recordGroup.setBackupId(record.getBackupId());
             recordGroup.setBackupAddresses(getBackupAddresses(records));

@@ -60,6 +60,11 @@ public class MiddlewareBackupRecord {
     private String phrase;
 
     /**
+     * 是否停止
+     */
+    private String pause;
+
+    /**
      * 备份源名称
      */
     private String sourceName;

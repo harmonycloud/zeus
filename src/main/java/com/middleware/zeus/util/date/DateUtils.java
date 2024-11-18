@@ -148,6 +148,17 @@ public class DateUtils {
     }
 
     /**
+     * 获取日期的天。失败返回0。
+     *
+     * @param date
+     *            日期
+     * @return 月份
+     */
+    public static int getDay(Date date){
+        return getInteger(date, Calendar.DAY_OF_MONTH);
+    }
+
+    /**
      * 获取日期的小时。失败返回0。
      *
      * @param date
@@ -305,6 +316,28 @@ public class DateUtils {
             LOGGER.warn("获取CurrentUtcTime失败", e);
         }
         return date;
+    }
+
+    // 获取指定日期的起始时间（00:00:00）
+    public static Date getStartOfDay(Date date) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(date);
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+        return cal.getTime();
+    }
+
+    // 获取指定日期的结束时间（23:59:59）
+    public static Date getEndOfDay(Date date) {
+        Calendar cal = Calendar.getInstance();
+        cal.setTime(date);
+        cal.set(Calendar.HOUR_OF_DAY, 23);
+        cal.set(Calendar.MINUTE, 59);
+        cal.set(Calendar.SECOND, 59);
+        cal.set(Calendar.MILLISECOND, 999);
+        return cal.getTime();
     }
 
 }

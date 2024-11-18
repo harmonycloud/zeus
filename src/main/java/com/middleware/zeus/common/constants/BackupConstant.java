@@ -20,4 +20,9 @@ public class BackupConstant {
     public static final String BACKUP_INC = "backup-inc";
     public static final String ENV = "env";
 
+    public static final String ON = "on";
+
+    public static final String OFF = "off";
+    public static final String FULL_BACKUP_WAITING = "fullBackupWaiting";
+
 }

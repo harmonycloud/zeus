@@ -355,7 +355,7 @@ public class MiddlewareBackupController {
     public BaseResult<BackupRestoreTimeDto> restoreTime(@PathVariable("clusterId") String clusterId,
                                                         @PathVariable("namespace") String namespace,
                                                         @PathVariable("backupId") String backupId,
-                                                        @RequestParam(value = "date", required = false) Date date) {
+                                                        @RequestParam(value = "date", required = false) String date) {
         return BaseResult.ok(middlewareBackupService.restoreTime(clusterId, namespace, backupId, date));
     }
 
