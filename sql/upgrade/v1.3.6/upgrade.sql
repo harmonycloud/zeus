@@ -468,7 +468,7 @@ insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_
 values('operation_audit','备份服务','zh-HK','childModuleChDesc','備份服務');
 -- 英语
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
-values('operation_audit','备份服务','en-US','childModuleChDesc','Middleware Backup Service');
+values('operation_audit','备份服务','en-US','childModuleChDesc','Backup Service');
 -- 繁体中文
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
 values('operation_audit','可用区','zh-HK','childModuleChDesc','可用區');

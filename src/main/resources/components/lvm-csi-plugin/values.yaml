@@ -1,10 +1,10 @@
 image:
-  repository: harbor.middleware.com/middleware
+  repository: 10.120.1.233:8443/k8s-deploy
   pullPolicy: IfNotPresent
-  registrarImageTag: v1.1.0
-  pluginImageTag: v1.2.0
-  provisionerImageTag: v1-5f99079e0-ack
-  resizerImageTag: v0.3.0
+  registrarImageTag: v2.8.0
+  pluginImageTag: v1.2.4
+  provisionerImageTag: v3.0.0-fa5f64b-ack
+  resizerImageTag: v1.7.0
   snapshotControllerImageTag: v4.2.0
   csiSnapshotterImageTag: v4.2.0
 
@@ -42,6 +42,9 @@ plugin:
 nodeSelector:
   beta.kubernetes.io/os: linux
 
+tolerations:
+  - operator: Exists
+
 storage:
   default: true
   vgName: vg_middleware
@@ -57,4 +60,4 @@ volumeSnapshotClass:
   # 123456
   backupPassword: MTIzNDU2Cg==
   bucket: restic-bucket
-  url: http://10.1.30.70:31909
+  url: http://minio-cluster-svc.minio.svc.cluster.local:9000

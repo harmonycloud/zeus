@@ -1,30 +1,28 @@
 package com.middleware.zeus.service.k8s.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.middleware.zeus.bean.BeanClusterComponents;
 import com.middleware.zeus.common.enums.ComponentsEnum;
 import com.middleware.zeus.common.model.ClusterComponentsDto;
 import com.middleware.zeus.common.model.MultipleComponentsInstallDto;
 import com.middleware.zeus.common.model.middleware.Middleware;
 import com.middleware.zeus.common.model.middleware.MiddlewareClusterDTO;
-import com.middleware.zeus.util.ThreadPoolExecutorFactory;
-import com.middleware.zeus.util.date.DateUtils;
-import com.middleware.zeus.bean.BeanClusterComponents;
 import com.middleware.zeus.dao.BeanClusterComponentsMapper;
 import com.middleware.zeus.integration.registry.bean.harbor.HelmListInfo;
-import com.middleware.zeus.service.components.api.LoggingService;
-import com.middleware.zeus.service.k8s.NamespaceService;
-import com.middleware.zeus.service.middleware.MiddlewareManagerService;
 import com.middleware.zeus.service.AbstractBaseService;
+import com.middleware.zeus.service.components.BaseComponentsService;
+import com.middleware.zeus.service.components.api.LoggingService;
 import com.middleware.zeus.service.k8s.ClusterComponentService;
 import com.middleware.zeus.service.k8s.ClusterService;
+import com.middleware.zeus.service.k8s.NamespaceService;
+import com.middleware.zeus.service.middleware.MiddlewareManagerService;
+import com.middleware.zeus.service.registry.HelmChartService;
+import com.middleware.zeus.util.ThreadPoolExecutorFactory;
+import com.middleware.zeus.util.date.DateUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import com.middleware.zeus.service.components.BaseComponentsService;
-import com.middleware.zeus.service.registry.HelmChartService;
-
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
@@ -34,7 +32,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
 import static com.middleware.zeus.common.constants.CommonConstant.*;
-import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_OPERATOR;
 
 /**
  * @author dengyulong
