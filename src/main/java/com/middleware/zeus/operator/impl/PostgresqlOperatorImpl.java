@@ -472,6 +472,17 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
     public void update(Middleware middleware, MiddlewareClusterDTO cluster) {
         StringBuilder sb = new StringBuilder();
 
+        //连接池参数
+        if (middleware.getPostgresqlParam()!=null&&middleware.getPostgresqlParam().getPoolerInstanceNum()!=null){
+            sb.append("connectionPooler.numberOfInstances=").append(middleware.getPostgresqlParam().getPoolerInstanceNum()).append(",");
+        }
+        if (middleware.getPostgresqlParam()!=null&&middleware.getPostgresqlParam().getConnectionPoolerCpu()!=null){
+            sb.append("connectionPooler.resources.limits.cpu=").append(middleware.getPostgresqlParam().getConnectionPoolerCpu()).append(",");
+            sb.append("connectionPooler.resources.requests.cpu=").append(middleware.getPostgresqlParam().getConnectionPoolerCpu()).append(",");
+            sb.append("connectionPooler.resources.limits.memory=").append(middleware.getPostgresqlParam().getConnectionPoolerMemory()).append(",");
+            sb.append("connectionPooler.resources.requests.memory=").append(middleware.getPostgresqlParam().getConnectionPoolerMemory()).append(",");
+        }
+
         if (middleware.getQuota() != null && middleware.getQuota().get(middleware.getType()) != null) {
             MiddlewareQuota quota = middleware.getQuota().get(middleware.getType());
 
@@ -503,11 +514,6 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
             } else if (!middleware.getAudit()) {
                 sb.append("args.pgaudit\\\\.log=NONE");
             }
-        }
-
-        //连接池参数
-        if (middleware.getPostgresqlParam()!=null&&middleware.getPostgresqlParam().getPoolerInstanceNum()!=null){
-            sb.append("connectionPooler.numberOfInstances=").append(middleware.getPostgresqlParam().getPoolerInstanceNum()).append(",");
         }
 
         if (sb.length() == 0) {
