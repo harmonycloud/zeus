@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 import static com.middleware.zeus.common.constants.CommonConstant.ASTERISK;
 
@@ -391,4 +392,13 @@ public class MiddlewareController {
         return BaseResult.ok(middlewareService.getResources(clusterId, namespace, type, middlewareName));
     }
 
+    @ApiOperation(value = "查询中间件字符集",notes = "查询中间件字符集")
+    @ApiImplicitParams({
+        @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class)
+    })
+    @GetMapping("/{type}/chatSet")
+    @Authority(power = 1)
+    public BaseResult<Map<String,List<String>>> getCharSet(@PathVariable("type") String type){
+        return BaseResult.ok(middlewareService.getChatSet(type));
+    }
 }

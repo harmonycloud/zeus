@@ -10,6 +10,8 @@ import com.middleware.zeus.util.page.PageObject;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author dengyulong
@@ -69,4 +71,10 @@ public interface MysqlService {
      * @return
      */
     MysqlAccessInfo queryBasicAccessInfo(String clusterId, String namespace, String middlewareName, Middleware middleware);
+
+    /**
+     * 获取mysql字符集及其语言环境
+     * @return
+     */
+    Map<String, List<String>> getChatSet();
 }

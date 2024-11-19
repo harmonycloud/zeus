@@ -8,6 +8,7 @@ import com.middleware.zeus.common.model.middleware.*;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareInfo;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author dengyulong
@@ -322,5 +323,13 @@ public interface MiddlewareService {
      * @return MiddlewarePodGroupDto
      */
     List<PodInfoGroup> podGroupInfo(String clusterId, String namespace, String middlewareName, String type);
+
+    /**
+     * 中间件字符集
+     *
+     * @param type 中间件类型
+     * @return
+     */
+    Map<String,List<String>> getChatSet(String type);
 
 }

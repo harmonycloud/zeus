@@ -289,4 +289,25 @@ public class MysqlServiceImpl implements MysqlService {
         }
     }
 
+    /**
+     * 查询字符集及其语言环境
+     */
+    public Map<String, List<String>> getChatSet(){
+        Map<String,List<String>> mp = new HashMap<>();
+        List<String> ls = new ArrayList<>();
+        mp.put("armscii8",Arrays.asList("hy_AM.ARMSCII-8"));
+        mp.put("big5",Arrays.asList("zh_HK.BIG5", "zh_TW.BIG5"));
+        mp.put("cp1250",Arrays.asList("cs_CZ.CP1250","pl_PL.CP1250","hu_HU.CP1250","sk_SK.CP1250"));
+        mp.put("cp1251",Arrays.asList("ru_RU.CP1251","uk_UA.CP1251","bg_BG.CP1251","sr_RS.CP1251"));
+        mp.put("cp1256",Arrays.asList("ar_AE.CP1256","ar_EG.CP1256","ar_SY.CP1256","ar_LB.CP1256"));
+        mp.put("cp1257",Arrays.asList("lt_LT.CP1257","lv_LV.CP1257","et_EE.CP1257"));
+        mp.put("cp850",Arrays.asList("en_US.CP850","fr_FR.CP850","de_DE.CP850","it_IT.CP850"));
+        mp.put("gb18030",Arrays.asList("zh_CN.GB18030","zh_TW.GB18030","ja_JP.GB18030","ko_KR.GB18030"));
+        mp.put("gbk",Arrays.asList("zh_CN.GBK","zh_TW.GBK"));
+
+
+        mp.put("utf8mb4",Arrays.asList("zh_CN.UTF-8","en_US.UTF-8","ja_JP.UTF-8","ko_KR.UTF-8","de_DE.UTF-8","fr_FR.UTF-8",
+                "es_ES.UTF-8","ru_RU.UTF-8","pt_PT.UTF-8","it_IT.UTF-8","ar_SA.UTF-8"));
+        return mp;
+    }
 }

@@ -83,6 +83,9 @@ public class Middleware implements Serializable {
     @ApiModelProperty("中间件字符集")
     private String charSet;
 
+    @ApiModelProperty("中间件语言环境")
+    private String language;
+
     @ApiModelProperty("中间件端口")
     private Integer port;
 

@@ -129,6 +129,8 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     private MiddlewareConfigYamlService middlewareConfigYamlService;
     @Autowired
     private MiddlewarePvcService middlewarePvcService;
+    @Autowired
+    private MysqlService mysqlService;
 
     @Value("${system.privateRegistry.middlewareServiceAccount:default}")
     private String middlewareServiceAccount;
@@ -1418,5 +1420,17 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             return;
         }
         middlewareClusterDTO.setRegistry(imageRepositoryService.generateRegistry(repositoryId));
+    }
+
+    @Override
+    public Map<String,List<String>> getChatSet(String type){
+        switch (type){
+            case "mysql":
+                return mysqlService.getChatSet();
+            case "postgresql":
+                return new HashMap<>();
+            default:
+                return new HashMap<>();
+        }
     }
 }
