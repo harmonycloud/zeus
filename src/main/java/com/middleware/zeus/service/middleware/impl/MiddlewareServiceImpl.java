@@ -131,6 +131,8 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     private MiddlewarePvcService middlewarePvcService;
     @Autowired
     private MysqlService mysqlService;
+    @Autowired
+    private PostgresqlService postgresqlService;
 
     @Value("${system.privateRegistry.middlewareServiceAccount:default}")
     private String middlewareServiceAccount;
@@ -1428,7 +1430,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             case "mysql":
                 return mysqlService.getChatSet();
             case "postgresql":
-                return new HashMap<>();
+                return postgresqlService.getChatSet();
             default:
                 return new HashMap<>();
         }
