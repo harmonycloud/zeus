@@ -1,27 +1,41 @@
 package com.middleware.zeus.controller.user;
 
 import com.middleware.zeus.common.base.BaseResult;
+import com.middleware.zeus.common.constants.NameConstant;
+import com.middleware.zeus.common.enums.middleware.ResourceUnitEnum;
 import com.middleware.zeus.common.model.BackupServerDTO;
+import com.middleware.zeus.common.model.PersistentVolumeClaim;
+import com.middleware.zeus.common.model.PrometheusResponse;
 import com.middleware.zeus.common.model.ResourceQuotaDo;
-import com.middleware.zeus.common.model.middleware.MiddlewareClusterDTO;
-import com.middleware.zeus.common.model.middleware.MiddlewareInfoDTO;
-import com.middleware.zeus.common.model.middleware.Namespace;
-import com.middleware.zeus.common.model.middleware.ProjectMiddlewareResourceInfo;
+import com.middleware.zeus.common.model.middleware.*;
 import com.middleware.zeus.common.model.user.ProjectDto;
 import com.middleware.zeus.common.model.user.ProjectQuota;
 import com.middleware.zeus.common.model.user.UserDto;
+import com.middleware.zeus.integration.cluster.PrometheusWrapper;
 import com.middleware.zeus.service.middleware.MiddlewareInfoService;
+import com.middleware.zeus.service.middleware.MiddlewarePvcService;
+import com.middleware.zeus.service.prometheus.PrometheusResourceMonitorService;
 import com.middleware.zeus.service.user.ProjectService;
+import com.middleware.zeus.util.ThreadPoolExecutorFactory;
+import com.middleware.zeus.util.numeric.ResourceCalculationUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+
+import static com.middleware.zeus.common.constants.NameConstant.MEMORY;
 
 /**
  * @author xutianhong
@@ -37,6 +51,12 @@ public class ProjectController {
     private ProjectService projectService;
     @Autowired
     private MiddlewareInfoService middlewareInfoService;
+    @Autowired
+    protected PrometheusWrapper prometheusWrapper;
+    @Autowired
+    protected PrometheusResourceMonitorService prometheusResourceMonitorService;
+    @Autowired
+    protected MiddlewarePvcService middlewarePvcService;
 
     @ApiOperation(value = "创建项目", notes = "创建项目")
     @ApiImplicitParams({
@@ -362,6 +382,154 @@ public class ProjectController {
                                          @PathVariable("backupServerId") Integer backupServerId,
                                          @RequestParam("clusterId") String clusterId) {
         projectService.removeBackupServer(organId, projectId, backupServerId, clusterId);
+        return BaseResult.ok();
+    }
+
+    @ApiOperation(value = "移除备份服务器", notes = "移除备份服务器")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "organId", value = "组织id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "backupServerId", value = "备份服务器id", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class),
+    })
+    @DeleteMapping("/test")
+    public BaseResult removeBackupServer(@RequestParam("num") Integer num) {
+
+        final CountDownLatch clusterCountDownLatch = new CountDownLatch(num);
+        for (int i =0; i < num;++i){
+            int finalI = i;
+            ThreadPoolExecutorFactory.executor.execute(() -> {
+                try {
+                    log.info("i=" + finalI + "   " + Thread.currentThread().getName() + "，开始sleep 10s");
+                    Thread.sleep(10000);
+                    log.info(Thread.currentThread().getName() + "，结束sleep 10s");
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                Map<String, String> queryMap = new HashMap<>();
+                String pods = "pgsql-cyl-0";
+                String namespace = "test-cyl";
+                String clusterId = "default--test-35";
+                MiddlewareResourceInfo mwRsInfo = new MiddlewareResourceInfo();
+                mwRsInfo.setName("pgsql-cyl");
+                // 查询cpu配额
+                try {
+                    String cpuRequestQuery = "sum(kube_pod_container_resource_requests{resource=\"cpu\",pod=~\""
+                            + pods.toString() + "\",namespace=\"" + namespace + "\"})";
+                    queryMap.put("query", cpuRequestQuery);
+                    PrometheusResponse cpuRequest =
+                            prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);
+                    if (!CollectionUtils.isEmpty(cpuRequest.getData().getResult())) {
+                        ResourceCalculationUtil.roundNumber(
+                                BigDecimal
+                                        .valueOf(Double.parseDouble(cpuRequest.getData().getResult().get(0).getValue().get(1))),
+                                2, RoundingMode.CEILING);
+                    }
+                } catch (Exception e) {
+                    log.error("中间件{} 查询cpu配额失败", mwRsInfo.getName());
+                }
+                // 查询cpu每5分钟平均用量
+                try {
+                    String per5MinCpuUsedQuery =
+                            "sum(rate(container_cpu_usage_seconds_total{pod=~\"" + pods.toString() + "\",namespace=\""
+                                    + namespace + "\",endpoint!=\"\",container!=\"\"}[5m]))";
+                    queryMap.put("query", per5MinCpuUsedQuery);
+                    PrometheusResponse per5MinCpuUsed =
+                            prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);
+                    if (!CollectionUtils.isEmpty(per5MinCpuUsed.getData().getResult())) {
+                        mwRsInfo.setPer5MinCpu(ResourceCalculationUtil.roundNumber(
+                                BigDecimal.valueOf(
+                                        Double.parseDouble(per5MinCpuUsed.getData().getResult().get(0).getValue().get(1))),
+                                2, RoundingMode.CEILING));
+                    }
+                } catch (Exception e) {
+                    log.error("中间件{} 查询cpu5分钟平均用量失败", mwRsInfo.getName());
+                }
+                // 查询memory配额
+                try {
+                    String memoryRequestQuery = "sum(kube_pod_container_resource_requests{resource=\"memory\",pod=~\""
+                            + pods.toString() + "\",namespace=\"" + namespace + "\"})";
+                    queryMap.put("query", memoryRequestQuery);
+                    PrometheusResponse memoryRequest =
+                            prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);
+                    if (!CollectionUtils.isEmpty(memoryRequest.getData().getResult())) {
+                        mwRsInfo.setRequestMemory(
+                                ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(ResourceCalculationUtil
+                                                .getResourceValue(memoryRequest.getData().getResult().get(0).getValue().get(1), MEMORY,
+                                                        ResourceUnitEnum.GI.getUnit())),
+                                        2, RoundingMode.CEILING));
+                    }
+                } catch (Exception e) {
+                    log.error("中间件{} 查询memory配额失败", mwRsInfo.getName());
+                }
+                // 查询memory每5分钟平均用量
+                try {
+                    String per5MinMemoryUsedQuery = "sum(avg_over_time(container_memory_working_set_bytes{pod=~\""
+                            + pods.toString() + "\",namespace=\"" + namespace
+                            + "\",endpoint!=\"\",container!=\"\"}[5m])) /1024/1024/1024";
+                    queryMap.put("query", per5MinMemoryUsedQuery);
+                    PrometheusResponse per5MinMemoryUsed =
+                            prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);
+                    if (!CollectionUtils.isEmpty(per5MinMemoryUsed.getData().getResult())) {
+                        mwRsInfo.setPer5MinMemory(ResourceCalculationUtil.roundNumber(
+                                BigDecimal.valueOf(
+                                        Double.parseDouble(per5MinMemoryUsed.getData().getResult().get(0).getValue().get(1))),
+                                2, RoundingMode.CEILING));
+                    }
+                } catch (Exception e) {
+                    log.error("中间件{} 查询memory5分钟平均用量失败", mwRsInfo.getName());
+                }
+
+                List<PersistentVolumeClaim> pvcList = middlewarePvcService.listMiddlewarePvc(mwRsInfo.getClusterId(), mwRsInfo.getNamespace(), mwRsInfo.getName(), mwRsInfo.getType());
+                StringBuilder pvcs = new StringBuilder();
+                for (PersistentVolumeClaim pvc : pvcList) {
+                    pvcs.append(pvc.getVolumeName()).append("|");
+                }
+                // 查询pvc总量
+                try {
+                    String pvcTotalQuery = "sum(total_size_kb{pv=~\"" + pvcs.toString() + "\"}) /1024/1024";
+                    Double pvcTotal = prometheusResourceMonitorService.queryAndConvert(clusterId, pvcTotalQuery);
+                    mwRsInfo.setRequestStorage(pvcTotal);
+                } catch (Exception e) {
+                    log.error("中间件{} 查询storage总量失败", mwRsInfo.getName());
+                }
+                // 查询pvc使用量
+                try {
+                    String pvcUsedQuery = "sum(used_size_kb{pv=~\"" + pvcs.toString() + "\"}) /1024/1024";
+                    Double pvcUsed = prometheusResourceMonitorService.queryAndConvert(clusterId, pvcUsedQuery);
+                    mwRsInfo.setPer5MinStorage(pvcUsed);
+                } catch (Exception e) {
+                    log.error("中间件{} 查询storage5分钟平均用量失败", mwRsInfo.getName());
+                }
+
+                // 计算cpu使用率
+                if (mwRsInfo.getRequestCpu() != null && mwRsInfo.getRequestCpu() != 0
+                        && mwRsInfo.getPer5MinCpu() != null) {
+                    double cpuRate = mwRsInfo.getPer5MinCpu() / mwRsInfo.getRequestCpu() * 100;
+                    mwRsInfo.setCpuRate(
+                            ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(cpuRate), 2, RoundingMode.CEILING));
+                }
+                // 计算memory使用率
+                if (mwRsInfo.getRequestMemory() != null && mwRsInfo.getRequestMemory() != 0
+                        && mwRsInfo.getPer5MinMemory() != null) {
+                    double memoryRate = mwRsInfo.getPer5MinMemory() / mwRsInfo.getRequestMemory() * 100;
+                    mwRsInfo.setMemoryRate(
+                            ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(memoryRate), 2, RoundingMode.CEILING));
+                }
+                // 计算pvc使用率
+                if (mwRsInfo.getRequestStorage() != null && mwRsInfo.getRequestStorage() != 0
+                        && mwRsInfo.getPer5MinStorage() != null) {
+                    double storageRate = mwRsInfo.getPer5MinStorage() / mwRsInfo.getRequestStorage() * 100;
+                    mwRsInfo.setStorageRate(
+                            ResourceCalculationUtil.roundNumber(BigDecimal.valueOf(storageRate), 2, RoundingMode.CEILING));
+                }
+            });
+        }
+        try {
+            clusterCountDownLatch.await();
+        } catch (Exception ignored){
+        }
+
         return BaseResult.ok();
     }
 }
