@@ -341,9 +341,10 @@ public interface MiddlewareBackupService {
      * @param namespace 命名空间
      * @param backupId 备份任务id
      * @param dateStr 指定时间
+     * @param zone 可用区
      * @return BackupRestoreTimeDto 可恢复时间
      */
-    BackupRestoreTimeDto restoreTime(String clusterId, String namespace, String backupId, String dateStr);
+    BackupRestoreTimeDto restoreTime(String clusterId, String namespace, String backupId, String dateStr, String zone);
 
     /**
      * 检查增量备份任务开关

@@ -328,12 +328,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
      */
     @Override
     public void createBackupSchedule(MiddlewareBackupDTO backupDTO, Minio minio, ObjectMeta objectMeta) {
-        // 判断是否已存在周期备份任务
-        String pause = OFF;
-        if (checkBackupScheduleExist(backupDTO.getClusterId(), backupDTO.getNamespace(), backupDTO.getMiddlewareName(), null)) {
-            pause = ON;
-        }
         MiddlewareBackupSchedule schedule = new MiddlewareBackupSchedule();
+        // 封装meta数据结构
         ObjectMeta meta = getMiddlewareBackupMeta(backupDTO, objectMeta);
         schedule.setMetadata(meta);
         // 将minio账号密码转换为base64
@@ -360,7 +356,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
 
         MiddlewareBackupScheduleSpec spec =
                 new MiddlewareBackupScheduleSpec(destination, customBackups, backupDTO.getMiddlewareName(),
-                        backupDTO.getCrdType(), pause, CronUtils.parseCron(backupDTO.getCron(), -8 + timezone),
+                        backupDTO.getCrdType(), backupDTO.getPause(), CronUtils.parseCron(backupDTO.getCron(), -8 + timezone),
                         backupDTO.getLimitRecord(), calRetentionTime(backupDTO));
         schedule.setSpec(spec);
         try {
@@ -492,7 +488,13 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             throw new BusinessException(DictEnum.BACKUP_POSITION, ErrorMessage.NOT_FOUND);
         }
         BackupServerDTO server = backupServerDTOList.get(0);
-
+        // 若为周期备份，判断是否已存在周期备份任务，设置pause字段
+        String pause = OFF;
+        if (checkBackupScheduleExist(backupDTO.getClusterId(), backupDTO.getNamespace(), backupDTO.getMiddlewareName(), null)) {
+            pause = ON;
+        }
+        backupDTO.setPause(pause);
+        // 判断是否为双活备份任务
         if (activeActiveBackupCheck(backupDTO) && server.getServerDetailList().size() == 2) {
             // 双活备份
             // 获取可用区annotation
@@ -1315,20 +1317,29 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
-    public BackupRestoreTimeDto restoreTime(String clusterId, String namespace, String backupId, String dateStr) {
+    public BackupRestoreTimeDto restoreTime(String clusterId, String namespace, String backupId, String dateStr,
+        String zone) {
         BackupRestoreTimeDto restoreTime = new BackupRestoreTimeDto();
         restoreTime.setBackupId(backupId);
         // 根据backupId查询全量备份任务
         List<MiddlewareBackupSchedule> scheduleCRList = listMiddlewareBackupSchedule(clusterId, namespace, backupId);
-        if (CollectionUtils.isEmpty(scheduleCRList)){
+        if (CollectionUtils.isEmpty(scheduleCRList)) {
             return restoreTime;
         }
+        // 根据zone查询对应的全量备份任务
+        MiddlewareBackupSchedule schedule;
+        if (zone != null) {
+            schedule = scheduleCRList.stream()
+                .filter(item -> zone.equals(item.getMetadata().getLabels().get(ACTIVE_AREA))).findFirst().orElse(null);
+        } else {
+            schedule = scheduleCRList.get(0);
+        }
         // 根据schedule name查询对应的增量备份任务
-        // 双活场景下如何选择恢复时间？todo
-        MiddlewareBackupSchedule schedule = scheduleCRList.get(0);
         // 根据名称是否以-incr结尾判断是否为增量备份任务
-        MiddlewareBackupSchedule incr = backupScheduleCRDService.listByLabels(clusterId, namespace, Map.of(OWNER, schedule.getMetadata().getName())).stream().findFirst().orElse(null);
-        if (incr == null || incr.getStatus() == null || incr.getStatus().getStorageProvider() == null){
+        MiddlewareBackupSchedule incr =
+            backupScheduleCRDService.listByLabels(clusterId, namespace, Map.of(OWNER, schedule.getMetadata().getName()))
+                .stream().findFirst().orElse(null);
+        if (incr == null || incr.getStatus() == null || incr.getStatus().getStorageProvider() == null) {
             return restoreTime;
         }
         // 数据结构解析
@@ -1336,21 +1347,21 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         JSONObject time = storageProvider.getJSONObject(incr.getSpec().getType());
         // 判断date是否为null
 
-        if (dateStr != null){
+        if (dateStr != null) {
             Date date = DateUtils.parseDate(dateStr, DateUtils.YYYY_MM_DD);
             Date startOfDay = DateUtils.getStartOfDay(date);
             Date endOfDay = DateUtils.getEndOfDay(date);
             // 获取date指定的日期的可恢复时间
             // 判断storageProvider.postgresql.timeRange是否存在
-            if (time.getJSONArray("timeRange") != null){
+            if (time.getJSONArray("timeRange") != null) {
                 JSONArray timeRange = time.getJSONArray("timeRange");
                 // 获取timeRange中对应date所在天的可恢复时间
                 List<BackupRestoreTimeDto.TimeRange> timeRangeList = new ArrayList<>();
-                for (int i = 0; i < timeRange.size(); i++){
+                for (int i = 0; i < timeRange.size(); i++) {
                     // 获取时间阈值
                     JSONObject timeRangeItem = timeRange.getJSONObject(i);
                     // 获取阈值内的开始时间和结束时间
-                    Date start  = DateUtils.parseUTCDate(timeRangeItem.getString("Start"));
+                    Date start = DateUtils.parseUTCDate(timeRangeItem.getString("Start"));
                     Date end = DateUtils.parseUTCDate(timeRangeItem.getString("End"));
                     // 当日期完全不符合时 跳过该阈值
                     if (endOfDay.before(start) || startOfDay.after(end)) {

@@ -349,14 +349,16 @@ public class MiddlewareBackupController {
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "backupId", value = "备份任务id", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "date", required = false, value = "", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "date", required = false, value = "日期", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "zone", required = false, value = "可用区", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping("{backupId}/restoreTime")
     public BaseResult<BackupRestoreTimeDto> restoreTime(@PathVariable("clusterId") String clusterId,
                                                         @PathVariable("namespace") String namespace,
                                                         @PathVariable("backupId") String backupId,
-                                                        @RequestParam(value = "date", required = false) String date) {
-        return BaseResult.ok(middlewareBackupService.restoreTime(clusterId, namespace, backupId, date));
+                                                        @RequestParam(value = "date", required = false) String date,
+                                                        @RequestParam(value = "zone", required = false) String zone) {
+        return BaseResult.ok(middlewareBackupService.restoreTime(clusterId, namespace, backupId, date, zone));
     }
 
 }

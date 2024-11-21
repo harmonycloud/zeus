@@ -25,4 +25,6 @@ public class BackupConstant {
     public static final String OFF = "off";
     public static final String FULL_BACKUP_WAITING = "fullBackupWaiting";
 
+    public static final String ACTIVE_AREA = "activeArea";
+
 }
