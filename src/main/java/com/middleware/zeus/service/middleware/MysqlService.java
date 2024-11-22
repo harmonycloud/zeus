@@ -76,5 +76,5 @@ public interface MysqlService {
      * 获取mysql字符集及其语言环境
      * @return
      */
-    Map<String, List<String>> getChatSet();
+    Map<String, List<String>> getChatSet(String version);
 }

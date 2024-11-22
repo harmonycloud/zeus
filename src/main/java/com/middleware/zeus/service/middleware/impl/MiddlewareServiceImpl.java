@@ -1425,12 +1425,12 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     }
 
     @Override
-    public Map<String,List<String>> getChatSet(String type){
+    public Map<String,List<String>> getChatSet(String type,String version){
         switch (type){
             case "mysql":
-                return mysqlService.getChatSet();
+                return mysqlService.getChatSet(version);
             case "postgresql":
-                return postgresqlService.getChatSet();
+                return postgresqlService.getChatSet(version);
             default:
                 return new HashMap<>();
         }

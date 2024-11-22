@@ -394,11 +394,13 @@ public class MiddlewareController {
 
     @ApiOperation(value = "查询中间件字符集",notes = "查询中间件字符集")
     @ApiImplicitParams({
-        @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class)
+        @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "query", dataTypeClass = String.class),
+        @ApiImplicitParam(name = "version", value = "中间件版本", paramType = "query", dataTypeClass = String.class),
     })
-    @GetMapping("/{type}/chatSet")
+    @GetMapping("/{type}/chatSet/{version}")
     @Authority(power = 1)
-    public BaseResult<Map<String,List<String>>> getCharSet(@PathVariable("type") String type){
-        return BaseResult.ok(middlewareService.getChatSet(type));
+    public BaseResult<Map<String,List<String>>> getCharSet(@PathVariable("type") String type,
+                                                           @PathVariable("version") String version){
+        return BaseResult.ok(middlewareService.getChatSet(type,version));
     }
 }

@@ -330,6 +330,6 @@ public interface MiddlewareService {
      * @param type 中间件类型
      * @return
      */
-    Map<String,List<String>> getChatSet(String type);
+    Map<String,List<String>> getChatSet(String type,String version);
 
 }

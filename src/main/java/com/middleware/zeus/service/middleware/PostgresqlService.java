@@ -12,5 +12,5 @@ public interface PostgresqlService {
     /**
      * 查询字符集及其语言环境
      */
-    public Map<String, List<String>> getChatSet();
+    public Map<String, List<String>> getChatSet(String version);
 }
