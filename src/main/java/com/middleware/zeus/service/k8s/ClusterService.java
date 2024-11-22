@@ -158,9 +158,11 @@ public interface ClusterService {
      *
      * @param clusterId 集群id
      * @param target    目标
-     * @return List<Node>
+     * @param current  当前页
+     * @param size     每页大小
+     * @return PageInfo<ClusterNamespaceResourceDto>
      */
-    List<ClusterNamespaceResourceDto> getNamespaceResource(String clusterId, String target) throws Exception;
+    PageInfo<ClusterNamespaceResourceDto> getNamespaceResource(String clusterId, String target, String keyword, Integer current, Integer size) throws Exception;
 
     /**
      * 获取快捷添加集群curl指令

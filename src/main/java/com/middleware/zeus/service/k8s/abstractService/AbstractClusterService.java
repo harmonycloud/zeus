@@ -372,9 +372,17 @@ public abstract class AbstractClusterService {
                 .collect(Collectors.toMap(MiddlewareClusterDTO::getId, MiddlewareClusterDTO::getNickname));
     }
 
-    public PageInfo<MiddlewareResourceInfo> getMwResource(String clusterId, String target, String keyword, Integer current, Integer size) throws Exception{
+    public PageInfo<MiddlewareResourceInfo> getMwResource(String clusterId, String target, String keyword,
+        Integer current, Integer size) throws Exception {
         // 获取middleware列表
         List<Middleware> middlewareList = middlewareCrService.list(clusterId, null, null, false);
+        // 获取命名空间列表
+        List<Namespace> namespaceList = namespaceService.list(clusterId);
+        // 根据命名空间进行过滤
+        middlewareList = middlewareList.stream()
+            .filter(mw -> namespaceList.stream().anyMatch(ns -> ns.getName().equals(mw.getNamespace())))
+            .collect(Collectors.toList());
+
         // 进一步封装middleware信息
         middlewareList = helmChartService.convertMiddlewareList(middlewareList);
         // 对中间件进行关键词过滤
@@ -556,8 +564,19 @@ public abstract class AbstractClusterService {
         return nodeService.getNodeResource(clusterId, nodeList, true);
     }
 
-    public List<ClusterNamespaceResourceDto> getNamespaceResource(String clusterId, String target) throws Exception {
+    public PageInfo<ClusterNamespaceResourceDto> getNamespaceResource(String clusterId, String target, String keyword,
+        Integer current, Integer size) throws Exception {
         List<Namespace> namespaceList = namespaceService.list(clusterId);
+        // 根据name和aliasName进行模糊匹配
+        if (StringUtils.isNotEmpty(keyword)) {
+            namespaceList = namespaceList.stream().filter(
+                ns -> (StringUtils.isNotEmpty(ns.getName()) && StringUtils.containsIgnoreCase(ns.getName(), keyword))
+                    || (StringUtils.isNotEmpty(ns.getAliasName())
+                        && StringUtils.containsIgnoreCase(ns.getClusterAliasName(), keyword)))
+                .collect(Collectors.toList());
+        }
+        
+        PageInfo<Namespace> namespacePageInfo = PageUtil.convertPage(namespaceList, current, size);
         Map<String, String> queryMap = new HashMap<>();
 
         Map<Map<String, String>, List<String>> cpuRequestResult = new HashMap<>();
@@ -615,12 +634,16 @@ public abstract class AbstractClusterService {
             pvcRequestResult.putAll(getResultMap(pvcTotal));
             pvcPer5MinResult.putAll(getResultMap(pvcUsing));
         }
+        // 初始化返回数据对象
+        PageInfo<ClusterNamespaceResourceDto> clusterNamespaceResourceDtoPageInfo = new PageInfo<>();
+        BeanUtils.copyProperties(namespacePageInfo, clusterNamespaceResourceDtoPageInfo, "list");
 
-
-        return namespaceList.stream().map(ns -> {
+        List<ClusterNamespaceResourceDto> clusterNamespaceResourceDtoList = new ArrayList<>();
+        // 循环遍历namespace 进行数据封装
+        for (Namespace namespace : namespacePageInfo.getList()){
             ClusterNamespaceResourceDto nsResource = new ClusterNamespaceResourceDto();
             Map<String, String> nsMap = new HashMap<>();
-            nsMap.put(NAMESPACE, ns.getName());
+            nsMap.put(NAMESPACE, nsResource.getName());
             // 获取cpu配额
             if (cpuRequestResult.containsKey(nsMap)) {
                 nsResource.setCpuRequest(getResourceResult(cpuRequestResult.get(nsMap).get(1)));
@@ -663,8 +686,11 @@ public abstract class AbstractClusterService {
                 double pvcRate = nsResource.getPer5MinPvc() / nsResource.getPvcRequest() * 100;
                 nsResource.setPvcRate(ResourceCalculationUtil.roundNumber2TwoDecimalWithCeiling(pvcRate));
             }
-            return nsResource.setClusterId(clusterId).setName(ns.getName());
-        }).collect(Collectors.toList());
+            nsResource.setClusterId(clusterId).setName(namespace.getName());
+            clusterNamespaceResourceDtoList.add(nsResource);
+        }
+        clusterNamespaceResourceDtoPageInfo.setList(clusterNamespaceResourceDtoList);
+        return clusterNamespaceResourceDtoPageInfo;
     }
 
     public Map<Map<String, String>, List<String>> getResultMap(PrometheusResponse response) {

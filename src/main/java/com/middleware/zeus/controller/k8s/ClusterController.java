@@ -131,11 +131,17 @@ public class ClusterController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "target", value = "目标: cpu/memory/storage", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "keyword", value = "根据中间件名称进行检索", required = false, paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "current", value = "当前页", required = false, paramType = "query", dataTypeClass = Long.class),
+            @ApiImplicitParam(name = "size", value = "每页记录数", required = false, paramType = "query", dataTypeClass = Long.class),
     })
     @GetMapping("/{clusterId}/namespace/resource")
-    public BaseResult<List<ClusterNamespaceResourceDto>> getNamespaceResource(@PathVariable(value = "clusterId") String clusterId,
-                                                                              @RequestParam("target") String target) throws Exception {
-        return BaseResult.ok(clusterService.getNamespaceResource(clusterId, target));
+    public BaseResult<PageInfo<ClusterNamespaceResourceDto>> getNamespaceResource(@PathVariable(value = "clusterId") String clusterId,
+                                                                              @RequestParam("target") String target,
+                                                                              @RequestParam(value = "keyword", required = false) String keyword,
+                                                                              @RequestParam(value = "current", required = false, defaultValue = "1") Integer current,
+                                                                              @RequestParam(value = "size", required = false, defaultValue = "5") Integer size) throws Exception {
+        return BaseResult.ok(clusterService.getNamespaceResource(clusterId, target, keyword, current, size));
     }
 
     @ApiOperation(value = "获取集群纳管指令", notes = "获取集群纳管指令")
