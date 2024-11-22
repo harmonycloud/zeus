@@ -243,13 +243,15 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
 
         //pool
         pgParam.setEnableConnectionPooler(values.getBoolean("enableConnectionPooler"));
-        JSONObject connectionPooler = values.getJSONObject("connectionPooler");
-        pgParam.setPoolerInstanceNum(connectionPooler.getInteger("numberOfInstances"));
-        JSONObject resources = connectionPooler.getJSONObject("resources");
-        JSONObject limits = resources.getJSONObject("limits");
-        pgParam.setConnectionPoolerCpu(limits.getString("cpu"));
-        pgParam.setConnectionPoolerMemory(limits.getString("memory"));
-        middleware.setPostgresqlParam(pgParam);
+        if(pgParam.getEnableConnectionPooler().equals(true)) {
+            JSONObject connectionPooler = values.getJSONObject("connectionPooler");
+            pgParam.setPoolerInstanceNum(connectionPooler.getInteger("numberOfInstances"));
+            JSONObject resources = connectionPooler.getJSONObject("resources");
+            JSONObject limits = resources.getJSONObject("limits");
+            pgParam.setConnectionPoolerCpu(limits.getString("cpu"));
+            pgParam.setConnectionPoolerMemory(limits.getString("memory"));
+            middleware.setPostgresqlParam(pgParam);
+        }
     }
 
     @Override
