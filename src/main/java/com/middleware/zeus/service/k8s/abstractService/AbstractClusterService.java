@@ -643,7 +643,7 @@ public abstract class AbstractClusterService {
         for (Namespace namespace : namespacePageInfo.getList()){
             ClusterNamespaceResourceDto nsResource = new ClusterNamespaceResourceDto();
             Map<String, String> nsMap = new HashMap<>();
-            nsMap.put(NAMESPACE, nsResource.getName());
+            nsMap.put(NAMESPACE, namespace.getName());
             // 获取cpu配额
             if (cpuRequestResult.containsKey(nsMap)) {
                 nsResource.setCpuRequest(getResourceResult(cpuRequestResult.get(nsMap).get(1)));
