@@ -129,11 +129,13 @@ public class ClusterController {
 
     @ApiOperation(value = "查询集群下namespace资源详情", notes = "查询集群下namespace资源详情")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class)
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "target", value = "目标: cpu/memory/storage", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping("/{clusterId}/namespace/resource")
-    public BaseResult<List<ClusterNamespaceResourceDto>> getNamespaceResource(@PathVariable(value = "clusterId") String clusterId) throws Exception {
-        return BaseResult.ok(clusterService.getNamespaceResource(clusterId));
+    public BaseResult<List<ClusterNamespaceResourceDto>> getNamespaceResource(@PathVariable(value = "clusterId") String clusterId,
+                                                                              @RequestParam("target") String target) throws Exception {
+        return BaseResult.ok(clusterService.getNamespaceResource(clusterId, target));
     }
 
     @ApiOperation(value = "获取集群纳管指令", notes = "获取集群纳管指令")

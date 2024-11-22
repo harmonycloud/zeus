@@ -56,6 +56,7 @@ import java.util.stream.Collectors;
 
 import static com.middleware.zeus.common.constants.CommonConstant.*;
 import static com.middleware.zeus.common.constants.NameConstant.*;
+import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.NAMESPACE;
 import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.PODS;
 import static com.middleware.zeus.common.constants.registry.HelmChartConstant.SVG;
 import static com.middleware.zeus.common.constants.user.UserConstant.USERNAME;
@@ -555,54 +556,71 @@ public abstract class AbstractClusterService {
         return nodeService.getNodeResource(clusterId, nodeList, true);
     }
 
-    public List<ClusterNamespaceResourceDto> getNamespaceResource(String clusterId) throws Exception {
+    public List<ClusterNamespaceResourceDto> getNamespaceResource(String clusterId, String target) throws Exception {
         List<Namespace> namespaceList = namespaceService.list(clusterId);
         Map<String, String> queryMap = new HashMap<>();
-        // 查询cpu配额
-        String cpuRequestQuery = "sum(container_spec_cpu_quota) by (namespace)/100000";
-        queryMap.put("query", cpuRequestQuery);
-        PrometheusResponse cpuRequest = prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);
 
-        // 查询cpu每5分钟平均用量
-        String per5MinCpuUsedQuery = "sum(rate(container_cpu_usage_seconds_total{endpoint!=\"\"}[3m])) by (namespace)";
-        queryMap.put("query", per5MinCpuUsedQuery);
-        PrometheusResponse per5MinCpuUsed =
-                prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);
+        Map<Map<String, String>, List<String>> cpuRequestResult = new HashMap<>();
+        Map<Map<String, String>, List<String>> cpuPer5MinResult = new HashMap<>();
+        if (target.equals(CPU)){
+            // 查询cpu配额
+            String cpuRequestQuery = "sum(container_spec_cpu_quota) by (namespace)/100000";
+            queryMap.put("query", cpuRequestQuery);
+            PrometheusResponse cpuRequest = prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);
 
-        // 查询memory配额
-        String memoryRequestQuery = "(sum(container_spec_memory_limit_bytes) by (namespace))/1024/1024/1024";
-        queryMap.put("query", memoryRequestQuery);
-        PrometheusResponse memoryRequest =
-                prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);
+            // 查询cpu每5分钟平均用量
+            String per5MinCpuUsedQuery = "sum(rate(container_cpu_usage_seconds_total{endpoint!=\"\"}[3m])) by (namespace)";
+            queryMap.put("query", per5MinCpuUsedQuery);
+            PrometheusResponse per5MinCpuUsed =
+                    prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);
 
-        // 查询memory每5分钟平均用量
-        String per5MinMemoryUsedQuery =
-                "(sum(avg_over_time(container_memory_usage_bytes{endpoint!=\"\"}[5m])) by (namespace))/1024/1024/1024";
-        queryMap.put("query", per5MinMemoryUsedQuery);
-        PrometheusResponse per5MinMemoryUsed =
-                prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);
+            cpuRequestResult.putAll(getResultMap(cpuRequest));
+            cpuPer5MinResult.putAll(getResultMap(per5MinCpuUsed));
+        }
 
-        // 查询pvc总量
-        String pvcTotalQuery =
-                "sum(kube_persistentvolumeclaim_resource_requests_storage_bytes) by (namespace) /1024/1024/1024";
-        queryMap.put("query", pvcTotalQuery);
-        PrometheusResponse pvcTotal = prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);
+        Map<Map<String, String>, List<String>> memoryRequestResult = new HashMap<>();
+        Map<Map<String, String>, List<String>> memoryPer5MinResult = new HashMap<>();
+        if (target.equals(MEMORY)){
+            // 查询memory配额
+            String memoryRequestQuery = "(sum(container_spec_memory_limit_bytes) by (namespace))/1024/1024/1024";
+            queryMap.put("query", memoryRequestQuery);
+            PrometheusResponse memoryRequest =
+                    prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);
 
-        // 查询pvc使用量
-        String pvcUsingQuery = "sum(kubelet_volume_stats_used_bytes{endpoint!=\"\"}) by (namespace) /1024/1024/1024";
-        queryMap.put("query", pvcUsingQuery);
-        PrometheusResponse pvcUsing = prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);
+            // 查询memory每5分钟平均用量
+            String per5MinMemoryUsedQuery =
+                    "(sum(avg_over_time(container_memory_usage_bytes{endpoint!=\"\"}[5m])) by (namespace))/1024/1024/1024";
+            queryMap.put("query", per5MinMemoryUsedQuery);
+            PrometheusResponse per5MinMemoryUsed =
+                    prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);
 
-        Map<Map<String, String>, List<String>> cpuRequestResult = getResultMap(cpuRequest);
-        Map<Map<String, String>, List<String>> cpuPer5MinResult = getResultMap(per5MinCpuUsed);
-        Map<Map<String, String>, List<String>> memoryRequestResult = getResultMap(memoryRequest);
-        Map<Map<String, String>, List<String>> memoryPer5MinResult = getResultMap(per5MinMemoryUsed);
-        Map<Map<String, String>, List<String>> pvcRequestResult = getResultMap(pvcTotal);
-        Map<Map<String, String>, List<String>> pvcPer5MinResult = getResultMap(pvcUsing);
+            memoryRequestResult.putAll(getResultMap(memoryRequest));
+            memoryPer5MinResult.putAll(getResultMap(per5MinMemoryUsed));
+        }
+
+        Map<Map<String, String>, List<String>> pvcRequestResult = new HashMap<>();
+        Map<Map<String, String>, List<String>> pvcPer5MinResult = new HashMap<>();
+        if (target.equals(STORAGE)){
+            // 查询pvc总量
+            String pvcTotalQuery =
+                    "sum(kube_persistentvolumeclaim_resource_requests_storage_bytes) by (namespace) /1024/1024/1024";
+            queryMap.put("query", pvcTotalQuery);
+            PrometheusResponse pvcTotal = prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);
+
+            // 查询pvc使用量
+            String pvcUsingQuery = "sum(kubelet_volume_stats_used_bytes{endpoint!=\"\"}) by (namespace) /1024/1024/1024";
+            queryMap.put("query", pvcUsingQuery);
+            PrometheusResponse pvcUsing = prometheusWrapper.get(clusterId, NameConstant.PROMETHEUS_API_VERSION, queryMap);
+
+            pvcRequestResult.putAll(getResultMap(pvcTotal));
+            pvcPer5MinResult.putAll(getResultMap(pvcUsing));
+        }
+
+
         return namespaceList.stream().map(ns -> {
             ClusterNamespaceResourceDto nsResource = new ClusterNamespaceResourceDto();
             Map<String, String> nsMap = new HashMap<>();
-            nsMap.put("namespace", ns.getName());
+            nsMap.put(NAMESPACE, ns.getName());
             // 获取cpu配额
             if (cpuRequestResult.containsKey(nsMap)) {
                 nsResource.setCpuRequest(getResourceResult(cpuRequestResult.get(nsMap).get(1)));
