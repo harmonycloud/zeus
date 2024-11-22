@@ -144,6 +144,9 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         if (StringUtils.isNotBlank(middleware.getCharSet())) {
             mysqlArgs.put("character_set_server", middleware.getCharSet());
         }
+        if (StringUtils.isNotBlank(middleware.getLanguage())){
+            mysqlArgs.put("collation_server",middleware.getLanguage());
+        }
         if (middleware.getPort() != null) {
             mysqlArgs.put("server_port", middleware.getPort());
         }
@@ -215,6 +218,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
                 middleware.setPassword(args.getString("root_password"));
             }
             middleware.setCharSet(args.getString("character_set_server"));
+            middleware.setLanguage(args.getString("collation_server"));
             middleware.setPort(args.getIntValue("server_port"));
 
             MysqlDTO mysqlDTO = new MysqlDTO();

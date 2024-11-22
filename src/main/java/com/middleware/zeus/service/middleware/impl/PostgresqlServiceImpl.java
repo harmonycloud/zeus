@@ -17,7 +17,7 @@ public class PostgresqlServiceImpl implements PostgresqlService {
     @Override
     public Map<String, List<String>> getChatSet(String version) {
         Map<String, List<String>> mp = new LinkedHashMap<>();
-        mp.put("UTF8",Arrays.asList("en_US.UTF-8","zh_CN.UTF-8","zh_TW.UTF-8"));
+        mp.put("UTF8",Arrays.asList("zh_CN.UTF-8","en_US.UTF-8","zh_TW.UTF-8"));
         return mp;
     }
 }

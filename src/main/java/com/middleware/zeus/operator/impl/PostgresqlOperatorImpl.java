@@ -149,6 +149,18 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
             }
         }
 
+        //字符集
+        JSONObject patroni = values.getJSONObject("patroni");
+        if(patroni != null){
+            JSONObject initdb = patroni.getJSONObject("initdb");
+            if(StringUtils.isNotBlank(middleware.getCharSet())){
+                initdb.put("encoding", middleware.getCharSet());
+            }
+            if(StringUtils.isNotBlank(middleware.getLanguage())){
+                initdb.put("locale",middleware.getLanguage());
+            }
+        }
+
         // 备份恢复
         if (StringUtils.isNotEmpty(middleware.getBackupFileName())){
             try {
@@ -201,6 +213,11 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
 
         List<MiddlewareQuota> storageClasses = getMiddlewareStorageClasses(cluster.getId(), middleware, values);
         middleware.setStorageResource(storageClasses);
+
+        JSONObject patroni = values.getJSONObject("patroni");
+        JSONObject initdb = patroni.getJSONObject("initdb");
+        middleware.setCharSet(initdb.getString("encoding"));
+        middleware.setLanguage(initdb.getString("locale"));
         return middleware;
     }
 
