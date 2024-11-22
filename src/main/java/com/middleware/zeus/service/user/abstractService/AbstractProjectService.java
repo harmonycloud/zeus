@@ -233,24 +233,24 @@ public abstract class AbstractProjectService {
         Set<String> clusterIdSet = new HashSet<>();
         nsList.forEach(ns -> clusterIdSet.add(ns.getClusterId()));
 
-        List<MiddlewareCR> middlewareCRList = new ArrayList<>();
+        List<Middleware> middlewareList = new ArrayList<>();
         for (String clusterId : clusterIdSet) {
-            middlewareCRList.addAll(middlewareCrService.listCR(clusterId, null, null));
+            middlewareList.addAll(middlewareCrService.list(clusterId, null, null, false));
             // 根据分区进行过滤
-            middlewareCRList = middlewareCRList.stream()
-                .filter(mw -> nsList.stream().anyMatch(ns -> ns.getName().equals(mw.getMetadata().getNamespace())))
+            middlewareList = middlewareList.stream()
+                .filter(mw -> nsList.stream().anyMatch(ns -> ns.getName().equals(mw.getNamespace())))
                 .collect(Collectors.toList());
         }
         // 判断当前用户是否为超级管理员，如果不是超级管理员 对用户中间件权限进行校验
         Map<String, String> power = userService.getPower();
         // 过滤获取拥有权限的中间件
         if (!CollectionUtils.isEmpty(power)) {
-            middlewareCRList = middlewareCRList.stream()
+            middlewareList = middlewareList.stream()
                 .filter(mw -> power.keySet().stream()
-                    .anyMatch(key -> !"0000".equals(power.get(key)) && mw.getSpec().getType().equals(key)))
+                    .anyMatch(key -> !"0000".equals(power.get(key)) && mw.getType().equals(key)))
                 .collect(Collectors.toList());
         }
-        return middlewareCRList.stream().map(mw -> mw.getSpec().getType()).distinct().collect(Collectors.toList());
+        return middlewareList.stream().map(Middleware::getType).distinct().collect(Collectors.toList());
     }
 
     public List<ProjectDto> getMiddlewareCount(String organId, String projectId) {
