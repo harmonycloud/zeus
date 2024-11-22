@@ -1,5 +1,6 @@
 package com.middleware.zeus.controller.k8s;
 
+import com.github.pagehelper.PageInfo;
 import com.middleware.zeus.common.base.BaseResult;
 import com.middleware.zeus.common.model.ClusterNamespaceResourceDto;
 import com.middleware.zeus.common.model.ClusterNodeResourceDto;
@@ -101,12 +102,20 @@ public class ClusterController {
 
     @ApiOperation(value = "查询集群下中间件资源详情", notes = "查询集群下中间件资源详情")
     @ApiImplicitParams({
-            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class)
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "target", value = "目标: cpu/memory/storage", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "keyword", value = "根据中间件名称进行检索", required = false, paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "current", value = "当前页", required = false, paramType = "query", dataTypeClass = Long.class),
+            @ApiImplicitParam(name = "size", value = "每页记录数", required = false, paramType = "query", dataTypeClass = Long.class),
+
     })
     @GetMapping("/{clusterId}/middleware/resource")
-    public BaseResult<List<MiddlewareResourceInfo>> getMwResource(@PathVariable(value = "clusterId") String clusterId) throws Exception {
-        List<MiddlewareResourceInfo> mwResourceInfoList = clusterService.getMwResource(clusterId);
-        return BaseResult.ok(mwResourceInfoList);
+    public BaseResult<PageInfo<MiddlewareResourceInfo>> getMwResource(@PathVariable(value = "clusterId") String clusterId,
+                                                                      @RequestParam("target") String target,
+                                                                      @RequestParam(value = "keyword", required = false) String keyword,
+                                                                      @RequestParam(value = "current", required = false, defaultValue = "1") Integer current,
+                                                                      @RequestParam(value = "size", required = false, defaultValue = "5") Integer size) throws Exception {
+        return BaseResult.ok(clusterService.getMwResource(clusterId, target, keyword, current, size));
     }
 
     @ApiOperation(value = "查询集群下node资源详情", notes = "查询集群下node资源详情")

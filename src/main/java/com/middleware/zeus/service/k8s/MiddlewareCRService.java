@@ -120,6 +120,6 @@ public interface MiddlewareCRService {
      * @param middlewareName 中间件名称
      * @return
      */
-    public Status getStatus(String clusterId, String namespace, String type, String middlewareName);
+    Status getStatus(String clusterId, String namespace, String type, String middlewareName);
 
 }

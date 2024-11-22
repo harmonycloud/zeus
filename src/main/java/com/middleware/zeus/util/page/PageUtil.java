@@ -31,4 +31,12 @@ public class PageUtil {
 
         return pageInfo;
     }
+
+    public static <T> List<T> splitPage(List<T> list, Integer current, Integer size){
+        List<T> res = new ArrayList<>();
+        for (int i = (current - 1) * size ; i < list.size() && i < current * size; ++i) {
+            res.add(list.get(i));
+        }
+        return res;
+    }
 }

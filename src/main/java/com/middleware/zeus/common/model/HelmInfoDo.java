@@ -33,6 +33,8 @@ public class HelmInfoDo {
     private String chartVersion;
     @ApiModelProperty("release版本")
     private String releaseVersion;
+    @ApiModelProperty("release")
+    private String release;
     @ApiModelProperty("values.yaml")
     private JSONObject values;
 

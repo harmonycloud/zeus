@@ -77,6 +77,7 @@ public class PrometheusServiceImpl extends AbstractBaseOperator implements Prome
             // uninstall
             helmChartService.uninstall(cluster, "monitoring", ComponentsEnum.PROMETHEUS.getName());
         }
+        prometheusWrapper.clearCache(cluster.getId());
     }
 
     @Override
@@ -113,5 +114,10 @@ public class PrometheusServiceImpl extends AbstractBaseOperator implements Prome
                 clusterComponentsDto.getPort())) {
             clusterComponentsDto.setStatus(7);
         }
+    }
+
+    @Override
+    public void expand(ClusterComponentsDto clusterComponentsDto) {
+        prometheusWrapper.clearCache(clusterComponentsDto.getClusterId());
     }
 }

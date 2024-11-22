@@ -39,4 +39,13 @@ public class SpringContextUtils implements ApplicationContextAware {
         }
         return result;
     }
+
+    public static String getProperty(String path) {
+        return applicationContext.getEnvironment().getProperty(path);
+    }
+
+    public static String getProperty(String path, String defaultConfig) {
+        String config = applicationContext.getEnvironment().getProperty(path);
+        return config == null ? defaultConfig : config;
+    }
 }

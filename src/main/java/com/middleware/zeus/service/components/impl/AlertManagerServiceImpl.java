@@ -129,7 +129,7 @@ public class AlertManagerServiceImpl extends AbstractBaseOperator implements Ale
     }
 
     @Override
-    public void record2SystemConfig(ClusterComponentsDto clusterComponentsDto) {
+    public void expand(ClusterComponentsDto clusterComponentsDto) {
         QueryWrapper<BeanSystemConfig> wrapper = new QueryWrapper<>();
         wrapper.eq("config_name", "Alertmanager_SilentTime");
         List<BeanSystemConfig> beanSystemConfigs = beanSystemConfigMapper.selectList(wrapper);

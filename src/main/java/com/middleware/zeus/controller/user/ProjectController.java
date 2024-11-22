@@ -1,17 +1,16 @@
 package com.middleware.zeus.controller.user;
 
+import com.github.pagehelper.PageInfo;
 import com.middleware.zeus.common.base.BaseResult;
 import com.middleware.zeus.common.model.BackupServerDTO;
 import com.middleware.zeus.common.model.ResourceQuotaDo;
-import com.middleware.zeus.common.model.middleware.MiddlewareClusterDTO;
-import com.middleware.zeus.common.model.middleware.MiddlewareInfoDTO;
-import com.middleware.zeus.common.model.middleware.Namespace;
-import com.middleware.zeus.common.model.middleware.ProjectMiddlewareResourceInfo;
+import com.middleware.zeus.common.model.middleware.*;
 import com.middleware.zeus.common.model.user.ProjectDto;
 import com.middleware.zeus.common.model.user.ProjectQuota;
 import com.middleware.zeus.common.model.user.UserDto;
 import com.middleware.zeus.service.middleware.MiddlewareInfoService;
 import com.middleware.zeus.service.user.ProjectService;
+import com.middleware.zeus.util.page.PageUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
@@ -219,11 +218,33 @@ public class ProjectController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "organId", value = "组织id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "target", value = "目标: cpu/memory/storage", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "keyword", value = "根据中间件名称进行检索", required = false, paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "current", value = "当前页", required = false, paramType = "query", dataTypeClass = Long.class),
+            @ApiImplicitParam(name = "size", value = "每页记录数", required = false, paramType = "query", dataTypeClass = Long.class),
     })
     @GetMapping("/{projectId}/middleware")
-    public BaseResult<List<ProjectMiddlewareResourceInfo>> getMiddlewareResource(@PathVariable("organId") String organId,
-                                                                                 @PathVariable("projectId") String projectId) throws Exception {
-        return BaseResult.ok(projectService.middlewareResource(organId, projectId));
+    public BaseResult<PageInfo<MiddlewareResourceInfo>> getMiddlewareResource(@PathVariable("organId") String organId,
+                                                                              @PathVariable("projectId") String projectId,
+                                                                              @RequestParam("type") String type,
+                                                                              @RequestParam("target") String target,
+                                                                              @RequestParam(value = "keyword", required = false) String keyword,
+                                                                              @RequestParam(value = "current", required = false, defaultValue = "1") Integer current,
+                                                                              @RequestParam(value = "size", required = false, defaultValue = "5") Integer size) throws Exception {
+        return BaseResult.ok(projectService.middlewareResource(organId, projectId, type, target, keyword, current, size));
+    }
+
+    @ApiOperation(value = "查询指定用户在项目下可见的中间件类型", notes = "查询指定用户在项目下可见的中间件类型")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "organId", value = "组织id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "current", value = "当前页", required = false, paramType = "query", dataTypeClass = Long.class),
+            @ApiImplicitParam(name = "size", value = "每页记录数", required = false, paramType = "query", dataTypeClass = Long.class),
+    })
+    @GetMapping("/{projectId}/middleware/type")
+    public BaseResult<List<String>> userMiddlewareType(@PathVariable("organId") String organId,
+                                                      @PathVariable("projectId") String projectId) {
+        return BaseResult.ok(projectService.userMiddlewareType(organId, projectId));
     }
 
     @ApiOperation(value = "获取项目下服务数量", notes = "获取项目下服务数量")

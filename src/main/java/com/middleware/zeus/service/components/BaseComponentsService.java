@@ -22,7 +22,7 @@ public interface BaseComponentsService {
      * 部署组件
      *
      * @param cluster 集群信息
-     * @param type 部署模式:高可用，单实例
+     * @param clusterComponentsDto 集群组件对象
      */
     void deploy(MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto);
 
@@ -51,10 +51,10 @@ public interface BaseComponentsService {
     void setStatus(ClusterComponentsDto clusterComponentsDto);
 
     /**
-     * 保存全局参数入数据库
+     * 其他需要执行的操作
      * @param clusterComponentsDto
      */
-    void record2SystemConfig(ClusterComponentsDto clusterComponentsDto);
+    void expand(ClusterComponentsDto clusterComponentsDto);
 
     /**
      * 读取全局参数

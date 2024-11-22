@@ -1,5 +1,6 @@
 package com.middleware.zeus.service.k8s;
 
+import com.github.pagehelper.PageInfo;
 import com.middleware.zeus.common.base.BaseResult;
 import com.middleware.zeus.common.model.ClusterDTO;
 import com.middleware.zeus.common.model.ClusterNamespaceResourceDto;
@@ -8,6 +9,7 @@ import com.middleware.zeus.common.model.ResourceQuotaDo;
 import com.middleware.zeus.common.model.middleware.*;
 import com.middleware.zeus.annotation.Skyview;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
+import io.swagger.models.auth.In;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -132,15 +134,16 @@ public interface ClusterService {
      * @param clusterId 集群id
      * @return List<MiddlewareResourceInfo>
      */
-    List<MiddlewareResourceInfo> getMwResource(String clusterId) throws Exception;
+    PageInfo<MiddlewareResourceInfo> getMwResource(String clusterId, String target, String keyword, Integer current, Integer size) throws Exception;
 
     /**
-     * 过滤不需要展示的mw，未注册分区下的中间件不做统计
-     * @param clusterId
-     * @param mwCrdList
-     * @return
+     * 获取集群下服务资源列表
+     *
+     * @param middlewareList 中间件列表
+     * @param target         目标
+     * @return List<MiddlewareResourceInfo>
      */
-    List<MiddlewareCR> filterByNamespace(String clusterId, List<MiddlewareCR> mwCrdList);
+    List<MiddlewareResourceInfo> getMwResource(List<Middleware> middlewareList, String target) throws Exception;
 
     /**
      * 获取集群主机资源列表

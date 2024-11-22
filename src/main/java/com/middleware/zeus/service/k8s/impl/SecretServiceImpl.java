@@ -38,7 +38,7 @@ public class SecretServiceImpl implements SecretService {
         List<io.fabric8.kubernetes.api.model.Secret> secretList = secretWrapper.list(clusterId, namespace, labels);
         return secretList.stream()
             .map(secret -> new Secret().setClusterId(clusterId).setNamespace(secret.getMetadata().getNamespace())
-                .setName(secret.getMetadata().getName()).setData(secret.getData()))
+                .setName(secret.getMetadata().getName()).setData(secret.getData()).setLabels(secret.getMetadata().getLabels()))
             .collect(Collectors.toList());
     }
 
@@ -49,7 +49,7 @@ public class SecretServiceImpl implements SecretService {
             return null;
         }
         return new Secret().setClusterId(clusterId).setNamespace(namespace).setName(secretName)
-                .setData(secret.getData());
+                .setData(secret.getData()).setLabels(secret.getMetadata().getLabels());
     }
 
     @Override

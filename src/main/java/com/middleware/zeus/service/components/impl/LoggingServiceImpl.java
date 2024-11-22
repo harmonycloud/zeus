@@ -230,8 +230,7 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
         }
     }
 
-    @Override
-    public void record2SystemConfig(ClusterComponentsDto clusterComponentsDto) {
+    public void expand(ClusterComponentsDto clusterComponentsDto) {
         try {
             esService.resetEsClient(clusterComponentsDto.getClusterId());
         } catch (Exception e) {
