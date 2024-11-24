@@ -23,6 +23,7 @@ import com.middleware.zeus.service.k8s.NamespaceService;
 import com.middleware.zeus.service.k8s.PodService;
 import com.middleware.zeus.service.middleware.*;
 import com.middleware.zeus.service.user.ProjectService;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -206,9 +207,14 @@ public class BackupPositionServiceImpl implements BackupPositionService {
     // 转换数据类型
     private List<BackupPositionDTO> convert(List<BeanBackupPosition> beanBackupPositions) {
         List<BackupPositionDTO> positionList = new ArrayList<>();
-        for (BeanBackupPosition beanBackupPosition : beanBackupPositions) {
+        if (CollectionUtils.isEmpty(beanBackupPositions)) {
+            return positionList;
+        }
+        Map<Integer, List<BeanBackupPosition>> postionMap = beanBackupPositions.stream().collect(Collectors.groupingBy(BeanBackupPosition::getBackupServerId));
+        for (List<BeanBackupPosition> positions : postionMap.values()) {
             BackupPositionDTO backupPositionDTO = new BackupPositionDTO();
-            BeanUtil.copyProperties(beanBackupPosition, backupPositionDTO);
+            BeanBackupPosition beanBackupPosition = positions.get(0);
+            BeanUtil.copyProperties(beanBackupPosition, backupPositionDTO, "id", "backupServerDetailId", "backupPosition");
             ProjectDto projectDto = projectService.get(beanBackupPosition.getOrganId(), beanBackupPosition.getProjectId());
             if (projectDto != null) {
                 backupPositionDTO.setProjectName(projectDto.getAliasName());
