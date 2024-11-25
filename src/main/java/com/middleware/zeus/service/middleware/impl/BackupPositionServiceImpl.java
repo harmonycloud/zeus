@@ -65,7 +65,7 @@ public class BackupPositionServiceImpl implements BackupPositionService {
     private MiddlewareBackupScheduleCRDService middlewareBackupScheduleCrService;
 
     @Override
-    public List<BackupPositionDTO> list(String organId, String projectId, Integer backupServerId) {
+    public List<BackupPositionDTO> list(String organId, String projectId, Integer backupServerId, Boolean all) {
         QueryWrapper<BeanBackupPosition> wrapper = new QueryWrapper<>();
 
         if (StringUtils.isNotEmpty(organId)) {
@@ -78,12 +78,12 @@ public class BackupPositionServiceImpl implements BackupPositionService {
             wrapper.eq("backup_server_id", backupServerId);
         }
         List<BeanBackupPosition> beanBackupPositions = backupPositionMapper.selectList(wrapper);
-        return convert(beanBackupPositions);
+        return convert(beanBackupPositions, all);
     }
 
     @Override
     public List<BackupPositionDTO> list(String organId, String projectId, String clusterId, String namespace, String middlewareName, String type) {
-        List<BackupPositionDTO> backupPositionDTOList = this.list(organId, projectId, null);
+        List<BackupPositionDTO> backupPositionDTOList = this.list(organId, projectId, null, false);
         boolean openAvailableDomain = namespaceService.isOpenAvailableDomain(clusterId, namespace);
         boolean activeMiddleware = middlewareService.activeActiveMiddlewareCheck(clusterId, namespace, middlewareName, type);
 
@@ -205,21 +205,26 @@ public class BackupPositionServiceImpl implements BackupPositionService {
     }
 
     // 转换数据类型
-    private List<BackupPositionDTO> convert(List<BeanBackupPosition> beanBackupPositions) {
+    private List<BackupPositionDTO> convert(List<BeanBackupPosition> beanBackupPositions, Boolean all) {
         List<BackupPositionDTO> positionList = new ArrayList<>();
         if (CollectionUtils.isEmpty(beanBackupPositions)) {
             return positionList;
         }
         Map<Integer, List<BeanBackupPosition>> postionMap = beanBackupPositions.stream().collect(Collectors.groupingBy(BeanBackupPosition::getBackupServerId));
         for (List<BeanBackupPosition> positions : postionMap.values()) {
-            BackupPositionDTO backupPositionDTO = new BackupPositionDTO();
-            BeanBackupPosition beanBackupPosition = positions.get(0);
-            BeanUtil.copyProperties(beanBackupPosition, backupPositionDTO, "id", "backupServerDetailId", "backupPosition");
-            ProjectDto projectDto = projectService.get(beanBackupPosition.getOrganId(), beanBackupPosition.getProjectId());
-            if (projectDto != null) {
-                backupPositionDTO.setProjectName(projectDto.getAliasName());
-                backupPositionDTO.setBackupTaskNum(getBackupPositionBindCount(beanBackupPosition.getBackupServerId(), beanBackupPosition.getId()));
-                positionList.add(backupPositionDTO);
+            for (int i = 0; i < positions.size(); i++) {
+                if (i > 0 && !all) {
+                    continue;
+                }
+                BackupPositionDTO backupPositionDTO = new BackupPositionDTO();
+                BeanBackupPosition beanBackupPosition = positions.get(0);
+                BeanUtil.copyProperties(beanBackupPosition, backupPositionDTO);
+                ProjectDto projectDto = projectService.get(beanBackupPosition.getOrganId(), beanBackupPosition.getProjectId());
+                if (projectDto != null) {
+                    backupPositionDTO.setProjectName(projectDto.getAliasName());
+                    backupPositionDTO.setBackupTaskNum(getBackupPositionBindCount(beanBackupPosition.getBackupServerId(), beanBackupPosition.getId()));
+                    positionList.add(backupPositionDTO);
+                }
             }
         }
         return positionList;

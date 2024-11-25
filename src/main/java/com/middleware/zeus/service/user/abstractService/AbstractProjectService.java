@@ -102,7 +102,7 @@ public abstract class AbstractProjectService {
         
         // 获取备份位置
         if (position) {
-            List<BackupPositionDTO> backupPositionDTOList = backupPositionService.list(organId, projectId, null);
+            List<BackupPositionDTO> backupPositionDTOList = backupPositionService.list(organId, projectId, null, true);
             Map<Integer, List<BackupPositionDTO>> backupPositionMap =
                 backupPositionDTOList.stream().collect(Collectors.groupingBy(BackupPositionDTO::getBackupServerDetailId));
             for (BackupServerDTO backupServerDTO : backupServerDTOList) {
@@ -114,7 +114,7 @@ public abstract class AbstractProjectService {
         
         // 查询 备份服务器使用情况
         if (detail) {
-            List<BackupPositionDTO> backupPositionDTOList = backupPositionService.list(organId, projectId, null);
+            List<BackupPositionDTO> backupPositionDTOList = backupPositionService.list(organId, projectId, null, true);
             for (BackupServerDTO backupServerDTO : backupServerDTOList) {
                 if (backupPositionDTOList.stream().anyMatch(
                         backupPositionDTO -> backupPositionDTO.getBackupServerId().equals(backupServerDTO.getId()))) {
@@ -144,7 +144,7 @@ public abstract class AbstractProjectService {
     }
 
     public void removeBackupServer(String organId, String projectId, Integer backupServerId, String clusterId) {
-        List<BackupPositionDTO> backupPositionDTOList = backupPositionService.list(organId, projectId, backupServerId);
+        List<BackupPositionDTO> backupPositionDTOList = backupPositionService.list(organId, projectId, backupServerId, true);
         if(!CollectionUtils.isEmpty(backupPositionDTOList)){
             throw new BusinessException(ErrorMessage.PROJECT_BACKUP_SERVER_USING);
         }
@@ -284,7 +284,7 @@ public abstract class AbstractProjectService {
                 .collect(Collectors.toList());
         }
         // 查询备份位置
-        List<BackupPositionDTO> backupPositionDTOList = backupPositionService.list(organId, projectId, null);
+        List<BackupPositionDTO> backupPositionDTOList = backupPositionService.list(organId, projectId, null, true);
         // 判断会被移除的备份服务器是否存在绑定的备份位置
         for (ProjectBackupServerDTO projectBackupServerDTO : usedBackupServerList){
             boolean flag = backupPositionDTOList.stream().anyMatch(backupPositionDTO -> backupPositionDTO.getBackupServerId().equals(projectBackupServerDTO.getBackupServerId()));

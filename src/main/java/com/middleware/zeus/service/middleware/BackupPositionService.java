@@ -22,7 +22,7 @@ public interface BackupPositionService {
      *
      * @return List<BackupPositionDTO>
      */
-    List<BackupPositionDTO> list(String organId, String projectId, Integer backupServerId);
+    List<BackupPositionDTO> list(String organId, String projectId, Integer backupServerId, Boolean all);
 
     /**
      * 获取可被使用的备份位置
