@@ -217,7 +217,7 @@ public class BackupPositionServiceImpl implements BackupPositionService {
                     continue;
                 }
                 BackupPositionDTO backupPositionDTO = new BackupPositionDTO();
-                BeanBackupPosition beanBackupPosition = positions.get(0);
+                BeanBackupPosition beanBackupPosition = positions.get(i);
                 BeanUtil.copyProperties(beanBackupPosition, backupPositionDTO);
                 ProjectDto projectDto = projectService.get(beanBackupPosition.getOrganId(), beanBackupPosition.getProjectId());
                 if (projectDto != null) {
