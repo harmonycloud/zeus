@@ -388,7 +388,8 @@ public abstract class AbstractClusterService {
         // 对中间件进行关键词过滤
         if (StringUtils.isNotEmpty(keyword)) {
             middlewareList = middlewareList.stream()
-                    .filter(mw -> mw.getName().contains(keyword) || mw.getAliasName().contains(keyword))
+                    .filter(mw -> (StringUtils.isNotEmpty(mw.getName()) && mw.getName().contains(keyword)) ||
+                            (StringUtils.isNotEmpty(mw.getAliasName()) && mw.getAliasName().contains(keyword)))
                     .collect(Collectors.toList());
         }
         // 进行分页的切分
