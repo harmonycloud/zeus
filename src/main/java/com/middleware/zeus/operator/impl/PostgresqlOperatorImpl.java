@@ -250,8 +250,8 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
             JSONObject limits = resources.getJSONObject("limits");
             pgParam.setConnectionPoolerCpu(limits.getString("cpu"));
             pgParam.setConnectionPoolerMemory(limits.getString("memory"));
-            middleware.setPostgresqlParam(pgParam);
         }
+        middleware.setPostgresqlParam(pgParam);
     }
 
     @Override
