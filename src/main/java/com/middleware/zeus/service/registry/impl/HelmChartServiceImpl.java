@@ -855,25 +855,25 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
             middlewareList.stream().map(Middleware::getClusterId).distinct().collect(Collectors.toList());
         for (String clusterId : clusterList) {
             // 获取已部署的中间件的values
-            //List<HelmInfoDo> helmInfoDoList = this.listInstalledValues(clusterId, null, false);
+            List<HelmInfoDo> helmInfoDoList = this.listInstalledValues(clusterId, null, false);
             // 将命名空间和名称作为key转为map
-//            Map<String, HelmInfoDo> helmInfoDoMap = helmInfoDoList.stream().collect(Collectors
-//                .toMap(helmInfoDo -> helmInfoDo.getNamespace() + "-" + helmInfoDo.getName(), helmInfoDo -> helmInfoDo));
+            Map<String, HelmInfoDo> helmInfoDoMap = helmInfoDoList.stream().collect(Collectors
+                .toMap(helmInfoDo -> helmInfoDo.getNamespace() + "-" + helmInfoDo.getName(), helmInfoDo -> helmInfoDo));
 
             final CountDownLatch clusterCountDownLatch = new CountDownLatch(middlewareList.size());
             for (Middleware middleware : middlewareList) {
                 ThreadPoolExecutorFactory.executor.execute(() -> {
                     try {
                         // 获取对应中间件的helm对象，并解析获取values
-//                        HelmInfoDo helmInfoDo =
-//                                helmInfoDoMap.get(middleware.getNamespace() + "-" + middleware.getName());
-//                        helmInfoDo = this.decodeValues(helmInfoDo);
-//
-//                        JSONObject values = helmInfoDo.getValues();
+                        HelmInfoDo helmInfoDo =
+                                helmInfoDoMap.get(middleware.getNamespace() + "-" + middleware.getName());
+                        helmInfoDo = this.decodeValues(helmInfoDo);
+
+                        JSONObject values = helmInfoDo.getValues();
                         // 获取中间件别名
-                        //middleware.setAliasName(values.getOrDefault("aliasName", middleware.getName()).toString());
+                        middleware.setAliasName(values.getOrDefault("aliasName", middleware.getName()).toString());
                         // 获取中间件chartVersion
-                       // middleware.setChartVersion(this.getChartVersion(values, middleware.getType()));
+                        middleware.setChartVersion(this.getChartVersion(values, middleware.getType()));
                         // 设置中间件图片路径
                         middleware.setImagePath(middleware.getType() + LINE + middleware.getChartVersion() + DOT + SVG);
                     } catch (Exception e){
