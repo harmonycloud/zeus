@@ -79,7 +79,7 @@ public class BackupPositionController {
     @GetMapping
     public BaseResult<List<BackupPositionDTO>> list(@PathVariable("organId") String organId,
                                                     @PathVariable("projectId") String projectId) {
-        return BaseResult.ok(backupPositionService.list(organId, projectId, null));
+        return BaseResult.ok(backupPositionService.list(organId, projectId, null, true));
     }
 
     @ApiOperation(value = "查询中间件可用备份位置列表", notes = "查询中间件可用备份位置列表")

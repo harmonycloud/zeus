@@ -211,7 +211,7 @@ public class BackupServerServiceImpl implements BackupServerService {
             backupServerDTO.setServerDetailList(backupServerDetailService.listBackupServerDetailDTOS(backupServer.getId()));
             backupServerDTO.setServerType(getServerType(backupServerDTO.getServerDetailList()));
             if (withDetail) {
-                backupServerDTO.setPositionList(backupPositionService.list(null, null, backupServer.getId()));
+                backupServerDTO.setPositionList(backupPositionService.list(null, null, backupServer.getId(), true));
             }
             return backupServerDTO;
         }).collect(Collectors.toList());
@@ -295,7 +295,7 @@ public class BackupServerServiceImpl implements BackupServerService {
      * 检查服务器关联的地址是否已被备份任务使用
      */
     private void backupServerDeletionCheck(Integer backupServerId){
-        List<BackupPositionDTO> backupPositionDTOList = backupPositionService.list(null, null, backupServerId);
+        List<BackupPositionDTO> backupPositionDTOList = backupPositionService.list(null, null, backupServerId, true);
         for (BackupPositionDTO backupPositionDTO : backupPositionDTOList) {
             if (backupPositionDTO.getBackupTaskNum() != null && backupPositionDTO.getBackupTaskNum() != 0){
                 throw new BusinessException(ErrorMessage.FAILED_TO_DELETE_BACKUP_SERVER);
