@@ -1,13 +1,18 @@
 package com.middleware.zeus.service.user.abstractService;
 
+import com.alibaba.fastjson.JSONObject;
+import com.github.pagehelper.PageInfo;
+import com.middleware.caas.filters.user.CurrentUser;
 import com.middleware.zeus.common.enums.ComponentsEnum;
 import com.middleware.zeus.common.enums.ErrorMessage;
 import com.middleware.zeus.common.enums.middleware.MiddlewareOfficialNameEnum;
 import com.middleware.zeus.common.exception.BusinessException;
 import com.middleware.zeus.common.model.BackupPositionDTO;
 import com.middleware.zeus.common.model.BackupServerDTO;
+import com.middleware.zeus.common.model.HelmInfoDo;
 import com.middleware.zeus.common.model.ProjectBackupServerDTO;
 import com.middleware.zeus.common.model.middleware.BackupServerDetailDTO;
+import com.middleware.zeus.common.model.middleware.Middleware;
 import com.middleware.zeus.common.model.middleware.MiddlewareResourceInfo;
 import com.middleware.zeus.common.model.middleware.Namespace;
 import com.middleware.zeus.common.model.middleware.ProjectMiddlewareResourceInfo;
@@ -21,21 +26,32 @@ import com.middleware.zeus.bean.BeanMiddlewareInfo;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
 import com.middleware.zeus.service.k8s.*;
 import com.middleware.zeus.service.middleware.*;
+import com.middleware.zeus.service.registry.HelmChartService;
 import com.middleware.zeus.service.user.RoleService;
 import com.middleware.zeus.service.user.UserService;
+import com.middleware.zeus.util.ThreadPoolExecutorFactory;
+import com.middleware.zeus.util.page.PageUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.CollectionUtils;
 
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
+import static com.middleware.zeus.common.constants.CommonConstant.DOT;
+import static com.middleware.zeus.common.constants.CommonConstant.LINE;
+import static com.middleware.zeus.common.constants.registry.HelmChartConstant.SVG;
 import static com.middleware.zeus.common.constants.user.UserConstant.USERNAME;
+import static org.apache.ibatis.ognl.DynamicSubscript.all;
 
 /**
  * @author xutianhong
  * @Date 2023/3/26 11:43 上午
  */
+@Slf4j
 public abstract class AbstractProjectService {
 
     /**
@@ -79,6 +95,8 @@ public abstract class AbstractProjectService {
     protected NamespaceService namespaceService;
     @Autowired
     protected RoleService roleService;
+    @Autowired
+    protected HelmChartService helmChartService;
 
     public List<BackupServerDTO> getBackupServer(String organId, String projectId, String clusterId, boolean detail, boolean position) {
         List<ProjectBackupServerDTO> projectBackupServerDTOList =
@@ -152,64 +170,90 @@ public abstract class AbstractProjectService {
     }
 
 
-    public List<ProjectMiddlewareResourceInfo> middlewareResource(String organId, String projectId) throws Exception {
+    public PageInfo<MiddlewareResourceInfo> middlewareResource(String organId, String projectId, String type, String target, String keyword,
+        Integer current, Integer size) throws Exception {
+        List<Namespace> nsList = getNamespace(organId, projectId);
+        // 根据项目下命名空间获取集群id集合
+        List<String> clusterList = new ArrayList<>();
+        clusterList = nsList.stream().map(Namespace::getClusterId).distinct().collect(Collectors.toList());
+        // 查询数据
+        List<Middleware> middlewareList = new ArrayList<>();
+        // 统计各个集群下的middlewareList
+        for (String clusterId : clusterList) {
+            middlewareList.addAll(middlewareCrService.list(clusterId, null, null, false));
+            // 根据分区进行过滤
+            middlewareList = middlewareList.stream()
+                .filter(mw -> nsList.stream().anyMatch(ns -> ns.getName().equals(mw.getNamespace())))
+                .collect(Collectors.toList());
+        }
+        // 根据中间件类型进行过滤
+        if (StringUtils.isNotEmpty(type)) {
+            middlewareList = middlewareList.stream().filter(mwCrd -> mwCrd.getType().equals(type))
+                    .collect(Collectors.toList());
+        }
+
+        // 进一步封装middleware信息
+        middlewareList = helmChartService.convertMiddlewareList(middlewareList);
+        // 对中间件进行关键词过滤
+        if (StringUtils.isNotEmpty(keyword)) {
+            middlewareList = middlewareList.stream()
+                    .filter(mw -> mw.getName().contains(keyword) || mw.getAliasName().contains(keyword))
+                    .collect(Collectors.toList());
+        }
+        // 进行分页的切分
+        PageInfo<Middleware> middlewarePageInfo = PageUtil.convertPage(middlewareList, current, size);
+
+        // 获取中间件监控信息
+        List<MiddlewareResourceInfo> middlewareResourceInfoList = clusterService.getMwResource(middlewarePageInfo.getList(), target);
+
+        // 封装page对象
+        PageInfo<MiddlewareResourceInfo> pageInfo = new PageInfo<>(middlewareResourceInfoList);
+        BeanUtils.copyProperties(middlewarePageInfo, pageInfo, "list");
+        return pageInfo;
+//        // 获取image.path
+//        Map<String,
+//                String> middlewareImagePathMap = middlewareInfoService.list(false).stream()
+//                .filter(beanMiddlewareInfo -> beanMiddlewareInfo.getImagePath() != null)
+//                .collect(Collectors.toMap(BeanMiddlewareInfo::getChartName, BeanMiddlewareInfo::getImagePath));
+//        // 封装数据
+//        //Map<String, List<MiddlewareResourceInfo>> map = all.stream().collect(Collectors.groupingBy(MiddlewareResourceInfo::getType));
+//        List<ProjectMiddlewareResourceInfo> infoList = new ArrayList<>();
+//
+//        for (String mwType : map.keySet()) {
+//            ProjectMiddlewareResourceInfo projectMiddlewareResourceInfo = new ProjectMiddlewareResourceInfo()
+//                    .setType(mwType).setAliasName(MiddlewareOfficialNameEnum.findByChartName(mwType))
+//                    .setMiddlewareResourceInfoList(map.getOrDefault(mwType, null))
+//                    .setImagePath(middlewareImagePathMap.getOrDefault(mwType, null));
+//            infoList.add(projectMiddlewareResourceInfo);
+//        }
+//        infoList.sort(Comparator.comparing(ProjectMiddlewareResourceInfo::getType));
+//        return infoList;
+    }
+
+    public List<String> userMiddlewareType(String organId, String projectId) {
         List<Namespace> nsList = getNamespace(organId, projectId);
         // 获取集群
         Set<String> clusterIdSet = new HashSet<>();
         nsList.forEach(ns -> clusterIdSet.add(ns.getClusterId()));
-        // 获取集群下已安装中间件并集
-        Set<String> mwTypeSet = new HashSet<>();
+
+        List<Middleware> middlewareList = new ArrayList<>();
         for (String clusterId : clusterIdSet) {
-            mwTypeSet.addAll(clusterMiddlewareInfoService.list(clusterId, true).stream()
-                    .map(BeanClusterMiddlewareInfo::getChartName).collect(Collectors.toList()));
+            middlewareList.addAll(middlewareCrService.list(clusterId, null, null, false));
+            // 根据分区进行过滤
+            middlewareList = middlewareList.stream()
+                .filter(mw -> nsList.stream().anyMatch(ns -> ns.getName().equals(mw.getNamespace())))
+                .collect(Collectors.toList());
         }
-        // 查询用户角色项目权限
-        String username =
-                JwtTokenComponent.checkToken(CurrentUserRepository.getUser().getToken()).getValue().getString(USERNAME);
-        UserDto userDto = userService.getUserDto(username, true);
-        Map<String, String> power = new HashMap<>();
-        if (!userDto.getIsAdmin()
-            && userDto.getUserRoleList().stream().anyMatch(userRole -> userRole.getProjectId().equals(projectId))) {
-            power
-                .putAll(
-                    userDto.getUserRoleList().stream()
-                        .filter(userRole -> StringUtils.isNotEmpty(userRole.getProjectId())
-                            && userRole.getProjectId().equals(projectId))
-                        .collect(Collectors.toList()).get(0).getPower());
-        }
+        // 判断当前用户是否为超级管理员，如果不是超级管理员 对用户中间件权限进行校验
+        Map<String, String> power = userService.getPower();
         // 过滤获取拥有权限的中间件
         if (!CollectionUtils.isEmpty(power)) {
-            mwTypeSet = mwTypeSet.stream().filter(
-                    mwType -> power.keySet().stream().anyMatch(key -> !"0000".equals(power.get(key)) && mwType.equals(key)))
-                    .collect(Collectors.toSet());
-        }
-        // 查询数据
-        List<MiddlewareResourceInfo> all = new ArrayList<>();
-        for (String clusterId : clusterIdSet) {
-            all.addAll(clusterService.getMwResource(clusterId));
-        }
-        // 根据分区过滤
-        all = all.stream().filter(middlewareResourceInfo -> nsList.stream().anyMatch(
-                ns -> ns.getName().equals(middlewareResourceInfo.getNamespace())))
+            middlewareList = middlewareList.stream()
+                .filter(mw -> power.keySet().stream()
+                    .anyMatch(key -> !"0000".equals(power.get(key)) && mw.getType().equals(key)))
                 .collect(Collectors.toList());
-        // 获取image.path
-        Map<String,
-                String> middlewareImagePathMap = middlewareInfoService.list(false).stream()
-                .filter(beanMiddlewareInfo -> beanMiddlewareInfo.getImagePath() != null)
-                .collect(Collectors.toMap(BeanMiddlewareInfo::getChartName, BeanMiddlewareInfo::getImagePath));
-        // 封装数据
-        Map<String, List<MiddlewareResourceInfo>> map =
-                all.stream().collect(Collectors.groupingBy(MiddlewareResourceInfo::getType));
-        List<ProjectMiddlewareResourceInfo> infoList = new ArrayList<>();
-        for (String mwType : mwTypeSet) {
-            ProjectMiddlewareResourceInfo projectMiddlewareResourceInfo = new ProjectMiddlewareResourceInfo()
-                    .setType(mwType).setAliasName(MiddlewareOfficialNameEnum.findByChartName(mwType))
-                    .setMiddlewareResourceInfoList(map.getOrDefault(mwType, null))
-                    .setImagePath(middlewareImagePathMap.getOrDefault(mwType, null));
-            infoList.add(projectMiddlewareResourceInfo);
         }
-        infoList.sort(Comparator.comparing(ProjectMiddlewareResourceInfo::getType));
-        return infoList;
+        return middlewareList.stream().map(Middleware::getType).distinct().collect(Collectors.toList());
     }
 
     public List<ProjectDto> getMiddlewareCount(String organId, String projectId) {

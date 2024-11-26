@@ -12,6 +12,7 @@ import com.middleware.zeus.integration.cluster.api.PrometheusApi;
 import com.middleware.zeus.integration.cluster.client.PrometheusClient;
 import com.middleware.zeus.service.k8s.ClusterComponentService;
 import com.middleware.zeus.service.k8s.ClusterService;
+import com.middleware.zeus.util.api.client.BaseClient;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import static com.middleware.zeus.common.constants.NameConstant.ADMIN;
@@ -30,14 +32,19 @@ import static com.middleware.zeus.common.constants.NameConstant.ADMIN;
 @Component
 public class PrometheusWrapper {
 
+    private static final Map<String, PrometheusClient> PROMETHEUS_CLIENT_MAP = new HashMap<>();
+
     @Autowired
     private ClusterService clusterService;
     @Value("${k8s.monitoring.prometheus.port:31900}")
     private String prometheusPort;
-    @Value("${k8s.monitoring.alertManager.port:31902}")
-    private String alertManagerPort;
     @Autowired
     private ClusterComponentService clusterComponentService;
+
+    // 清理缓存
+    public void clearCache(String clusterId) {
+        PROMETHEUS_CLIENT_MAP.remove(clusterId);
+    }
 
     public PrometheusResponse get(String clusterId, String prometheusApiVersion, Map<String, String> queryMap)
         throws Exception {
@@ -70,6 +77,9 @@ public class PrometheusWrapper {
         if (StringUtils.isAnyEmpty(prometheus.getProtocol(), prometheus.getHost())) {
             throw new BusinessException(ErrorMessage.PROMETHEUS_NOT_INSTALLED);
         }
+        if (PROMETHEUS_CLIENT_MAP.containsKey(clusterId)) {
+            return PROMETHEUS_CLIENT_MAP.get(clusterId);
+        }
         PrometheusClient client =
                 new PrometheusClient(prometheus.getProtocol(), prometheus.getHost(), Integer.parseInt(prometheus.getPort()),
                         prometheus.getAddress()
@@ -82,6 +92,7 @@ public class PrometheusWrapper {
             client.addHttpBasicAuth(ADMIN, componentsDto.getUsername(),
                     componentsDto.getPassword());
         }
+        PROMETHEUS_CLIENT_MAP.put(clusterId, client);
         return client;
     }
 

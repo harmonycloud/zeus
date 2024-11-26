@@ -9,6 +9,8 @@ import com.middleware.zeus.common.model.middleware.MiddlewareClusterDTO;
 import com.middleware.zeus.common.model.middleware.PodInfo;
 import com.middleware.zeus.bean.BeanClusterComponents;
 import com.middleware.zeus.dao.BeanClusterComponentsMapper;
+import com.middleware.zeus.integration.cluster.PrometheusWrapper;
+import com.middleware.zeus.service.components.api.PrometheusService;
 import com.middleware.zeus.service.k8s.ClusterService;
 import com.middleware.zeus.service.k8s.IngressService;
 import com.middleware.zeus.service.k8s.NamespaceService;
@@ -46,6 +48,8 @@ public abstract class AbstractBaseOperator {
     protected BeanClusterComponentsMapper beanClusterComponentsMapper;
     @Autowired
     private ImageRepositoryService imageRepositoryService;
+    @Autowired
+    protected PrometheusWrapper prometheusWrapper;
 
     public void deploy(MiddlewareClusterDTO cluster, ClusterComponentsDto clusterComponentsDto){
         //获取仓库地址
@@ -101,10 +105,10 @@ public abstract class AbstractBaseOperator {
     }
 
     /**
-     * 保存全局参数入数据库
+     * 其他需要执行的操作
      * @param clusterComponentsDto
      */
-    public void record2SystemConfig(ClusterComponentsDto clusterComponentsDto) {
+    public void expand(ClusterComponentsDto clusterComponentsDto) {
 
     }
 

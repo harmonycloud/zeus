@@ -29,6 +29,7 @@ import com.middleware.zeus.service.middleware.MiddlewareInfoService;
 import com.middleware.zeus.service.middleware.MiddlewareService;
 import com.middleware.zeus.service.registry.AbstractRegistryService;
 import com.middleware.zeus.service.registry.HelmChartService;
+import com.middleware.zeus.util.ThreadPoolExecutorFactory;
 import com.middleware.zeus.util.YamlUtil;
 import com.middleware.zeus.util.cmd.CmdExecUtil;
 import com.middleware.zeus.util.cmd.HelmChartUtil;
@@ -46,6 +47,7 @@ import org.yaml.snakeyaml.Yaml;
 
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.CountDownLatch;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -307,27 +309,9 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
         List<Secret> secretList = secretService.list(clusterId, namespace, labels);
         for (Secret secret : secretList){
             HelmInfoDo helmInfoDo = new HelmInfoDo();
+            helmInfoDo.setRelease(secret.getData().get(RELEASE));
             if (decode){
-                JSONObject target = HelmChartUtil.decodeSecret(secret.getData().get(RELEASE));
-                helmInfoDo.setName(target.getString(NAME));
-
-                JSONObject chart = target.getJSONObject("chart");
-                JSONObject values = target.getJSONObject("chart").getJSONObject("values");
-                if (target.containsKey("config")) {
-                    for (String key : target.getJSONObject("config").keySet()){
-                        values.put(key, target.getJSONObject("config").get(key));
-                    }
-                }
-                helmInfoDo.setValues(values);
-
-                JSONObject metadata = chart.getJSONObject("metadata");
-                helmInfoDo.setChartName(metadata.getString(NAME));
-                helmInfoDo.setChartVersion(metadata.getString(VERSION));
-
-                JSONObject info = target.getJSONObject(INFO);
-                Date updateTime = DateUtils.parseDate(info.getString("last_deployed").split("\\.")[0] + "Z",
-                        DateType.YYYY_MM_DD_T_HH_MM_SS.getValue());
-                helmInfoDo.setUpdateTime(updateTime);
+                this.decodeValues(helmInfoDo);
             }
             // 设置release 名称
             if (!CollectionUtils.isEmpty(secret.getLabels())) {
@@ -342,9 +326,35 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
             helmInfoDo.setClusterId(clusterId);
             helmInfoDo.setNamespace(secret.getNamespace());
 
+
             helmInfoDoList.add(helmInfoDo);
         }
         return helmInfoDoList;
+    }
+
+    @Override
+    public HelmInfoDo decodeValues(HelmInfoDo helmInfoDo) {
+        JSONObject target = HelmChartUtil.decodeSecret(helmInfoDo.getRelease());
+        helmInfoDo.setName(target.getString(NAME));
+
+        JSONObject chart = target.getJSONObject("chart");
+        JSONObject values = target.getJSONObject("chart").getJSONObject("values");
+        if (target.containsKey("config")) {
+            for (String key : target.getJSONObject("config").keySet()){
+                values.put(key, target.getJSONObject("config").get(key));
+            }
+        }
+        helmInfoDo.setValues(values);
+
+        JSONObject metadata = chart.getJSONObject("metadata");
+        helmInfoDo.setChartName(metadata.getString(NAME));
+        helmInfoDo.setChartVersion(metadata.getString(VERSION));
+
+        JSONObject info = target.getJSONObject(INFO);
+        Date updateTime = DateUtils.parseDate(info.getString("last_deployed").split("\\.")[0] + "Z",
+                DateType.YYYY_MM_DD_T_HH_MM_SS.getValue());
+        helmInfoDo.setUpdateTime(updateTime);
+        return helmInfoDo;
     }
 
     @Override
@@ -836,6 +846,52 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
             return mode;
         }
         return "";
+    }
+
+    @Override
+    public List<Middleware> convertMiddlewareList(List<Middleware> middlewareList) {
+        // 获取集群id集合
+        List<String> clusterList =
+            middlewareList.stream().map(Middleware::getClusterId).distinct().collect(Collectors.toList());
+        for (String clusterId : clusterList) {
+            // 获取已部署的中间件的values
+            //List<HelmInfoDo> helmInfoDoList = this.listInstalledValues(clusterId, null, false);
+            // 将命名空间和名称作为key转为map
+//            Map<String, HelmInfoDo> helmInfoDoMap = helmInfoDoList.stream().collect(Collectors
+//                .toMap(helmInfoDo -> helmInfoDo.getNamespace() + "-" + helmInfoDo.getName(), helmInfoDo -> helmInfoDo));
+
+            final CountDownLatch clusterCountDownLatch = new CountDownLatch(middlewareList.size());
+            for (Middleware middleware : middlewareList) {
+                ThreadPoolExecutorFactory.executor.execute(() -> {
+                    try {
+                        // 获取对应中间件的helm对象，并解析获取values
+//                        HelmInfoDo helmInfoDo =
+//                                helmInfoDoMap.get(middleware.getNamespace() + "-" + middleware.getName());
+//                        helmInfoDo = this.decodeValues(helmInfoDo);
+//
+//                        JSONObject values = helmInfoDo.getValues();
+                        // 获取中间件别名
+                        //middleware.setAliasName(values.getOrDefault("aliasName", middleware.getName()).toString());
+                        // 获取中间件chartVersion
+                       // middleware.setChartVersion(this.getChartVersion(values, middleware.getType()));
+                        // 设置中间件图片路径
+                        middleware.setImagePath(middleware.getType() + LINE + middleware.getChartVersion() + DOT + SVG);
+                    } catch (Exception e){
+                        log.error("集群:{} 命名空间:{} 名称:{} ,获取中间件信息失败", middleware.getClusterId(), middleware.getNamespace(),
+                                middleware.getName(), e);
+                    } finally {
+                        clusterCountDownLatch.countDown();
+                    }
+
+                });
+            }
+            try {
+                clusterCountDownLatch.await();
+            } catch (InterruptedException e) {
+                log.error("等待线程结束失败", e);
+            }
+        }
+        return middlewareList;
     }
 
     private String getUploadPath() {

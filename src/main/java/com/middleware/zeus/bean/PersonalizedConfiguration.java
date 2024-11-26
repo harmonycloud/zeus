@@ -17,7 +17,9 @@ import java.util.Date;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @TableName("personal_config")
-public class PersonalizedConfiguration {
+public class PersonalizedConfiguration implements java.io.Serializable {
+
+    private static final long serialVersionUID = -5957128358232124L;
 
     /**
      * 自增id

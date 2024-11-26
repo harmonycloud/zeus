@@ -11,7 +11,15 @@ import java.util.concurrent.Executors;
  */
 public class ThreadPoolExecutorFactory {
 
-    public static final ExecutorService executor = Executors.newFixedThreadPool(30);
+
+    private static final Integer THREAD_SIZE;
+
+    static {
+        THREAD_SIZE = Integer.valueOf(SpringContextUtils.getProperty("system.thread.size", "20"));
+    }
+
+
+    public static final ExecutorService executor = Executors.newFixedThreadPool(THREAD_SIZE);
 
 
 }
