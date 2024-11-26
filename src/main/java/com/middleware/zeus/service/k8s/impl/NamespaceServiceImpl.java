@@ -17,6 +17,7 @@ import io.fabric8.kubernetes.api.model.LocalObjectReference;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.ServiceAccount;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.ss.formula.functions.Na;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -276,8 +277,14 @@ public class NamespaceServiceImpl implements NamespaceService {
     }
 
     @Override
-    public ResourceQuotaDo cpuMemory(String clusterId, String namespace) {
-        return resourceQuotaService.get(clusterId, namespace, namespace + "quota");
+    public ResourceQuotaDo cpuMemory(String clusterId, String name) {
+        // 查询命名空间信息
+        Namespace namespace = this.get(clusterId, name);
+        // 获取资源使用情况
+        ResourceQuotaDo resourceQuotaDo = resourceQuotaService.get(clusterId, name, name + "quota");
+        // 设置双活信息
+        resourceQuotaDo.setAvailableDomain(namespace.isAvailableDomain());
+        return resourceQuotaDo;
     }
 
     @Override

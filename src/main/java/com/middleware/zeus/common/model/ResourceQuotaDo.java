@@ -27,6 +27,9 @@ public class ResourceQuotaDo extends Quota {
     @ApiModelProperty("集群别名")
     private String clusterNickName;
 
+    @ApiModelProperty("是否开启可用域")
+    private boolean availableDomain;
+
     @ApiModelProperty("存储配额")
     private List<StorageQuota> storageList;
 
