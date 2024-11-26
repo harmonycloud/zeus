@@ -1266,7 +1266,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         if (enable){
             for (MiddlewareBackupSchedule schedule : middlewareBackupScheduleList){
                 if (schedule.getSpec().getPause().equalsIgnoreCase(OFF)){
-                    throw new BusinessException(ErrorMessage.RUNNING_SCHEDULE_BACKUP_EXISTED);
+                    // 将其pause更新为ON
+                    schedule.getSpec().setPause(ON);
+                    backupScheduleCRDService.update(clusterId, schedule);
                 }
             }
             // 若不存在当前pause为OFF的周期备份任务，则将对应backupId的周期备份任务的pause修改为OFF
