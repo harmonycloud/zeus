@@ -611,5 +611,11 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         }
         return result;
     }
+
+    @Override
+    public Boolean withPgbouncer(String clusterId, Middleware middleware) {
+        JSONObject values = helmChartService.getInstalledValues(middleware, clusterService.findById(clusterId));
+        return values.getBoolean("enableConnectionPooler");
+    }
 }
 

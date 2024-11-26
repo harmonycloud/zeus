@@ -248,4 +248,12 @@ public interface BaseOperator {
      */
     List<PodInfoGroup> podInfoGroup(Middleware middleware);
 
+    /**
+     * 查询中间件是否开启连接池配置
+     *
+     * @param middleware 中间件
+     * @return Boolean
+     */
+    Boolean withPgbouncer(String clusterId, Middleware middleware);
+
 }
