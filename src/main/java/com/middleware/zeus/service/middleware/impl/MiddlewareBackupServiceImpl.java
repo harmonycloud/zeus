@@ -1328,7 +1328,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         }
         // 根据zone查询对应的全量备份任务
         MiddlewareBackupSchedule schedule;
-        if (zone != null) {
+        if (!StringUtils.isEmpty(zone)) {
             schedule = scheduleCRList.stream()
                 .filter(item -> zone.equals(item.getMetadata().getLabels().get(ACTIVE_AREA))).findFirst().orElse(null);
         } else {
