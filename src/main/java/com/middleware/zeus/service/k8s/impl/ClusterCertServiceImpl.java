@@ -16,6 +16,7 @@ import com.middleware.zeus.integration.cluster.ServiceAccountWrapper;
 import com.middleware.zeus.service.k8s.ClusterCertService;
 import com.middleware.zeus.util.file.FileUtil;
 import com.middleware.zeus.util.YamlUtil;
+import com.middleware.zeus.util.uuid.UUIDUtils;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.rbac.ClusterRoleBinding;
 import io.fabric8.kubernetes.api.model.rbac.RoleRef;
@@ -30,9 +31,7 @@ import org.springframework.util.CollectionUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
+import java.util.*;
 
 import static com.middleware.zeus.common.constants.NameConstant.KUBE_SYSTEM;
 
@@ -143,11 +142,34 @@ public class ClusterCertServiceImpl implements ClusterCertService {
             // 获取token并存入对象
             List<ObjectReference> secrets;
             if (isNewCreate) {
-                ServiceAccount newSa = serviceAccountWrapper.get(cluster.getId(), KUBE_SYSTEM, saName);
-                secrets = newSa.getSecrets();
-            } else {
+                serviceAccount = serviceAccountWrapper.get(cluster.getId(), KUBE_SYSTEM, saName);
+            }
+
+            secrets = serviceAccount.getSecrets();
+            // 手动创建secret
+            if (CollectionUtils.isEmpty(secrets)){
+                Secret secret = new Secret();
+                ObjectMeta metadata = new ObjectMeta();
+                String secretName = saName + "-token-" + UUIDUtils.get5UUID();
+                metadata.setName(secretName);
+                metadata.setNamespace(KUBE_SYSTEM);
+
+                Map<String, String> annotations = new HashMap<>();
+                annotations.put("kubernetes.io/service-account.name", saName);
+                metadata.setAnnotations(annotations);
+
+                secret.setMetadata(metadata);
+                secret.setType("kubernetes.io/service-account-token");
+                secretWrapper.create(cluster.getId(), KUBE_SYSTEM, secret);
+                // 更新sa
+                ObjectReference reference = new ObjectReference();
+                reference.setName(secretName);
+                serviceAccount.setSecrets(Collections.singletonList(reference));
+                serviceAccountWrapper.update(cluster.getId(), serviceAccount);
+                // 设置secret列表
                 secrets = serviceAccount.getSecrets();
             }
+
             if (!CollectionUtils.isEmpty(secrets)) {
                 ObjectReference reference = secrets.get(0);
                 String secretName = reference.getName();
