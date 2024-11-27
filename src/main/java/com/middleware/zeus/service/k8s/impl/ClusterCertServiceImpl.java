@@ -189,12 +189,15 @@ public class ClusterCertServiceImpl implements ClusterCertService {
         File file = new File(kubeConfigPath + "/" + ClusterCertService.getCertCmName(clusterId) + ".conf");
         if (!file.exists()) {
             QueryWrapper<BeanKubeConfig> wrapper = new QueryWrapper<BeanKubeConfig>().eq("cluster_id", clusterId);
-            BeanKubeConfig kubeConfig = beanKubeConfigMapper.selectOne(wrapper);
-            String certCmName = ClusterCertService.getCertCmName(clusterId);
-            try {
-                FileUtil.writeToLocal(kubeConfigPath, certCmName + ".conf", kubeConfig.getConf());
-            } catch (IOException e) {
-                log.error("写出admin.conf文件到路径{}/{}异常", kubeConfigPath, certCmName, e);
+            List<BeanKubeConfig> kubeConfigList = beanKubeConfigMapper.selectList(wrapper);
+            if (!CollectionUtils.isEmpty(kubeConfigList)) {
+                BeanKubeConfig kubeConfig = kubeConfigList.get(0);
+                String certCmName = ClusterCertService.getCertCmName(clusterId);
+                try {
+                    FileUtil.writeToLocal(kubeConfigPath, certCmName + ".conf", kubeConfig.getConf());
+                } catch (IOException e) {
+                    log.error("写出admin.conf文件到路径{}/{}异常", kubeConfigPath, certCmName, e);
+                }
             }
         }
         return kubeConfigPath + "/" + ClusterCertService.getCertCmName(clusterId) + ".conf";
