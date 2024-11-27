@@ -2390,18 +2390,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     /**
      * 校验备份任务是否已存在
      *
-     * @param backupDTO
-     */
-    public void checkBackupScheduleExist(MiddlewareBackupDTO backupDTO) {
-        String backupId = backupDTO.getLabels().get("backupId");
-        if (checkBackupScheduleExist(backupDTO.getClusterId(), backupDTO.getNamespace(), backupDTO.getMiddlewareName(), backupId)) {
-            throw new BusinessException(ErrorMessage.MIDDLEWARE_BACKUP_SCHEDULE_EXIST);
-        }
-    }
-
-    /**
-     * 校验备份任务是否已存在
-     *
      * @param clusterId
      * @param namespace
      * @param middlewareName
@@ -2416,7 +2404,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 items = items.stream().filter(cr ->
                         !cr.getMetadata().getLabels().getOrDefault("backupId", backupId).equals(backupId)).collect(Collectors.toList());
             }
-            return items.stream().anyMatch(item -> item.getSpec().getName().equals(middlewareName));
+            return items.stream().anyMatch(item -> item.getSpec().getName().equals(middlewareName) && item.getSpec().getPause().equals(OFF));
         }
         return false;
     }
