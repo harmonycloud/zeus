@@ -18,6 +18,10 @@ import java.math.RoundingMode;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.middleware.zeus.common.constants.CommonConstant.LINE;
+import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.NAMESPACE;
+import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.POD;
+
 /**
  * @author xutianhong
  * @Date 2022/2/25 10:49 上午
@@ -74,5 +78,40 @@ public class PrometheusResourceMonitorServiceImpl implements PrometheusResourceM
         }
         log.debug("执行语句: {} 成功", query);
         return response;
+    }
+
+    @Override
+    public Map<String, Double> sumResponseByTarget(PrometheusResponse response, String target) {
+        Map<String, Double> map = new HashMap<>();
+        // 空值处理
+        if (response == null || response.getData() == null || CollectionUtils.isEmpty(response.getData().getResult())) {
+            return map;
+        }
+        response.getData().getResult().forEach(res -> {
+            // 空值处理
+            if (CollectionUtils.isEmpty(res.getMetric()) || res.getValue() == null || res.getValue().size() < 2) {
+                return;
+            }
+            // 特殊字段处理
+            if (!res.getMetric().containsKey(target) || !res.getMetric().containsKey(NAMESPACE)) {
+                return;
+            }
+            // 获取pod名称
+            String targetName = res.getMetric().get(target);
+            // 获取命名空间
+            String namespace = res.getMetric().get(NAMESPACE);
+            // 拼接唯一key值
+            String key = namespace + LINE + targetName;
+            // 获取监控数据
+            double value = ResourceCalculationUtil
+                .roundNumber(BigDecimal.valueOf(Double.parseDouble(res.getValue().get(1))), 2, RoundingMode.CEILING);
+            // 汇总数据
+            if (map.containsKey(key)) {
+                map.put(key, map.get(key) + value);
+            } else {
+                map.put(key, value);
+            }
+        });
+        return map;
     }
 }

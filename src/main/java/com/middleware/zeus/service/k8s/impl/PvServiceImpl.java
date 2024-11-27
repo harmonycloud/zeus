@@ -31,8 +31,9 @@ public class PvServiceImpl implements PvService {
         if (CollectionUtils.isEmpty(persistentVolumeList)) {
             return new ArrayList<>();
         }
+
         return persistentVolumeList.stream()
-            .filter(pv -> StringUtils.isNotEmpty(namespace) && filterByPvc(pv, namespace, pvcNameList))
+            .filter(pv -> namespace == null || filterByPvc(pv, namespace, pvcNameList))
             .map(this::convertPv).collect(Collectors.toList());
     }
 
@@ -49,6 +50,7 @@ public class PvServiceImpl implements PvService {
         pvDo.setPvcName(pv.getSpec().getClaimRef().getName());
         pvDo.setReclaimPolicy(pv.getSpec().getPersistentVolumeReclaimPolicy());
         pvDo.setStatus(pv.getStatus() == null ? null : pv.getStatus().getPhase());
+        pvDo.setNamespace(pv.getSpec().getClaimRef().getNamespace());
         return pvDo;
     }
 }

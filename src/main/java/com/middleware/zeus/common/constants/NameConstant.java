@@ -65,6 +65,7 @@ public class NameConstant {
     public final static String KUBE_SYSTEM = "kube-system";
     public final static String STORAGE = "storage";
     public final static String PVC = "pvc";
+    public final static String PV = "pv";
     public final static String DISK = "disk";
     public final static String STORAGE_CLASS_STORAGE_K8s_IO_REQUESTS_STORAGE = "storageclass.storage.k8s.io/requests.storage";
 

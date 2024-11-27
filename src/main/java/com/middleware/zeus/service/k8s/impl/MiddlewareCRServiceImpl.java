@@ -222,7 +222,7 @@ public class MiddlewareCRServiceImpl implements MiddlewareCRService {
                 .setStatus(mw.getStatus() != null ? mw.getStatus().getPhase() : "")
                 .setReason(mw.getStatus() != null ? mw.getStatus().getReason() : "")
                 .setCreateTime(DateUtils.parseUTCDate(mw.getMetadata().getCreationTimestamp())).setPodNum(getPodNum(mw))
-                .setPods(getPodName(mw));
+                .setPods(getPodName(mw)).setPvcs(getPvc(mw));
     }
 
     @Override

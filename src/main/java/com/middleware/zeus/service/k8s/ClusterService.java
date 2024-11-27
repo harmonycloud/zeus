@@ -2,10 +2,7 @@ package com.middleware.zeus.service.k8s;
 
 import com.github.pagehelper.PageInfo;
 import com.middleware.zeus.common.base.BaseResult;
-import com.middleware.zeus.common.model.ClusterDTO;
-import com.middleware.zeus.common.model.ClusterNamespaceResourceDto;
-import com.middleware.zeus.common.model.ClusterNodeResourceDto;
-import com.middleware.zeus.common.model.ResourceQuotaDo;
+import com.middleware.zeus.common.model.*;
 import com.middleware.zeus.common.model.middleware.*;
 import com.middleware.zeus.annotation.Skyview;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
@@ -134,7 +131,15 @@ public interface ClusterService {
      * @param clusterId 集群id
      * @return List<MiddlewareResourceInfo>
      */
-    PageInfo<MiddlewareResourceInfo> getMwResource(String clusterId, String target, String keyword, Integer current, Integer size) throws Exception;
+    PageInfo<MiddlewareResourceInfo> getMwResource(String clusterId, MiddlewareResourceQueryDto middlewareResourceQueryDto) throws Exception;
+
+    /**
+     * 查询中间件资源查询条件
+     *
+     * @param clusterId 集群id
+     * @return List<MiddlewareResourceInfo>
+     */
+    Map<String, List<String>> getMwResourceQueryCondition(String clusterId);
 
     /**
      * 获取集群下服务资源列表

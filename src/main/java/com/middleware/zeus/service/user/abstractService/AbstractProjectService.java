@@ -7,10 +7,7 @@ import com.middleware.zeus.common.enums.ComponentsEnum;
 import com.middleware.zeus.common.enums.ErrorMessage;
 import com.middleware.zeus.common.enums.middleware.MiddlewareOfficialNameEnum;
 import com.middleware.zeus.common.exception.BusinessException;
-import com.middleware.zeus.common.model.BackupPositionDTO;
-import com.middleware.zeus.common.model.BackupServerDTO;
-import com.middleware.zeus.common.model.HelmInfoDo;
-import com.middleware.zeus.common.model.ProjectBackupServerDTO;
+import com.middleware.zeus.common.model.*;
 import com.middleware.zeus.common.model.middleware.BackupServerDetailDTO;
 import com.middleware.zeus.common.model.middleware.Middleware;
 import com.middleware.zeus.common.model.middleware.MiddlewareResourceInfo;
@@ -170,8 +167,8 @@ public abstract class AbstractProjectService {
     }
 
 
-    public PageInfo<MiddlewareResourceInfo> middlewareResource(String organId, String projectId, String type, String target, String keyword,
-        Integer current, Integer size) throws Exception {
+    public PageInfo<MiddlewareResourceInfo> middlewareResource(String organId, String projectId,
+        MiddlewareResourceQueryDto queryDto) throws Exception{
         List<Namespace> nsList = getNamespace(organId, projectId);
         // 根据项目下命名空间获取集群id集合
         List<String> clusterList = new ArrayList<>();
@@ -187,47 +184,28 @@ public abstract class AbstractProjectService {
                 .collect(Collectors.toList());
         }
         // 根据中间件类型进行过滤
-        if (StringUtils.isNotEmpty(type)) {
-            middlewareList = middlewareList.stream().filter(mwCrd -> mwCrd.getType().equals(type))
-                    .collect(Collectors.toList());
+        if (StringUtils.isNotEmpty(queryDto.getType())) {
+            middlewareList = middlewareList.stream().filter(mwCrd -> mwCrd.getType().equals(queryDto.getType()))
+                .collect(Collectors.toList());
         }
 
         // 进一步封装middleware信息
         middlewareList = helmChartService.convertMiddlewareList(middlewareList);
         // 对中间件进行关键词过滤
-        if (StringUtils.isNotEmpty(keyword)) {
-            middlewareList = middlewareList.stream()
-                    .filter(mw -> mw.getName().contains(keyword) || mw.getAliasName().contains(keyword))
-                    .collect(Collectors.toList());
+        if (StringUtils.isNotEmpty(queryDto.getKeyword())) {
+            middlewareList = middlewareList.stream().filter(
+                mw -> mw.getName().contains(queryDto.getKeyword()) || mw.getAliasName().contains(queryDto.getKeyword()))
+                .collect(Collectors.toList());
         }
-        // 进行分页的切分
-        PageInfo<Middleware> middlewarePageInfo = PageUtil.convertPage(middlewareList, current, size);
 
         // 获取中间件监控信息
-        List<MiddlewareResourceInfo> middlewareResourceInfoList = clusterService.getMwResource(middlewarePageInfo.getList(), target);
+        List<MiddlewareResourceInfo> middlewareResourceInfoList =
+            clusterService.getMwResource(middlewareList, queryDto.getTarget());
 
+        // 对监控数据进行排序筛选
+        queryDto.sortMiddlewareResourceInfo(middlewareResourceInfoList);
         // 封装page对象
-        PageInfo<MiddlewareResourceInfo> pageInfo = new PageInfo<>(middlewareResourceInfoList);
-        BeanUtils.copyProperties(middlewarePageInfo, pageInfo, "list");
-        return pageInfo;
-//        // 获取image.path
-//        Map<String,
-//                String> middlewareImagePathMap = middlewareInfoService.list(false).stream()
-//                .filter(beanMiddlewareInfo -> beanMiddlewareInfo.getImagePath() != null)
-//                .collect(Collectors.toMap(BeanMiddlewareInfo::getChartName, BeanMiddlewareInfo::getImagePath));
-//        // 封装数据
-//        //Map<String, List<MiddlewareResourceInfo>> map = all.stream().collect(Collectors.groupingBy(MiddlewareResourceInfo::getType));
-//        List<ProjectMiddlewareResourceInfo> infoList = new ArrayList<>();
-//
-//        for (String mwType : map.keySet()) {
-//            ProjectMiddlewareResourceInfo projectMiddlewareResourceInfo = new ProjectMiddlewareResourceInfo()
-//                    .setType(mwType).setAliasName(MiddlewareOfficialNameEnum.findByChartName(mwType))
-//                    .setMiddlewareResourceInfoList(map.getOrDefault(mwType, null))
-//                    .setImagePath(middlewareImagePathMap.getOrDefault(mwType, null));
-//            infoList.add(projectMiddlewareResourceInfo);
-//        }
-//        infoList.sort(Comparator.comparing(ProjectMiddlewareResourceInfo::getType));
-//        return infoList;
+        return PageUtil.convertPage(middlewareResourceInfoList, queryDto.getCurrent(), queryDto.getSize());
     }
 
     public List<String> userMiddlewareType(String organId, String projectId) {

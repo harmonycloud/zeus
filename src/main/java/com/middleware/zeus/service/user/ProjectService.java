@@ -2,6 +2,7 @@ package com.middleware.zeus.service.user;
 
 import com.github.pagehelper.PageInfo;
 import com.middleware.zeus.common.model.BackupServerDTO;
+import com.middleware.zeus.common.model.MiddlewareResourceQueryDto;
 import com.middleware.zeus.common.model.ResourceQuotaDo;
 import com.middleware.zeus.common.model.middleware.MiddlewareClusterDTO;
 import com.middleware.zeus.common.model.middleware.MiddlewareResourceInfo;
@@ -177,8 +178,7 @@ public interface ProjectService {
      *
      * @return List<ProjectMiddlewareResourceInfo>
      */
-    PageInfo<MiddlewareResourceInfo> middlewareResource(String organId, String projectId, String type, String target, String keyword,
-                                                        Integer current, Integer size) throws Exception;
+    PageInfo<MiddlewareResourceInfo> middlewareResource(String organId, String projectId, MiddlewareResourceQueryDto queryDto) throws Exception;
 
     /**
      * 获取项目下中间件资源

@@ -4,10 +4,7 @@ import com.github.pagehelper.PageInfo;
 import com.middleware.zeus.common.base.BaseResult;
 import com.middleware.zeus.common.constants.NameConstant;
 import com.middleware.zeus.common.enums.middleware.ResourceUnitEnum;
-import com.middleware.zeus.common.model.BackupServerDTO;
-import com.middleware.zeus.common.model.PersistentVolumeClaim;
-import com.middleware.zeus.common.model.PrometheusResponse;
-import com.middleware.zeus.common.model.ResourceQuotaDo;
+import com.middleware.zeus.common.model.*;
 import com.middleware.zeus.common.model.middleware.*;
 import com.middleware.zeus.common.model.user.ProjectDto;
 import com.middleware.zeus.common.model.user.ProjectQuota;
@@ -239,20 +236,13 @@ public class ProjectController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "organId", value = "组织id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "projectId", value = "项目id", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "target", value = "目标: cpu/memory/storage", paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "keyword", value = "根据中间件名称进行检索", required = false, paramType = "query", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "current", value = "当前页", required = false, paramType = "query", dataTypeClass = Long.class),
-            @ApiImplicitParam(name = "size", value = "每页记录数", required = false, paramType = "query", dataTypeClass = Long.class),
+            @ApiImplicitParam(name = "MiddlewareResourceQueryDto", value = "查询参数", paramType = "query", dataTypeClass = MiddlewareResourceQueryDto.class),
     })
-    @GetMapping("/{projectId}/middleware")
+    @PostMapping("/{projectId}/middleware")
     public BaseResult<PageInfo<MiddlewareResourceInfo>> getMiddlewareResource(@PathVariable("organId") String organId,
                                                                               @PathVariable("projectId") String projectId,
-                                                                              @RequestParam("type") String type,
-                                                                              @RequestParam("target") String target,
-                                                                              @RequestParam(value = "keyword", required = false) String keyword,
-                                                                              @RequestParam(value = "current", required = false, defaultValue = "1") Integer current,
-                                                                              @RequestParam(value = "size", required = false, defaultValue = "5") Integer size) throws Exception {
-        return BaseResult.ok(projectService.middlewareResource(organId, projectId, type, target, keyword, current, size));
+                                                                              @RequestBody MiddlewareResourceQueryDto queryDto) throws Exception {
+        return BaseResult.ok(projectService.middlewareResource(organId, projectId, queryDto));
     }
 
     @ApiOperation(value = "查询指定用户在项目下可见的中间件类型", notes = "查询指定用户在项目下可见的中间件类型")

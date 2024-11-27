@@ -44,8 +44,6 @@ import static com.middleware.zeus.common.constants.NameConstant.KUBE_SYSTEM;
 public class ClusterCertServiceImpl implements ClusterCertService {
 
     @Autowired
-    private ConfigMapWrapper configMapWrapper;
-    @Autowired
     private RbacWrapper rbacWrapper;
     @Autowired
     private ServiceAccountWrapper serviceAccountWrapper;
