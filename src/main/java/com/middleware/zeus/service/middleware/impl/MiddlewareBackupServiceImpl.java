@@ -1346,8 +1346,14 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         }
         // 数据结构解析
         JSONObject storageProvider = incr.getStatus().getStorageProvider();
+        if (storageProvider == null) {
+            return restoreTime;
+        }
         JSONObject time = storageProvider.getJSONObject(incr.getSpec().getType());
-        // 判断date是否为null
+        // 判断time是否为null
+        if (time == null) {
+            return restoreTime;
+        }
 
         if (dateStr != null) {
             Date date = DateUtils.parseDate(dateStr, DateUtils.YYYY_MM_DD);
@@ -1397,7 +1403,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 restoreTime.setTimeRange(Collections.singletonList(timeRangeDto));
             }
         } else {
-            if (time != null && time.containsKey("startTime") && time.containsKey("endTime")) {
+            if (time.containsKey("startTime") && time.containsKey("endTime")) {
                 Date startTime = DateUtils.parseUTCDate(time.getString("startTime"));
                 Date endTime = DateUtils.parseUTCDate(time.getString("endTime"));
                 restoreTime.setStartTime(startTime).setEndTime(endTime);
