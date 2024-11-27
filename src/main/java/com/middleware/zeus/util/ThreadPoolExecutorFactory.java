@@ -15,7 +15,7 @@ public class ThreadPoolExecutorFactory {
     private static final Integer THREAD_SIZE;
 
     static {
-        THREAD_SIZE = Integer.valueOf(SpringContextUtils.getProperty("system.thread.size", "20"));
+        THREAD_SIZE = Integer.valueOf(SpringContextUtils.getProperty("system.thread.size", "100"));
     }
 
 
