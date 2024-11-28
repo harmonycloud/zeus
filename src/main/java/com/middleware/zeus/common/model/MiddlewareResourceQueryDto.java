@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.ss.formula.functions.T;
 
 import java.util.Comparator;
 import java.util.List;
@@ -26,10 +27,10 @@ public class MiddlewareResourceQueryDto {
     private String type;
 
     @ApiModelProperty("当前页")
-    private Integer current;
+    private Integer current = 1;
 
     @ApiModelProperty("页大小")
-    private Integer size;
+    private Integer size = 5;
 
     @ApiModelProperty("关键词检索")
     private String keyword;
@@ -46,72 +47,72 @@ public class MiddlewareResourceQueryDto {
     @ApiModelProperty("降序/升序: desc/asc")
     private String collation;
 
-    public void sortMiddlewareResourceInfo(List<MiddlewareResourceInfo> mwRsInfoList){
-        if (StringUtils.isEmpty(this.orderBy)){
+    public <T extends BaseResourceInfo> void sortMiddlewareResourceInfo(List<T> resourceInfoList) {
+        if (StringUtils.isEmpty(orderBy)){
             return;
         }
         switch (this.orderBy){
             case "requestCpu":
                 if ("desc".equals(this.collation)) {
-                    mwRsInfoList.sort((o1, o2) -> o2.getRequestCpu().compareTo(o1.getRequestCpu()));
+                    resourceInfoList.sort((o1, o2) -> o2.getRequestCpu().compareTo(o1.getRequestCpu()));
                 } else {
-                    mwRsInfoList.sort(Comparator.comparing(MiddlewareResourceInfo::getRequestCpu));
+                    resourceInfoList.sort(Comparator.comparing(BaseResourceInfo::getRequestCpu));
                 }
                 break;
             case "per5MinCpu":
                 if ("desc".equals(this.collation)) {
-                    mwRsInfoList.sort((o1, o2) -> o2.getPer5MinCpu().compareTo(o1.getPer5MinCpu()));
+                    resourceInfoList.sort((o1, o2) -> o2.getPer5MinCpu().compareTo(o1.getPer5MinCpu()));
                 } else {
-                    mwRsInfoList.sort(Comparator.comparing(MiddlewareResourceInfo::getPer5MinCpu));
+                    resourceInfoList.sort(Comparator.comparing(BaseResourceInfo::getPer5MinCpu));
                 }
                 break;
             case "cpuRate":
                 if ("desc".equals(this.collation)) {
-                    mwRsInfoList.sort((o1, o2) -> o2.getCpuRate().compareTo(o1.getCpuRate()));
+                    resourceInfoList.sort((o1, o2) -> o2.getCpuRate().compareTo(o1.getCpuRate()));
                 } else {
-                    mwRsInfoList.sort(Comparator.comparing(MiddlewareResourceInfo::getCpuRate));
+                    resourceInfoList.sort(Comparator.comparing(BaseResourceInfo::getCpuRate));
                 }
                 break;
             case "requestMemory":
                 if ("desc".equals(this.collation)) {
-                    mwRsInfoList.sort((o1, o2) -> o2.getRequestMemory().compareTo(o1.getRequestMemory()));
+                    resourceInfoList.sort((o1, o2) -> o2.getRequestMemory().compareTo(o1.getRequestMemory()));
                 } else {
-                    mwRsInfoList.sort(Comparator.comparing(MiddlewareResourceInfo::getRequestMemory));
+                    resourceInfoList.sort(Comparator.comparing(BaseResourceInfo::getRequestMemory));
                 }
                 break;
             case "per5MinMemory":
                 if ("desc".equals(this.collation)) {
-                    mwRsInfoList.sort((o1, o2) -> o2.getPer5MinMemory().compareTo(o1.getPer5MinMemory()));
+                    resourceInfoList.sort((o1, o2) -> o2.getPer5MinMemory().compareTo(o1.getPer5MinMemory()));
                 } else {
-                    mwRsInfoList.sort(Comparator.comparing(MiddlewareResourceInfo::getPer5MinMemory));
+                    resourceInfoList.sort(Comparator.comparing(BaseResourceInfo::getPer5MinMemory));
                 }
                 break;
             case "memoryRate":
                 if ("desc".equals(this.collation)) {
-                    mwRsInfoList.sort((o1, o2) -> o2.getMemoryRate().compareTo(o1.getMemoryRate()));
+                    resourceInfoList.sort((o1, o2) -> o2.getMemoryRate().compareTo(o1.getMemoryRate()));
                 } else {
-                    mwRsInfoList.sort(Comparator.comparing(MiddlewareResourceInfo::getMemoryRate));
+                    resourceInfoList.sort(Comparator.comparing(BaseResourceInfo::getMemoryRate));
                 }
                 break;
             case "requestStorage":
                 if ("desc".equals(this.collation)) {
-                    mwRsInfoList.sort((o1, o2) -> o2.getRequestStorage().compareTo(o1.getRequestStorage()));
+                    resourceInfoList.sort((o1, o2) -> o2.getRequestStorage().compareTo(o1.getRequestStorage()));
                 } else {
-                    mwRsInfoList.sort(Comparator.comparing(MiddlewareResourceInfo::getRequestStorage));
+                    resourceInfoList.sort(Comparator.comparing(BaseResourceInfo::getRequestStorage));
                 }
                 break;
             case "per5MinStorage":
                 if ("desc".equals(this.collation)) {
-                    mwRsInfoList.sort((o1, o2) -> o2.getPer5MinStorage().compareTo(o1.getPer5MinStorage()));
+                    resourceInfoList.sort((o1, o2) -> o2.getPer5MinStorage().compareTo(o1.getPer5MinStorage()));
                 } else {
-                    mwRsInfoList.sort(Comparator.comparing(MiddlewareResourceInfo::getPer5MinStorage));
+                    resourceInfoList.sort(Comparator.comparing(BaseResourceInfo::getPer5MinStorage));
                 }
                 break;
             case "storageRate":
                 if ("desc".equals(this.collation)) {
-                    mwRsInfoList.sort((o1, o2) -> o2.getStorageRate().compareTo(o1.getStorageRate()));
+                    resourceInfoList.sort((o1, o2) -> o2.getStorageRate().compareTo(o1.getStorageRate()));
                 } else {
-                    mwRsInfoList.sort(Comparator.comparing(MiddlewareResourceInfo::getStorageRate));
+                    resourceInfoList.sort(Comparator.comparing(BaseResourceInfo::getStorageRate));
                 }
                 break;
             default:

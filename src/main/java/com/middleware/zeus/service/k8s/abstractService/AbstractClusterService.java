@@ -640,24 +640,29 @@ public abstract class AbstractClusterService {
         return nodeService.getNodeResource(clusterId, nodeList, true);
     }
 
-    public PageInfo<ClusterNamespaceResourceDto> getNamespaceResource(String clusterId, String target, String keyword,
-        Integer current, Integer size) throws Exception {
+    public PageInfo<ClusterNamespaceResourceDto> getNamespaceResource(String clusterId, MiddlewareResourceQueryDto queryDto) throws Exception {
         List<Namespace> namespaceList = namespaceService.list(clusterId);
         // 根据name和aliasName进行模糊匹配
-        if (StringUtils.isNotEmpty(keyword)) {
+        if (StringUtils.isNotEmpty(queryDto.getKeyword())) {
             namespaceList = namespaceList.stream().filter(
-                ns -> (StringUtils.isNotEmpty(ns.getName()) && StringUtils.containsIgnoreCase(ns.getName(), keyword))
+                ns -> (StringUtils.isNotEmpty(ns.getName()) && StringUtils.containsIgnoreCase(ns.getName(), queryDto.getKeyword()))
                     || (StringUtils.isNotEmpty(ns.getAliasName())
-                        && StringUtils.containsIgnoreCase(ns.getClusterAliasName(), keyword)))
+                        && StringUtils.containsIgnoreCase(ns.getClusterAliasName(), queryDto.getKeyword())))
+                .collect(Collectors.toList());
+        }
+        // 命名空间过滤匹配
+        if (!CollectionUtils.isEmpty(queryDto.getNamespaceList())) {
+            namespaceList = namespaceList.stream()
+                .filter(ns -> queryDto.getNamespaceList().stream().anyMatch(n -> n.equals(ns.getName())))
                 .collect(Collectors.toList());
         }
         
-        PageInfo<Namespace> namespacePageInfo = PageUtil.convertPage(namespaceList, current, size);
+        PageInfo<Namespace> namespacePageInfo = PageUtil.convertPage(namespaceList, queryDto.getCurrent(), queryDto.getSize());
         Map<String, String> queryMap = new HashMap<>();
 
         Map<Map<String, String>, List<String>> cpuRequestResult = new HashMap<>();
         Map<Map<String, String>, List<String>> cpuPer5MinResult = new HashMap<>();
-        if (target.equals(CPU)){
+        if (queryDto.getTarget().equals(CPU)){
             // 查询cpu配额
             String cpuRequestQuery = "sum(container_spec_cpu_quota) by (namespace)/100000";
             queryMap.put("query", cpuRequestQuery);
@@ -675,7 +680,7 @@ public abstract class AbstractClusterService {
 
         Map<Map<String, String>, List<String>> memoryRequestResult = new HashMap<>();
         Map<Map<String, String>, List<String>> memoryPer5MinResult = new HashMap<>();
-        if (target.equals(MEMORY)){
+        if (queryDto.getTarget().equals(MEMORY)){
             // 查询memory配额
             String memoryRequestQuery = "(sum(container_spec_memory_limit_bytes) by (namespace))/1024/1024/1024";
             queryMap.put("query", memoryRequestQuery);
@@ -695,7 +700,7 @@ public abstract class AbstractClusterService {
 
         Map<Map<String, String>, List<String>> pvcRequestResult = new HashMap<>();
         Map<Map<String, String>, List<String>> pvcPer5MinResult = new HashMap<>();
-        if (target.equals(STORAGE)){
+        if (queryDto.getTarget().equals(STORAGE)){
             // 查询pvc总量
             String pvcTotalQuery =
                     "sum(kube_persistentvolumeclaim_resource_requests_storage_bytes) by (namespace) /1024/1024/1024";
@@ -722,7 +727,7 @@ public abstract class AbstractClusterService {
             nsMap.put(NAMESPACE, namespace.getName());
             // 获取cpu配额
             if (cpuRequestResult.containsKey(nsMap)) {
-                nsResource.setCpuRequest(getResourceResult(cpuRequestResult.get(nsMap).get(1)));
+                nsResource.setRequestCpu(getResourceResult(cpuRequestResult.get(nsMap).get(1)));
             }
             // 获取cpu5分钟平均使用量
             if (cpuPer5MinResult.containsKey(nsMap)) {
@@ -730,7 +735,7 @@ public abstract class AbstractClusterService {
             }
             // 获取memory配额
             if (memoryRequestResult.containsKey(nsMap)) {
-                nsResource.setMemoryRequest(getResourceResult(memoryRequestResult.get(nsMap).get(1)));
+                nsResource.setRequestMemory(getResourceResult(memoryRequestResult.get(nsMap).get(1)));
             }
             // 获取memory5分钟平均使用量
             if (memoryPer5MinResult.containsKey(nsMap)) {
@@ -738,33 +743,34 @@ public abstract class AbstractClusterService {
             }
             // 获取pvc总额
             if (pvcRequestResult.containsKey(nsMap)) {
-                nsResource.setPvcRequest(getResourceResult(pvcRequestResult.get(nsMap).get(1)));
+                nsResource.setRequestStorage(getResourceResult(pvcRequestResult.get(nsMap).get(1)));
             }
             // 获取pvc使用量
             if (pvcPer5MinResult.containsKey(nsMap)) {
-                nsResource.setPer5MinPvc(getResourceResult((pvcPer5MinResult.get(nsMap).get(1))));
+                nsResource.setPer5MinCpu(getResourceResult((pvcPer5MinResult.get(nsMap).get(1))));
             }
             // 计算cpu使用率
-            if (nsResource.getCpuRequest() != null && nsResource.getPer5MinCpu() != null
-                    && nsResource.getCpuRequest() != 0) {
-                double cpuRate = nsResource.getPer5MinCpu() / nsResource.getCpuRequest() * 100;
+            if (nsResource.getRequestCpu() != null && nsResource.getPer5MinCpu() != null
+                    && nsResource.getRequestCpu() != 0) {
+                double cpuRate = nsResource.getPer5MinCpu() / nsResource.getRequestCpu() * 100;
                 nsResource.setCpuRate(ResourceCalculationUtil.roundNumber2TwoDecimalWithCeiling(cpuRate));
             }
             // 计算memory使用率
-            if (nsResource.getMemoryRequest() != null && nsResource.getPer5MinMemory() != null
-                    && nsResource.getMemoryRequest() != 0) {
-                double memoryRate = nsResource.getPer5MinMemory() / nsResource.getMemoryRequest() * 100;
+            if (nsResource.getRequestMemory() != null && nsResource.getPer5MinMemory() != null
+                    && nsResource.getRequestMemory() != 0) {
+                double memoryRate = nsResource.getPer5MinMemory() / nsResource.getRequestMemory() * 100;
                 nsResource.setMemoryRate(ResourceCalculationUtil.roundNumber2TwoDecimalWithCeiling(memoryRate));
             }
             // 计算pvc使用率
-            if (nsResource.getPvcRequest() != null && nsResource.getPer5MinPvc() != null
-                    && nsResource.getPvcRequest() != 0) {
-                double pvcRate = nsResource.getPer5MinPvc() / nsResource.getPvcRequest() * 100;
-                nsResource.setPvcRate(ResourceCalculationUtil.roundNumber2TwoDecimalWithCeiling(pvcRate));
+            if (nsResource.getRequestStorage() != null && nsResource.getPer5MinStorage() != null
+                    && nsResource.getRequestStorage() != 0) {
+                double pvcRate = nsResource.getPer5MinStorage() / nsResource.getRequestStorage() * 100;
+                nsResource.setStorageRate(ResourceCalculationUtil.roundNumber2TwoDecimalWithCeiling(pvcRate));
             }
             nsResource.setClusterId(clusterId).setName(namespace.getName());
             clusterNamespaceResourceDtoList.add(nsResource);
         }
+        queryDto.sortMiddlewareResourceInfo(clusterNamespaceResourceDtoList);
         clusterNamespaceResourceDtoPageInfo.setList(clusterNamespaceResourceDtoList);
         return clusterNamespaceResourceDtoPageInfo;
     }

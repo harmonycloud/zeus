@@ -140,13 +140,10 @@ public class ClusterController {
             @ApiImplicitParam(name = "current", value = "当前页", required = false, paramType = "query", dataTypeClass = Long.class),
             @ApiImplicitParam(name = "size", value = "每页记录数", required = false, paramType = "query", dataTypeClass = Long.class),
     })
-    @GetMapping("/{clusterId}/namespace/resource")
+    @PostMapping("/{clusterId}/namespace/resource")
     public BaseResult<PageInfo<ClusterNamespaceResourceDto>> getNamespaceResource(@PathVariable(value = "clusterId") String clusterId,
-                                                                              @RequestParam("target") String target,
-                                                                              @RequestParam(value = "keyword", required = false) String keyword,
-                                                                              @RequestParam(value = "current", required = false, defaultValue = "1") Integer current,
-                                                                              @RequestParam(value = "size", required = false, defaultValue = "5") Integer size) throws Exception {
-        return BaseResult.ok(clusterService.getNamespaceResource(clusterId, target, keyword, current, size));
+                                                                                  @RequestBody MiddlewareResourceQueryDto middlewareResourceQueryDto) throws Exception {
+        return BaseResult.ok(clusterService.getNamespaceResource(clusterId, middlewareResourceQueryDto));
     }
 
     @ApiOperation(value = "获取集群纳管指令", notes = "获取集群纳管指令")
