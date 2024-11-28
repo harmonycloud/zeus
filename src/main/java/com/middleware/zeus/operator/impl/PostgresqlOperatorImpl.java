@@ -607,7 +607,7 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         HashSet<String> result = new HashSet<>();
         result.add("major");
         if(values.getBoolean("enableConnectionPooler")){
-            result.add("pgbouncer");
+            result.add("Pgbouncer");
         }
         return result;
     }
