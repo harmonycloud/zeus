@@ -167,7 +167,7 @@ public interface ClusterService {
      * @param size     每页大小
      * @return PageInfo<ClusterNamespaceResourceDto>
      */
-    PageInfo<ClusterNamespaceResourceDto> getNamespaceResource(String clusterId, String target, String keyword, Integer current, Integer size) throws Exception;
+    PageInfo<ClusterNamespaceResourceDto> getNamespaceResource(String clusterId, MiddlewareResourceQueryDto middlewareResourceQueryDto) throws Exception;
 
     /**
      * 获取快捷添加集群curl指令
