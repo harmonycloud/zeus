@@ -31,7 +31,7 @@ public class CustomConfigHistoryServiceImpl implements CustomConfigHistoryServic
     private BeanCustomConfigHistoryMapper beanCustomConfigHistoryMapper;
 
     @Override
-    public void insert(String middlewareName, Map<String, String> oldData,
+    public void insert(String middlewareName, Map<String, Object> oldData,
         MiddlewareCustomConfig middlewareCustomConfig) {
         Date now = new Date();
         for (CustomConfig customConfig : middlewareCustomConfig.getCustomConfigList()) {
@@ -40,14 +40,14 @@ public class CustomConfigHistoryServiceImpl implements CustomConfigHistoryServic
             beanCustomConfigHistory.setClusterId(middlewareCustomConfig.getClusterId());
             beanCustomConfigHistory.setNamespace(middlewareCustomConfig.getNamespace());
             beanCustomConfigHistory.setName(middlewareName);
-            beanCustomConfigHistory.setAfter(customConfig.getValue());
+            beanCustomConfigHistory.setAfter(customConfig.getValue().toString());
             beanCustomConfigHistory.setDate(now);
             beanCustomConfigHistory.setRestart(customConfig.getRestart());
             beanCustomConfigHistory.setStatus(false);
             beanCustomConfigHistory.setRole(middlewareCustomConfig.getRole());
             // 当前值不存在，选择默认值
             if (oldData.containsKey(customConfig.getName())) {
-                beanCustomConfigHistory.setLast(oldData.get(customConfig.getName()));
+                beanCustomConfigHistory.setLast(oldData.get(customConfig.getName()).toString());
             } else {
                 beanCustomConfigHistory.setLast(customConfig.getDefaultValue());
             }

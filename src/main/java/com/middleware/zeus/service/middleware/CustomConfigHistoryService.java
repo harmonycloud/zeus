@@ -21,7 +21,7 @@ public interface CustomConfigHistoryService {
      * @param oldData           原数据
      * @param middlewareCustomConfig 新数据
      */
-    void insert(String middlewareName, Map<String, String> oldData, MiddlewareCustomConfig middlewareCustomConfig);
+    void insert(String middlewareName, Map<String, Object> oldData, MiddlewareCustomConfig middlewareCustomConfig);
 
     /**
      * 获取修改历史

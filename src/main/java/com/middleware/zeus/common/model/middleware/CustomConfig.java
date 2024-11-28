@@ -23,7 +23,7 @@ public class CustomConfig {
     private String defaultValue;
 
     @ApiModelProperty("当前值")
-    private String value;
+    private Object value;
 
     @ApiModelProperty("是否重启")
     private Boolean restart;

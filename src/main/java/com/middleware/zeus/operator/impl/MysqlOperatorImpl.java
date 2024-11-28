@@ -448,7 +448,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
             if (data.get(i).contains(customConfig.getName())) {
                 String temp = StringUtils.substring(data.get(i), data.get(i).indexOf("=") + 1, data.get(i).length());
                 if (data.get(i).replace(" ", "").replace(temp, "").replace("=", "").equals(customConfig.getName())) {
-                    data.set(i, data.get(i).replace(temp, customConfig.getValue()));
+                    data.set(i, data.get(i).replace(temp, customConfig.getValue().toString()));
                 }
             }
         }
