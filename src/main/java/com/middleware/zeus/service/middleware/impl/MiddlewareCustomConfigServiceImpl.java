@@ -21,6 +21,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.util.ObjectUtils;
 import org.yaml.snakeyaml.Yaml;
 
 import com.alibaba.fastjson.JSONObject;
@@ -78,7 +79,7 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         JSONObject values = helmChartService.getInstalledValues(middlewareName, namespace, cluster);
         // 获取configs
         String valuesType = getOperator(BaseOperator.class, BaseOperator.class, middleware).changeConfigRoleToValueArg(role, false);
-        Map<String, String> data = getConfigFromValues(middleware, values, valuesType);
+        Map<String, Object> data = getConfigFromValues(middleware, values, valuesType);
         // 取出chartVersion
         middleware.setChartVersion(values.getString("chart-version"));
         // 获取数据库数据
@@ -99,7 +100,7 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         beanCustomConfigList.forEach(beanCustomConfig -> {
             CustomConfig customConfig = new CustomConfig();
             BeanUtils.copyProperties(beanCustomConfig, customConfig);
-            customConfig.setValue(data.getOrDefault(customConfig.getName(), ""));
+            customConfig.setValue(data.getOrDefault(customConfig.getName(), new Object()));
             customConfig.setParamType(customConfig.getRanges().contains("|") ? "select" : "input");
             // 设置最近一次修改时间
             if (beanCustomConfigHistoryListMap.containsKey(customConfig.getName())) {
@@ -129,12 +130,12 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         // 获取values
         JSONObject values = helmChartService.getInstalledValues(config.getName(), config.getNamespace(), cluster);
         // 获取configs
-        Map<String, String> data = getConfigFromValues(middleware, values, valuesType);
+        Map<String, Object> data = getConfigFromValues(middleware, values, valuesType);
         // 取出chartVersion
         middleware.setChartVersion(values.getString("chart-version"));
         middleware.setChartName(config.getType());
         // 记录当前数据
-        Map<String, String> oldDate = new HashMap<>(data);
+        Map<String, Object> oldDate = new HashMap<>(data);
         // 更新配置，并记录是否重启
         for (CustomConfig customConfig : config.getCustomConfigList()) {
             // 确认正则匹配
@@ -370,13 +371,13 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
      */
     public boolean checkPattern(CustomConfig customConfig) {
         if (StringUtils.isNotEmpty(customConfig.getPattern())) {
-            return Pattern.matches(customConfig.getPattern(), customConfig.getValue());
+            return Pattern.matches(customConfig.getPattern(), customConfig.getValue().toString());
         }
         return true;
     }
 
-    public Map<String, String> getConfigFromValues(Middleware middleware, JSONObject values, String valuesType) {
-        Map<String, String> data = new HashMap<>();
+    public Map<String, Object> getConfigFromValues(Middleware middleware, JSONObject values, String valuesType) {
+        Map<String, Object> data = new HashMap<>();
         JSONObject args;
         if (valuesType.equalsIgnoreCase("Master") && values.containsKey("args")) {
             args = values.getJSONObject("args");
@@ -386,7 +387,7 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
             return data;
         }
         for (String key : args.keySet()) {
-            data.put(key, args.getString(key));
+            data.put(key, args.get(key));
         }
         return data;
     }
@@ -394,7 +395,7 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
     /**
      * 更新values.yaml
      */
-    public void updateValues(Middleware middleware, Map<String, String> dataMap, MiddlewareClusterDTO cluster,
+    public void updateValues(Middleware middleware, Map<String, Object> dataMap, MiddlewareClusterDTO cluster,
         JSONObject values, String podType) {
         JSONObject newValues = JSONObject.parseObject(values.toJSONString());
         JSONObject args;
@@ -412,7 +413,7 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
             args = newValues.getJSONObject(podType).getJSONObject("args");
         }
         for (String key : dataMap.keySet()) {
-            if (StringUtils.isEmpty(dataMap.get(key))) {
+            if (ObjectUtils.isEmpty(dataMap.get(key))) {
                 continue;
             }
             args.put(key, dataMap.get(key));
@@ -494,7 +495,7 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         config.getCustomConfigList().forEach(customConfig -> {
             if (!customConfig.getRestart()) {
                 sb.append("set global ").append(customConfig.getName()).append("=");
-                if (isNum(customConfig.getValue())) {
+                if (isNum(customConfig.getValue().toString())) {
                     sb.append(customConfig.getValue()).append(";");
                 } else {
                     sb.append("'").append(customConfig.getValue()).append("'").append(";");
@@ -525,7 +526,7 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
             throw new BusinessException(ErrorMessage.CUSTOM_CONFIG_IS_EMPTY);
         }
         config.getCustomConfigList().forEach(customConfig -> {
-            if (StringUtils.isEmpty(customConfig.getValue())) {
+            if (ObjectUtils.isEmpty(customConfig.getValue())) {
                 log.error(ErrorMessage.CUSTOM_CONFIG_VALUE_IS_EMPTY.getZhMsg() + " :" + customConfig.getName());
                 throw new BusinessException(ErrorMessage.CUSTOM_CONFIG_VALUE_IS_EMPTY, customConfig.getName());
             }

@@ -461,7 +461,7 @@ public class RedisOperatorImpl extends AbstractRedisOperator implements RedisOpe
                 String temp = StringUtils.substring(data.get(i), data.get(i).indexOf(" ") + 1, data.get(i).length());
                 String test = data.get(i).replace(" ", "").replace(temp, "");
                 if (data.get(i).replace(" ", "").replace(temp, "").equals(customConfig.getName())) {
-                    data.set(i, data.get(i).replace(temp, customConfig.getValue()));
+                    data.set(i, data.get(i).replace(temp, customConfig.getValue().toString()));
                 }
             }
         }
