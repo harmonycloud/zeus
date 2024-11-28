@@ -37,4 +37,13 @@ public interface PrometheusResourceMonitorService {
      */
     PrometheusResponse query(String clusterId, String query) throws Exception;
 
+    /**
+     * 查询资源监控数据
+     *
+     * @param query 查询语句
+     * @param clusterId 集群id
+     * @return PrometheusResponse
+     */
+    Map<String, Double> sumResponseByTarget(PrometheusResponse response, String target) throws Exception;
+
 }

@@ -366,6 +366,11 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             String url = grafana.getAddress() + "/d/" + monitorDto.getUid() + "/" + middleware.getType()
                     + "?var-namespace=" + middleware.getNamespace() + "&"
                     + MiddlewareGrafanaNameEnum.findByType(middleware.getType()).getName() + "=" + middleware.getName();
+            //特殊处理Pgbouncer
+            if(monitorDto.getTitle().equals("PgBouncer")){
+                monitorDto.setTitle("Pgbouncer");
+                url = url + "-pgbouncer";
+            }
             monitorDto.setUrl(url);
             monitorDtoList.add(monitorDto);
         }
@@ -377,6 +382,20 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 .filter(
                     monitorDto -> !"cBk_ZGpGz1".equals(monitorDto.getUid()) && !"dHlrS1PVz".equals(monitorDto.getUid()))
                 .collect(Collectors.toList());
+        }
+        // 获取pgbouncer信息
+        Boolean withPgbouncer =
+                getOperator(BaseOperator.class, BaseOperator.class, middleware).withPgbouncer(clusterId, middleware);
+        if (!withPgbouncer) {
+            monitorDtoList = monitorDtoList.stream()
+                    .filter(
+                            monitorDto -> !"pgbouncer_00001".equals(monitorDto.getUid()))
+                    .collect(Collectors.toList());
+        }
+        if(monitorDtoList.get(0).getTitle().equals("Pgbouncer")){
+            MonitorDto monitorDto = monitorDtoList.get(0);
+            monitorDtoList.set(0, monitorDtoList.get(1));
+            monitorDtoList.set(1, monitorDto);
         }
         return monitorDtoList;
     }
@@ -830,7 +849,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 String totalCpuQuery = "sum(kube_pod_container_resource_requests{resource=\"cpu\",pod=~\"" + pods.toString()
                     + "\",namespace=\"" + namespace + "\"}) by (pod)";
                 PrometheusResponse totalCpu = prometheusResourceMonitorService.query(clusterId, totalCpuQuery);
-                Map<String, Double> result = convertResponse(totalCpu, false);
+                Map<String, Double> result = convertResponse(totalCpu);
                 middlewareTopologyDTO.getPods().forEach(podInfo -> {
                     String podName = podInfo.getPodName();
                     for(String key : result.keySet()){
@@ -852,7 +871,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 String usedCpuQuery = "sum(rate(container_cpu_usage_seconds_total{pod=~\"" + pods.toString()
                     + "\",namespace=\"" + namespace + "\",endpoint!=\"\",container!=\"\"}[5m])) by (pod)";
                 PrometheusResponse usedCpu = prometheusResourceMonitorService.query(clusterId, usedCpuQuery);
-                Map<String, Double> result = convertResponse(usedCpu, false);
+                Map<String, Double> result = convertResponse(usedCpu);
                 middlewareTopologyDTO.getPods().forEach(podInfo -> {
                     String podName = podInfo.getPodName();
                     for(String key : result.keySet()){
@@ -874,7 +893,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 String totalMemoryQuery = "sum(kube_pod_container_resource_requests{resource=\"memory\",pod=~\""
                     + pods.toString() + "\",namespace=\"" + namespace + "\"}) by (pod) /1024/1024/1024";
                 PrometheusResponse totalMemory = prometheusResourceMonitorService.query(clusterId, totalMemoryQuery);
-                Map<String, Double> result = convertResponse(totalMemory, false);
+                Map<String, Double> result = convertResponse(totalMemory);
                 middlewareTopologyDTO.getPods().forEach(podInfo -> {
                     String podName = podInfo.getPodName();
                     for(String key : result.keySet()){
@@ -896,7 +915,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 String usedMemoryQuery = "sum(container_memory_working_set_bytes{pod=~\"" + pods.toString()
                     + "\",namespace=\"" + namespace + "\",endpoint!=\"\",container!=\"\"}) by (pod) /1024/1024/1024";
                 PrometheusResponse usedMemory = prometheusResourceMonitorService.query(clusterId, usedMemoryQuery);
-                Map<String, Double> result = convertResponse(usedMemory, false);
+                Map<String, Double> result = convertResponse(usedMemory);
                 middlewareTopologyDTO.getPods().forEach(podInfo -> {
                     String podName = podInfo.getPodName();
                     for(String key : result.keySet()){
@@ -928,7 +947,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             try {
                 String totalStorageQuery = "sum(total_size_kb{pv=~\"" + pvcs.toString() + "\"}) by (pv) /1024/1024";
                 PrometheusResponse totalStorage = prometheusResourceMonitorService.query(clusterId, totalStorageQuery);
-                Map<String, Double> result = convertResponse(totalStorage, true);
+                Map<String, Double> result = convertResponse(totalStorage);
                 middlewareTopologyDTO.getPods().forEach(podInfo -> {
                     String podName = podInfo.getPodName();
                     for(String key : pvcVolumeMap.keySet()){
@@ -949,7 +968,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             try {
                 String usedStorageQuery = "sum(used_size_kb{pv=~\"" + pvcs.toString() + "\"}) by (pv) /1024/1024";
                 PrometheusResponse usedStorage = prometheusResourceMonitorService.query(clusterId, usedStorageQuery);
-                Map<String, Double> result = convertResponse(usedStorage, true);
+                Map<String, Double> result = convertResponse(usedStorage);
                 middlewareTopologyDTO.getPods().forEach(podInfo -> {
                     String podName = podInfo.getPodName();
                     for(String key : pvcVolumeMap.keySet()){
@@ -1361,7 +1380,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         return !current.equals(upgrade);
     }
 
-    public Map<String, Double> convertResponse(PrometheusResponse response, Boolean storage) {
+    public Map<String, Double> convertResponse(PrometheusResponse response) {
         Map<String, Double> map = new HashMap<>();
         response.getData().getResult().forEach(res -> {
             res.getMetric().forEach((k, v) -> {

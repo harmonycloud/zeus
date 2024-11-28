@@ -11,6 +11,8 @@ public class UUIDUtils {
     public static final int UUID_LENGTH_16 = 16;
     public static final int UUID_LENGTH_8 = 8;
 
+    public static final int UUID_LENGTH_5 = 5;
+
     /**
      * 生成随机字符串UUID（长度32）
      *
@@ -38,6 +40,15 @@ public class UUIDUtils {
      */
     public static String get8UUID() {
         return getUUID().substring(0, UUID_LENGTH_8);
+    }
+
+    /**
+     * 生成5位随机字符串UUID
+     *
+     * @return
+     */
+    public static String get5UUID() {
+        return getUUID().substring(0, UUID_LENGTH_5);
     }
 
 }

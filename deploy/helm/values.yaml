@@ -14,7 +14,8 @@ global:
       limits:
         cpu: 2000m
         memory: 4Gi
-    nodeSelector: {}
+    nodeSelector:
+      system: "true"
   zeus_ui:
     image: zeus-ui
     tag: v1.3.7-hk
@@ -27,7 +28,8 @@ global:
       limits:
         cpu: 500m
         memory: 512Mi
-    nodeSelector: {}
+    nodeSelector:
+      system: "true"
   zeus_mysql:
     replicaCount: 1
     image: zeus-mysql

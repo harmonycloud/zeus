@@ -9,6 +9,7 @@ import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant
 
 import java.text.MessageFormat;
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import cn.hutool.core.collection.CollectionUtil;
@@ -496,6 +497,11 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
             sb.append("connectionPooler.numberOfInstances=").append(middleware.getPostgresqlParam().getPoolerInstanceNum()).append(",");
         }
         if (middleware.getPostgresqlParam()!=null&&middleware.getPostgresqlParam().getConnectionPoolerCpu()!=null){
+            Pattern pattern = Pattern.compile("^[0-9]+$");
+            if (StringUtils.isNotEmpty(middleware.getPostgresqlParam().getConnectionPoolerCpu()) &&
+                    pattern.matcher(middleware.getPostgresqlParam().getConnectionPoolerCpu()).matches()) {
+                middleware.getPostgresqlParam().setConnectionPoolerCpu(middleware.getPostgresqlParam().getConnectionPoolerCpu() + DOT + "0");
+            }
             sb.append("connectionPooler.resources.limits.cpu=").append(middleware.getPostgresqlParam().getConnectionPoolerCpu()).append(",");
             sb.append("connectionPooler.resources.requests.cpu=").append(middleware.getPostgresqlParam().getConnectionPoolerCpu()).append(",");
             sb.append("connectionPooler.resources.limits.memory=").append(middleware.getPostgresqlParam().getConnectionPoolerMemory()).append(",");
@@ -595,6 +601,21 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         }
         return patroniPort;
     }
-    
+
+    @Override
+    public Set<String> getCustomConfigRole(JSONObject values) {
+        HashSet<String> result = new HashSet<>();
+        result.add("major");
+        if(values.getBoolean("enableConnectionPooler")){
+            result.add("pgbouncer");
+        }
+        return result;
+    }
+
+    @Override
+    public Boolean withPgbouncer(String clusterId, Middleware middleware) {
+        JSONObject values = helmChartService.getInstalledValues(middleware, clusterService.findById(clusterId));
+        return values.getBoolean("enableConnectionPooler");
+    }
 }
 

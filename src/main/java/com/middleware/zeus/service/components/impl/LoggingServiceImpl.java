@@ -230,12 +230,16 @@ public class LoggingServiceImpl extends AbstractBaseOperator implements LoggingS
         }
     }
 
-    @Override
-    public void record2SystemConfig(ClusterComponentsDto clusterComponentsDto) {
+    public void expand(ClusterComponentsDto clusterComponentsDto) {
         try {
             esService.resetEsClient(clusterComponentsDto.getClusterId());
         } catch (Exception e) {
             log.error("更新日志组件缓存出错了", e);
+        }
+        try {
+            esService.initEsIndexTemplate(clusterComponentsDto.getClusterId());
+        } catch (Exception e) {
+            log.error("初始化日志模板失败", e);
         }
         try {
             esService.createOrUpdateLogSaveTime(clusterComponentsDto.getClusterId(), clusterComponentsDto.getLogSaveTime());

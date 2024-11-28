@@ -84,6 +84,12 @@ spec:
       schedulerName: default-scheduler
       securityContext: {}
       serviceAccount: zeus
+      tolerations:
+        - effect: NoSchedule
+          key: harm.cn/type
+          value: active-active
+        - effect: NoSchedule
+          key: harm.cn/system
       terminationGracePeriodSeconds: 30
       volumes:
       - configMap:

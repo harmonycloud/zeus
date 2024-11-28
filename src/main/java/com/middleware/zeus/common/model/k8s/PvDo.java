@@ -18,6 +18,9 @@ public class PvDo {
     @ApiModelProperty("pvc名称")
     private String pvcName;
 
+    @ApiModelProperty("命名空间")
+    private String namespace;
+
     @ApiModelProperty("回收策略")
     private String reclaimPolicy;
 

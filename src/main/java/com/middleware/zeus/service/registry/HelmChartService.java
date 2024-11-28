@@ -97,6 +97,13 @@ public interface HelmChartService {
     List<HelmInfoDo> listInstalledValues(String clusterId, String namespace, Boolean decode);
 
     /**
+     * 解码values
+     *
+     * @param helmInfoDo helm信息
+     */
+    HelmInfoDo decodeValues(HelmInfoDo helmInfoDo);
+
+    /**
      * 获取zeus-mysql的values
      * @return
      */
@@ -303,5 +310,14 @@ public interface HelmChartService {
      * @return
      */
     String getMiddlewareMode(String middlewareName, String namespace, String clusterId);
+
+    /**
+     * 根据middleeware list，获取values并封装信息
+     * @param middlewareList
+     * @return List<Middleware>
+     */
+    List<Middleware> convertMiddlewareList(List<Middleware> middlewareList);
+
+
 
 }

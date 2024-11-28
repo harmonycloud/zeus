@@ -1,8 +1,11 @@
 package com.middleware.zeus.service.user;
 
+import com.github.pagehelper.PageInfo;
 import com.middleware.zeus.common.model.BackupServerDTO;
+import com.middleware.zeus.common.model.MiddlewareResourceQueryDto;
 import com.middleware.zeus.common.model.ResourceQuotaDo;
 import com.middleware.zeus.common.model.middleware.MiddlewareClusterDTO;
+import com.middleware.zeus.common.model.middleware.MiddlewareResourceInfo;
 import com.middleware.zeus.common.model.middleware.Namespace;
 import com.middleware.zeus.common.model.middleware.ProjectMiddlewareResourceInfo;
 import com.middleware.zeus.common.model.user.*;
@@ -175,7 +178,16 @@ public interface ProjectService {
      *
      * @return List<ProjectMiddlewareResourceInfo>
      */
-    List<ProjectMiddlewareResourceInfo> middlewareResource(String organId, String projectId) throws Exception;
+    PageInfo<MiddlewareResourceInfo> middlewareResource(String organId, String projectId, MiddlewareResourceQueryDto queryDto) throws Exception;
+
+    /**
+     * 获取项目下中间件资源
+     * @param organId 组织id
+     * @param projectId 项目id
+     *
+     * @return List<ProjectMiddlewareResourceInfo>
+     */
+    List<String> userMiddlewareType(String organId, String projectId);
 
     /**
      * 查询项目列表

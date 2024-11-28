@@ -1642,6 +1642,10 @@ public abstract class AbstractBaseOperator {
         return false;
     }
 
+    public Boolean withPgbouncer(String clusterId, Middleware middleware){
+        return false;
+    }
+
     public void convertDeployConfiguration(JSONObject configuration, List<AffinityDTO> nodeAffinity, List<String> tolerations){
         if (configuration == null){
             return;

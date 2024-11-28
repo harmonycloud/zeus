@@ -146,6 +146,7 @@ public class MiddlewareBackupController {
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "query", dataTypeClass = String.class)
     })
     @GetMapping("/checkSchedule")
+    @Deprecated
     public BaseResult checkSchedule(@PathVariable("clusterId") String clusterId,
                                     @PathVariable("namespace") String namespace,
                                     @RequestParam("type") String type,

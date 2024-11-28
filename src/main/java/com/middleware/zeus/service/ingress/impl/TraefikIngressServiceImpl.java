@@ -117,9 +117,7 @@ public class TraefikIngressServiceImpl extends AbstractBaseOperator implements T
             // convert to k8s model
             JSONObject nodeAffinity = K8sConvert.convertNodeAffinity2Json(ingressComponentDto.getNodeAffinity());
             if (nodeAffinity != null) {
-                JSONObject affinity = new JSONObject();
-                affinity.put("nodeAffinity", nodeAffinity);
-                values.put("affinity", affinity);
+                values.put("nodeAffinity", nodeAffinity);
             }
         }
         // toleration

@@ -341,7 +341,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 new MiddlewareBackupScheduleSpec.MiddlewareBackupScheduleDestination();
         destination.setDestinationType("minio").setParameters(
                 new MiddlewareBackupScheduleSpec.MiddlewareBackupScheduleDestination.MiddlewareBackupParameters(
-                        minio.getBucketName(), minio.getEndpoint(), backupDTO.getType(), base64AccessKeyId,
+                        minio.getBucketName(), minio.getEndpoint(), UUIDUtils.get8UUID(), base64AccessKeyId,
                         base64SecretAccessKey, "MTIzNDU2Cg=="));
         // 设置备份类型(全量备份)
         List<Map<String, List<Map<String, String>>>> customBackups = new ArrayList<>();
@@ -1268,7 +1268,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         if (enable){
             for (MiddlewareBackupSchedule schedule : middlewareBackupScheduleList){
                 if (schedule.getSpec().getPause().equalsIgnoreCase(OFF)){
-                    throw new BusinessException(ErrorMessage.RUNNING_SCHEDULE_BACKUP_EXISTED);
+                    // 将其pause更新为ON
+                    schedule.getSpec().setPause(ON);
+                    backupScheduleCRDService.update(clusterId, schedule);
                 }
             }
             // 若不存在当前pause为OFF的周期备份任务，则将对应backupId的周期备份任务的pause修改为OFF
@@ -1330,7 +1332,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         }
         // 根据zone查询对应的全量备份任务
         MiddlewareBackupSchedule schedule;
-        if (zone != null) {
+        if (!StringUtils.isEmpty(zone)) {
             schedule = scheduleCRList.stream()
                 .filter(item -> zone.equals(item.getMetadata().getLabels().get(ACTIVE_AREA))).findFirst().orElse(null);
         } else {
@@ -1346,8 +1348,14 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         }
         // 数据结构解析
         JSONObject storageProvider = incr.getStatus().getStorageProvider();
-        JSONObject time = storageProvider.getJSONObject(incr.getSpec().getType());
-        // 判断date是否为null
+        if (storageProvider == null) {
+            return restoreTime;
+        }
+        JSONObject time = storageProvider.getJSONObject(middlewareCrTypeService.findTypeByCrType(incr.getSpec().getType()));
+        // 判断time是否为null
+        if (time == null) {
+            return restoreTime;
+        }
 
         if (dateStr != null) {
             Date date = DateUtils.parseDate(dateStr, DateUtils.YYYY_MM_DD);
@@ -1397,7 +1405,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 restoreTime.setTimeRange(Collections.singletonList(timeRangeDto));
             }
         } else {
-            if (time != null && time.containsKey("startTime") && time.containsKey("endTime")) {
+            if (time.containsKey("startTime") && time.containsKey("endTime")) {
                 Date startTime = DateUtils.parseUTCDate(time.getString("startTime"));
                 Date endTime = DateUtils.parseUTCDate(time.getString("endTime"));
                 restoreTime.setStartTime(startTime).setEndTime(endTime);
@@ -2390,18 +2398,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     /**
      * 校验备份任务是否已存在
      *
-     * @param backupDTO
-     */
-    public void checkBackupScheduleExist(MiddlewareBackupDTO backupDTO) {
-        String backupId = backupDTO.getLabels().get("backupId");
-        if (checkBackupScheduleExist(backupDTO.getClusterId(), backupDTO.getNamespace(), backupDTO.getMiddlewareName(), backupId)) {
-            throw new BusinessException(ErrorMessage.MIDDLEWARE_BACKUP_SCHEDULE_EXIST);
-        }
-    }
-
-    /**
-     * 校验备份任务是否已存在
-     *
      * @param clusterId
      * @param namespace
      * @param middlewareName
@@ -2416,7 +2412,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 items = items.stream().filter(cr ->
                         !cr.getMetadata().getLabels().getOrDefault("backupId", backupId).equals(backupId)).collect(Collectors.toList());
             }
-            return items.stream().anyMatch(item -> item.getSpec().getName().equals(middlewareName));
+            return items.stream().anyMatch(item -> item.getSpec().getName().equals(middlewareName) && item.getSpec().getPause().equals(OFF));
         }
         return false;
     }

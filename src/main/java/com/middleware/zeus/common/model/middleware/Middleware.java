@@ -224,6 +224,9 @@ public class Middleware implements Serializable {
     @ApiModelProperty("values.yaml")
     private JSONObject values;
 
+    @ApiModelProperty("pvc")
+    private List<String> pvcs;
+
     public Middleware(String clusterId, String namespace, String name, String type) {
         this.clusterId = clusterId;
         this.namespace = namespace;

@@ -131,30 +131,35 @@ logstashPipeline:
           }
         }
         if [k8s_container_name] == "redis-init" {
-          grok {
-            match => {"message" => "(?<LogTime>(%{MONTHDAY}%{SPACE}%{MONTH}%{SPACE}%{YEAR})%{SPACE}(%{TIME}))"}
-          }
-     
-          date {
-            match => [ "LogTime", "dd MMM YYYY HH:mm:ss.SSS"]
-            target => "@timestamp"
-            timezone => "Asia/Shanghai"
-            remove_field => ["LogTime"]
-          }
+          drop{}
         }
       }
       else if [index] == "middlewarestdout" {
-        grok {
-          match => { "message" => "%{TIMESTAMP_ISO8601:timestamp} %{WORD:word1} %{WORD:word2} %{GREEDYDATA:logmessage}" }
-        }
-        mutate {
-          replace => { "message" => "%{logmessage}" }
-          remove_field => ["timestamp","word1","word2","logmessage"]
-        }
-        date{
-          match => ["time", "ISO8601"]
-          target => "@timestamp"
-          timezone => "Asia/Shanghai"
+        if [message] =~ /^\s*\{.*\}\s*$/ {
+          json {
+            source => "message"
+          }
+          mutate {
+            rename => { "log" => "message" }
+          }
+          date{
+            match => ["time", "ISO8601"]
+            target => "@timestamp"
+            timezone => "Asia/Shanghai"
+          }
+        } else {
+          grok {
+            match => { "message" => "%{TIMESTAMP_ISO8601:timestamp} %{WORD:word1} %{WORD:word2} %{GREEDYDATA:logmessage}" }
+          }
+          date{
+            match => ["timestamp", "ISO8601"]
+            target => "@timestamp"
+            timezone => "Asia/Shanghai"
+          }
+          mutate {
+            replace => { "message" => "%{logmessage}" }
+            remove_field => ["timestamp","word1","word2","logmessage"]
+          }
         }
       }
       # for es log

@@ -3,10 +3,14 @@ nodeSelector:
 
 # Tolerations to use for the lvm-provisioner deployment. Optional.
 tolerations:
-  - operator: Exists
+  - effect: NoSchedule
+    key: harm.cn/type
+    value: active-active
+  - effect: NoSchedule
+    key: harm.cn/system
 
 storage:
-  default: false
+  default: true
   vgName: logvg02
   storageClassName: middleware-lvm
   size: 100

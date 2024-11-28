@@ -23,7 +23,7 @@ spec:
     spec:
       containers:
         - name: fs-exporter
-          image: "{{ .Values.image.registry }}{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           command:
             - /fs-exporter
             - "--web.listen-address={{ .Values.web.listenAddress }}"
