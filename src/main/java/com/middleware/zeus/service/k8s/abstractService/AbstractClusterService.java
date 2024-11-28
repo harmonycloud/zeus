@@ -767,7 +767,7 @@ public abstract class AbstractClusterService {
                 double pvcRate = nsResource.getPer5MinStorage() / nsResource.getRequestStorage() * 100;
                 nsResource.setStorageRate(ResourceCalculationUtil.roundNumber2TwoDecimalWithCeiling(pvcRate));
             }
-            nsResource.setClusterId(clusterId).setName(namespace.getName());
+            nsResource.setClusterId(clusterId).setNamespace(namespace.getName());
             clusterNamespaceResourceDtoList.add(nsResource);
         }
         queryDto.sortMiddlewareResourceInfo(clusterNamespaceResourceDtoList);
