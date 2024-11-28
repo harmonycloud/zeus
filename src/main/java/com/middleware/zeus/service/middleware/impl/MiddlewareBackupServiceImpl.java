@@ -722,12 +722,14 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         List<Map<String, String>> envList = new ArrayList<>();
         Map<String, Object> map = new HashMap<>();
         args.add("--backupNamespace=" + namespace);
-        args.add("--backupResultName=" + backupName);
         if (StringUtils.isEmpty(restoreTime)) {
             if (MiddlewareTypeEnum.POSTGRESQL.getType().equals(type) || MiddlewareTypeEnum.MYSQL.getType().equals(type)) {
                 args.add("--mode=full");
             }
+            args.add("--backupResultName=" + backupName);
         } else {
+            String baksIncrName = backupName.substring(0, backupName.lastIndexOf("-")) + "-incr";
+            args.add("--backupResultName=" + baksIncrName);
             args.add("--mode=inc");
             Map<String, String> envMap = new HashMap<>();
             envMap.put(NAME, RESTORE_TIME);
