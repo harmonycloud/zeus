@@ -19,6 +19,6 @@ public class ClusterNamespaceResourceDto extends BaseResourceInfo {
     private String clusterId;
 
     @ApiModelProperty("分区名称")
-    private String name;
+    private String namespace;
 
 }
