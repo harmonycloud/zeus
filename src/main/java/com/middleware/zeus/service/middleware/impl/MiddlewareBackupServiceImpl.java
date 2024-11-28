@@ -1349,7 +1349,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         if (storageProvider == null) {
             return restoreTime;
         }
-        JSONObject time = storageProvider.getJSONObject(incr.getSpec().getType());
+        JSONObject time = storageProvider.getJSONObject(middlewareCrTypeService.findTypeByCrType(incr.getSpec().getType()));
         // 判断time是否为null
         if (time == null) {
             return restoreTime;
