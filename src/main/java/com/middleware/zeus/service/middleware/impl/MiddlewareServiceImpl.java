@@ -366,7 +366,9 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             String url = grafana.getAddress() + "/d/" + monitorDto.getUid() + "/" + middleware.getType()
                     + "?var-namespace=" + middleware.getNamespace() + "&"
                     + MiddlewareGrafanaNameEnum.findByType(middleware.getType()).getName() + "=" + middleware.getName();
+            //特殊处理Pgbouncer
             if(monitorDto.getTitle().equals("PgBouncer")){
+                monitorDto.setTitle("Pgbouncer");
                 url = url + "-pgbouncer";
             }
             monitorDto.setUrl(url);
@@ -389,6 +391,11 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                     .filter(
                             monitorDto -> !"pgbouncer_00001".equals(monitorDto.getUid()))
                     .collect(Collectors.toList());
+        }
+        if(monitorDtoList.get(0).getTitle().equals("Pgbouncer")){
+            MonitorDto monitorDto = monitorDtoList.get(0);
+            monitorDtoList.set(0, monitorDtoList.get(1));
+            monitorDtoList.set(1, monitorDto);
         }
         return monitorDtoList;
     }
