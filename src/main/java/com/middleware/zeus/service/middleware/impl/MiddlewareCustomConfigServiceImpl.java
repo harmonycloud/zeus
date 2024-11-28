@@ -100,7 +100,7 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         beanCustomConfigList.forEach(beanCustomConfig -> {
             CustomConfig customConfig = new CustomConfig();
             BeanUtils.copyProperties(beanCustomConfig, customConfig);
-            customConfig.setValue(data.getOrDefault(customConfig.getName(), new Object()));
+            customConfig.setValue(data.getOrDefault(customConfig.getName(), ""));
             customConfig.setParamType(customConfig.getRanges().contains("|") ? "select" : "input");
             // 设置最近一次修改时间
             if (beanCustomConfigHistoryListMap.containsKey(customConfig.getName())) {
