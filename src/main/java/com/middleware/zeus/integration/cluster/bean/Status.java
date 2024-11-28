@@ -30,7 +30,7 @@ public class Status {
         private String name;
         private String nodeName;
         private String podIP;
-        private String status;
+        private Object status;
         private String type;
     }
 
