@@ -27,6 +27,7 @@ import com.middleware.zeus.util.encrypt.RSAUtils;
 import com.middleware.zeus.util.numeric.ResourceCalculationUtil;
 import com.skyview.language.annotations.TranslateAfterResult;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -41,6 +42,8 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 import static com.middleware.zeus.common.constants.NameConstant.*;
@@ -53,7 +56,9 @@ import static com.middleware.zeus.common.constants.NameConstant.*;
 @Slf4j
 public class LicenseServiceImpl implements LicenseService {
 
-
+    protected final ReentrantLock lock = new ReentrantLock();
+    
+    
     @Value("${system.license.enable:true}")
     private String enable;
     @Value("${system.disasterRecovery:true}")
@@ -124,7 +129,7 @@ public class LicenseServiceImpl implements LicenseService {
 
         // 更新license
         String licenseStr = RSAUtils.encryptByPublicKey(exist.toJSONString(), PUBLIC_KEY);
-        BeanSystemConfig zeusLicense = systemConfigService.getConfigForUpdate(ZEUS_LICENSE);
+        BeanSystemConfig zeusLicense = systemConfigService.getConfig(ZEUS_LICENSE);
         if (zeusLicense == null) {
             systemConfigService.addConfig(ZEUS_LICENSE, licenseStr);
         } else {
@@ -178,14 +183,39 @@ public class LicenseServiceImpl implements LicenseService {
         return license.getDoubleValue(type) - cpu > limit;
     }
 
+
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void refreshMiddlewareResource() throws Exception {
-        if (!Boolean.parseBoolean(enable)){
+    public void lockRefreshLicense() {
+        ThreadPoolExecutorFactory.executor.execute(() -> {
+            try {
+                if (lock.tryLock(1, TimeUnit.SECONDS)) {
+                    try {
+                        this.refreshLicense();
+                        try {
+                            log.info("License: 刷新license成功，将静默30s");
+                            Thread.sleep(10000);
+                        } catch (InterruptedException e) {
+                            log.error("License: 线程休眠异常", e);
+                        }
+                    } catch (Exception e){
+                        e.printStackTrace();
+                    } finally {
+                        lock.unlock();
+                    }
+                }
+            } catch (Exception e){
+                e.printStackTrace();
+            }
+        });
+    }
+
+
+    public void refreshLicense() throws Exception {
+        if (!Boolean.parseBoolean(enable)) {
             return;
         }
-        BeanSystemConfig produceConfig = systemConfigService.getConfigForUpdate(PRODUCE);
-        BeanSystemConfig testConfig = systemConfigService.getConfigForUpdate(TEST);
+        BeanSystemConfig produceConfig = systemConfigService.getConfig(PRODUCE);
+        BeanSystemConfig testConfig = systemConfigService.getConfig(TEST);
         if (produceConfig == null || testConfig == null) {
             return;
         }
@@ -193,28 +223,31 @@ public class LicenseServiceImpl implements LicenseService {
         List<Double> produceList = new ArrayList<>();
         List<Double> testList = new ArrayList<>();
         for (MiddlewareClusterDTO cluster : clusterList) {
-            List<MiddlewareCR> middlewareCrList = middlewareCrService.listCR(cluster.getId(), null, null);
+            // 获取middeware列表
+            List<Middleware> middlewareList = middlewareCrService.list(cluster.getId(), null, null, false);
+            // 获取命名空间并进行过滤
             List<Namespace> namespaceList = namespaceService.list(cluster.getId());
-            middlewareCrList = middlewareCrList.stream()
-                .filter(middlewareCr -> namespaceList.stream()
-                    .anyMatch(namespace -> namespace.getName().equals(middlewareCr.getMetadata().getNamespace())))
+            middlewareList = middlewareList.stream()
+                .filter(middleware -> namespaceList.stream()
+                    .anyMatch(namespace -> namespace.getName().equals(middleware.getNamespace())))
                 .collect(Collectors.toList());
-            final CountDownLatch clusterCountDownLatch = new CountDownLatch(middlewareCrList.size());
-            for (MiddlewareCR middlewareCr : middlewareCrList) {
+
+            middlewareList = helmChartService.convertMiddlewareList(middlewareList);
+
+            final CountDownLatch clusterCountDownLatch = new CountDownLatch(middlewareList.size());
+            for (Middleware mw : middlewareList) {
                 try {
+
                     ThreadPoolExecutorFactory.executor.execute(() -> {
                         try {
-                            String name = middlewareCr.getSpec().getName();
-                            String namespace = middlewareCr.getMetadata().getNamespace();
-                            String type = middlewareCrTypeService.findTypeByCrType(middlewareCr.getSpec().getType());
+                            String name = mw.getName();
+                            String namespace = mw.getNamespace();
+                            String type = middlewareCrTypeService.findTypeByCrType(mw.getType());
+                            JSONObject values = mw.getValues();
 
-                            JSONObject values = helmChartService.getInstalledValues(name, namespace, cluster);
-                            if (values == null) {
-                                return;
-                            }
                             // 根据类型去获取对应的cpu
-                            Middleware middleware = new Middleware().setClusterId(cluster.getId()).setNamespace(namespace)
-                                    .setName(name).setType(type);
+                            Middleware middleware = new Middleware().setClusterId(cluster.getId())
+                                .setNamespace(namespace).setName(name).setType(type);
                             if (PRODUCE.equals(cluster.getType())) {
                                 produceList.add(middlewareService.calculateCpuRequest(middleware, values));
                             } else {
@@ -224,7 +257,7 @@ public class LicenseServiceImpl implements LicenseService {
                             clusterCountDownLatch.countDown();
                         }
                     });
-                } catch (Exception e){
+                } catch (Exception e) {
                     log.error("中间件cpu资源查询失败", e);
                 }
             }
@@ -316,7 +349,7 @@ public class LicenseServiceImpl implements LicenseService {
         }
         ThreadPoolExecutorFactory.executor.execute(() -> {
             try {
-                refreshMiddlewareResource();
+                lockRefreshLicense();
             } catch (Exception e) {
                 log.debug(e.getMessage());
             }

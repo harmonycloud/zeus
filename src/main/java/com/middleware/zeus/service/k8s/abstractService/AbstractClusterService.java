@@ -657,7 +657,7 @@ public abstract class AbstractClusterService {
                 .collect(Collectors.toList());
         }
         
-        PageInfo<Namespace> namespacePageInfo = PageUtil.convertPage(namespaceList, queryDto.getCurrent(), queryDto.getSize());
+
         Map<String, String> queryMap = new HashMap<>();
 
         Map<Map<String, String>, List<String>> cpuRequestResult = new HashMap<>();
@@ -716,12 +716,12 @@ public abstract class AbstractClusterService {
             pvcPer5MinResult.putAll(getResultMap(pvcUsing));
         }
         // 初始化返回数据对象
-        PageInfo<ClusterNamespaceResourceDto> clusterNamespaceResourceDtoPageInfo = new PageInfo<>();
-        BeanUtils.copyProperties(namespacePageInfo, clusterNamespaceResourceDtoPageInfo, "list");
+        //PageInfo<ClusterNamespaceResourceDto> clusterNamespaceResourceDtoPageInfo = new PageInfo<>();
+        //BeanUtils.copyProperties(namespacePageInfo, clusterNamespaceResourceDtoPageInfo, "list");
 
         List<ClusterNamespaceResourceDto> clusterNamespaceResourceDtoList = new ArrayList<>();
         // 循环遍历namespace 进行数据封装
-        for (Namespace namespace : namespacePageInfo.getList()){
+        for (Namespace namespace : namespaceList){
             ClusterNamespaceResourceDto nsResource = new ClusterNamespaceResourceDto();
             Map<String, String> nsMap = new HashMap<>();
             nsMap.put(NAMESPACE, namespace.getName());
@@ -770,9 +770,11 @@ public abstract class AbstractClusterService {
             nsResource.setClusterId(clusterId).setNamespace(namespace.getName());
             clusterNamespaceResourceDtoList.add(nsResource);
         }
+        // 对查询结果进行排序
         queryDto.sortMiddlewareResourceInfo(clusterNamespaceResourceDtoList);
-        clusterNamespaceResourceDtoPageInfo.setList(clusterNamespaceResourceDtoList);
-        return clusterNamespaceResourceDtoPageInfo;
+
+        // 分页处理
+        return PageUtil.convertPage(clusterNamespaceResourceDtoList, queryDto.getCurrent(), queryDto.getSize());
     }
 
     public Map<Map<String, String>, List<String>> getResultMap(PrometheusResponse response) {

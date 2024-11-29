@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
  * @author xutianhong
  * @Date 2022/10/11 10:43 上午
  */
-@Api(tags = {"服务列表", "服务管理"}, value = "中间件运维", description = "中间件运维")
+@Api(tags = {"服务列表", "运维面板"}, value = "中间件运维", description = "中间件运维")
 @RestController
 @RequestMapping("/clusters/{clusterId}/namespaces/{namespace}/middlewares/{middlewareName}")
 public class MiddlewareDashboardAuthController {

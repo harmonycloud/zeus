@@ -25,7 +25,7 @@ import java.util.List;
  * @author liyinlong
  * @Date 2022/10/10 3:29 下午
  */
-@Api(tags = {"服务列表", "Mysql管理面板"}, value = "mysql中间件")
+@Api(tags = {"服务列表", "Mysql运维面板"}, value = "mysql中间件")
 @RestController
 @RequestMapping(path = {"/clusters/{clusterId}/namespaces/{namespace}/mysql/{middlewareName}", "/dashboard/mysql"})
 public class MysqlDashboardController {
