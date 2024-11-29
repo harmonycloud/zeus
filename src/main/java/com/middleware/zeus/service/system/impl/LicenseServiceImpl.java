@@ -124,7 +124,7 @@ public class LicenseServiceImpl implements LicenseService {
 
         // 更新license
         String licenseStr = RSAUtils.encryptByPublicKey(exist.toJSONString(), PUBLIC_KEY);
-        BeanSystemConfig zeusLicense = systemConfigService.getConfigForUpdate(ZEUS_LICENSE);
+        BeanSystemConfig zeusLicense = systemConfigService.getConfig(ZEUS_LICENSE);
         if (zeusLicense == null) {
             systemConfigService.addConfig(ZEUS_LICENSE, licenseStr);
         } else {
