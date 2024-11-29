@@ -838,6 +838,7 @@ public class OverviewServiceImpl implements OverviewService {
         recordQueryWrapper.orderByDesc("alert_time");
         PageHelper.startPage(current, size);
         // 查询告警记录
+        // 获取当前时间
         List<BeanAlertRecord> alertRecordList = beanAlertRecordMapper.selectList(recordQueryWrapper);
         // 转换为page数据结构
         PageInfo<AlertDTO> pageInfo = new PageInfo<>();
@@ -845,37 +846,37 @@ public class OverviewServiceImpl implements OverviewService {
 
         // 查询分区所在组织.项目
         List<ProjectNamespaceDo> projectNamespaceDoList = projectService.listNamespace(clusterId);
-        Map<String, ProjectNamespaceDo> projectNamespaceDoMap = projectNamespaceDoList.stream().collect(Collectors.toMap(pn -> pn.getClusterId() + "-" + pn.getNamespace(), Function.identity()));
+        Map<String, ProjectNamespaceDo> projectNamespaceDoMap = projectNamespaceDoList.stream()
+            .collect(Collectors.toMap(pn -> pn.getClusterId() + "-" + pn.getNamespace(), Function.identity()));
 
-        Map<Middleware, String> middlewareMap = new HashMap<>();
+        // 从record中获取middleware信息并封装为list，根据toString为key进行group
+        // 对group的结果获取每个values中的第一个重新整合list
+        List<Middleware> middlewareList = alertRecordList.stream()
+            .map(record -> new Middleware().setName(record.getName()).setNamespace(record.getNamespace())
+                .setClusterId(record.getClusterId()).setType(record.getType()))
+            .collect(Collectors.groupingBy(Middleware::toString)).values().stream().map(list -> list.get(0))
+            .collect(Collectors.toList());
+
+        // 获取整合后的middlewareList的详细信息(chartVersion)
+        middlewareList = helmChartService.convertMiddlewareList(middlewareList);
+        // 重新将其根据toString为key转化为map
+        Map<String, Middleware> middlewareMap =
+            middlewareList.stream().collect(Collectors.toMap(Middleware::toString, Function.identity()));
+
         pageInfo.setList(alertRecordList.stream().map(record -> {
             AlertDTO alertDTO = new AlertDTO();
             BeanUtils.copyProperties(record, alertDTO);
-            if (StringUtils.isNotEmpty(alertDTO.getType())){
+            if (StringUtils.isNotEmpty(alertDTO.getType())) {
                 // 查询chartVersion
-                Middleware middleware = new Middleware().setName(alertDTO.getName()).setNamespace(alertDTO.getNamespace())
-                        .setClusterId(alertDTO.getClusterId());
-                if (middlewareMap.containsKey(middleware)) {
-                    alertDTO.setChartVersion(middlewareMap.get(middleware));
-                } else {
-                    try {
-                        JSONObject values = helmChartService.getInstalledValues(middleware, clusterService.findById(alertDTO.getClusterId()));
-                        if (values != null && values.containsKey("chart-version")) {
-                            String version = values.getString("chart-version");
-                            middlewareMap.put(middleware, version);
-                            alertDTO.setChartVersion(version);
-                        } else {
-                            middlewareMap.put(middleware, null);
-                            alertDTO.setChartVersion(null);
-                        }
-                    } catch (Exception e) {
-                        alertDTO.setChartVersion(null);
-                    }
+                Middleware middleware = new Middleware().setName(alertDTO.getName())
+                    .setNamespace(alertDTO.getNamespace()).setClusterId(alertDTO.getClusterId());
+                String mwKey = middleware.toString();
+                if (middlewareMap.containsKey(mwKey)) {
+                    alertDTO.setChartVersion(middlewareMap.get(mwKey).getChartVersion());
                 }
-
                 // 设置所在组织，项目
                 if (StringUtils.isNotEmpty(middleware.getClusterId())
-                        && StringUtils.isNotEmpty(middleware.getNamespace())) {
+                    && StringUtils.isNotEmpty(middleware.getNamespace())) {
                     String key = middleware.getClusterId() + "-" + middleware.getNamespace();
                     if (projectNamespaceDoMap.containsKey(key)) {
                         alertDTO.setOrganId(projectNamespaceDoMap.get(key).getOrganId());
