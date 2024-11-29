@@ -30,9 +30,9 @@ public interface LicenseService {
     Boolean check(String clusterId);
 
     /**
-     * 计算cpu使用量
+     * 计算cpu使用量(上锁）
      */
-    void refreshMiddlewareResource() throws Exception;
+    void lockRefreshLicense() throws Exception;
 
     /**
      * 计算cpu使用量

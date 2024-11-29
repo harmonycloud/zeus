@@ -21,8 +21,8 @@ public class SystemManageTask {
     private LicenseService licenseService;
 
     @Async("singleThreadExecutor")
-    public void asyncRefreshMiddlewareResource() throws Exception {
-        licenseService.refreshMiddlewareResource();
+    public void asyncrefreshLicense() throws Exception {
+        licenseService.refreshLicense();
     }
 
 

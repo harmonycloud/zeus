@@ -28,10 +28,10 @@ public class ScheduleTask {
     @Autowired
     private AlertRecordService alertRecordService;
 
-    @Scheduled(fixedDelayString = "${system.license.refresh:30000}", initialDelay = 10 * 1000)
+    @Scheduled(fixedDelayString = "${system.license.refresh:60000}", initialDelay = 10 * 1000)
     public void calculateCpu() {
         try {
-            licenseService.refreshMiddlewareResource();
+            licenseService.lockRefreshLicense();
         } catch (Exception e){
             log.error("刷新中间件资源使用情况失败");
             log.debug("刷新中间件资源使用情况失败, e");

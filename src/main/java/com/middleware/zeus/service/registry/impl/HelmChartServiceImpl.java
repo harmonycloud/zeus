@@ -867,6 +867,9 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
                         // 获取对应中间件的helm对象，并解析获取values
                         HelmInfoDo helmInfoDo =
                                 helmInfoDoMap.get(middleware.getNamespace() + "-" + middleware.getName());
+                        if (helmInfoDo == null) {
+                            return;
+                        }
                         helmInfoDo = this.decodeValues(helmInfoDo);
 
                         JSONObject values = helmInfoDo.getValues();
@@ -876,6 +879,8 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
                         middleware.setChartVersion(this.getChartVersion(values, middleware.getType()));
                         // 设置中间件图片路径
                         middleware.setImagePath(middleware.getType() + LINE + middleware.getChartVersion() + DOT + SVG);
+                        // 设置中间件values对象
+                        middleware.setValues(values);
                     } catch (Exception e){
                         log.error("集群:{} 命名空间:{} 名称:{} ,获取中间件信息失败", middleware.getClusterId(), middleware.getNamespace(),
                                 middleware.getName(), e);

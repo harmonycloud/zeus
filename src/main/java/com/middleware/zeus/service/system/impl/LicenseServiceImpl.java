@@ -27,6 +27,7 @@ import com.middleware.zeus.util.encrypt.RSAUtils;
 import com.middleware.zeus.util.numeric.ResourceCalculationUtil;
 import com.skyview.language.annotations.TranslateAfterResult;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.SerializationUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -41,6 +42,8 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 import static com.middleware.zeus.common.constants.NameConstant.*;
@@ -53,7 +56,9 @@ import static com.middleware.zeus.common.constants.NameConstant.*;
 @Slf4j
 public class LicenseServiceImpl implements LicenseService {
 
-
+    protected final ReentrantLock lock = new ReentrantLock();
+    
+    
     @Value("${system.license.enable:true}")
     private String enable;
     @Value("${system.disasterRecovery:true}")
@@ -178,10 +183,35 @@ public class LicenseServiceImpl implements LicenseService {
         return license.getDoubleValue(type) - cpu > limit;
     }
 
+
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void refreshMiddlewareResource() throws Exception {
-        if (!Boolean.parseBoolean(enable)){
+    public void lockRefreshLicense() {
+        ThreadPoolExecutorFactory.executor.execute(() -> {
+            try {
+                if (lock.tryLock(1, TimeUnit.SECONDS)) {
+                    try {
+                        this.refreshLicense();
+                        try {
+                            log.info("License: 刷新license成功，将静默30s");
+                            Thread.sleep(10000);
+                        } catch (InterruptedException e) {
+                            log.error("License: 线程休眠异常", e);
+                        }
+                    } catch (Exception e){
+                        e.printStackTrace();
+                    } finally {
+                        lock.unlock();
+                    }
+                }
+            } catch (Exception e){
+                e.printStackTrace();
+            }
+        });
+    }
+
+
+    public void refreshLicense() throws Exception {
+        if (!Boolean.parseBoolean(enable)) {
             return;
         }
         BeanSystemConfig produceConfig = systemConfigService.getConfig(PRODUCE);
@@ -207,6 +237,7 @@ public class LicenseServiceImpl implements LicenseService {
             final CountDownLatch clusterCountDownLatch = new CountDownLatch(middlewareList.size());
             for (Middleware mw : middlewareList) {
                 try {
+
                     ThreadPoolExecutorFactory.executor.execute(() -> {
                         try {
                             String name = mw.getName();
@@ -215,8 +246,8 @@ public class LicenseServiceImpl implements LicenseService {
                             JSONObject values = mw.getValues();
 
                             // 根据类型去获取对应的cpu
-                            Middleware middleware = new Middleware().setClusterId(cluster.getId()).setNamespace(namespace)
-                                    .setName(name).setType(type);
+                            Middleware middleware = new Middleware().setClusterId(cluster.getId())
+                                .setNamespace(namespace).setName(name).setType(type);
                             if (PRODUCE.equals(cluster.getType())) {
                                 produceList.add(middlewareService.calculateCpuRequest(middleware, values));
                             } else {
@@ -226,7 +257,7 @@ public class LicenseServiceImpl implements LicenseService {
                             clusterCountDownLatch.countDown();
                         }
                     });
-                } catch (Exception e){
+                } catch (Exception e) {
                     log.error("中间件cpu资源查询失败", e);
                 }
             }
@@ -318,7 +349,7 @@ public class LicenseServiceImpl implements LicenseService {
         }
         ThreadPoolExecutorFactory.executor.execute(() -> {
             try {
-                refreshMiddlewareResource();
+                lockRefreshLicense();
             } catch (Exception e) {
                 log.debug(e.getMessage());
             }
