@@ -54,7 +54,7 @@ values('operation_audit','查询集群下namespace资源详情','zh-HK','actionC
 
 -- 修改服务管理为运维面板
 -- 繁体中文
-delete from sys_resource_translate_config where `group_name` = 'operation_audit' and `unique_value` = '服务管理';
+delete from sys_resource_translate_config where `group_name` = 'operation_audit' and `unique_value` = '运维面板';
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
 values('operation_audit','运维面板','zh-HK','childModuleChDesc','運維面板');
 -- 英语
@@ -63,6 +63,7 @@ values('operation_audit','运维面板','en-US','childModuleChDesc','O&M Dashboa
 
 -- 繁体中文
 delete from sys_resource_translate_config where `group_name` = 'operation_audit' and `unique_value` = 'Mysql管理面板';
+delete from sys_resource_translate_config where `group_name` = 'operation_audit' and `unique_value` = 'Mysql运维面板';
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
 values('operation_audit','Mysql运维面板','zh-HK','childModuleChDesc','Mysql運維面板');
 -- 英语
@@ -70,24 +71,26 @@ insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_
 values('operation_audit','Mysql运维面板','en-US','childModuleChDesc','Mysql Dashboard');
 -- 繁体中文
 delete from sys_resource_translate_config where `group_name` = 'operation_audit' and `unique_value` = 'Postgresql管理面板';
+delete from sys_resource_translate_config where `group_name` = 'operation_audit' and `unique_value` = 'Postgresql运维面板';
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
 values('operation_audit','Postgresql运维面板','zh-HK','childModuleChDesc','Postgresql運維面板');
 -- 英语
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
-values('operation_audit','Postgresql运维面板','en-US','childModuleChDesc','Postgresql dashboard');
+values('operation_audit','Postgresql运维面板','en-US','childModuleChDesc','Postgresql Dashboard');
 -- 繁体中文
 delete from sys_resource_translate_config where `group_name` = 'operation_audit' and `unique_value` = 'Redis管理面板';
+delete from sys_resource_translate_config where `group_name` = 'operation_audit' and `unique_value` = 'Redis运维面板';
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
 values('operation_audit','Redis运维面板','zh-HK','childModuleChDesc','Redis運維面板');
 -- 英语
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
-values('operation_audit','Redis运维面板','en-US','childModuleChDesc','Redis dashboard');
+values('operation_audit','Redis运维面板','en-US','childModuleChDesc','Redis Dashboard');
 -- 更新已有的审计日志
 update operation_audit set child_module_ch_desc = '运维面板' where module_ch_desc = '服务列表' and child_module_ch_desc = '服务管理';
 update operation_audit set child_module_ch_desc = 'Mysql运维面板' where module_ch_desc = '服务列表' and child_module_ch_desc = 'Mysql管理面板';
 update operation_audit set child_module_ch_desc = 'Postgresql运维面板' where module_ch_desc = '服务列表' and child_module_ch_desc = 'Postgresql管理面板';
 update operation_audit set child_module_ch_desc = 'Redis运维面板' where module_ch_desc = '服务列表' and child_module_ch_desc = 'Redis管理面板';
-
+update operation_audit set child_module_ch_desc = 'Sql Console' where module_ch_desc = '服务列表' and child_module_ch_desc = 'sql console';
 
 -- 默认角色权限修改
 delete from resource_menu_role where role_id = 1;
