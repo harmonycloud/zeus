@@ -184,8 +184,8 @@ public class LicenseServiceImpl implements LicenseService {
         if (!Boolean.parseBoolean(enable)){
             return;
         }
-        BeanSystemConfig produceConfig = systemConfigService.getConfigForUpdate(PRODUCE);
-        BeanSystemConfig testConfig = systemConfigService.getConfigForUpdate(TEST);
+        BeanSystemConfig produceConfig = systemConfigService.getConfig(PRODUCE);
+        BeanSystemConfig testConfig = systemConfigService.getConfig(TEST);
         if (produceConfig == null || testConfig == null) {
             return;
         }
@@ -193,25 +193,27 @@ public class LicenseServiceImpl implements LicenseService {
         List<Double> produceList = new ArrayList<>();
         List<Double> testList = new ArrayList<>();
         for (MiddlewareClusterDTO cluster : clusterList) {
-            List<MiddlewareCR> middlewareCrList = middlewareCrService.listCR(cluster.getId(), null, null);
+            // 获取middeware列表
+            List<Middleware> middlewareList = middlewareCrService.list(cluster.getId(), null, null, false);
+            // 获取命名空间并进行过滤
             List<Namespace> namespaceList = namespaceService.list(cluster.getId());
-            middlewareCrList = middlewareCrList.stream()
-                .filter(middlewareCr -> namespaceList.stream()
-                    .anyMatch(namespace -> namespace.getName().equals(middlewareCr.getMetadata().getNamespace())))
+            middlewareList = middlewareList.stream()
+                .filter(middleware -> namespaceList.stream()
+                    .anyMatch(namespace -> namespace.getName().equals(middleware.getNamespace())))
                 .collect(Collectors.toList());
-            final CountDownLatch clusterCountDownLatch = new CountDownLatch(middlewareCrList.size());
-            for (MiddlewareCR middlewareCr : middlewareCrList) {
+
+            middlewareList = helmChartService.convertMiddlewareList(middlewareList);
+
+            final CountDownLatch clusterCountDownLatch = new CountDownLatch(middlewareList.size());
+            for (Middleware mw : middlewareList) {
                 try {
                     ThreadPoolExecutorFactory.executor.execute(() -> {
                         try {
-                            String name = middlewareCr.getSpec().getName();
-                            String namespace = middlewareCr.getMetadata().getNamespace();
-                            String type = middlewareCrTypeService.findTypeByCrType(middlewareCr.getSpec().getType());
+                            String name = mw.getName();
+                            String namespace = mw.getNamespace();
+                            String type = middlewareCrTypeService.findTypeByCrType(mw.getType());
+                            JSONObject values = mw.getValues();
 
-                            JSONObject values = helmChartService.getInstalledValues(name, namespace, cluster);
-                            if (values == null) {
-                                return;
-                            }
                             // 根据类型去获取对应的cpu
                             Middleware middleware = new Middleware().setClusterId(cluster.getId()).setNamespace(namespace)
                                     .setName(name).setType(type);

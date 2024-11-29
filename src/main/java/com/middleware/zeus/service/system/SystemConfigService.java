@@ -40,14 +40,6 @@ public interface SystemConfigService {
     BeanSystemConfig getConfig(String name);
 
     /**
-     * 获取配置
-     * @param name 配置名称
-     *
-     * @return BeanSystemConfig
-     */
-    BeanSystemConfig getConfigForUpdate(String name);
-
-    /**
      * 删除配置
      * @param name 配置名称
      *
