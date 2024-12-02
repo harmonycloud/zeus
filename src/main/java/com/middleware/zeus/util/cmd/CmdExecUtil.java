@@ -31,6 +31,16 @@ public class CmdExecUtil {
     /**
      * 运行shell命令
      *
+     * @param commandArray 命令
+     * @return
+     */
+    public static List<String> runCmdWithoutException(String... commandArray) {
+        return runCmd(false, commandArray);
+    }
+
+    /**
+     * 运行shell命令
+     *
      * @param isErrorThrow 是否错误时抛出异常
      * @param commandArray 命令
      * @return
@@ -43,8 +53,7 @@ public class CmdExecUtil {
         }, errorMsg -> {
             // 之后会被catch到
             if (!isErrorThrow) {
-                resList.add(errorMsg);
-                return errorMsg;
+                return null;
             }
             throw new RuntimeException(errorMsg);
         });
