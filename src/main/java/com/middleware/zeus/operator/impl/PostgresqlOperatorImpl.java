@@ -621,7 +621,7 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
     @Override
     public void replaceToleration(Middleware middleware, JSONObject values) {
         super.replaceToleration(middleware, values);
-        if (!CollectionUtils.isEmpty(middleware.getTolerations())&& values.getBoolean("enableConnectionPooler")) {
+        if (!CollectionUtils.isEmpty(middleware.getTolerations())) {
             JSONArray jsonArray = K8sConvert.convertToleration2Json(middleware.getTolerations());
             JSONObject connectionPooler = values.getJSONObject("connectionPooler");
             connectionPooler.put("tolerations", jsonArray);
@@ -638,7 +638,7 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
     public void replaceNodeAffinity(Middleware middleware, JSONObject values) {
         super.replaceNodeAffinity(middleware,values);
         JSONObject connectionPooler = values.getJSONObject("connectionPooler");
-        if (!CollectionUtils.isEmpty(middleware.getNodeAffinity())&& values.getBoolean("enableConnectionPooler")) {
+        if (!CollectionUtils.isEmpty(middleware.getNodeAffinity())) {
             JSONObject nodeAffinity = K8sConvert.convertNodeAffinity2Json(middleware.getNodeAffinity());
             if (nodeAffinity != null) {
                 connectionPooler.put("nodeAffinity", nodeAffinity);
