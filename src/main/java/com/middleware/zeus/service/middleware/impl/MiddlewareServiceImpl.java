@@ -13,6 +13,8 @@ import com.middleware.zeus.common.enums.DictEnum;
 import com.middleware.zeus.common.enums.ErrorMessage;
 import com.middleware.zeus.common.enums.middleware.MiddlewareGrafanaNameEnum;
 import com.middleware.zeus.common.enums.middleware.MiddlewareTypeEnum;
+import com.middleware.zeus.common.enums.middleware.MysqlCharSetEnum;
+import com.middleware.zeus.common.enums.middleware.PostgresqlCharSetEnum;
 import com.middleware.zeus.common.exception.BusinessException;
 import com.middleware.zeus.common.model.*;
 import com.middleware.zeus.common.model.middleware.*;
@@ -129,10 +131,6 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     private MiddlewareConfigYamlService middlewareConfigYamlService;
     @Autowired
     private MiddlewarePvcService middlewarePvcService;
-    @Autowired
-    private MysqlService mysqlService;
-    @Autowired
-    private PostgresqlService postgresqlService;
 
     @Value("${system.privateRegistry.middlewareServiceAccount:default}")
     private String middlewareServiceAccount;
@@ -1447,9 +1445,9 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     public Map<String,List<String>> getChatSet(String type,String version){
         switch (type){
             case "mysql":
-                return mysqlService.getChatSet(version);
+                return MysqlCharSetEnum.getByVersion(version);
             case "postgresql":
-                return postgresqlService.getChatSet(version);
+                return PostgresqlCharSetEnum.getByVersion(version);
             default:
                 return new HashMap<>();
         }

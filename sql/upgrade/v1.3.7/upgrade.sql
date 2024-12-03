@@ -16,10 +16,10 @@ DROP TABLE temp_ids;
 
 -- 繁体中文
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
-values('servicePurpose','读写(pgbouncer)','zh-HK','servicePurpose','讀寫(pgbouncer)');
+values('servicePurpose','读写(Pgbouncer)','zh-HK','servicePurpose','讀寫(Pgbouncer)');
 -- 英语
 insert into sys_resource_translate_config(`group_name`,`unique_value`,`language_code`,`property`,`translation`)
-values('servicePurpose','读写(pgbouncer)','en-US','servicePurpose','Read Write(pgbouncer)');
+values('servicePurpose','读写(Pgbouncer)','en-US','servicePurpose','Read Write(Pgbouncer)');
 
 -- 20241128 xutianhong
 -- 新增翻译
