@@ -630,6 +630,7 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
                 sbf.append(toleration).append(",");
             }
             connectionPooler.put("tolerationAry", sbf.substring(0, sbf.length()));
+            values.put("connectionPooler", connectionPooler);
         }
     }
 
@@ -645,6 +646,7 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         } else {
             connectionPooler.put("nodeAffinity", new JSONObject());
         }
+        values.put("connectionPooler", connectionPooler);
     }
 
 }
