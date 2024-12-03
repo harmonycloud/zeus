@@ -5,7 +5,6 @@ import static com.middleware.zeus.common.constants.CommonConstant.*;
 import static com.middleware.zeus.common.constants.NameConstant.*;
 import static com.middleware.zeus.common.constants.NameConstant.CPU;
 import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.ACTIVE_ACTIVE;
-import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.ARGS;
 
 import java.text.MessageFormat;
 import java.util.*;
@@ -18,6 +17,7 @@ import com.middleware.zeus.common.enums.DictEnum;
 import com.middleware.zeus.common.enums.ErrorMessage;
 import com.middleware.zeus.common.exception.BusinessException;
 import com.middleware.zeus.common.model.ActiveAreaAnnotationDto;
+import com.middleware.zeus.util.K8sConvert;
 import com.middleware.zeus.util.cmd.CmdExecUtil;
 import com.middleware.zeus.common.model.middleware.*;
 import com.middleware.zeus.bean.BeanSystemConfig;
@@ -617,5 +617,35 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         JSONObject values = helmChartService.getInstalledValues(middleware, clusterService.findById(clusterId));
         return values.getBoolean("enableConnectionPooler");
     }
+
+    @Override
+    public void replaceToleration(Middleware middleware, JSONObject values) {
+        super.replaceToleration(middleware, values);
+        if (!CollectionUtils.isEmpty(middleware.getTolerations())&& values.getBoolean("enableConnectionPooler")) {
+            JSONArray jsonArray = K8sConvert.convertToleration2Json(middleware.getTolerations());
+            JSONObject connectionPooler = values.getJSONObject("connectionPooler");
+            connectionPooler.put("tolerations", jsonArray);
+            StringBuffer sbf = new StringBuffer();
+            for (String toleration : middleware.getTolerations()) {
+                sbf.append(toleration).append(",");
+            }
+            connectionPooler.put("tolerationAry", sbf.substring(0, sbf.length()));
+        }
+    }
+
+    @Override
+    public void replaceNodeAffinity(Middleware middleware, JSONObject values) {
+        super.replaceNodeAffinity(middleware,values);
+        JSONObject connectionPooler = values.getJSONObject("connectionPooler");
+        if (!CollectionUtils.isEmpty(middleware.getNodeAffinity())&& values.getBoolean("enableConnectionPooler")) {
+            JSONObject nodeAffinity = K8sConvert.convertNodeAffinity2Json(middleware.getNodeAffinity());
+            if (nodeAffinity != null) {
+                connectionPooler.put("nodeAffinity", nodeAffinity);
+            }
+        } else {
+            connectionPooler.put("nodeAffinity", new JSONObject());
+        }
+    }
+
 }
 
