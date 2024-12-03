@@ -139,6 +139,8 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
             values.put("enableConnectionPooler", pgParam.getEnableConnectionPooler());
             JSONObject connectionPooler = values.getJSONObject("connectionPooler");
             if(pgParam.getEnableConnectionPooler()&&connectionPooler!=null){
+                connectionPooler.put("podAntiAffinity","hard");
+                connectionPooler.put("podAntiAffinityTopologKey","topology.kubernetes.io/zone");
                 connectionPooler.put("numberOfInstances",pgParam.getPoolerInstanceNum());
                 JSONObject resources = connectionPooler.getJSONObject("resources");
                 JSONObject limits = resources.getJSONObject("limits");
