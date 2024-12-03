@@ -340,9 +340,10 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         MiddlewareBackupScheduleSpec.MiddlewareBackupScheduleDestination destination =
                 new MiddlewareBackupScheduleSpec.MiddlewareBackupScheduleDestination();
         destination.setDestinationType("minio").setParameters(
-                new MiddlewareBackupScheduleSpec.MiddlewareBackupScheduleDestination.MiddlewareBackupParameters(
-                        minio.getBucketName(), minio.getEndpoint(), UUIDUtils.get8UUID(), base64AccessKeyId,
-                        base64SecretAccessKey, "MTIzNDU2Cg=="));
+            new MiddlewareBackupScheduleSpec.MiddlewareBackupScheduleDestination.MiddlewareBackupParameters(
+                minio.getBucketName(), minio.getEndpoint(),
+                SCHEDULE + LINE + meta.getName(), base64AccessKeyId,
+                base64SecretAccessKey, "MTIzNDU2Cg=="));
         // 设置备份类型(全量备份)
         List<Map<String, List<Map<String, String>>>> customBackups = new ArrayList<>();
         Map<String, List<Map<String, String>>> env = new HashMap<>();
@@ -653,7 +654,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             metaData.setAnnotations(new HashMap<>());
         }
         metaData.setNamespace(backupDTO.getNamespace());
-        metaData.setName(backupDTO.getMiddlewareName() + "-" + UUIDUtils.get8UUID());
+        metaData.setName(backupDTO.getMiddlewareName() + LINE + UUIDUtils.get8UUID());
         if (backupDTO.getLabels() != null) {
             metaData.getLabels().putAll(backupDTO.getLabels());
         }
