@@ -62,7 +62,8 @@ public class K8sExecServiceImpl implements K8sExecService {
      **/
     public boolean filter(String line){
         return line.contains("Using a password on the command line interface can be insecure")||
-                line.contains("Warning: Using a password with '-a' or '-u' option on the command line interface may not be safe.");
+                line.contains("Warning: Using a password with '-a' or '-u' option on the command line interface may not be safe.")||
+                line.contains("Warning: Use tokens from the TokenRequest API or manually created secret-based tokens instead of auto-generated secret-based tokens.");
     }
 
 }
