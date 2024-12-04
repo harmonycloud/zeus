@@ -208,6 +208,10 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         if (helms.stream().anyMatch(h -> name.equals(h.getName()))) {
             return true;
         }
+        // 数据仍未清清除
+        if (!ObjectUtils.isEmpty(cacheMiddlewareService.get(clusterId, namespace, type, name))) {
+            return true;
+        }
         return false;
     }
 
