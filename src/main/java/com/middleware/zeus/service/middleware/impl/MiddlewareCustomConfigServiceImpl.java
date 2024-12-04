@@ -387,6 +387,8 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
             args = values.getJSONObject("args");
         } else if (values.containsKey(valuesType) && values.getJSONObject(valuesType).containsKey("args")) {
             args = values.getJSONObject(valuesType).getJSONObject("args");
+        } else if (valuesType.equals("Pgbouncer")) {
+            args = values.getJSONObject("connectionPooler").getJSONObject("args");
         } else {
             return data;
         }
