@@ -1265,13 +1265,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         }
         // 若enable 为true，判断是否存在pause为off对周期备份任务
         if (enable){
-            for (MiddlewareBackupSchedule schedule : middlewareBackupScheduleList){
-                if (schedule.getSpec().getPause().equalsIgnoreCase(OFF)){
-                    // 将其pause更新为ON
-                    schedule.getSpec().setPause(ON);
-                    backupScheduleCRDService.update(clusterId, schedule);
-                }
-            }
             // 若不存在当前pause为OFF的周期备份任务，则将对应backupId的周期备份任务的pause修改为OFF
             for (MiddlewareBackupSchedule schedule : middlewareBackupScheduleList){
                 // 空指针过滤
@@ -1283,6 +1276,22 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 // 理论上 上述backupId字段是否存在已过滤增量备份任务
                 if (schedule.getMetadata().getName().endsWith(LINE + INCR)){
                     continue;
+                }
+                // 将当前pause为off的周期备份任务pause修改为on
+                if (schedule.getSpec().getPause().equalsIgnoreCase(OFF)){
+                    // 将其pause更新为ON
+                    schedule.getSpec().setPause(ON);
+                    backupScheduleCRDService.update(clusterId, schedule);
+                    // 判断该周期备份任务是否存在增量备份任务，若存在，则也修改pause字段并更新，并添加label FULL_BACKUP_WAITING
+                    middlewareBackupScheduleList.stream()
+                            .filter(inc -> inc.getMetadata().getLabels() != null
+                                    && inc.getMetadata().getLabels().containsKey(OWNER)
+                                    && inc.getMetadata().getLabels().get(OWNER).equals(schedule.getMetadata().getName()))
+                            .findFirst().ifPresent(incr -> {
+                                incr.getMetadata().getLabels().put(FULL_BACKUP_WAITING, TRUE);
+                                incr.getSpec().setPause(ON);
+                                backupScheduleCRDService.update(clusterId, incr);
+                            });
                 }
                 // 对backupId匹配的周期备份任务进行更新
                 if (schedule.getMetadata().getLabels().get(BACKUP_ID).equalsIgnoreCase(backupId)){
