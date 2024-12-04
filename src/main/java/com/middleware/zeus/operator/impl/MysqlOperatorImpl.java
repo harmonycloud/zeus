@@ -168,6 +168,12 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
                 values.put(MysqlConstant.SPEC_TYPE, mysqlDTO.getType());
             }
         }
+        // 配置开启/关闭 审计日志和慢日志
+        if (middleware.getSlowSql() != null && middleware.getSlowSql()) {
+            mysqlArgs.put(SLOW_QUERY_LOG, ON);
+        } else {
+            mysqlArgs.put(SLOW_QUERY_LOG, OFF);
+        }
 
         //配置mysql环境变量
         if (!CollectionUtils.isEmpty(middleware.getEnvironment())) {
