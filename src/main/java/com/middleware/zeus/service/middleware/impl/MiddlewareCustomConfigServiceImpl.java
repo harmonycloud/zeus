@@ -153,6 +153,10 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
         }
         // 获取节点类型
         String podType = operator.getPodType(config.getRole());
+        // 特殊处理pgbouncer节点
+        if (config.getRole().equals("Pgbouncer")){
+            valuesType = "connectionPooler";
+        }
         updateValues(middleware, data, cluster, values, valuesType);
         // 添加修改历史
         customConfigHistoryService.insert(config.getName(), oldDate, config);
@@ -383,6 +387,8 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
             args = values.getJSONObject("args");
         } else if (values.containsKey(valuesType) && values.getJSONObject(valuesType).containsKey("args")) {
             args = values.getJSONObject(valuesType).getJSONObject("args");
+        } else if (valuesType.equals("Pgbouncer")) {
+            args = values.getJSONObject("connectionPooler").getJSONObject("args");
         } else {
             return data;
         }

@@ -72,9 +72,4 @@ public interface MysqlService {
      */
     MysqlAccessInfo queryBasicAccessInfo(String clusterId, String namespace, String middlewareName, Middleware middleware);
 
-    /**
-     * 获取mysql字符集及其语言环境
-     * @return
-     */
-    Map<String, List<String>> getChatSet(String version);
 }

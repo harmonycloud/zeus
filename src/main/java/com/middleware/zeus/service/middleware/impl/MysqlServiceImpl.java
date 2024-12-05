@@ -289,18 +289,4 @@ public class MysqlServiceImpl implements MysqlService {
         }
     }
 
-    /**
-     * 查询字符集及其语言环境
-     */
-    public Map<String, List<String>> getChatSet(String version){
-        Map<String,List<String>> mp = new LinkedHashMap<>();
-        if(version.equals("5.7")){
-            mp.put("utf8mb4",Arrays.asList("utf8mb4_general_ci","utf8mb4_bin","utf8mb4_unicode_520_ci","utf8mb4_unicode_ci"));
-        }
-        else{
-            mp.put("utf8mb4",Arrays.asList("utf8mb4_0900_ai_ci","utf8mb4_0900_as_ci","utf8mb4_0900_as_cs","utf8mb4_0900_bin",
-                    "utf8mb4_bin","utf8mb4_general_ci","utf8mb4_unicode_520_ci","utf8mb4_unicode_ci"));
-        }
-        return mp;
-    }
 }

@@ -854,14 +854,14 @@ public class OverviewServiceImpl implements OverviewService {
         List<Middleware> middlewareList = alertRecordList.stream()
             .map(record -> new Middleware().setName(record.getName()).setNamespace(record.getNamespace())
                 .setClusterId(record.getClusterId()).setType(record.getType()))
-            .collect(Collectors.groupingBy(Middleware::toString)).values().stream().map(list -> list.get(0))
+            .collect(Collectors.groupingBy(Middleware::toStringKey)).values().stream().map(list -> list.get(0))
             .collect(Collectors.toList());
 
         // 获取整合后的middlewareList的详细信息(chartVersion)
         middlewareList = helmChartService.convertMiddlewareList(middlewareList);
         // 重新将其根据toString为key转化为map
         Map<String, Middleware> middlewareMap =
-            middlewareList.stream().collect(Collectors.toMap(Middleware::toString, Function.identity()));
+            middlewareList.stream().collect(Collectors.toMap(Middleware::toStringKey, Function.identity()));
 
         pageInfo.setList(alertRecordList.stream().map(record -> {
             AlertDTO alertDTO = new AlertDTO();
@@ -869,8 +869,8 @@ public class OverviewServiceImpl implements OverviewService {
             if (StringUtils.isNotEmpty(alertDTO.getType())) {
                 // 查询chartVersion
                 Middleware middleware = new Middleware().setName(alertDTO.getName())
-                    .setNamespace(alertDTO.getNamespace()).setClusterId(alertDTO.getClusterId());
-                String mwKey = middleware.toString();
+                    .setNamespace(alertDTO.getNamespace()).setClusterId(alertDTO.getClusterId()).setType(alertDTO.getType());
+                String mwKey = middleware.toStringKey();
                 if (middlewareMap.containsKey(mwKey)) {
                     alertDTO.setChartVersion(middlewareMap.get(mwKey).getChartVersion());
                 }

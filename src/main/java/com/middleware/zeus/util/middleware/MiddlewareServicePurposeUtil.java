@@ -124,7 +124,7 @@ public class MiddlewareServicePurposeUtil {
         } else if (serviceName.equals(middlewareName)) {
             return "读写";
         } else if (serviceName.contains("pgbouncer")){
-            return "读写(pgbouncer)";
+            return "读写(Pgbouncer)";
         } else {
             return null;
         }

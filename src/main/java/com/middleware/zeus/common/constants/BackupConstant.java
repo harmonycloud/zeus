@@ -27,4 +27,6 @@ public class BackupConstant {
 
     public static final String ACTIVE_AREA = "activeArea";
 
+    public static final String SCHEDULE = "schedule";
+
 }

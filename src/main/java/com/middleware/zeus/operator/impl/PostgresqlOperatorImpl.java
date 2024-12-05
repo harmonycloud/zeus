@@ -5,7 +5,6 @@ import static com.middleware.zeus.common.constants.CommonConstant.*;
 import static com.middleware.zeus.common.constants.NameConstant.*;
 import static com.middleware.zeus.common.constants.NameConstant.CPU;
 import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.ACTIVE_ACTIVE;
-import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.ARGS;
 
 import java.text.MessageFormat;
 import java.util.*;
@@ -18,6 +17,7 @@ import com.middleware.zeus.common.enums.DictEnum;
 import com.middleware.zeus.common.enums.ErrorMessage;
 import com.middleware.zeus.common.exception.BusinessException;
 import com.middleware.zeus.common.model.ActiveAreaAnnotationDto;
+import com.middleware.zeus.util.K8sConvert;
 import com.middleware.zeus.util.cmd.CmdExecUtil;
 import com.middleware.zeus.common.model.middleware.*;
 import com.middleware.zeus.bean.BeanSystemConfig;
@@ -139,6 +139,8 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
             values.put("enableConnectionPooler", pgParam.getEnableConnectionPooler());
             JSONObject connectionPooler = values.getJSONObject("connectionPooler");
             if(pgParam.getEnableConnectionPooler()&&connectionPooler!=null){
+                connectionPooler.put("podAntiAffinity","hard");
+                connectionPooler.put("podAntiAffinityTopologKey","topology.kubernetes.io/zone");
                 connectionPooler.put("numberOfInstances",pgParam.getPoolerInstanceNum());
                 JSONObject resources = connectionPooler.getJSONObject("resources");
                 JSONObject limits = resources.getJSONObject("limits");
@@ -293,7 +295,7 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
                 middleware.getNamespace(), cluster.getAddress(), cluster.getAccessToken(), patroniName, patroniPort);
         List<String> resList = new ArrayList<>();
         try {
-            resList = CmdExecUtil.runCmd(execCommand);
+            resList = CmdExecUtil.runCmdWithoutException(execCommand);
         } catch (Exception e) {
             log.error("查询自动切换失败", e);
         }
@@ -617,5 +619,37 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         JSONObject values = helmChartService.getInstalledValues(middleware, clusterService.findById(clusterId));
         return values.getBoolean("enableConnectionPooler");
     }
+
+    @Override
+    public void replaceToleration(Middleware middleware, JSONObject values) {
+        super.replaceToleration(middleware, values);
+        if (!CollectionUtils.isEmpty(middleware.getTolerations())) {
+            JSONArray jsonArray = K8sConvert.convertToleration2Json(middleware.getTolerations());
+            JSONObject connectionPooler = values.getJSONObject("connectionPooler");
+            connectionPooler.put("tolerations", jsonArray);
+            StringBuffer sbf = new StringBuffer();
+            for (String toleration : middleware.getTolerations()) {
+                sbf.append(toleration).append(",");
+            }
+            connectionPooler.put("tolerationAry", sbf.substring(0, sbf.length()));
+            values.put("connectionPooler", connectionPooler);
+        }
+    }
+
+    @Override
+    public void replaceNodeAffinity(Middleware middleware, JSONObject values) {
+        super.replaceNodeAffinity(middleware,values);
+        JSONObject connectionPooler = values.getJSONObject("connectionPooler");
+        if (!CollectionUtils.isEmpty(middleware.getNodeAffinity())) {
+            JSONObject nodeAffinity = K8sConvert.convertNodeAffinity2Json(middleware.getNodeAffinity());
+            if (nodeAffinity != null) {
+                connectionPooler.put("nodeAffinity", nodeAffinity);
+            }
+        } else {
+            connectionPooler.put("nodeAffinity", new JSONObject());
+        }
+        values.put("connectionPooler", connectionPooler);
+    }
+
 }
 

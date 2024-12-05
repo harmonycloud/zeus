@@ -31,6 +31,16 @@ public class CmdExecUtil {
     /**
      * 运行shell命令
      *
+     * @param commandArray 命令
+     * @return
+     */
+    public static List<String> runCmdWithoutException(String... commandArray) {
+        return runCmd(false, commandArray);
+    }
+
+    /**
+     * 运行shell命令
+     *
      * @param isErrorThrow 是否错误时抛出异常
      * @param commandArray 命令
      * @return
@@ -43,8 +53,7 @@ public class CmdExecUtil {
         }, errorMsg -> {
             // 之后会被catch到
             if (!isErrorThrow) {
-                resList.add(errorMsg);
-                return errorMsg;
+                return null;
             }
             throw new RuntimeException(errorMsg);
         });
@@ -79,6 +88,7 @@ public class CmdExecUtil {
                 dealInput.apply(res);
             }
             while ((res = stdError.readLine()) != null) {
+                if(filter(res)) continue;
                 dealErr.apply(res);
             }
             int runningStatus = p.waitFor();
@@ -92,6 +102,13 @@ public class CmdExecUtil {
                 p.destroy();
             }
         }
+    }
+
+    /**
+     * 过滤一些并非异常的提醒信息
+     **/
+    public static boolean filter(String line){
+        return line.contains("Warning: Use tokens from the TokenRequest API or manually created secret-based tokens instead of auto-generated secret-based tokens.");
     }
 
 }
