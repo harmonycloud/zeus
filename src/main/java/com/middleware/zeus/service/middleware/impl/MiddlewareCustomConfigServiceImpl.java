@@ -144,7 +144,23 @@ public class MiddlewareCustomConfigServiceImpl extends AbstractBaseService imple
                     customConfig.getName());
                 throw new CaasRuntimeException(ErrorMessage.VALIDATE_FAILED);
             }
-            data.put(customConfig.getName(), customConfig.getValue());
+            Object value = customConfig.getValue();
+            if (data.containsKey(customConfig.getName())) {
+                Object oldObj = data.get(customConfig.getName());
+                try {
+                    String newValueStr = (String)customConfig.getValue();
+                    if (oldObj instanceof String) {
+                        value = String.valueOf(newValueStr);
+                    } else if (oldObj instanceof Integer) {
+                        value = Integer.valueOf(newValueStr);
+                    } else if (oldObj instanceof Boolean) {
+                        value = Boolean.valueOf(newValueStr);
+                    }
+                } catch (ClassCastException e) {
+                    log.error("参数{}类型转换失败", customConfig.getName());
+                }
+            }
+            data.put(customConfig.getName(), value);
         }
         // mysql和redis手动执行参数设置
         if ((config.getType().equals(MiddlewareTypeEnum.MYSQL.getType())
