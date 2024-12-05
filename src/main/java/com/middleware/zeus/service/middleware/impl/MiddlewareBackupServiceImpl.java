@@ -2030,7 +2030,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         Map<String, String> labels = schedule.getMetadata().getLabels();
         Map<String, String> annotations = schedule.getMetadata().getLabels();
         if (!CollectionUtils.isEmpty(labels)) {
-            backupRecord.setDateUnit(labels.get("unit"));
+            backupRecord.setDateUnit(labels.getOrDefault("unit", "day"));
             backupRecord.setAddressId(labels.get("addressId"));
             backupRecord.setBackupId(labels.get("backupId"));
             backupRecord.setActiveArea(labels.get("activeArea"));
