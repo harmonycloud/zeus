@@ -88,6 +88,7 @@ public class CmdExecUtil {
                 dealInput.apply(res);
             }
             while ((res = stdError.readLine()) != null) {
+                if(filter(res)) continue;
                 dealErr.apply(res);
             }
             int runningStatus = p.waitFor();
@@ -101,6 +102,13 @@ public class CmdExecUtil {
                 p.destroy();
             }
         }
+    }
+
+    /**
+     * 过滤一些并非异常的提醒信息
+     **/
+    public static boolean filter(String line){
+        return line.contains("Warning: Use tokens from the TokenRequest API or manually created secret-based tokens instead of auto-generated secret-based tokens.");
     }
 
 }
