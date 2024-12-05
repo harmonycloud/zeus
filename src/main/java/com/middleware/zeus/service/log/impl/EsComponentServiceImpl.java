@@ -415,10 +415,12 @@ public class EsComponentServiceImpl implements EsComponentService {
         while (it.hasNext()) {
             SearchHit sh = it.next();
             Map<String, Object> doc = sh.getSourceAsMap();
+            String queryStr;
             if (!doc.containsKey("query") || StringUtils.isEmpty(doc.get("query").toString())){
-                continue;
+                queryStr = "";
+            } else {
+                queryStr = doc.get("query").toString();
             }
-            String queryStr = doc.get("query").toString();
             String time = doc.get("@timestamp").toString();
             String pod = doc.get("k8s_pod").toString();
             String container = doc.get("k8s_container_name").toString();
