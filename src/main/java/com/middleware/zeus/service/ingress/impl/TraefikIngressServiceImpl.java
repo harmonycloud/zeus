@@ -304,49 +304,6 @@ public class TraefikIngressServiceImpl extends AbstractBaseOperator implements T
         }
     }
 
-    private List<String> execCmd(String cmd, Function<String, String> dealWithErrMsg) {
-        List<String> res = new ArrayList<>();
-        try {
-            CmdExecUtil.execCmd(cmd, inputMsg -> {
-                res.add(inputMsg);
-                return inputMsg;
-            }, dealWithErrMsg == null ? warningMsg() : dealWithErrMsg);
-        } catch (Exception e) {
-            if (StringUtils.isNotEmpty(e.getMessage()) && e.getMessage().contains(RESOURCE_ALREADY_EXISTED)) {
-                log.error(e.getMessage());
-                throw new BusinessException(ErrorMessage.RESOURCE_ALREADY_EXISTED);
-            } else {
-                throw e;
-            }
-        }
-        return res;
-    }
-
-    private Function<String, String> warningMsg() {
-        return errorMsg -> {
-            if (errorMsg.startsWith("WARNING: ") || errorMsg.contains("warning: ")) {
-                return errorMsg;
-            }
-            if (errorMsg.contains("OperatorConfiguration") || errorMsg.contains("operatorconfigurations")) {
-                return errorMsg;
-            }
-            if (errorMsg.contains("CustomResourceDefinition is deprecated")
-                || errorMsg.contains("apiextensions.k8s.io/v1beta1")) {
-                return errorMsg;
-            }
-            throw new RuntimeException(errorMsg);
-        };
-    }
-
-    private Function<String, String> notFoundMsg() {
-        return errorMsg -> {
-            if (errorMsg.startsWith("WARNING: ") || errorMsg.contains("warning: ")
-                || errorMsg.endsWith("release: not found")) {
-                return errorMsg;
-            }
-            throw new RuntimeException(errorMsg);
-        };
-    }
 
     private List<String> getPortList(MiddlewareClusterDTO cluster, List<TraefikPort> traefikPortList,
         String ingressName, Boolean filter) {

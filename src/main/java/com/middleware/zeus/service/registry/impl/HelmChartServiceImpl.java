@@ -269,7 +269,7 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
         String cmd = "helm list --kube-apiserver " + cluster.getAddress() + " --kubeconfig "
             + clusterCertService.getKubeConfigFilePath(cluster.getId())
             + (StringUtils.isBlank(namespace) ? " -A" : " -n " + namespace);
-        List<String> res = execCmd(cmd, null);
+        List<String> res = CmdExecUtil.execCmd(cmd, null);
         if (CollectionUtils.isEmpty(res)) {
             return new ArrayList<>(0);
         }
@@ -398,7 +398,7 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
         // 打包文件，返回信息如：Successfully packaged chart and saved it to: /xxx/xx/mysql-0.1.0.tgz，取/最后一段为包名
         String packageCmd =
             String.format("helm package %s -d %s", tarFileDir + File.separator + unzipFileName, tarFileDir);
-        List<String> packageRes = execCmd(packageCmd, null);
+        List<String> packageRes = CmdExecUtil.execCmd(packageCmd, null);
         String tgzFileName = packageRes.get(0).substring(packageRes.get(0).lastIndexOf("/") + 1);
         return tarFileDir + File.separator + tgzFileName;
     }
@@ -421,9 +421,9 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
         }
 
         // 先dry-run发布下，避免包不正确
-        execCmd(cmd + " --dry-run", null);
+        CmdExecUtil.execCmd(cmd + " --dry-run", null);
         // 正式发布
-        execCmd(cmd, null);
+        CmdExecUtil.execCmd(cmd, null);
         // 把当前目录删除
         FileUtil.deleteFile(tarFileDir);
     }
@@ -454,44 +454,44 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
     }
 
 
-    private List<String> execCmd(String cmd, Function<String, String> dealWithErrMsg) {
-        List<String> res = new ArrayList<>();
-        try {
-            CmdExecUtil.execCmd(cmd, inputMsg -> {
-                res.add(inputMsg);
-                return inputMsg;
-            }, dealWithErrMsg == null ? warningMsg() : dealWithErrMsg);
-        } catch (Exception e) {
-            if (StringUtils.isNotEmpty(e.getMessage()) && e.getMessage().contains(RESOURCE_ALREADY_EXISTED)) {
-                log.error(e.getMessage());
-                throw new BusinessException(ErrorMessage.RESOURCE_ALREADY_EXISTED);
-            } else {
-                throw e;
-            }
-        }
-        return res;
-    }
+//    private List<String> execCmd(String cmd, Function<String, String> dealWithErrMsg) {
+//        List<String> res = new ArrayList<>();
+//        try {
+//            CmdExecUtil.execCmd(cmd, inputMsg -> {
+//                res.add(inputMsg);
+//                return inputMsg;
+//            }, dealWithErrMsg == null ? warningMsg() : dealWithErrMsg);
+//        } catch (Exception e) {
+//            if (StringUtils.isNotEmpty(e.getMessage()) && e.getMessage().contains(RESOURCE_ALREADY_EXISTED)) {
+//                log.error(e.getMessage());
+//                throw new BusinessException(ErrorMessage.RESOURCE_ALREADY_EXISTED);
+//            } else {
+//                throw e;
+//            }
+//        }
+//        return res;
+//    }
     
-    private Function<String, String> warningMsg() {
-        return errorMsg -> {
-            if (errorMsg.startsWith("WARNING: ") || errorMsg.contains("warning: ")) {
-                return errorMsg;
-            }
-            if (errorMsg.contains("OperatorConfiguration") || errorMsg.contains("operatorconfigurations")){
-                return errorMsg;
-            }
-            if (errorMsg.contains("CustomResourceDefinition is deprecated") || errorMsg.contains("apiextensions.k8s.io/v1beta1")){
-                return errorMsg;
-            }
-            if (errorMsg.contains("PodSecurityPolicy is deprecated")){
-                return errorMsg;
-            }
-            if (errorMsg.contains("CSIDriver is deprecated")){
-                return errorMsg;
-            }
-            throw new RuntimeException(errorMsg);
-        };
-    }
+//    private Function<String, String> warningMsg() {
+//        return errorMsg -> {
+//            if (errorMsg.startsWith("WARNING: ") || errorMsg.contains("warning: ")) {
+//                return errorMsg;
+//            }
+//            if (errorMsg.contains("OperatorConfiguration") || errorMsg.contains("operatorconfigurations")){
+//                return errorMsg;
+//            }
+//            if (errorMsg.contains("CustomResourceDefinition is deprecated") || errorMsg.contains("apiextensions.k8s.io/v1beta1")){
+//                return errorMsg;
+//            }
+//            if (errorMsg.contains("PodSecurityPolicy is deprecated")){
+//                return errorMsg;
+//            }
+//            if (errorMsg.contains("CSIDriver is deprecated")){
+//                return errorMsg;
+//            }
+//            throw new RuntimeException(errorMsg);
+//        };
+//    }
     
     private Function<String, String> notFoundMsg() {
         return errorMsg -> {
@@ -542,7 +542,7 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
         }
 
         try {
-            execCmd(cmd, null);
+            CmdExecUtil.execCmd(cmd, null);
         } finally {
             // 删除文件
             FileUtil.deleteFile(tempValuesYamlPath, getHelmChartFilePath(chartName, chartVersion));
@@ -609,7 +609,7 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
             String cmd = String.format("helm upgrade --install %s %s -f %s -f %s -n %s",
                     NameConstant.ZEUS_MYSQL, helmPath, tempValuesYamlPath, targetValuesYamlPath, zeusNamespace);
             try {
-                execCmd(cmd, null);
+                CmdExecUtil.execCmd(cmd, null);
             } finally {
                 // 删除文件
                 FileUtil.deleteFile(tempValuesYamlPath, targetValuesYamlPath,
@@ -665,7 +665,7 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
             middleware.getName(), helmPath, tempValuesYamlPath, targetValuesYamlPath, middleware.getNamespace(),
             cluster.getAddress(), clusterCertService.getKubeConfigFilePath(cluster.getId()));
         try {
-            execCmd(cmd, null);
+            CmdExecUtil.execCmd(cmd, null);
         } finally {
             // 删除文件
             FileUtil.deleteFile(tempValuesYamlPath, targetValuesYamlPath,
@@ -700,7 +700,7 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
                 path, tempValuesYamlPath, targetValuesYamlPath, namespace, cluster.getAddress(),
                 clusterCertService.getKubeConfigFilePath(cluster.getId()));
         try {
-            execCmd(cmd, null);
+            CmdExecUtil.execCmd(cmd, null);
         } finally {
             // 删除文件
             FileUtil.deleteFile(tempValuesYamlPath, targetValuesYamlPath);
@@ -722,7 +722,7 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
         if (StringUtils.isNotEmpty(param)){
             cmd += param;
         }
-        execCmd(cmd, null);
+        CmdExecUtil.execCmd(cmd, null);
     }
 
     @Override
@@ -736,7 +736,7 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
         // delete helm
         String cmd = String.format("helm uninstall %s -n %s --kube-apiserver %s --kubeconfig %s", middleware.getName(),
             middleware.getNamespace(), cluster.getAddress(), clusterCertService.getKubeConfigFilePath(cluster.getId()));
-        execCmd(cmd, null);
+        CmdExecUtil.execCmd(cmd, null);
     }
 
     @Override
@@ -748,7 +748,7 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
         // delete helm
         String cmd = String.format("helm uninstall %s -n %s --kube-apiserver %s --kubeconfig %s", operatorName,
                 namespace, cluster.getAddress(), clusterCertService.getKubeConfigFilePath(cluster.getId()));
-        execCmd(cmd, null);
+        CmdExecUtil.execCmd(cmd, null);
     }
 
     @Override
@@ -929,7 +929,7 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
     private String loadYamlAsStr(String name, String namespace, MiddlewareClusterDTO cluster) {
         String cmd = String.format("helm get values %s -n %s -a --kube-apiserver %s --kubeconfig %s", name, namespace,
                 cluster.getAddress(), clusterCertService.getKubeConfigFilePath(cluster.getId()));
-        List<String> values = execCmd(cmd, notFoundMsg());
+        List<String> values = CmdExecUtil.execCmd(cmd, notFoundMsg());
         if (CollectionUtils.isEmpty(values)) {
             return null;
         }
@@ -943,7 +943,7 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
 
     private String loadZeusMySQLValuesStr(){
         String cmd = String.format(CmdConstant.ZEUS_MYSQL_VALUES,zeusNamespace);
-        List<String> values = execCmd(cmd, notFoundMsg());
+        List<String> values = CmdExecUtil.execCmd(cmd, notFoundMsg());
         if (CollectionUtils.isEmpty(values)) {
             return null;
         }

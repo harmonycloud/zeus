@@ -7,8 +7,13 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 
+import com.middleware.zeus.common.enums.ErrorMessage;
+import com.middleware.zeus.common.exception.BusinessException;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static com.middleware.zeus.common.constants.CommonConstant.RESOURCE_ALREADY_EXISTED;
 
 /**
  * @author dengyulong
@@ -27,17 +32,6 @@ public class CmdExecUtil {
     public static List<String> runCmd(String... commandArray) {
         return runCmd(true, commandArray);
     }
-
-    /**
-     * 运行shell命令
-     *
-     * @param commandArray 命令
-     * @return
-     */
-    public static List<String> runCmdWithoutException(String... commandArray) {
-        return runCmd(false, commandArray);
-    }
-
     /**
      * 运行shell命令
      *
@@ -53,11 +47,29 @@ public class CmdExecUtil {
         }, errorMsg -> {
             // 之后会被catch到
             if (!isErrorThrow) {
-                return null;
+                return errorMsg;
             }
             throw new RuntimeException(errorMsg);
         });
         return resList;
+    }
+
+    public static List<String> execCmd(String cmd, Function<String, String> dealWithErrMsg) {
+        List<String> res = new ArrayList<>();
+        try {
+            CmdExecUtil.execCmd(cmd, inputMsg -> {
+                res.add(inputMsg);
+                return inputMsg;
+            }, dealWithErrMsg == null ? warningMsg() : dealWithErrMsg);
+        } catch (Exception e) {
+            if (StringUtils.isNotEmpty(e.getMessage()) && e.getMessage().contains(RESOURCE_ALREADY_EXISTED)) {
+                logger.error(e.getMessage());
+                throw new BusinessException(ErrorMessage.RESOURCE_ALREADY_EXISTED);
+            } else {
+                throw e;
+            }
+        }
+        return res;
     }
 
     public static String buildCmdStr(String[] command) {
@@ -88,7 +100,6 @@ public class CmdExecUtil {
                 dealInput.apply(res);
             }
             while ((res = stdError.readLine()) != null) {
-                if(filter(res)) continue;
                 dealErr.apply(res);
             }
             int runningStatus = p.waitFor();
@@ -104,11 +115,28 @@ public class CmdExecUtil {
         }
     }
 
-    /**
-     * 过滤一些并非异常的提醒信息
-     **/
-    public static boolean filter(String line){
-        return line.contains("Warning: Use tokens from the TokenRequest API or manually created secret-based tokens instead of auto-generated secret-based tokens.");
+    private static Function<String, String> warningMsg() {
+        return errorMsg -> {
+            if (errorMsg.startsWith("WARNING: ") || errorMsg.contains("warning: ")) {
+                return errorMsg;
+            }
+            if (errorMsg.contains("OperatorConfiguration") || errorMsg.contains("operatorconfigurations")){
+                return errorMsg;
+            }
+            if (errorMsg.contains("CustomResourceDefinition is deprecated") || errorMsg.contains("apiextensions.k8s.io/v1beta1")){
+                return errorMsg;
+            }
+            if (errorMsg.contains("PodSecurityPolicy is deprecated")){
+                return errorMsg;
+            }
+            if (errorMsg.contains("CSIDriver is deprecated")){
+                return errorMsg;
+            }
+            if (errorMsg.contains("Warning: Use tokens from the TokenRequest API or manually created secret-based tokens instead of auto-generated secret-based tokens.")){
+                return errorMsg;
+            }
+            throw new RuntimeException(errorMsg);
+        };
     }
 
 }
