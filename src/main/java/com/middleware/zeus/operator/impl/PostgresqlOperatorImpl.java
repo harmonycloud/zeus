@@ -295,7 +295,7 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
                 middleware.getNamespace(), cluster.getAddress(), cluster.getAccessToken(), patroniName, patroniPort);
         List<String> resList = new ArrayList<>();
         try {
-            resList = CmdExecUtil.runCmd(execCommand);
+            resList = CmdExecUtil.execCmd(execCommand, null);
         } catch (Exception e) {
             log.error("查询自动切换失败", e);
         }
