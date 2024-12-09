@@ -193,8 +193,9 @@ public abstract class AbstractProjectService {
         middlewareList = helmChartService.convertMiddlewareList(middlewareList);
         // 对中间件进行关键词过滤
         if (StringUtils.isNotEmpty(queryDto.getKeyword())) {
-            middlewareList = middlewareList.stream().filter(
-                mw -> mw.getName().contains(queryDto.getKeyword()) || mw.getAliasName().contains(queryDto.getKeyword()))
+            middlewareList = middlewareList.stream()
+                .filter(mw -> (StringUtils.isNotEmpty(mw.getName()) && mw.getName().contains(queryDto.getKeyword()))
+                    || (StringUtils.isNotEmpty(mw.getAliasName()) && mw.getAliasName().contains(queryDto.getKeyword())))
                 .collect(Collectors.toList());
         }
 

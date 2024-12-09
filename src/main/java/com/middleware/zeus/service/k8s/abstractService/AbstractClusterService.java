@@ -403,10 +403,11 @@ public abstract class AbstractClusterService {
         // 进一步封装middleware信息
         middlewareList = helmChartService.convertMiddlewareList(middlewareList);
         // 对中间件进行关键词过滤
-        if (StringUtils.isNotEmpty(queryDto.getKeyword())) {
-            middlewareList = middlewareList.stream().filter(
-                mw -> mw.getName().contains(queryDto.getKeyword()) || mw.getAliasName().contains(queryDto.getKeyword()))
-                .collect(Collectors.toList());
+        if (StringUtils.isNotEmpty(keyword)) {
+            middlewareList = middlewareList.stream()
+                    .filter(mw -> (StringUtils.isNotEmpty(mw.getName()) && mw.getName().contains(keyword)) ||
+                            (StringUtils.isNotEmpty(mw.getAliasName()) && mw.getAliasName().contains(keyword)))
+                    .collect(Collectors.toList());
         }
 
         // 获取中间件监控信息
@@ -614,7 +615,7 @@ public abstract class AbstractClusterService {
         }
         return mwResourceInfoList;
     }
-    
+
     public Map<String, List<String>> getMwResourceQueryCondition(String clusterId) {
         // 获取middleware列表
         List<Middleware> middlewareList = middlewareCrService.list(clusterId, null, null, false);
