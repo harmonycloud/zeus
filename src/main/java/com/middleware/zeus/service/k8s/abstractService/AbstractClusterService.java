@@ -403,10 +403,10 @@ public abstract class AbstractClusterService {
         // 进一步封装middleware信息
         middlewareList = helmChartService.convertMiddlewareList(middlewareList);
         // 对中间件进行关键词过滤
-        if (StringUtils.isNotEmpty(keyword)) {
+        if (StringUtils.isNotEmpty(queryDto.getKeyword())) {
             middlewareList = middlewareList.stream()
-                    .filter(mw -> (StringUtils.isNotEmpty(mw.getName()) && mw.getName().contains(keyword)) ||
-                            (StringUtils.isNotEmpty(mw.getAliasName()) && mw.getAliasName().contains(keyword)))
+                    .filter(mw -> (StringUtils.isNotEmpty(mw.getName()) && mw.getName().contains(queryDto.getKeyword())) ||
+                            (StringUtils.isNotEmpty(mw.getAliasName()) && mw.getAliasName().contains(queryDto.getKeyword())))
                     .collect(Collectors.toList());
         }
 
