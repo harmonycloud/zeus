@@ -133,6 +133,14 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
 
         }
 
+        // 审计日志配置
+        if (middleware.getAudit() != null && middleware.getAudit()){
+            JSONObject args = values.getJSONObject(ARGS);
+            if (args != null){
+                args.put("pgaudit.log", "WRITE,DDL");
+            }
+        }
+
         //连接池配置
         if(middleware.getPostgresqlParam()!=null){
             PostgresqlParam pgParam = middleware.getPostgresqlParam();
