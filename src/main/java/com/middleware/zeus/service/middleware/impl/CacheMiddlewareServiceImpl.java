@@ -27,8 +27,10 @@ public class CacheMiddlewareServiceImpl implements CacheMiddlewareService {
     
     @Override
     public List<BeanCacheMiddleware> list(String clusterId, String namespace, String type) {
-        QueryWrapper<BeanCacheMiddleware> wrapper =
-            new QueryWrapper<BeanCacheMiddleware>().eq("cluster_id", clusterId);
+        QueryWrapper<BeanCacheMiddleware> wrapper = new QueryWrapper<>();
+        if(StringUtils.isNotEmpty(clusterId)){
+            wrapper.eq("cluster_id", clusterId);
+        }
         if(StringUtils.isNotEmpty(namespace)){
             wrapper.eq("namespace", namespace);
         }

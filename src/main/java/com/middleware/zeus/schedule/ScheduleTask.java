@@ -58,4 +58,14 @@ public class ScheduleTask {
         }
     }
 
+    @Scheduled(cron = "0 */5 * ? * *")
+    public void clearRecycleFailedBackup() {
+        try {
+            middlewareBackupService.clearRecycleFailedBackup();
+        } catch (Exception e){
+            log.error("清理回收失败的备份失败");
+            log.debug("清理回收失败的备份失败", e);
+        }
+    }
+
 }

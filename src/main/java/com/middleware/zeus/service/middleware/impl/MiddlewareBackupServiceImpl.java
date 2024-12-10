@@ -6,6 +6,8 @@ import static com.middleware.zeus.common.constants.BackupConstant.ON;
 import static com.middleware.zeus.common.constants.CommonConstant.*;
 import static com.middleware.zeus.common.constants.NameConstant.*;
 import static com.middleware.zeus.common.enums.BackupStatusEnum.SUCCESS;
+import static com.middleware.zeus.common.enums.BackupStatusEnum.RECYCLEFAILED;
+import static com.middleware.zeus.common.enums.BackupStatusEnum.DELETING;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -113,6 +115,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     private UserService userService;
     @Autowired
     private PodService podService;
+    @Autowired
+    private CacheMiddlewareService cacheMiddlewareService;
 
     // <可用区英文名,可用区别名>
     private static final Map<String, String> activeAreaMap = new HashMap<>();
@@ -763,6 +767,12 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                 backupScheduleCRDService.listByLabels(clusterId, namespace, labels);
         middlewareBackupScheduleList.forEach(item -> {
             try {
+                // 对item添加已删除label
+                if (item.getMetadata().getLabels() == null) {
+                    item.getMetadata().setLabels(new HashMap<>());
+                }
+                item.getMetadata().getLabels().put(DELETING.getStatus(), TRUE);
+                backupScheduleCRDService.update(clusterId, item);
                 backupScheduleCRDService.delete(clusterId, namespace, item.getMetadata().getName());
             } catch (IOException e) {
                 log.error("删除定时备份失败");
@@ -773,6 +783,12 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         if (!CollectionUtils.isEmpty(backupCRList)) {
             backupCRList.forEach(item -> {
                 try {
+                    // 对item添加已删除label
+                    if (item.getMetadata().getLabels() == null) {
+                        item.getMetadata().setLabels(new HashMap<>());
+                    }
+                    item.getMetadata().getLabels().put(DELETING.getStatus(), TRUE);
+                    backupCRDService.update(clusterId, item);
                     backupCRDService.delete(clusterId, namespace, item.getMetadata().getName());
                 } catch (IOException e) {
                     log.error("删除立即备份失败");
@@ -1473,6 +1489,41 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                         inc.getMetadata().getLabels().remove(FULL_BACKUP_WAITING);
                         backupScheduleCRDService.update(cluster.getId(), inc);
                     }
+                }
+            }
+        }
+    }
+
+    @Override
+    public void clearRecycleFailedBackup() {
+        // 获取所有集群
+        List<MiddlewareClusterDTO> clusterList = clusterService.listClusters();
+        for (MiddlewareClusterDTO cluster : clusterList) {
+            // 获取所有位于删除中的备份任务
+            Map<String, String> labels = Map.of(DELETING.getStatus(), TRUE);
+            // 获取单次备份任务
+            List<MiddlewareBackup> backupList = backupCRDService.list(cluster.getId(), null, labels);
+            // 删除单次备份任务
+            for (MiddlewareBackup backup : backupList) {
+                boolean isRecycle = backup.getStatus() != null && backup.getStatus().getPhase() != null
+                    && backup.getStatus().getPhase().equalsIgnoreCase(RECYCLEFAILED.getStatus());
+                // 删除备份任务
+                if (isRecycle) {
+                    deleteRecord(cluster.getId(), backup.getMetadata().getNamespace(), null,
+                        backup.getMetadata().getName(), true);
+                }
+            }
+
+            // 获取周期备份任务
+            List<MiddlewareBackupSchedule> scheduleList =
+                backupScheduleCRDService.listByLabels(cluster.getId(), null, labels);
+            for (MiddlewareBackupSchedule schedule : scheduleList) {
+                boolean isRecycle = schedule.getStatus() != null && schedule.getStatus().getPhase() != null
+                    && schedule.getStatus().getPhase().equalsIgnoreCase(RECYCLEFAILED.getStatus());
+                // 删除周期备份任务
+                if (isRecycle) {
+                    deleteSchedule(cluster.getId(), schedule.getMetadata().getNamespace(), null,
+                        schedule.getMetadata().getName(), true);
                 }
             }
         }
