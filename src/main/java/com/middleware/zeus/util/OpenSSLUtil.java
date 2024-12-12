@@ -5,6 +5,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
 import java.util.Base64;
 
 import org.apache.commons.lang3.StringUtils;
@@ -52,7 +53,8 @@ public class OpenSSLUtil {
     }
 
     public static PKCS10CertificationRequest generateCsr(KeyPair keyPair, String username) throws Exception {
-        ContentSigner contentSigner = new JcaContentSignerBuilder("SHA256withRSA").build(keyPair.getPrivate());
+        PrivateKey privateKey = keyPair.getPrivate();
+        ContentSigner contentSigner = new JcaContentSignerBuilder("SHA256withRSA").build(privateKey);
 
         String info = "C=CN";
         if (StringUtils.isNotEmpty(username)){
