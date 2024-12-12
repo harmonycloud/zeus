@@ -772,6 +772,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                     item.getMetadata().setLabels(new HashMap<>());
                 }
                 item.getMetadata().getLabels().put(DELETING.getStatus(), TRUE);
+                item.getMetadata().setResourceVersion(null);
+                item.getMetadata().setUid(null);
                 backupScheduleCRDService.update(clusterId, item);
                 backupScheduleCRDService.delete(clusterId, namespace, item.getMetadata().getName());
             } catch (IOException e) {
@@ -788,6 +790,8 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
                         item.getMetadata().setLabels(new HashMap<>());
                     }
                     item.getMetadata().getLabels().put(DELETING.getStatus(), TRUE);
+                    item.getMetadata().setResourceVersion(null);
+                    item.getMetadata().setUid(null);
                     backupCRDService.update(clusterId, item);
                     backupCRDService.delete(clusterId, namespace, item.getMetadata().getName());
                 } catch (IOException e) {
