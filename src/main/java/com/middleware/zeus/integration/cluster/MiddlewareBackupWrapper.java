@@ -50,13 +50,13 @@ public class MiddlewareBackupWrapper {
      * @param middlewareBackup
      * @throws IOException
      */
-    public void update(String clusterId, MiddlewareBackup middlewareBackup) throws IOException {
+    public void patch(String clusterId, MiddlewareBackup middlewareBackup) throws IOException {
         // init client
         NonNamespaceOperation<MiddlewareBackup, MiddlewareBackupList,
                 Resource<MiddlewareBackup>> middlewareBackupClient =
                 K8sClient.getClient(clusterId).resources(MiddlewareBackup.class, MiddlewareBackupList.class);
-        // update
-        middlewareBackupClient.resource(middlewareBackup).update();
+        // patch
+        middlewareBackupClient.resource(middlewareBackup).patch();
     }
 
     /**
