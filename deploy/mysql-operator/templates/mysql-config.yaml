@@ -26,8 +26,14 @@ data:
     tmpdir                          =/data/mysql/DBNAME/tmp
     secure_file_priv                =/data/mysql/DBNAME/tmp
     port                            =MYSQLPORT
-    socket                          =/data/mysql/DBNAME/conf/mysql.sock
+    socket                          ={{ .Values.args.socket | default "/data/mysql/DBNAME/conf/mysql.sock" }}
     pid_file                        =/data/mysql/DBNAME/conf/mysql.pid
+    {{- if eq $bigVersion "5" }}
+    collation_server                ={{ .Values.args.collation_server | default "utf8mb4_general_ci" }}
+    {{ end }}
+    {{- if eq $bigVersion "8" }}
+    collation_server                ={{ .Values.args.collation_server | default "utf8mb4_0900_ai_ci" }}
+    {{ end }}
     #************** connection ***************
     max_connect_errors              ={{ .Values.args.max_connect_errors | default 100000 }}
     {{- if (default .Values.args.skip_ssl false)}}
@@ -59,7 +65,7 @@ data:
     slow_query_log                  ={{ .Values.args.slow_query_log | default "ON" }}
     slow_query_log_file             =/data/mysql/DBNAME/elog/slow.log
     long_query_time                 ={{ .Values.args.long_query_time | default 1 }}
-    log_queries_not_using_indexes   ={{ .Values.args.log_queries_not_using_indexes | default 0 }}
+    log_queries_not_using_indexes   ={{ .Values.args.log_queries_not_using_indexes | default "OFF" }}
     log_throttle_queries_not_using_indexes = {{ .Values.args.log_throttle_queries_not_using_indexes | default 10 }}
     general_log                     ={{ .Values.args.general_log | default "OFF" }}
     general_log_file                =/data/mysql/DBNAME/elog/general.log
@@ -198,26 +204,53 @@ data:
     buffer_pool_control_enabled=ON
     {{- end }}
 
-    {{- if .Values.features.auditLog.enabled }}
-    {{- if eq $bigVersion "5" }}
+    {{ if .Values.features.auditLog.enabled }}
+    {{ if eq $bigVersion "5" }}
     plugin-load-add=libaudit_plugin.so
     audit_json_log_file             =/data/mysql/DBNAME/elog/mysql-audit.json
-    audit_whitelist_users           =operator,healthchecker,replic,zabbixjk,boot,skip-grants user
+    audit_whitelist_users           =operator,healthchecker,replic,zabbixjk,boot,skip-grants
     audit_json_file                 =ON
-    {{- else}}
+
+    {{ if .Values.args.audit_record_cmds }}
+    loose-audit_record_cmds         =  {{ .Values.args.audit_record_cmds }}
+    {{ end }}
+    {{ if  .Values.args.audit_whitelist_cmds }}
+    loose-audit_whitelist_cmds      =  {{ .Values.args.audit_whitelist_cmds }}
+    {{ end }}
+
+    {{ else }}
+    {{ if lt .Values.version "8.0.39" -}}
     loose-plugin-load-add=libaudit_plugin.so
     loose-audit_json_log_file       =/data/mysql/DBNAME/elog/mysql-audit.json
-    loose-audit_whitelist_users     =operator,healthchecker,replic,zabbixjk,boot,skip-grants user
+    loose-audit_whitelist_users     =operator,healthchecker,replic,zabbixjk,boot,skip-grants
     loose-audit_json_file           =ON
 
-    {{- if .Values.args.audit_record_cmds }}
+    {{ if .Values.args.audit_record_cmds }}
     loose-audit_record_cmds         =  {{ .Values.args.audit_record_cmds }}
-    {{- end}}
-    {{- if  .Values.args.audit_whitelist_cmds }}
+    {{ end }}
+    {{ if  .Values.args.audit_whitelist_cmds }}
     loose-audit_whitelist_cmds      =  {{ .Values.args.audit_whitelist_cmds }}
-    {{- end}}
+    {{ end }}
 
-    {{- end}}
+    {{ else}}
+    loose-plugin-load-add             =audit_log.so
+    loose-audit_log_file              =/data/mysql/DBNAME/elog/mysql-audit.json
+    loose-audit_log_exclude_accounts  =operator@%,healthchecker@localhost,replic@%,zabbixjk@%,boot@%,skip-grants@%
+    loose-audit_log_format            =JSON
+    loose-audit_log_policy            =QUERIES
+    {{ if .Values.args.audit_record_cmds }}
+    loose-audit_log_include_commands  = {{ .Values.args.audit_record_cmds }}
+    {{ else}}
+    {{ if  .Values.args.audit_whitelist_cmds }}
+    loose-audit_log_exclude_commands  = {{ .Values.args.audit_whitelist_cmds}}
+    {{ end }}
+    {{ end }}
+    {{ end }}
+    {{ end }}
+    {{ end }}
+
+    {{- range $k, $v := .Values.additionArgs }}
+    {{$k}}                          ={{$v}}
     {{- end }}
 
 kind: ConfigMap

@@ -16,8 +16,8 @@
   "editable": true,
   "gnetId": 7362,
   "graphTooltip": 1,
-  "id": 10,
-  "iteration": 1685520175042,
+  "id": 271,
+  "iteration": 1732785762789,
   "links": [],
   "panels": [
     {
@@ -545,7 +545,7 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "Prometheus",
-      "description": "The percentage of requested memory resources that are actually being used (memory working set bytes) by the MySQL Pod.",
+      "description": "The percentage of requested memory resources that are actually being used by the mysql pod.",
       "fieldConfig": {
         "defaults": {
           "custom": {},
@@ -595,13 +595,19 @@
           "interval": "",
           "legendFormat": "Mem",
           "refId": "B"
+        },
+        {
+          "expr": "sum(container_memory_rss{namespace=\"$namespace\",pod=\"$pod\",endpoint!=\"\",container!=\"\"}) by (pod) / sum(kube_pod_container_resource_requests{namespace=\"$namespace\",pod=\"$pod\",resource=\"memory\"}) by (pod) * 100",
+          "interval": "",
+          "legendFormat": "Rss Mem",
+          "refId": "A"
         }
       ],
       "thresholds": [],
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Memory Working Set Usage(%)",
+      "title": "Memory Usage(%)",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -5198,8 +5204,8 @@
         "allValue": null,
         "current": {
           "selected": false,
-          "text": "zeus",
-          "value": "zeus"
+          "text": "test",
+          "value": "test"
         },
         "datasource": null,
         "definition": "label_values(mysql_up, namespace)",
@@ -5225,8 +5231,8 @@
         "allValue": null,
         "current": {
           "selected": false,
-          "text": "zeus-mysql",
-          "value": "zeus-mysql"
+          "text": "shjtest-mysql57",
+          "value": "shjtest-mysql57"
         },
         "datasource": null,
         "definition": "query_result(kube_statefulset_labels{namespace=\"$namespace\", label_operatorname=\"mysql-operator\"})",
@@ -5253,8 +5259,8 @@
         "allValue": null,
         "current": {
           "selected": false,
-          "text": "zeus-mysql-1",
-          "value": "zeus-mysql-1"
+          "text": "shjtest-mysql57-0",
+          "value": "shjtest-mysql57-0"
         },
         "datasource": null,
         "definition": "label_values(kube_pod_info{namespace=\"$namespace\", created_by_name=\"$mc\"}, pod) ",
@@ -5282,8 +5288,8 @@
         "allValue": null,
         "current": {
           "selected": false,
-          "text": "mysql-data-zeus-mysql-1",
-          "value": "mysql-data-zeus-mysql-1"
+          "text": "mysql-data-shjtest-mysql57-0",
+          "value": "mysql-data-shjtest-mysql57-0"
         },
         "datasource": "Prometheus",
         "definition": "query_result(kube_pod_spec_volumes_persistentvolumeclaims_info{namespace=\"$namespace\", pod=\"$pod\"})",
@@ -5296,8 +5302,8 @@
         "options": [
           {
             "selected": true,
-            "text": "mysql-data-zeus-mysql-1",
-            "value": "mysql-data-zeus-mysql-1"
+            "text": "mysql-data-shjtest-mysql57-0",
+            "value": "mysql-data-shjtest-mysql57-0"
           }
         ],
         "query": "query_result(kube_pod_spec_volumes_persistentvolumeclaims_info{namespace=\"$namespace\", pod=\"$pod\"})",
@@ -5316,8 +5322,8 @@
         "allValue": null,
         "current": {
           "selected": false,
-          "text": "mw-worker2",
-          "value": "mw-worker2"
+          "text": "node-115",
+          "value": "node-115"
         },
         "datasource": null,
         "definition": "label_values(kube_pod_info{namespace=\"$namespace\", pod=\"$pod\"}, node)",
@@ -5345,8 +5351,8 @@
         "allValue": null,
         "current": {
           "selected": false,
-          "text": "disk-7ee64f3d-c9ed-46b8-8ea8-c7a435efd889",
-          "value": "disk-7ee64f3d-c9ed-46b8-8ea8-c7a435efd889"
+          "text": "disk-5ff674fb-74e9-4a79-aa8b-c78bea02b361",
+          "value": "disk-5ff674fb-74e9-4a79-aa8b-c78bea02b361"
         },
         "datasource": "Prometheus",
         "definition": "query_result(kube_persistentvolumeclaim_info{namespace=\"$namespace\", persistentvolumeclaim=\"$pvc\"})",
@@ -5359,8 +5365,8 @@
         "options": [
           {
             "selected": true,
-            "text": "disk-7ee64f3d-c9ed-46b8-8ea8-c7a435efd889",
-            "value": "disk-7ee64f3d-c9ed-46b8-8ea8-c7a435efd889"
+            "text": "disk-5ff674fb-74e9-4a79-aa8b-c78bea02b361",
+            "value": "disk-5ff674fb-74e9-4a79-aa8b-c78bea02b361"
           }
         ],
         "query": "query_result(kube_persistentvolumeclaim_info{namespace=\"$namespace\", persistentvolumeclaim=\"$pvc\"})",
@@ -5414,6 +5420,6 @@
   },
   "timezone": "browser",
   "title": "MySQL Overview",
-  "uid": "uaKUl7_Mk1",
-  "version": 6
+  "uid": "uaKUl7_Mk",
+  "version": 2
 }

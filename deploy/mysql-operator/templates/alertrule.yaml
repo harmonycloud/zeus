@@ -155,6 +155,39 @@ spec:
         product: harmonycloud
         message: 'The disk usage of MySQL has exceeded 85%, current_value={{ `{{ printf "%.0f" $value }}` }}%.  (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Persistentvolumeclaim: {{`{{ $labels.persistentvolumeclaim }}`}})'
 
+    - alert: MySQLFailOver
+      annotations:
+        message: 'The MySQL instance occurs Master-slave switchover or failover. (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}'
+      expr: delta(mysql_global_variables_read_only{namespace='{{ .Release.Namespace }}',pod=~'{{ include "mysql.fullname" . }}-[0-9]'}[5m]) > 0
+      for: 20s
+      labels:
+        severity: warning
+
+    - alert: MySQLWorkingSetMemoryUsageHigh95
+      annotations:
+        message: 'The workingSet memory(include Active Pages in the File System Cache) usage of MySQL has exceeded 95%, current_value={{ `{{ printf "%.0f" $value }}` }}%.  (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})'
+      expr: sum(container_memory_working_set_bytes{namespace='{{ .Release.Namespace }}',pod=~'{{ include "mysql.fullname" . }}-[0-9]',endpoint!="",container="mysql"}) by (pod) * 100 / sum(kube_pod_container_resource_requests{namespace='{{ .Release.Namespace }}',pod=~'{{ include "mysql.fullname" . }}-[0-9]',resource="memory",container="mysql"}) by (pod) > 95
+      for: 5m
+      labels:
+        severity: warning
+
+    - alert: MySQLRSSMemoryUsageHigh80
+      annotations:
+        message: 'The rss memory usage of MySQL has exceeded 80%, current_value={{ `{{ printf "%.0f" $value }}` }}%.  (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})'
+      expr: sum(container_memory_rss{namespace='{{ .Release.Namespace }}',pod=~'{{ include "mysql.fullname" . }}-[0-9]',endpoint!="",container="mysql"}) by (pod) * 100 / sum(kube_pod_container_resource_requests{namespace='{{ .Release.Namespace }}',pod=~'{{ include "mysql.fullname" . }}-[0-9]',resource="memory",container="mysql"}) by (pod) > 80
+      for: 5m
+      labels:
+        severity: warning
+
+    - alert: MySQLCpuUsageHigh
+      annotations:
+        message: 'The cpu usage of MySQL has exceeded 90%, current_value={{ `{{ printf "%.0f" $value }}` }}%.  (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})'
+      expr: sum(rate (container_cpu_usage_seconds_total{namespace='{{ .Release.Namespace }}',pod=~'{{ include "mysql.fullname" . }}-[0-9]',endpoint!="",container="mysql"}[5m]) ) by (pod) * 100 / sum(kube_pod_container_resource_requests{namespace='{{ .Release.Namespace }}',pod=~'{{ include "mysql.fullname" . }}-[0-9]',resource="cpu",container="mysql"}) by (pod)  > 90
+      for: 5m
+      labels:
+        severity: warning
+
+
 
   {{- if .Values.proxy.enable }}
   - name: proxysql

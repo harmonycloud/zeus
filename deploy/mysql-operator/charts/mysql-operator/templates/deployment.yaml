@@ -55,6 +55,8 @@ spec:
             value: stdout
           - name: aliyun_logs_middlewarestdout_tags
             value: middleware_name={{ include "mysql-operator.fullname" . }}
+          - name: TOOLBOOX_IMAGE
+            value: "{{ .Values.image.repository }}/mysql-toolbox:{{ .Values.image.toolboxImageTag}}"
           ports:
             - name: http
               containerPort: 8080

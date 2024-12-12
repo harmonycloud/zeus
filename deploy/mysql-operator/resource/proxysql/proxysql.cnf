@@ -57,7 +57,7 @@ scheduler=
     id=1
     active=1
     interval_ms={{ .Values.proxy.args.sync_user_period | default 600000 }}
-    filename="/root/proxysql-admin-tool/sync-user.sh"
+    filename="/tmp/proxysql/sync-user.sh"
     comment="sync-user"
   }
 )

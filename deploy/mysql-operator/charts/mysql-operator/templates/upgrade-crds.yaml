@@ -73,7 +73,11 @@ metadata:
     app.kubernetes.io/managed-by: {{ .Release.Service }}
 data:
   crds.yaml: |
-{{ (tpl (.Files.Glob "crds/*").AsConfig . ) | indent 2 }}
+{{- if .Capabilities.APIVersions.Has "apiextensions.k8s.io/v1" }}
+{{ (.Files.Glob "crdsv1/*").AsConfig | indent 2 }}
+{{- else }}
+{{ (.Files.Glob "crdsv1beta1/*").AsConfig | indent 2 }}
+{{- end }}
 
 
 
