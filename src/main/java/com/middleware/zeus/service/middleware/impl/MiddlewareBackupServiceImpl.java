@@ -780,7 +780,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         });
         // 删除立即备份
         List<MiddlewareBackup> backupCRList = backupCRDService.list(clusterId, namespace, labels).stream()
-                .filter(bak -> CollectionUtils.isEmpty(bak.getMetadata().getLabels()) || bak.getMetadata().getLabels().containsKey("owner"))
+                .filter(bak -> CollectionUtils.isEmpty(bak.getMetadata().getLabels()) || !bak.getMetadata().getLabels().containsKey("owner"))
                 .collect(Collectors.toList());
         if (!CollectionUtils.isEmpty(backupCRList)) {
             backupCRList.forEach(item -> {
