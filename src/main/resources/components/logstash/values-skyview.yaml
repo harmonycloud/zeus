@@ -89,10 +89,10 @@ logstashPipeline:
             mutate {
               add_field => { "postgres_audit" => "true" }
             }
-          }
-          csv {
-            source => "message_audit"
-            columns => ["audit_type","statement_id","substatement_id","class","command","object_type","object_name","statement","parameter"]
+            csv {
+              source => "message_audit"
+              columns => ["audit_type","statement_id","substatement_id","class","command","object_type","object_name","statement","parameter"]
+            }
           }
           date {
             match => ["log_time", "yyyy-MM-dd HH:mm:ss.SSS 'CST'"]
@@ -176,6 +176,32 @@ logstashPipeline:
         }
       }
       else if [index] == "mysqlaudit" {
+        if [audit_record] {
+          grok {
+            match => { "[audit_record][user]" => "\[(?<user>.+?)\]" }
+          }
+
+          if [audit_record][ip]  {
+            mutate {
+              add_field => { "ip" => "%{[audit_record][ip]}" }
+              }
+          }
+
+          if [audit_record][sqltext] {
+            mutate {
+              add_field => { "query" => "%{[audit_record][sqltext]}" }
+            }
+          }
+
+          ruby {
+            code => "
+              if event.get('audit_record') && event.get('audit_record')['db']
+                db_value = event.get('audit_record')['db']
+                event.set('objects', [{ 'db' => db_value }])
+              end
+            "
+          }
+        }
         date {
           match => ["date","UNIX_MS"]
           target => "@timestamp"

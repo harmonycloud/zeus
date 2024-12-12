@@ -21,23 +21,293 @@ logstashConfig:
 
 # Allows you to add any pipeline files in /usr/share/logstash/pipeline/
 ### ***warn*** there is a hardcoded logstash.conf in the image, override it first
-logstashPipeline: {}
-#  logstash.conf: |
-#    input {
-#      beats {
-#        port => 5044
-#      }
-#    }
-#
-#    # to-es
-#    output {
-#      elasticsearch {
-#        hosts => ["es-elasticsearch-master.ttx:9200"]
-#        index => "logstash-%{+YYYY.MM.dd}"
-#        user => "elastic"
-#        password => "Hc@Cloud01"
-#      }
-#    }
+logstashPipeline:
+  logstash.conf: |
+    input {
+      beats {
+        port => 5044
+      }
+    }
+    #input {
+    #  kafka {
+    #    bootstrap_servers => ["kafka-headless-svc.logging:9092"]
+    #      auto_offset_reset => "latest"
+    #      consumer_threads => 3
+    #      client_id => "client_stdout"
+    #      group_id => "group_stdout"
+    #      decorate_events => true
+    #      topics => ["stdout"]
+    #      codec => "json"
+    #  }
+    #  kafka {
+    #    bootstrap_servers => ["kafka-headless-svc.logging:9092"]
+    #      auto_offset_reset => "latest"
+    #      consumer_threads => 3
+    #      client_id => "client_nginxlog"
+    #      group_id => "group_nginxlog"
+    #      decorate_events => true
+    #      topics => ["nginxlog"]
+    #      codec => "json"
+    #  }
+    #  kafka {
+    #    bootstrap_servers => ["kafka-headless-svc.logging:9092"]
+    #      auto_offset_reset => "latest"
+    #      consumer_threads => 3
+    #      client_id => "client_logstash"
+    #      group_id => "group_logstash"
+    #      decorate_events => true
+    #      topics => ["logstash"]
+    #      codec => "json"
+    #  }
+    #}
+    filter {
+      # 删除部分字段
+      mutate {
+        remove_field => ["tags","beat","@version","prospector","input","host","topic"]
+      }
+      # for nginx log
+      if [index] == "nginxlog" {
+        dissect {
+          mapping => { "message" => "%{time_local} || %{remote_addr} || %{upstream_addr} || %{status} || %{request_time} || %{upstream_status} || %{upstream_response_time} || %{upstream_cache_status} || %{body_bytes_sent} || %{http_referer} || %{remote_user} || %{http_user_agent} || %{cookie_cmos_vision} || %{http_x_forwarded_for} || %{request}"}
+          remove_field => ["message","k8s_container_name","k8s_node_name","k8s_pod_namespace","offset","k8s_pod","docker_container"]
+        }
+      }
+      # 替换es @timestamp
+      else if [index] == "middlewarelogstash"{
+        if [k8s_container_name] == "mysql" {
+          grok {
+            # 提取时间
+            match => {"message" => "(?<LogTime>(%{YEAR}-%{MONTHNUM}-%{MONTHDAY})T(%{HOUR}:%{MINUTE}:%{SECOND}))"}
+          }
+    
+          date {
+            # 匹配并替换时间
+            match => ["LogTime","YYYY-MM-dd'T'HH:mm:ss", "ISO8601"]
+            target => "@timestamp"
+            timezone => "Asia/Shanghai"
+            remove_field => ["LogTime"]
+          }
+        }
+        if [k8s_container_name] == "postgres" {
+          grok {
+            match => {"message" => "(?<LogTime>(%{YEAR}-%{MONTHNUM}-%{MONTHDAY})%{SPACE}(%{TIME})%{SPACE}CST)"}
+          }
+    
+          date {
+            match => [ "LogTime", "YYYY-MM-dd HH:mm:ss.SSS 'CST'"]
+            target => "@timestamp"
+            timezone => "Asia/Shanghai"
+            remove_field => ["LogTime"]
+          }
+          csv {
+            columns => ["log_time","user_name","database_name","process_id","connection_from","session_id","session_line_num","command_tag","session_start_time","virtual_transaction_id","transaction_id","error_severity","sql_state_code","message_audit","detail","hint","internal_query","internal_query_pos","context","query_orgin","query_pos_orgin","location","application_name","backend_type","leader_pid","query_id"]
+          }
+          # 丢弃部分日志
+          if "AUDIT:" in [message_audit]
+          {
+            mutate {
+              add_field => { "postgres_audit" => "true" }
+            }
+          }
+          csv {
+            source => "message_audit"
+            columns => ["audit_type","statement_id","substatement_id","class","command","object_type","object_name","statement","parameter"]
+          }
+          date {
+            match => ["log_time", "yyyy-MM-dd HH:mm:ss.SSS 'CST'"]
+            target => "@timestamp"
+            timezone => "Asia/Shanghai"
+            remove_field => ["log_time"]
+          }
+          mutate {
+            remove_field => ["@version"]
+            rename => {
+              "user_name" => "user"
+              "database_name" => "db"
+              "connection_from" => "ip"
+            }
+            copy => { "statement" => "query" }
+          }
+          # cmd命令提取
+          mutate {
+            add_field => { "cmd" => "%{[command_tag]}" }
+          }
+          mutate {
+            convert => { "cmd" => "string" }
+            uppercase => ["cmd"]
+          }
+        }
+        if [k8s_container_name] == "redis-cluster" {
+          grok {
+            match => {"message" => "(?<LogTime>(%{MONTHDAY}%{SPACE}%{MONTH}%{SPACE}%{YEAR})%{SPACE}(%{TIME}))"}
+          }
+    
+          date {
+            match => [ "LogTime", "dd MMM YYYY HH:mm:ss.SSS"]
+            target => "@timestamp"
+            timezone => "Asia/Shanghai"
+            remove_field => ["LogTime"]
+          }
+        }
+        if [k8s_container_name] == "redis-init" {
+          drop{}
+        }
+      }
+      else if [index] == "middlewarestdout" {
+        if [message] =~ /^\s*\{.*\}\s*$/ {
+          json {
+            source => "message"
+          }
+          mutate {
+            rename => { "log" => "message" }
+          }
+          date{
+            match => ["time", "ISO8601"]
+            target => "@timestamp"
+            timezone => "Asia/Shanghai"
+          }
+        } else {
+          grok {
+            match => { "message" => "%{TIMESTAMP_ISO8601:timestamp} %{WORD:word1} %{WORD:word2} %{GREEDYDATA:logmessage}" }
+          }
+          date{
+            match => ["timestamp", "ISO8601"]
+            target => "@timestamp"
+            timezone => "Asia/Shanghai"
+          }
+          mutate {
+            replace => { "message" => "%{logmessage}" }
+            remove_field => ["timestamp","word1","word2","logmessage"]
+          }
+        }
+      }
+      # for es log
+      else if [index] == "esrunlog" {
+        dissect {
+          mapping => { "source" => "/%{}/%{}/%{}/%{k8s_pod_namespace}/%{k8s_resource_name}/%{k8s_pod}/%{}/%{}"}
+        }
+      }
+      else if [index] == "esslowlog" {
+        dissect {
+          mapping => { "message" => "[%{logTime}][%{level}][%{logType}] [%{nodeName}] [%{indexName}][%{shardId}] took[%{took}]%{}search_type[%{searchType}]%{}source[%{src}]"}
+          mapping => { "source" => "/%{}/%{}/%{}/%{namespace}/%{clusterName}/%{}"}
+          remove_field => ["message","offset"]
+        }
+      }
+      else if [index] == "mysqlaudit" {
+        date {
+          match => ["date","UNIX_MS"]
+          target => "@timestamp"
+          timezone => "Asia/Shanghai"
+        }
+      }
+      else if [index] == "mysqlslow" {
+        json {
+          source => "message"
+        }
+        grok {
+          match => [ "message", "^#\s+User@Host:\s+%{USER:user}\[[^\]]+\]\s+@\s+(?:(?<clienthost>\S*) )?\[(?:%{IP:clientip})?\]\s+Id:\s+%{NUMBER:id}\n# Query_time: %{NUMBER:query_time}\s+Lock_time: %{NUMBER:lock_time}\s+Rows_sent: %{NUMBER:rows_sent}\s+Rows_examined: %{NUMBER:rows_examined}\nSET\s+timestamp=%{NUMBER:timestamp_mysql};\n(?<query>[\s\S]*)" ]
+        }
+        #grok {
+        #  match => [ "message", "\s+FROM\s(?<db>\w+)" ]
+        #}
+        date {
+          match => ["timestamp_mysql","UNIX"]
+          target => "@timestamp"
+          timezone => "Asia/Shanghai"
+        }
+        mutate {
+          remove_field => "@version"
+          remove_field => "message"
+        }
+      }
+    }
+    # to-es
+    output {
+      if [index] == "nginxlog" {
+        elasticsearch {
+          hosts => ["kubernetes-logging-master.logging:9200"]
+          index => "nginxlog-%{+YYYY.MM.dd}"
+          user => "elastic"
+          password => "Hc@Cloud01"
+        }
+      }
+      else if [index] == "esrunlog"{
+        elasticsearch {
+          hosts => ["kubernetes-logging-master.logging:9200"]
+          index => "esrunlog-%{+YYYY.MM.dd}"
+          user => "elastic"
+          password => "Hc@Cloud01"
+        }
+      }
+      else if [index] == "esslowlog"{
+        elasticsearch {
+          hosts => ["kubernetes-logging-master.logging:9200"]
+          index => "esslowlog-%{+YYYY.MM.dd}"
+          user => "elastic"
+          password => "Hc@Cloud01"
+        }
+      }
+      else if [index] == "stdout"{
+        elasticsearch {
+          hosts => ["kubernetes-logging-master.logging:9200"]
+          index => "stdout-%{+YYYY.MM.dd}"
+          user => "elastic"
+          password => "Hc@Cloud01"
+        }
+      }
+      else if [index] == "mysqlslow"{
+        elasticsearch {
+          hosts => ["kubernetes-logging-master.logging:9200"]
+          index => "mysqlslowlog-%{+YYYY.MM.dd}"
+          user => "elastic"
+          password => "Hc@Cloud01"
+        }
+      }
+      else if [index] == "mysqlaudit"{
+        elasticsearch {
+          hosts => ["kubernetes-logging-master.logging:9200"]
+          index => "mysqlaudit-%{+YYYY.MM.dd}"
+          user => "elastic"
+          password => "Hc@Cloud01"
+        }
+      }
+      else if [index] == "middlewarestdout"{
+        elasticsearch {
+          hosts => ["kubernetes-logging-master.logging:9200"]
+          index => "middlewarestdout-%{+YYYY.MM.dd}"
+          user => "elastic"
+          password => "Hc@Cloud01"
+          document_type =>"_doc"
+        }
+      }
+      else if [index] == "middlewarelogstash"{
+        elasticsearch {
+          hosts => ["kubernetes-logging-master.logging:9200"]
+          index => "middlewarelogstash-%{+YYYY.MM.dd}"
+          user => "elastic"
+          password => "Hc@Cloud01"
+          document_type =>"_doc"
+        }
+        if [postgres_audit] == "true"{
+          elasticsearch {
+            hosts => ["kubernetes-logging-master.logging:9200"]
+            index => "postgresqlaudit-%{+YYYY.MM.dd}"
+            user => "elastic"
+            password => "Hc@Cloud01"
+            document_type =>"_doc"
+          }
+        }
+      }
+      else {
+        elasticsearch {
+          hosts => ["kubernetes-logging-master.logging:9200"]
+          index => "logstash-%{+YYYY.MM.dd}"
+          user => "elastic"
+          password => "Hc@Cloud01"
+        }
+      }
+    }
 
 multiplePipelines: {}
 #  pipelines.yml: |
