@@ -22,6 +22,19 @@ spec:
   podManagementPolicy: {{ .Values.podManagementPolicy }}
   updateStrategy:
     type: {{ .Values.updateStrategy }}
+  volumeClaimTemplates:
+    - apiVersion: v1
+      kind: PersistentVolumeClaim
+      metadata:
+        name: logstash-logs
+      spec:
+        accessModes:
+          - ReadWriteOnce
+        storageClassName: {{ .Values.persistence.storageClassName }}
+        resources:
+          requests:
+            storage: {{ .Values.persistence.storageSize }}
+        volumeMode: Filesystem
   {{- if .Values.persistence.enabled }}
   volumeClaimTemplates:
   - metadata:
@@ -125,11 +138,12 @@ spec:
           secret:
             secretName: {{ .secretName }}
         {{- end }}
-        {{- if .Values.logstashConfig }}
         - name: logstashconfig
           configMap:
             name: {{ template "logstash.fullname" . }}-config
-        {{- end }}
+        - name: logstashlog4j
+          configMap:
+             name: {{ template "logstash.fullname" . }}-log4j-config
         {{- if .Values.logstashPipeline }}
         - name: logstashpipeline
           configMap:
@@ -148,9 +162,9 @@ spec:
       {{- if .Values.extraVolumes }}
 {{ tpl .Values.extraVolumes . | indent 8 }}
       {{- end }}
-      {{- if .Values.imagePullSecrets }}
+      {{- if .Values.image.imagePullSecrets }}
       imagePullSecrets:
-{{ toYaml .Values.imagePullSecrets | indent 8 }}
+{{ toYaml .Values.image.imagePullSecrets | indent 8 }}
       {{- end}}
       {{- if .Values.hostAliases }}
       hostAliases: {{ toYaml .Values.hostAliases | nindent 6 }}
@@ -163,8 +177,8 @@ spec:
       - name: "{{ template "logstash.name" . }}"
         securityContext:
 {{ toYaml .Values.securityContext | indent 10 }}
-        image: "{{ .Values.image }}:{{ .Values.imageTag }}"
-        imagePullPolicy: "{{ .Values.imagePullPolicy }}"
+        image: "{{ .Values.image.repository }}/logstash:{{ .Values.image.imageTag }}"
+        imagePullPolicy: "{{ .Values.image.imagePullPolicy }}"
         livenessProbe:
 {{ toYaml .Values.livenessProbe | indent 10 }}
         readinessProbe:
@@ -178,8 +192,22 @@ spec:
         resources:
 {{ toYaml .Values.resources | indent 10 }}
         env:
+          {{- if ((((.Values.logging).collection).stdout).enabled) }}
+          - name: aliyun_logs_middlewarestdout
+            value: stdout
+          - name: aliyun_logs_middlewarestdout_tags
+            value: middleware_name={{ include "logstash.fullname" . }}
+         {{- end }}
+         {{- if ((((.Values.logging).collection).filelog).enabled)}}
+          - name: aliyun_logs_middlewarelogstash
+            value: /usr/share/logstash/logs/*.log
+          - name: aliyun_logs_middlewarelogstash_tags
+            value: middleware_name={{ include "logstash.fullname" . }}
+          {{- end}}
           - name: LS_JAVA_OPTS
             value: "{{ .Values.logstashJavaOpts }}"
+          - name: TZ
+            value: Asia/Shanghai
 {{- if .Values.extraEnvs }}
 {{ toYaml .Values.extraEnvs | indent 10 }}
 {{- end }}
@@ -199,11 +227,14 @@ spec:
             subPath: {{ .subPath }}
             {{- end }}
           {{- end }}
-          {{- range $path, $config := .Values.logstashConfig }}
           - name: logstashconfig
-            mountPath: /usr/share/logstash/config/{{ $path }}
-            subPath: {{ $path }}
-          {{- end -}}
+            mountPath: /usr/share/logstash/config/logstash.yml
+            subPath: logstash.yml
+          - name: logstashlog4j
+            mountPath: /usr/share/logstash/config/log4j2.properties
+            subPath: log4j2.properties
+          - name: logstash-logs
+            mountPath: /usr/share/logstash/logs
           {{- range $path, $config := .Values.logstashPipeline }}
           - name: logstashpipeline
             mountPath: /usr/share/logstash/pipeline/{{ $path }}

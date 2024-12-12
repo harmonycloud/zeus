@@ -1,0 +1,23 @@
+{{- if  .Capabilities.APIVersions.Has "monitoring.coreos.com/v1" }}
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: k8s
+    role: alert-rules
+  name: {{ include "logstash.fullname" . }}
+spec:
+  groups:
+    - name: LogstashAlerts
+      rules:
+        - alert: LogstashNotHealthy
+          annotations:
+            alertLevel: warning
+            message: all logstash pod is down.
+            product: harmonycloud
+            summary: all logstash pod is down.
+          expr: logstash_info_up{service='{{ include "logstash.fullname" . }}'} < 1
+          for: 3s
+          labels:
+            severity: warning
+  {{- end }}

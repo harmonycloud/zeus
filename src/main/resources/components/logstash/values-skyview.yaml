@@ -60,7 +60,7 @@ logstashPipeline:
             # 提取时间
             match => {"message" => "(?<LogTime>(%{YEAR}-%{MONTHNUM}-%{MONTHDAY})T(%{HOUR}:%{MINUTE}:%{SECOND}))"}
           }
-    
+
           date {
             # 匹配并替换时间
             match => ["LogTime","YYYY-MM-dd'T'HH:mm:ss", "ISO8601"]
@@ -73,7 +73,7 @@ logstashPipeline:
           grok {
             match => {"message" => "(?<LogTime>(%{YEAR}-%{MONTHNUM}-%{MONTHDAY})%{SPACE}(%{TIME})%{SPACE}CST)"}
           }
-    
+
           date {
             match => [ "LogTime", "YYYY-MM-dd HH:mm:ss.SSS 'CST'"]
             target => "@timestamp"
@@ -89,10 +89,10 @@ logstashPipeline:
             mutate {
               add_field => { "postgres_audit" => "true" }
             }
-            csv {
-              source => "message_audit"
-              columns => ["audit_type","statement_id","substatement_id","class","command","object_type","object_name","statement","parameter"]
-            }
+          }
+          csv {
+            source => "message_audit"
+            columns => ["audit_type","statement_id","substatement_id","class","command","object_type","object_name","statement","parameter"]
           }
           date {
             match => ["log_time", "yyyy-MM-dd HH:mm:ss.SSS 'CST'"]
@@ -120,18 +120,52 @@ logstashPipeline:
         }
         if [k8s_container_name] == "redis-cluster" {
           grok {
-            match => {"message" => "(?<LogTime>(%{MONTHDAY}%{SPACE}%{MONTH}%{SPACE}%{YEAR})%{SPACE}(%{TIME}))"}
+            match => {"message" => "(?<LogTime>(%{MONTHDAY}%{SPACE}%{MONTH}%{SPACE}%{YEAR})%{SPACE}(%{TIME})) (?<level>[.*#-])"}
           }
-    
+
           date {
             match => [ "LogTime", "dd MMM YYYY HH:mm:ss.SSS"]
             target => "@timestamp"
             timezone => "Asia/Shanghai"
             remove_field => ["LogTime"]
           }
+
+          if [level] == "." {
+            mutate {
+              replace => [ "level", "debug" ]
+            }
+          }
+          if [level] == "-" {
+            mutate {
+              replace => [ "level", "verbose" ]
+            }
+          }
+          if [level] == "*" {
+            mutate {
+              replace => [ "level", "notice" ]
+            }
+          }
+          if [level] == "#" {
+            mutate {
+              replace => [ "level", "warning" ]
+            }
+          }
+
         }
+
         if [k8s_container_name] == "redis-init" {
           drop{}
+        }
+
+        if [k8s_container_name] == "rabbitmq" {
+          grok {
+            match => { "message" => "%{TIMESTAMP_ISO8601:timestamp} \[%{WORD:level}\] %{GREEDYDATA:message}" }
+          }
+          date {
+            match => ["timestamp", "ISO8601"]
+            target => "@timestamp"
+            timezone => "Asia/Shanghai"
+          }
         }
       }
       else if [index] == "middlewarestdout" {
@@ -178,13 +212,19 @@ logstashPipeline:
       else if [index] == "mysqlaudit" {
         if [audit_record] {
           grok {
-            match => { "[audit_record][user]" => "\[(?<user>.+?)\]" }
+            match => { "[audit_record][user]" => ["\[(?<user>.+?)\]" , "(?<user>.+)"] }
           }
 
-          if [audit_record][ip]  {
-            mutate {
-              add_field => { "ip" => "%{[audit_record][ip]}" }
+          if [audit_record][ip] {
+            if [audit_record][host] == "localhost" {
+              mutate {
+                add_field => { "ip" => "localhost" }
               }
+            } else {
+              mutate {
+                add_field => { "ip" => "%{[audit_record][ip]}" }
+              }
+            }
           }
 
           if [audit_record][sqltext] {
@@ -209,15 +249,9 @@ logstashPipeline:
         }
       }
       else if [index] == "mysqlslow" {
-        json {
-          source => "message"
-        }
         grok {
-          match => [ "message", "^#\s+User@Host:\s+%{USER:user}\[[^\]]+\]\s+@\s+(?:(?<clienthost>\S*) )?\[(?:%{IP:clientip})?\]\s+Id:\s+%{NUMBER:id}\n# Query_time: %{NUMBER:query_time}\s+Lock_time: %{NUMBER:lock_time}\s+Rows_sent: %{NUMBER:rows_sent}\s+Rows_examined: %{NUMBER:rows_examined}\nSET\s+timestamp=%{NUMBER:timestamp_mysql};\n(?<query>[\s\S]*)" ]
-        }
-        #grok {
-        #  match => [ "message", "\s+FROM\s(?<db>\w+)" ]
-        #}
+              match => {"message" =>"^#\s+User@Host:\s+%{USER:user}\[[^\]]+\]\s+@\s+(?:(?<clienthost>\S*) )?\[(?:%{IP:clientip})?\]\s+Id:\s+%{NUMBER:id}\n# Query_time: %{NUMBER:query_time}\s+Lock_time: %{NUMBER:lock_time}\s+Rows_sent: %{NUMBER:rows_sent}\s+Rows_examined: %{NUMBER:rows_examined}\nSET\s+timestamp=%{NUMBER:timestamp_mysql};\n(?<query>[\s\S]*)" }
+            }
         date {
           match => ["timestamp_mysql","UNIX"]
           target => "@timestamp"
@@ -272,6 +306,8 @@ logstashPipeline:
         }
       }
       else if [index] == "mysqlaudit"{
+
+
         elasticsearch {
           hosts => ["kubernetes-logging-master.logging:9200"]
           index => "mysqlaudit-%{+YYYY.MM.dd}"
@@ -315,4 +351,3 @@ logstashPipeline:
         }
       }
     }
-

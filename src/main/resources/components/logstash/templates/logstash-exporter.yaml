@@ -1,0 +1,66 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "logstash.fullname" . }}-exporter
+  labels:
+    app: {{ include "logstash.fullname" . }}-exporter
+spec:
+  replicas: {{ .Values.exporter.replicas }}
+  selector:
+    matchLabels:
+      app: {{ include "logstash.fullname" . }}-exporter
+  template:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        app: {{ include "logstash.fullname" . }}-exporter
+    spec:
+      {{- with .Values.image.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: logstash-exporter
+          image: "{{ .Values.image.repository }}/logstash-exporter:{{ .Values.image.exporterTag }}"
+          imagePullPolicy: {{ .Values.image.imagePullPolicy }}
+          env:
+            - name: EXPORTER_CONFIG_LOCATION
+              value: /app/config.yml
+          volumeMounts:
+            - name: logstash-exporter-config
+              mountPath: /app/config.yml
+              subPath: config.yml
+          readinessProbe:
+            failureThreshold: 30
+            periodSeconds: 10
+            successThreshold: 1
+            tcpSocket:
+              port: 9198
+            timeoutSeconds: 1
+          ports:
+            - name: metrics
+              containerPort: 9198
+              protocol: TCP
+          resources:
+            {{- toYaml .Values.exporter.resource | nindent 12 }}
+      volumes:
+        - name: logstash-exporter-config
+          configMap:
+            name: {{ include "logstash.fullname" . }}-exporter-config
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+

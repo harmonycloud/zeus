@@ -1,12 +1,15 @@
 apiVersion: v1
-appVersion: 6.8.22
 description: Official Elastic helm chart for Logstash
 home: https://github.com/elastic/helm-charts
-icon: https://helm.elastic.co/icons/logstash.png
 maintainers:
 - email: helm-charts@elastic.co
   name: Elastic
 name: logstash
+version: 7.0.1-beta.4
+appVersion: 6.8.22
 sources:
-- https://github.com/elastic/logstash
-version: 6.8.22-7.1
+  - https://github.com/elastic/logstash
+icon: https://helm.elastic.co/icons/logstash.png
+annotations:
+  owner: harmonycloud
+  version: 6.8.22
