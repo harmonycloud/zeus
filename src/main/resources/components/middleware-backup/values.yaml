@@ -2,9 +2,10 @@ global:
   repository: harbor.middleware.com/middleware
   crdGroup: harmonycloud
   middlewarebackup_controller:
+    replicas: 1
     image: middlewarebackup-controller
     removeBinlog: "yes"
-    tag: "v1.9.0"
+    tag: "v1.11.0"
     resources:
       limits:
         cpu: 200m
@@ -27,11 +28,11 @@ global:
       tag: v1.2.0-common
     job_pgsql_backup:
       image: middleware-backup-operator
-      tag: v1.3.1-pgsql
+      tag: v1.4.0-pgsql
     job_mysql_backup:
       image: middleware-backup-operator
-      tag: v1.1.2-mysql
-      mysql8tag: v1.1.2-mysql8
+      tag: v1.2.0-mysql
+      mysql8tag: v1.2.0-mysql8
   kubectl:
     installCRDs: true
     tag: 1.21
