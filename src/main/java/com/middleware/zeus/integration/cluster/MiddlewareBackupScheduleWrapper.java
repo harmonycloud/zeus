@@ -58,7 +58,7 @@ public class MiddlewareBackupScheduleWrapper {
 
     /**
      * 更新
-     * 
+     *
      * @param clusterId
      * @param backupScheduleCr
      * @throws IOException
@@ -66,10 +66,27 @@ public class MiddlewareBackupScheduleWrapper {
     public void update(String clusterId, MiddlewareBackupSchedule backupScheduleCr) {
         // init client
         NonNamespaceOperation<MiddlewareBackupSchedule, MiddlewareBackupScheduleList,
-            Resource<MiddlewareBackupSchedule>> backupScheduleClient = K8sClient.getClient(clusterId)
+                Resource<MiddlewareBackupSchedule>> backupScheduleClient = K8sClient.getClient(clusterId)
                 .resources(MiddlewareBackupSchedule.class, MiddlewareBackupScheduleList.class);
         // create
         backupScheduleClient.resource(backupScheduleCr).update();
+    }
+
+
+    /**
+     * 更新
+     * 
+     * @param clusterId
+     * @param backupScheduleCr
+     * @throws IOException
+     */
+    public void patch(String clusterId, MiddlewareBackupSchedule backupScheduleCr) {
+        // init client
+        NonNamespaceOperation<MiddlewareBackupSchedule, MiddlewareBackupScheduleList,
+            Resource<MiddlewareBackupSchedule>> backupScheduleClient = K8sClient.getClient(clusterId)
+                .resources(MiddlewareBackupSchedule.class, MiddlewareBackupScheduleList.class);
+        // create
+        backupScheduleClient.resource(backupScheduleCr).patch();
     }
 
     /**

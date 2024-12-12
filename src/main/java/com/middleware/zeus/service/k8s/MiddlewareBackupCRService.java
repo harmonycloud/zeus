@@ -22,6 +22,14 @@ public interface MiddlewareBackupCRService {
     void create(String clusterId, MiddlewareBackup middlewareBackup)  throws IOException;
 
     /**
+     * 更新备份
+     * @param clusterId
+     * @param middlewareBackup
+     * @throws IOException
+     */
+    void patch(String clusterId, MiddlewareBackup middlewareBackup)  throws IOException;
+
+    /**
      * 删除备份记录
      * @param clusterId
      * @param namespace

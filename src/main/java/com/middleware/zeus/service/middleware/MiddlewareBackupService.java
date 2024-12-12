@@ -351,4 +351,9 @@ public interface MiddlewareBackupService {
      */
     void checkSchedule();
 
+    /**
+     * 清理回收失败的周期备份任务
+     */
+    void clearRecycleFailedBackup();
+
 }

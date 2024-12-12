@@ -27,6 +27,11 @@ public class MiddlewareBackupCRServiceImpl implements MiddlewareBackupCRService 
     }
 
     @Override
+    public void patch(String clusterId, MiddlewareBackup middlewareBackup) throws IOException {
+        middlewareBackupWrapper.patch(clusterId, middlewareBackup);
+    }
+
+    @Override
     public void delete(String clusterId, String namespace, String name) throws IOException {
         middlewareBackupWrapper.delete(clusterId, namespace, name);
     }

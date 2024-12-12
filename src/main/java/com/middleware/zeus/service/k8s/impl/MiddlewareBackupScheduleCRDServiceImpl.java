@@ -41,6 +41,11 @@ public class MiddlewareBackupScheduleCRDServiceImpl implements MiddlewareBackupS
     }
 
     @Override
+    public void patch(String clusterId, MiddlewareBackupSchedule middlewareBackupSchedule) {
+        middlewareBackupScheduleWrapper.patch(clusterId, middlewareBackupSchedule);
+    }
+
+    @Override
     public MiddlewareBackupSchedule get(String clusterId, String namespace, String backupName) {
         return middlewareBackupScheduleWrapper.get(clusterId, namespace, backupName);
     }

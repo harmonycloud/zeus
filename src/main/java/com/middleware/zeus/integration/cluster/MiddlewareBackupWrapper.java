@@ -44,6 +44,22 @@ public class MiddlewareBackupWrapper {
     }
 
     /**
+     * 更新备份(立即备份)
+     *
+     * @param clusterId
+     * @param middlewareBackup
+     * @throws IOException
+     */
+    public void patch(String clusterId, MiddlewareBackup middlewareBackup) throws IOException {
+        // init client
+        NonNamespaceOperation<MiddlewareBackup, MiddlewareBackupList,
+                Resource<MiddlewareBackup>> middlewareBackupClient =
+                K8sClient.getClient(clusterId).resources(MiddlewareBackup.class, MiddlewareBackupList.class);
+        // patch
+        middlewareBackupClient.resource(middlewareBackup).patch();
+    }
+
+    /**
      * 删除
      * 
      * @param clusterId

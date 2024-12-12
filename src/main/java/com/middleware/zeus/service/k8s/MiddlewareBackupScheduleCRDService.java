@@ -39,6 +39,14 @@ public interface MiddlewareBackupScheduleCRDService {
     void update(String clusterId, MiddlewareBackupSchedule middlewareBackupSchedule);
 
     /**
+     * 更新备份
+     * @param clusterId
+     * @param middlewareBackupSchedule
+     * @throws IOException
+     */
+    void patch(String clusterId, MiddlewareBackupSchedule middlewareBackupSchedule);
+
+    /**
      * 查询备份
      * @param clusterId
      * @param namespace
