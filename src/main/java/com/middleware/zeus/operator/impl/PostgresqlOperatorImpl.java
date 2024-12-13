@@ -524,6 +524,7 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
             // 设置limit的resources
             setLimitResources(quota);
             if (StringUtils.isNotBlank(quota.getCpu())) {
+                parseQuotaToString(quota);
                 sb.append("resources.requests.cpu=").append(quota.getCpu()).append(",resources.limits.cpu=")
                         .append(quota.getLimitCpu()).append(",");
             }

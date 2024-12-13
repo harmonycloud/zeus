@@ -116,7 +116,7 @@ metadata:
     control-plane: backup-controller
   name: middlewarebackup-controller
 spec:
-  replicas: 3
+  replicas: {{ .Values.global.middlewarebackup_controller.replicas }}
   selector:
     matchLabels:
       control-plane: backup-controller

@@ -89,15 +89,6 @@ parameters:
         value: [1-1073741824]
       - name: describe
         value: "This variable specifies the timeout in seconds for attempts to acquire metadata locks. The permissible values range from 1 to 31536000 (1 year). The default is 60."
-  - lower_case_table_names:
-      - name: default
-        value: 1
-      - name: isReboot
-        value: y
-      - name: range
-        value: [0|1|2]
-      - name: describe
-        value: "If set to 0, table names are stored as specified and comparisons are case-sensitive. If set to 1, table names are stored in lowercase on disk and comparisons are not case-sensitive. If set to 2, table names are stored as given but compared in lowercase. This option also applies to database names and table aliases."
   - thread_cache_size:
       - name: default
         value: 64
@@ -113,9 +104,18 @@ parameters:
       - name: isReboot
         value: y
       - name: range
-        value: [utf8|latin1|gbk|gb18030|utf8mb4]
+        value: [utf8mb4]
       - name: describe
         value: "The default character set"
+  - collation_server:
+      - name: default
+        value: utf8mb4_0900_ai_ci
+      - name: isReboot
+        value: y
+      - name: range
+        value: [utf8mb4_0900_ai_ci|utf8mb4_0900_as_ci|utf8mb4_0900_as_cs|utf8mb4_0900_bin|utf8mb4_bin|utf8mb4_general_ci|utf8mb4_unicode_520_ci|utf8mb4_unicode_ci]
+      - name: describe
+        value: "Collation for the character set."
   - transaction_isolation:
       - name: default
         value: READ-COMMITTED
@@ -125,15 +125,6 @@ parameters:
         value: [READ-UNCOMMITTED|READ-COMMITTED|REPEATABLE-READ|SERIALIZABLE]
       - name: describe
         value: "The transaction isolation level."
-  - skip_name_resolve:
-      - name: default
-        value: 'ON'
-      - name: isReboot
-        value: y
-      - name: range
-        value: [ON|OFF]
-      - name: describe
-        value: "Whether to resolve host names when checking client connections. If this variable is OFF, mysqld resolves host names when checking client connections. If it is ON, mysqld uses only IP numbers; in this case, all Host column values in the grant tables must be IP addresses. "
   - explicit_defaults_for_timestamp:
       - name: default
         value: 'ON'
@@ -154,7 +145,7 @@ parameters:
         value: "This variable controls the time zone of timestamps in messages written to the error log, and in general query log and slow query log messages written to files."
   - local_infile:
       - name: default
-        value: OFF
+        value: 'OFF'
       - name: isReboot
         value: n
       - name: range
@@ -199,11 +190,11 @@ parameters:
         value: "Log all queries that have taken more than long_query_time seconds to execute to file. The argument will be treated as a decimal value with microsecond precision"
   - log_queries_not_using_indexes:
       - name: default
-        value: 0
+        value: 'OFF'
       - name: isReboot
         value: n
       - name: range
-        value: [0|1]
+        value: [ON|OFF]
       - name: describe
         value: "Log queries that are executed without benefit of any index to the slow log if it is open"
   - log_throttle_queries_not_using_indexes:
@@ -469,11 +460,11 @@ parameters:
         value: "Number of seconds to wait for a block to be written to a connection before aborting the write"
   - skip_external_locking:
       - name: default
-        value: 1
+        value: 'ON'
       - name: isReboot
         value: y
       - name: range
-        value: [0|1]
+        value: [ON|OFF]
       - name: describe
         value: "This is OFF if mysqld uses external locking (system locking), ON if external locking is disabled. This affects only MyISAM table access."
   - key_buffer_size:
@@ -523,11 +514,11 @@ parameters:
         value: "The number of cached table definitions"
   - innodb_log_file_size:
       - name: default
-        value: 1073741824
+        value: 50331648
       - name: isReboot
         value: y
       - name: range
-        value: [1048576-512GB/innodb_log_files_in_group]
+        value: [4194304-512GB/innodb_log_files_in_group]
       - name: describe
         value: "The size in bytes of each log file in a log group."
   - innodb_log_files_in_group:
@@ -557,15 +548,15 @@ parameters:
         value: [10485760-18446744073709551615]
       - name: describe
         value: "Defines a threshold size for undo tablespaces. If an undo tablespace exceeds the threshold, it can be marked for truncation when innodb_undo_log_truncate is enabled. The default value is 1073741824 bytes (1024 MiB)."
-  - innodb_undo_tablespaces:
-      - name: default
-        value: 3
-      - name: isReboot
-        value: y
-      - name: range
-        value: [0-95]
-      - name: describe
-        value: "The number of undo tablespaces used by InnoDB. "
+#  - innodb_undo_tablespaces:
+#      - name: default
+#        value: 3
+#      - name: isReboot
+#        value: y
+#      - name: range
+#        value: [0-95]
+#      - name: describe
+#        value: "The number of undo tablespaces used by InnoDB. "
   - innodb_fast_shutdown:
       - name: default
         value: 1
@@ -712,11 +703,11 @@ parameters:
         value: "Specifies the size of sort buffers used to sort data during creation of an InnoDB index. The specified size defines the amount of data that is read into memory for internal sorting and then written out to disk. This process is referred to as a “run”. During the merge phase, pairs of buffers of the specified size are read in and merged. The larger the setting, the fewer runs and merges there are."
   - innodb_print_all_deadlocks:
       - name: default
-        value: 1
+        value: 'ON'
       - name: isReboot
         value: y
       - name: range
-        value: [0|1]
+        value: [ON|OFF]
       - name: describe
         value: "Print all deadlocks to MySQL error log (off by default)"
   - innodb_rollback_on_timeout:
@@ -746,7 +737,7 @@ parameters:
         value: [-1-1048576]
       - name: describe
         value: "Maximum number of instrumented tables."
-  - audit_whitelist_cmds:
+  - audit_log_exclude_commands:
       - name: default
         value: "select"
       - name: isReboot
@@ -755,7 +746,7 @@ parameters:
         value: [select|create_table|create_index|alter_table|update|insert|insert_select|delete|truncate|drop_table|drop_index|show_databases|show_tables|show_fields|show_keys|show_variables|show_status|show_engine_logs|show_engine_status|show_engine_mutex|show_processlist|show_master_stat|show_slave_stat|show_grants|show_create|show_charsets|show_collations|show_create_db|show_table_status|show_triggers|load|set_option|lock_tables|unlock_tables|grant|change_db|create_db|drop_db|alter_db|repair|replace|replace_select|create_function|drop_function|revoke|optimize|check|assign_to_keycache|preload_keys|flush|kill|analyze|rollback|rollback_to_savepoint|commit|savepoint|release_savepoint|slave_start|slave_stop|start_group_replication|stop_group_replication|begin|change_master|change_replication_filter|rename_table|reset|purge|purge_before|show_binlogs|show_open_tables|ha_open|ha_close|ha_read|show_slave_hosts|delete_multi|update_multi|show_binlog_events|do|show_warns|empty_query|show_errors|show_storage_engines|show_privileges|help|create_user|drop_user|rename_user|revoke_all|checksum|create_procedure|create_spfunction|call|drop_procedure|alter_procedure|alter_function|show_create_proc|show_create_func|show_status_proc|show_status_func|prepare|execute|deallocate_prepare|create_view|drop_view|create_trigger|drop_trigger|xa_start|xa_end|xa_prepare|xa_commit|xa_rollback|xa_recover|show_proc_code|show_func_code|alter_tablespace|install_plugin|uninstall_plugin|binlog_base64_event|show_plugins|create_server|drop_server|alter_server|create_event|alter_event|drop_event|show_create_event|show_events|show_create_trigger|alter_db_upgrade|show_profile|show_profiles|signal|resignal|show_relaylog_events|get_diagnostics|alter_user|explain_other|show_create_user|shutdown|alter_instance]
       - name: describe
         value: "Audit Log Configuration, Comma separated list of white-listed cmds whose queries are not recorded. Introduced in version 1.0.6"
-  - audit_record_cmds:
+  - audit_log_include_commands:
       - name: default
         value: "create_db,create_table,create_user,create_index,drop_db,drop_table,drop_user,drop_index,alter_user,alert_table,truncate,revoke,rename_table,insert,update,delete,lock_tables,unlock_tables"
       - name: isReboot

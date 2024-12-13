@@ -1,0 +1,33 @@
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name:  mysqlclusters.mysql.middleware.harmonycloud.cn
+  labels:
+    MiddlewareCluster: mysqlcluster
+  annotations:
+    harmonycloud-middleware-status-phase: 'if .metadata.annotations."middleware.maintenance.lock"=="middlewarebackup" then . + {status: (.status +  {"phase": "Recover"})} else . end'
+spec:
+  group: mysql.middleware.harmonycloud.cn
+  preserveUnknownFields: true
+  versions:
+    - name: v1alpha1
+      served: true
+      storage: true
+  additionalPrinterColumns:
+    - name: phase
+      type: string
+      JSONPath: .status.phase
+    - name: phaseMysql
+      type: string
+      JSONPath: .status.phaseMysql
+    - name: phaseProxy
+      type: string
+      JSONPath: .status.phaseProxy
+  names:
+    kind: MysqlCluster
+    listKind: MysqlClusterList
+    plural: mysqlclusters
+    shortNames:
+      - mc
+    singular: mysqlcluster
+  scope: Namespaced

@@ -41,7 +41,7 @@ parameters:
         will be retried for '
 - mysql-connect_timeout_client:
     - name: default
-      value: Default
+      value: 10000
     - name: isReboot
       value: y
     - name: range
@@ -96,7 +96,7 @@ parameters:
         (
 - mysql-connection_warming:
     - name: default
-      value: Default
+      value: 'false'
     - name: isReboot
       value: y
     - name: range
