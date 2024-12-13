@@ -65,6 +65,7 @@ import org.yaml.snakeyaml.Yaml;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import static com.middleware.zeus.common.constants.AlertConstant.SERVICE;
@@ -667,8 +668,20 @@ public abstract class AbstractBaseOperator {
         MiddlewareQuota quota = checkMiddlewareQuota(middleware, quotaKey);
         JSONObject requests = resources.getJSONObject("requests");
         JSONObject limits = resources.getJSONObject("limits");
-        quota.setCpu(requests.getString(CPU)).setMemory(requests.getString(MEMORY)).setLimitCpu(limits.getString(CPU))
-            .setLimitMemory(limits.getString(MEMORY));
+
+        // 因为cpu涉及单位转换，所以根据单位是否为m做转换处理
+        if (requests.getString(CPU).endsWith(ResourceUnitEnum.M.getUnit())) {
+            quota.setCpu(String.valueOf(ResourceCalculationUtil.getResourceValue(requests.getString(CPU), CPU, "")));
+        } else {
+            quota.setCpu(requests.getString(CPU));
+        }
+        if (limits.getString(CPU).endsWith(ResourceUnitEnum.M.getUnit())) {
+            quota.setLimitCpu(String.valueOf(ResourceCalculationUtil.getResourceValue(limits.getString(CPU), CPU, "")));
+        } else {
+            quota.setLimitCpu(limits.getString(CPU));
+        }
+        // 设置内存
+        quota.setMemory(requests.getString(MEMORY)).setLimitMemory(limits.getString(MEMORY));
     }
 
     protected void convertStoragesByHelmChart(Middleware middleware, String quotaKey, JSONObject values) {
@@ -1698,6 +1711,20 @@ public abstract class AbstractBaseOperator {
             log.error("获取deploy容忍配置失败", e);
         }
         return null;
+    }
+
+    protected void parseQuotaToString(MiddlewareQuota quota) {
+        if (quota == null) {
+            return;
+        }
+        //
+        Pattern pattern = Pattern.compile("^[0-9]+$");
+        if (StringUtils.isNotEmpty(quota.getCpu()) && pattern.matcher(quota.getCpu()).matches()) {
+            quota.setCpu((int) ResourceCalculationUtil.getResourceValue(quota.getCpu(), CPU, "m", 0, RoundingMode.UP) + "m");
+        }
+        if (StringUtils.isNotEmpty(quota.getLimitCpu()) && pattern.matcher(quota.getLimitCpu()).matches()) {
+            quota.setLimitCpu((int) ResourceCalculationUtil.getResourceValue(quota.getLimitCpu(), CPU, "m", 0, RoundingMode.UP) + "m");
+        }
     }
 
 }

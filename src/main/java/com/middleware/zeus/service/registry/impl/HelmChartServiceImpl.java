@@ -511,6 +511,14 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
         String chartName = middleware.getChartName();
         String chartVersion = middleware.getChartVersion();
 
+        String cmd = String.format("helm upgrade %s %s --values %s --set %s -n %s --kube-apiserver %s --kubeconfig %s ",
+                middleware.getName(), "tgzFilePath", "tempValuesYamlPath", updateValues, middleware.getNamespace(),
+                cluster.getAddress(), clusterCertService.getKubeConfigFilePath(cluster.getId()));
+
+        if (StringUtils.isNotBlank(updateStringValues)) {
+            cmd = cmd + " --set-string " + updateStringValues + " ";
+        }
+
         // 先获取chart文件
         HelmChartFile helmChart = getHelmChartFromMysql(chartName, chartVersion);
 
@@ -533,7 +541,7 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
             tgzFilePath = packageChart(helmChart.getTarFileName(), chartName, chartVersion);
         }
         String tempValuesYamlPath = tempValuesYamlDir + File.separator + tempValuesYamlName;
-        String cmd = String.format("helm upgrade %s %s --values %s --set %s -n %s --kube-apiserver %s --kubeconfig %s ",
+        cmd = String.format("helm upgrade %s %s --values %s --set %s -n %s --kube-apiserver %s --kubeconfig %s ",
             middleware.getName(), tgzFilePath, tempValuesYamlPath, updateValues, middleware.getNamespace(),
             cluster.getAddress(), clusterCertService.getKubeConfigFilePath(cluster.getId()));
 
