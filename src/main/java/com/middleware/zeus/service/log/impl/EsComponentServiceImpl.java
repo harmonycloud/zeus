@@ -381,7 +381,7 @@ public class EsComponentServiceImpl implements EsComponentService {
         Response response = null;
         try {
             response = restClient.performRequest(request);
-        } catch (ConnectException e) {
+        } catch (IOException e) {
             log.error("日志组件连接失败", e);
             throw new BusinessException(ErrorMessage.ELASTICSEARCH_CONNECT_FAILED);
         }
