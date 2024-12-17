@@ -2,10 +2,7 @@ capabilities:
   - basic
   - high
   - ingress
-  - monitoring
-  - log
   - config
-  - alert
 questions:
   - variable: nodeAffinity
     description: "主机亲和"
@@ -13,16 +10,9 @@ questions:
     default: false
     type: nodeAffinity
     group: "调度策略"
-  - variable: image.repository
+  - variable: image
     default: "middleware.harmonycloud.cn:38080/middleware/logstash"
     label: 镜像地址
-    detail: true
-    type: string
-    required: true
-    group: "Logstash 配置"
-  - variable: persistence.storageClassName
-    default: "middleware-lvm"
-    label: StorageClass名称
     detail: true
     type: string
     required: true
@@ -30,16 +20,8 @@ questions:
   - variable: logstashPipeline
     label: pipeline files
     default: "logstash.conf: |\n  input {\n    exec {\n      command => \"uptime\"\n      interval => 30\n    }\n  }\n  output { stdout { } }"
-    type: string
+    type: multiline
     required: true
-    group: "Logstash 配置"
-  - variable: version
-    default: "6.8.22"
-    label: 版本
-    type: enum
-    required: true
-    options:
-      - "6.8.22"
     group: "Logstash 配置"
   - variable: replicas
     default: 1
@@ -84,3 +66,15 @@ questions:
     type: string
     group: "规格配置"
     required: true
+  - variable: storageClassName
+    default: ""
+    label: 存储类型
+    type: storageclass
+    required: true
+    group: "存储配额"
+  - variable: volumeClaimTemplate.resources.requests.storage
+    default: "1Gi"
+    label: 存储大小
+    type: string
+    required: true
+    group: "存储配额"

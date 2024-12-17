@@ -90,6 +90,7 @@ spec:
           privileged: true
       terminationGracePeriodSeconds: 30
       hostNetwork: false
+      serviceAccount: log-pilot
       volumes:
       {{- if eq .Values.runtime.type "containerd"}}
       - name: sock

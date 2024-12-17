@@ -1,0 +1,19 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  labels:
+    prometheus: k8s
+  name: log-pilot-rules
+  namespace: logging
+spec:
+  groups:
+    - name: log-pilot
+      rules:
+        - alert: filebeatRetryTimesIncrease
+          annotations:
+            message: 'node "{{`{{`}} $labels.node {{`}}`}}" filebeat retry times is increasing.'
+          expr: |-
+            sum by (node) (rate(filebeat_pipeline_retry_total{}[2m])) > 0
+          for: 10m
+          labels:
+            severity: minor
