@@ -20,7 +20,9 @@ runtime:
   #  type: docker or containerd
   type: docker
   imageDockerTag: 0.9.7-filebeat-hc.7-docker
-  imageContainerdTag: 0.9.7-filebeat-hc.9-containerd-middleware
+  imageContainerdTag: 0e1111e4
+
+pathSymlink: /host/var/lib/kubelet:/appl/cdb/data/data/kubelet
 
 customVolumes: {}
 

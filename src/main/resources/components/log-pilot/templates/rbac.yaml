@@ -14,6 +14,7 @@ rules:
   - apiGroups: [""]
     resources:
       - "nodes"
+      - "pods"
     verbs: ["get"]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
