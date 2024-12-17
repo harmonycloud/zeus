@@ -341,10 +341,12 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         }
 
         // 慢日志更新
-        if (middleware.getSlowSql() != null && middleware.getSlowSql()) {
-            sb.append("args.slow_query_log=").append(ON).append(",");
-        } else {
-            sb.append("args.slow_query_log=").append(OFF).append(",");
+        if (middleware.getSlowSql() != null) {
+            if (middleware.getSlowSql()) {
+                sb.append("args.slow_query_log=").append(ON).append(",");
+            } else {
+                sb.append("args.slow_query_log=").append(OFF).append(",");
+            }
         }
 
         // 更新通用字段
