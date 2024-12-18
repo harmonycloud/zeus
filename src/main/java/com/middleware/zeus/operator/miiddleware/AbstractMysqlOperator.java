@@ -13,7 +13,7 @@ public class AbstractMysqlOperator extends AbstractBaseOperator {
 
     @Override
     public boolean support(Middleware middleware) {
-        return MiddlewareTypeEnum.MYSQL == MiddlewareTypeEnum.findByType(middleware.getType());
+        return MiddlewareTypeEnum.MONGODB == MiddlewareTypeEnum.findByType(middleware.getType());
     }
 
 }

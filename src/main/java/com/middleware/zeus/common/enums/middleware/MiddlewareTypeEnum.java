@@ -24,6 +24,7 @@ public enum MiddlewareTypeEnum {
     KAFKA("kafka"),
     ZOOKEEPER("zookeeper"),
     POSTGRESQL("postgresql"),
+    MONGODB("mongodb")
     ;
 
     /**
