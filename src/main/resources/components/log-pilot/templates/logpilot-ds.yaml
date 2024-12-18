@@ -53,6 +53,10 @@ spec:
               fieldPath: spec.nodeName
         - name: PILOT_LOG_PREFIX
           value: aliyun
+        {{- if .Values.pathSymlink }}
+        - name: PATH_SYMLINK
+          value: {{ .Values.pathSymlink }}
+        {{- end}}
         volumeMounts:
         {{- if eq .Values.runtime.type "containerd"}}
         - name: sock
@@ -90,6 +94,7 @@ spec:
           privileged: true
       terminationGracePeriodSeconds: 30
       hostNetwork: false
+      serviceAccount: log-pilot
       volumes:
       {{- if eq .Values.runtime.type "containerd"}}
       - name: sock

@@ -1,3 +1,4 @@
+{{- if .Values.logstashConfig }}
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -10,9 +11,8 @@ metadata:
     release: {{ .Release.Name | quote }}
     {{- include "logstash.labels" . | nindent 4 }}
 data:
-  logstash.yml: |
-    pipeline.workers: {{ .Values.args.pipelineWorker }}
-    pipeline.output.workers: {{ .Values.args.pipelineOutputWorker }}
-    pipeline.batch.size: {{ .Values.args.pipelineBatchSize }}
-    pipeline.batch.delay: {{ .Values.args.pipelineBatchDelay }}
-    http.host: 0.0.0.0
+{{- range $path, $config := .Values.logstashConfig }}
+  {{ $path }}: |
+{{ tpl $config $ | indent 4 -}}
+{{- end -}}
+{{- end -}}

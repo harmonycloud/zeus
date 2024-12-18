@@ -20,6 +20,9 @@ data:
     cd $(dirname $0)
     base() {
     cat >> $FILEBEAT_CONFIG << EOF
+    http.enabled: true
+    http.host: 0.0.0.0
+    http.port: 5066
     path.config: /etc/filebeat
     path.logs: /var/log/filebeat
     path.data: /var/lib/filebeat/data

@@ -5,8 +5,8 @@ data:
     - type: log
       enabled: true
       paths:
-    {{`{{range $key, $value := $v.HostDir}}`}}
-          - {{`{{ $value }}`}}/{{`{{ $v.File }}`}}
+    {{`{{range $index, $value := $v.HostDir}}`}}
+          - {{`{{ $value }}`}}/{{`{{index $v.File $index}}`}}
     {{`{{end}}`}}
       scan_frequency: 10s
       fields_under_root: true

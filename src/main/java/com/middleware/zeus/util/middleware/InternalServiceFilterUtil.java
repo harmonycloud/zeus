@@ -64,7 +64,9 @@ public class InternalServiceFilterUtil {
                             !servicePortDTO.getServiceName().endsWith("svc-metrics")
             ).collect(Collectors.toList());
         }
-        return servicePortDTOList;
+        return servicePortDTOList.stream().filter(servicePortDTO ->
+                !servicePortDTO.getServiceName().endsWith("pgbouncer-patroni")
+        ).collect(Collectors.toList());
     }
 
 }

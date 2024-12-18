@@ -1,0 +1,29 @@
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: log-pilot
+  namespace: logging
+spec:
+  endpoints:
+    - interval: 15s
+      path: /metrics
+      port: metrics
+  selector:
+    matchLabels:
+      k8s-app: log-pilot
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    k8s-app: log-pilot
+  name: log-pilot
+  namespace: logging
+spec:
+  ports:
+    - name: metrics
+      port: 5070
+      targetPort: 5070
+  selector:
+    k8s-app: log-pilot
+  type: ClusterIP
