@@ -1,5 +1,7 @@
 package com.middleware.zeus.integration.cluster;
 
+import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
+import com.middleware.zeus.integration.cluster.bean.MiddlewareList;
 import com.middleware.zeus.util.K8sClient;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.SecretList;
@@ -31,9 +33,12 @@ public class SecretWrapper {
         if (CollectionUtils.isEmpty(labels)){
             labels = new HashMap<>();
         }
-        MixedOperation<Secret, SecretList, Resource<Secret>> secretClient = K8sClient.getClient(clusterId).secrets();
+        NonNamespaceOperation<Secret, SecretList, Resource<Secret>> secretClient = K8sClient.getClient(clusterId).secrets();
+        // 条件判断
         if (StringUtils.isNotEmpty(namespace)) {
-            secretClient.inNamespace(namespace);
+            secretClient =
+                    ((MixedOperation<Secret, SecretList, Resource<Secret>>)secretClient)
+                            .inNamespace(namespace);
         }
         SecretList list = secretClient.withLabels(labels).list();
         if (list == null || CollectionUtils.isEmpty(list.getItems())) {
