@@ -54,7 +54,7 @@ function deploy_helm() {
   # 创建logging命名空间
   kubectl create ns logging
   # 安装es operator
-  helm install elasticsearch-opeartor -n middleware-operator src/main/resources/components/elasticsearch/charts/elasticsearch-operator --set image.repository=$IMAGE_REPO,replicaCount=3 -f src/main/resources/components/elasticsearch/charts/elasticsearch-operator/values.yaml -f src/main/resources/components/elasticsearch/charts/elasticsearch-operator/values-active-active.yaml
+  helm install elasticsearch-operator -n middleware-operator src/main/resources/components/elasticsearch/charts/elasticsearch-operator --set image.repository=$IMAGE_REPO,replicaCount=3 -f src/main/resources/components/elasticsearch/charts/elasticsearch-operator/values.yaml -f src/main/resources/components/elasticsearch/charts/elasticsearch-operator/values-active-active.yaml
   # 安装es
   helm install kubernetes-logging -n logging src/main/resources/components/elasticsearch --set image.repository=$IMAGE_REPO,aliasName=kubernetes-logging,nameOverride=kubernetes-logging,elasticsearch-operator.enabled=false,elasticPassword=Hc@Cloud01,storage.masterClass=$STORAGE_CLASS,storage.masterSize=30Gi,logging.collection.filelog.enable=false,logging.collection.stdout.enable=false,resources.master.limits.cpu=1,resources.master.limits.memory=4Gi,esJavaOpts.xmx=2048m,esJavaOpts.xms=2048m,cluster.masterReplacesCount=3,resources.master.requests.cpu=1,resources.master.requests.memory=4Gi -f src/main/resources/components/elasticsearch/values.yaml -f src/main/resources/components/elasticsearch/values-active-active.yaml
   # 安装log-pilot
