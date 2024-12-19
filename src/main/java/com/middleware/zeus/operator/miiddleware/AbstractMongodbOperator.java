@@ -1,5 +1,6 @@
 package com.middleware.zeus.operator.miiddleware;
 
+import com.middleware.zeus.common.enums.middleware.MiddlewareTypeEnum;
 import com.middleware.zeus.common.model.middleware.Middleware;
 import com.middleware.zeus.operator.AbstractBaseOperator;
 
@@ -10,6 +11,6 @@ import com.middleware.zeus.operator.AbstractBaseOperator;
 public class AbstractMongodbOperator extends AbstractBaseOperator {
     @Override
     public boolean support(Middleware middleware) {
-        return false;
+        return MiddlewareTypeEnum.MONGODB == MiddlewareTypeEnum.findByType(middleware.getType());
     }
 }

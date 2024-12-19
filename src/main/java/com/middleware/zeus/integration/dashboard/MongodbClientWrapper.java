@@ -1,5 +1,7 @@
 package com.middleware.zeus.integration.dashboard;
 
+import com.alibaba.fastjson.JSONArray;
+import com.middleware.zeus.common.enums.Protocol;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -20,11 +22,20 @@ public class MongodbClientWrapper {
     private MongodbClient mongodbClient;
 
 
-    public String getOrgId(){
-        JSONObject res = mongodbClient.getOrgId();
+    public String getOrgId(String publicKey, String privateKey){
+        String protocol = Protocol.HTTP.getValue().toLowerCase();
+        String path = "mongodb-enterprise-operator-om-svc.middleware-operator";
+        String port = "8080";
+        JSONObject res = mongodbClient.getOrgId(protocol, path, port, publicKey, privateKey);
         if (res.containsKey("data")){
             try {
-                return res.getJSONObject("data").getString("id");
+                JSONArray data = res.getJSONArray("data");
+                for (int i = 0; i < data.size(); i++) {
+                    JSONObject obj = data.getJSONObject(i);
+                    if (obj.getString("name").equals("mongodb-enterprise-operator-om-db")) {
+                        return obj.getString("id");
+                    }
+                }
             } catch (Exception e){
                 log.error("查询mongodb orgId 失败");
             }

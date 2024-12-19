@@ -47,6 +47,7 @@ public class CmdExecUtil {
         }, errorMsg -> {
             // 之后会被catch到
             if (!isErrorThrow) {
+                resList.add(errorMsg);
                 return errorMsg;
             }
             throw new RuntimeException(errorMsg);

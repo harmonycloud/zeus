@@ -47,19 +47,22 @@ public class MongodbOperatorImpl extends AbstractMongodbOperator implements Mong
         // 设置实例数
         values.getJSONObject(MONGODB.getType()).put("members", quota.getNum());
 
+        // 查询用户认证信息
+        Secret secret = secretService.get(cluster.getId(), MIDDLEWARE_OPERATOR,
+                "middleware-operator-mongodb-enterprise-operator-om-admin-key");
+        String publicKey = new String(Base64Utils.decode(secret.getData().get("publicKey")));
+        String privateKey = new String(Base64Utils.decode(secret.getData().get("privateKey")));
+        // 设置用户认证信息
+        values.getJSONObject("credentials").put("privateKey", privateKey);
+        values.getJSONObject("credentials").put("publicKey", publicKey);
         // 查询orgId
-        String orgId = mongodbClientWrapper.getOrgId();
+        String orgId = mongodbClientWrapper.getOrgId(publicKey, privateKey);
         if (StringUtils.isEmpty(orgId)) {
             throw new BusinessException(ErrorMessage.MONGODB_GET_ORGAN_ID_FAILED);
         }
         values.getJSONObject(PROJECT).put("organId", orgId);
-        // 查询用户认证信息
-        Secret secret = secretService.get(cluster.getId(), MIDDLEWARE_OPERATOR,
-            "middleware-operator-mongodb-enterprise-operator-om-admin-key");
-        String publicKey = new String(Base64Utils.decode(secret.getData().get("publicKey")));
-        String privateKey = new String(Base64Utils.decode(secret.getData().get("privateKey")));
-        values.getJSONObject("credentials").put("privateKey", privateKey);
-        values.getJSONObject("credentials").put("publicKey", publicKey);
+
+
     }
     @Override
     public Middleware convertByHelmChart(Middleware middleware, MiddlewareClusterDTO cluster) {
