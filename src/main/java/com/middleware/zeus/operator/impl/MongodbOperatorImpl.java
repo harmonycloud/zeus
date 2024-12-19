@@ -1,6 +1,7 @@
 package com.middleware.zeus.operator.impl;
 
 import static com.middleware.zeus.common.constants.NameConstant.*;
+import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.ACTIVE_ACTIVE;
 import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_OPERATOR;
 import static com.middleware.zeus.common.enums.DictEnum.POD;
 import static com.middleware.zeus.common.enums.middleware.MiddlewareTypeEnum.MONGODB;
@@ -62,7 +63,8 @@ public class MongodbOperatorImpl extends AbstractMongodbOperator implements Mong
         }
         values.getJSONObject(PROJECT).put("organId", orgId);
 
-
+        // 设置双活信息
+        checkAndSetActiveActive(values, middleware);
     }
     @Override
     public Middleware convertByHelmChart(Middleware middleware, MiddlewareClusterDTO cluster) {
@@ -152,6 +154,20 @@ public class MongodbOperatorImpl extends AbstractMongodbOperator implements Mong
             }
         } catch (Exception e) {
             log.error("中间件{}, 获取存储中文名失败", middleware.getName());
+        }
+    }
+
+    /**
+     * 检查是否是双活分区并设置双活配置字段
+     * @param values
+     * @param middleware
+     */
+    @Override
+    public void checkAndSetActiveActive(JSONObject values, Middleware middleware) {
+        if (namespaceService.isOpenAvailableDomain(middleware.getClusterId(), middleware.getNamespace())) {
+            super.setActiveActiveConfig(null, values);
+            super.setActiveActiveToleration(middleware, values);
+            values.put(ACTIVE_ACTIVE, true);
         }
     }
 
