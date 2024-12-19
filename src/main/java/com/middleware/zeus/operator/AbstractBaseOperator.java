@@ -151,6 +151,8 @@ public abstract class AbstractBaseOperator {
     private CustomConfigHistoryService customConfigHistoryService;
     @Autowired
     protected AlertUserService alertUserService;
+    @Autowired
+    protected SecretService secretService;
 
     /**
      * 是否支持该中间件

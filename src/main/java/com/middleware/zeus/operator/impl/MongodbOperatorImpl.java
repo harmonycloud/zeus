@@ -1,22 +1,30 @@
 package com.middleware.zeus.operator.impl;
 
-import com.alibaba.fastjson.JSONObject;
-import com.middleware.zeus.annotation.Operator;
-import com.middleware.zeus.common.model.StorageDto;
-import com.middleware.zeus.common.model.middleware.*;
-import com.middleware.zeus.operator.api.MongodbOperator;
-import com.middleware.zeus.operator.miiddleware.AbstractMongodbOperator;
-import io.fabric8.kubernetes.api.model.ConfigMap;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.stereotype.Component;
+import static com.middleware.zeus.common.constants.NameConstant.*;
+import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_OPERATOR;
+import static com.middleware.zeus.common.enums.DictEnum.POD;
+import static com.middleware.zeus.common.enums.middleware.MiddlewareTypeEnum.MONGODB;
 
 import java.util.List;
 import java.util.Map;
 
-import static com.middleware.zeus.common.constants.NameConstant.*;
-import static com.middleware.zeus.common.enums.DictEnum.POD;
-import static com.middleware.zeus.common.enums.middleware.MiddlewareTypeEnum.MONGODB;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import com.alibaba.fastjson.JSONObject;
+import com.middleware.zeus.annotation.Operator;
+import com.middleware.zeus.common.enums.ErrorMessage;
+import com.middleware.zeus.common.exception.BusinessException;
+import com.middleware.zeus.common.model.Secret;
+import com.middleware.zeus.common.model.StorageDto;
+import com.middleware.zeus.common.model.middleware.*;
+import com.middleware.zeus.integration.dashboard.MongodbClientWrapper;
+import com.middleware.zeus.operator.api.MongodbOperator;
+import com.middleware.zeus.operator.miiddleware.AbstractMongodbOperator;
+import com.middleware.zeus.util.encrypt.Base64Utils;
+
+import io.fabric8.kubernetes.api.model.ConfigMap;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author xutianhong
@@ -25,6 +33,9 @@ import static com.middleware.zeus.common.enums.middleware.MiddlewareTypeEnum.MON
 @Slf4j
 @Operator(paramTypes4One = Middleware.class)
 public class MongodbOperatorImpl extends AbstractMongodbOperator implements MongodbOperator {
+
+    @Autowired
+    private MongodbClientWrapper mongodbClientWrapper;
 
     @Override
     protected void replaceValues(Middleware middleware, MiddlewareClusterDTO cluster, JSONObject values) {
@@ -36,7 +47,19 @@ public class MongodbOperatorImpl extends AbstractMongodbOperator implements Mong
         // 设置实例数
         values.getJSONObject(MONGODB.getType()).put("members", quota.getNum());
 
-
+        // 查询orgId
+        String orgId = mongodbClientWrapper.getOrgId();
+        if (StringUtils.isEmpty(orgId)) {
+            throw new BusinessException(ErrorMessage.MONGODB_GET_ORGAN_ID_FAILED);
+        }
+        values.getJSONObject(PROJECT).put("organId", orgId);
+        // 查询用户认证信息
+        Secret secret = secretService.get(cluster.getId(), MIDDLEWARE_OPERATOR,
+            "middleware-operator-mongodb-enterprise-operator-om-admin-key");
+        String publicKey = new String(Base64Utils.decode(secret.getData().get("publicKey")));
+        String privateKey = new String(Base64Utils.decode(secret.getData().get("privateKey")));
+        values.getJSONObject("credentials").put("privateKey", privateKey);
+        values.getJSONObject("credentials").put("publicKey", publicKey);
     }
     @Override
     public Middleware convertByHelmChart(Middleware middleware, MiddlewareClusterDTO cluster) {

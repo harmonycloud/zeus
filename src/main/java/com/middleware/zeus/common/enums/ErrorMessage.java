@@ -334,6 +334,7 @@ public enum ErrorMessage {
     GET_CUSTOM_CONFIG_ROLE_FAILED(700035, "get custom config role failed", "获取自定义配置节点类型失败"),
     CUSTOM_CONFIG_ROLE_CAN_NOT_BE_NULL(700036, "custom config role can not be null", "参数节点类型不能为空"),
     UPDATE_CUSTOM_CONFIG_FAILED(700037, "update config config failed", "更新自定义参数失败"),
+    MONGODB_GET_ORGAN_ID_FAILED(700038, "mongodb get organ Id failed", "获取组织id失败"),
 
     BACKUP_ALREADY_EXISTS(710000, "Backup already exists", "备份已存在"),
     BACKUP_RECORD_MAY_NOT_EXIST(710001, "Record delete failed,record may not exist", "删除失败，备份记录可能不存在"),
