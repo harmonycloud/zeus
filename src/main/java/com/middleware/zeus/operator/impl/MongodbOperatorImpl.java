@@ -70,8 +70,7 @@ public class MongodbOperatorImpl extends AbstractMongodbOperator implements Mong
     public Middleware convertByHelmChart(Middleware middleware, MiddlewareClusterDTO cluster) {
         JSONObject values = helmChartService.getInstalledValues(middleware, cluster);
         convertCommonByHelmChart(middleware, values);
-        convertResourcesByHelmChart(middleware, middleware.getType(),
-                values.getJSONObject(POD.getEnPhrase()).getJSONObject(RESOURCES));
+        convertResourcesByHelmChart(middleware, middleware.getType(), values.getJSONObject(RESOURCES));
         convertStoragesByHelmChart(middleware, middleware.getType(), values);
         // 设置副本数
         if (middleware.getQuota() != null && middleware.getQuota().get(middleware.getType()) != null) {
