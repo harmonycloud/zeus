@@ -51,13 +51,18 @@ public class MiddlewareApiInterceptor implements Interceptor {
     @Override
     public void onError(ForestRuntimeException ex, ForestRequest req, ForestResponse res) {
         log.error(res.getContent());
-        if (StringUtils.isNotEmpty(res.getContent())) {
-            JSONObject jsonObject = JSONObject.parseObject(res.getContent());
-            String err = jsonObject.getString("err");
-            throw new BusinessException(ErrorMessage.MIDDLEWARE_API_REQUEST_ERROR, err);
-        } else {
+        try {
+            if (StringUtils.isNotEmpty(res.getContent())) {
+                JSONObject jsonObject = JSONObject.parseObject(res.getContent());
+                String err = jsonObject.getString("err");
+                throw new BusinessException(ErrorMessage.MIDDLEWARE_API_REQUEST_ERROR, err);
+            } else {
+                throw new BusinessException(ErrorMessage.MIDDLEWARE_API_REQUEST_ERROR, ex.getMessage());
+            }
+        } catch (Exception e){
             throw new BusinessException(ErrorMessage.MIDDLEWARE_API_REQUEST_ERROR, ex.getMessage());
         }
+
     }
 
 }
