@@ -171,6 +171,18 @@ public class MongodbOperatorImpl extends AbstractMongodbOperator implements Mong
     }
 
     @Override
+    public void deleteStorage(Middleware middleware) {
+        super.deleteStorage(middleware);
+        // 查询用户认证信息
+        Secret secret = secretService.get(middleware.getClusterId(), MIDDLEWARE_OPERATOR,
+                "middleware-operator-mongodb-enterprise-operator-om-admin-key");
+        String publicKey = new String(Base64Utils.decode(secret.getData().get("publicKey")));
+        String privateKey = new String(Base64Utils.decode(secret.getData().get("privateKey")));
+        // 删除mongodb项目
+        mongodbClientWrapper.deleteProject(publicKey, privateKey, middleware.getName());
+    }
+
+    @Override
     public List<String> getConfigmapDataList(ConfigMap configMap) {
         return null;
     }

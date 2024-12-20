@@ -43,4 +43,11 @@ public class MongodbClientWrapper {
         return null;
     }
 
+    public void deleteProject(String publicKey, String privateKey, String name){
+        String protocol = Protocol.HTTP.getValue().toLowerCase();
+        String path = "mongodb-enterprise-operator-om-svc.middleware-operator";
+        String port = "8080";
+        mongodbClient.deleteProject(protocol, path, port, publicKey, privateKey, name);
+    }
+
 }
