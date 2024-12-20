@@ -21,6 +21,8 @@ public class MiddlewareModeUtil {
             return !"1m-0s".equals(mode);
         }else if(MiddlewareTypeEnum.REDIS.getType().equals(type)){
             return "sentinel".equals(mode);
+        } else if (MiddlewareTypeEnum.MONGODB.getType().equals(type)) {
+            return "cluster".equals(mode);
         }
         return false;
     }
