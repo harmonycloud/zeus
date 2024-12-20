@@ -18,7 +18,7 @@ public interface MongodbClient {
     /**
      * 获取组织id
      */
-    @Get(url = "/mongodb/ops/org?protocol={protocol}&path={path}&port={port}&publicKey={publicKey}&privateKey={privateKey}")
+    @Get(url = "/mongodb/ops/orgs?protocol={protocol}&path={path}&port={port}&publicKey={publicKey}&privateKey={privateKey}")
     JSONObject getOrgId(@Var("protocol") String protocol,
                         @Var("path") String path,
                         @Var("port") String port,
