@@ -76,7 +76,7 @@ function deploy_helm() {
   # 安装备份控制器
   helm install middlewarebackup-controller -n middleware-operator src/main/resources/components/middleware-backup --set global.repository=$IMAGE_REPO -f src/main/resources/components/middleware-backup/values.yaml -f src/main/resources/components/middleware-backup/values-active-active.yaml
   # 安装middleware webhook
-  helm install middleware-admission-webhook -n middleware-operator src/main/resources/components/middleware-admission-webhook --set global.repository=$IMAGE_REPO,replicaCount=3 -f src/main/resources/components/middleware-admission-webhook/values.yaml -f src/main/resources/components/middleware-admission-webhook/values-active-active.yaml
+  helm install middleware-admission-webhook -n middleware-operator src/main/resources/components/middleware-admission-webhook --set image.repository=$IMAGE_REPO,replicaCount=3 -f src/main/resources/components/middleware-admission-webhook/values.yaml -f src/main/resources/components/middleware-admission-webhook/values-active-active.yaml
   # 安装fs exporter
   helm install fs-exporter -n middleware-operator src/main/resources/components/fs-exporter --set image.registry=$IMAGE_REPO -f src/main/resources/components/fs-exporter/values.yaml
 }
