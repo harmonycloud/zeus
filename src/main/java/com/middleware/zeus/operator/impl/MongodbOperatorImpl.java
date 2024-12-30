@@ -48,6 +48,11 @@ public class MongodbOperatorImpl extends AbstractMongodbOperator implements Mong
         // 设置实例数
         values.getJSONObject(MONGODB.getType()).put("members", quota.getNum());
 
+        if (StringUtils.isNotEmpty(middleware.getMode())) {
+            JSONObject mongodb = values.getJSONObject(MONGODB.getType());
+            mongodb.put(TYPE, middleware.getMode());
+        }
+
         // 查询用户认证信息
         Secret secret = secretService.get(cluster.getId(), MIDDLEWARE_OPERATOR,
                 "middleware-operator-mongodb-enterprise-operator-om-admin-key");
@@ -66,6 +71,7 @@ public class MongodbOperatorImpl extends AbstractMongodbOperator implements Mong
         // 设置双活信息
         checkAndSetActiveActive(values, middleware);
     }
+
     @Override
     public Middleware convertByHelmChart(Middleware middleware, MiddlewareClusterDTO cluster) {
         JSONObject values = helmChartService.getInstalledValues(middleware, cluster);
@@ -75,6 +81,10 @@ public class MongodbOperatorImpl extends AbstractMongodbOperator implements Mong
         // 设置副本数
         if (middleware.getQuota() != null && middleware.getQuota().get(middleware.getType()) != null) {
             middleware.getQuota().get(middleware.getType()).setNum(values.getJSONObject(MONGODB.getType()).getInteger("members"));
+        }
+        // 设置模式
+        if (values.getJSONObject(MONGODB.getType()).containsKey(TYPE)) {
+            middleware.setMode(values.getJSONObject(MONGODB.getType()).getString(TYPE));
         }
         convertRegistry(middleware, values);
         return middleware;
@@ -102,7 +112,7 @@ public class MongodbOperatorImpl extends AbstractMongodbOperator implements Mong
             }
             // 实例模式扩容
             if (quota.getNum() != null) {
-                sb.append("replicas=").append(quota.getNum()).append(",");
+                sb.append("mongodb.members=").append(quota.getNum()).append(",");
             }
         }
 
