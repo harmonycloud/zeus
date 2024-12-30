@@ -22,7 +22,7 @@ public class MiddlewareModeUtil {
         }else if(MiddlewareTypeEnum.REDIS.getType().equals(type)){
             return "sentinel".equals(mode);
         } else if (MiddlewareTypeEnum.MONGODB.getType().equals(type)) {
-            return "cluster".equals(mode);
+            return "ReplicaSet".equals(mode);
         }
         return false;
     }
