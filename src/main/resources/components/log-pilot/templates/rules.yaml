@@ -1,8 +1,15 @@
+{{- if  .Capabilities.APIVersions.Has "monitoring.coreos.com/v1" }}
 apiVersion: monitoring.coreos.com/v1
 kind: PrometheusRule
 metadata:
+  annotations:
+    target_alias_name: 平台系统监控
+    target_name: platform
+    target_type: system
   labels:
     prometheus: k8s
+    platform: zeus
+    role: alert-rules
   name: log-pilot-rules
   namespace: logging
 spec:
@@ -11,9 +18,18 @@ spec:
       rules:
         - alert: filebeatRetryTimesIncrease
           annotations:
-            message: 'node "{{`{{`}} $labels.node {{`}}`}}" filebeat retry times is increasing.'
+            message: 'Log-pilot instance retry times is increasing. (Namespace: {{ .Release.Namespace }}, Pod: {{`{{ $labels.pod }}`}}) '
           expr: |-
-            sum by (node) (rate(filebeat_pipeline_retry_total{}[2m])) > 0
+            sum by (pod) (rate(filebeat_pipeline_retry_total{}[2m])) > 0
           for: 10m
           labels:
-            severity: minor
+            severity: warning
+        - alert: filebeatRestartTimesIncrease
+          annotations:
+            message: 'Log-pilot instance restart times is increasing. (Namespace: {{ .Release.Namespace }}, Pod: {{`{{ $labels.pod }}`}}) '
+          expr: |-
+            sum by (pod) (rate(filebeat_restart_total{}[2m])) > 0
+          for: 10m
+          labels:
+            severity: warning
+{{- end }}

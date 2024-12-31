@@ -9,3 +9,6 @@ resources:
   requests:
     cpu: 2
     memory: 8Gi
+
+runtime:
+  type: containerd
