@@ -27,6 +27,10 @@ spec:
       priorityClassName: system-node-critical
       serviceAccount: {{ include "lvm.fullname" . }}
       hostNetwork: true
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
       containers:
         - name: external-local-provisioner
           image: "{{ .Values.image.repository }}/csi-provisioner:{{ .Values.image.provisionerImageTag }}"

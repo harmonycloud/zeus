@@ -29,7 +29,7 @@ function deploy_helm() {
 
   kubectl apply -f deploy/namespaces.yaml
   # install lvm
-  helm upgrade -i -n kube-system lvm-csi-plugin src/main/resources/components/lvm-csi-plugin --set image.repository=$IMAGE_REPO  -f src/main/resources/components/lvm-csi-plugin/values.yaml -f src/main/resources/components/lvm-csi-plugin/ha-values.yaml
+  helm upgrade -i -n kube-system lvm-csi-plugin src/main/resources/components/lvm-csi-plugin --set image.repository=$IMAGE_REPO  -f src/main/resources/components/lvm-csi-plugin/values.yaml -f src/main/resources/components/lvm-csi-plugin/values-ha.yaml
   # install mysql-operator
   helm install -n middleware-operator mysql-operator deploy/mysql-operator/charts/mysql-operator --set image.repository=$IMAGE_REPO,replicaCount=3 -f deploy/mysql-operator/charts/mysql-operator/values.yaml -f deploy/mysql-operator/charts/mysql-operator/values-active-active.yaml
   # install mysql instance
