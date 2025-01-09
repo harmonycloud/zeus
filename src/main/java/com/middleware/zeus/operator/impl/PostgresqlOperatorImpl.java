@@ -430,7 +430,7 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
         }
         String execCommand = MessageFormat.format(POSTGRESQL_HAND_SWITCH, podName, middleware.getNamespace(),
             cluster.getAddress(), cluster.getAccessToken(), patroniName, String.valueOf(patroniPort), podName);
-        List<String> results = CmdExecUtil.runCmd(execCommand);
+        List<String> results = CmdExecUtil.execCmd(execCommand, null);
         // 判断结果
         parseHandSwitchResult(results);
         return new SwitchInfo().setNewMasterName(podName);
