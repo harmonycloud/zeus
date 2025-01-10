@@ -41,7 +41,7 @@ public class MysqlReplicateWrapper {
         NonNamespaceOperation<MysqlReplicateCR, MysqlReplicateList, Resource<MysqlReplicateCR>> mysqlReplicateClient =
             K8sClient.getClient(clusterId).resources(MysqlReplicateCR.class, MysqlReplicateList.class);
         // update
-        mysqlReplicateClient.resource(mysqlReplicateCr).update();
+        mysqlReplicateClient.resource(mysqlReplicateCr).patch();
     }
 
     /**

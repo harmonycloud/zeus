@@ -79,7 +79,7 @@ public class MiddlewareRestoreWrapper {
         if (forceDelete) {
             MiddlewareRestoreCR restoreCR = get(clusterId, namespace, name);
             restoreCR.getMetadata().setFinalizers(Collections.emptyList());
-            middlewareRestoreClient.resource(restoreCR).update();
+            middlewareRestoreClient.resource(restoreCR).patch();
         } else {
             middlewareRestoreClient.withName(name).delete();
         }

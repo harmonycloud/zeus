@@ -31,7 +31,7 @@ public class RedisClusterWrapper {
         NonNamespaceOperation<RedisCluster, RedisClusterList, Resource<RedisCluster>> redisClusterClient =
             K8sClient.getClient(clusterId).resources(RedisCluster.class, RedisClusterList.class).inNamespace(namespace);
         // get
-        redisClusterClient.resource(redisCluster).update();
+        redisClusterClient.resource(redisCluster).patch();
     }
 
 }

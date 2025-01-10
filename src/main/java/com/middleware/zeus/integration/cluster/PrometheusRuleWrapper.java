@@ -71,7 +71,7 @@ public class PrometheusRuleWrapper {
         NonNamespaceOperation<PrometheusRule, PrometheusRuleList, Resource<PrometheusRule>> prometheusRuleClient =
                 K8sClient.getClient(clusterId).resources(PrometheusRule.class, PrometheusRuleList.class);
         // update
-        prometheusRuleClient.resource(prometheusRule).update();
+        prometheusRuleClient.resource(prometheusRule).patch();
     }
 
     /**

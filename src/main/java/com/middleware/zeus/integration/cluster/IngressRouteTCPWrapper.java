@@ -41,7 +41,7 @@ public class IngressRouteTCPWrapper {
             IngressRouteTcp routeTcp = get(clusterId, ingressRouteTcp.getMetadata().getNamespace(), ingressRouteTcp.getMetadata().getName());
             if (routeTcp != null) {
                 // update
-                ingressRouteClient.resource(ingressRouteTcp).update();
+                ingressRouteClient.resource(ingressRouteTcp).patch();
             } else {
                 // create
                 ingressRouteClient.resource(ingressRouteTcp).create();
@@ -95,7 +95,7 @@ public class IngressRouteTCPWrapper {
         NonNamespaceOperation<IngressRouteTcp, IngressRouteTcpList, Resource<IngressRouteTcp>> ingressRouteClient =
                 K8sClient.getClient(clusterId).resources(IngressRouteTcp.class, IngressRouteTcpList.class).inNamespace(namespace);
         // update
-        ingressRouteClient.resource(ingressRouteTcp).update();
+        ingressRouteClient.resource(ingressRouteTcp).patch();
     }
 
     /**

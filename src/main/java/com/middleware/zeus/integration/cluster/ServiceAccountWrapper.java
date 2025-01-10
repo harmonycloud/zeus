@@ -22,7 +22,7 @@ public class ServiceAccountWrapper {
 
     public ServiceAccount update(String clusterId, ServiceAccount serviceAccount) {
         return K8sClient.getClient(clusterId).serviceAccounts().inNamespace(serviceAccount.getMetadata().getNamespace())
-            .resource(serviceAccount).update();
+            .resource(serviceAccount).patch();
     }
 
     public ServiceAccount createOrReplace(String clusterId, ServiceAccount serviceAccount) {
