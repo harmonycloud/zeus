@@ -1,6 +1,6 @@
 apiVersion: v2
-name: log-pilot
+appVersion: 0.9.7-filebeat-hc.12-containerd-middleware
 description: Log-pilot by Harmonycloud
+name: log-pilot
 type: application
-version: 0.9.7-filebeat-hc.11
-appVersion:  0.9.7-filebeat-hc.11-middleware
+version: 0.9.7-filebeat-hc.12

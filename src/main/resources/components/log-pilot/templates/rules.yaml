@@ -29,7 +29,7 @@ spec:
             message: 'Log-pilot instance restart times is increasing. (Namespace: {{ .Release.Namespace }}, Pod: {{`{{ $labels.pod }}`}}) '
           expr: |-
             sum by (pod) (rate(filebeat_restart_total{}[2m])) > 0
-          for: 10m
+          for: 30s
           labels:
             severity: warning
 {{- end }}
