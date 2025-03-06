@@ -86,9 +86,9 @@ public class BackupServerServiceImpl implements BackupServerService {
         if (checkNameExists(backupServerDTO.getName())) {
             throw new BusinessException(ErrorMessage.SERVER_NAME_ALREADY_EXISTS);
         }
-        if (checkAddressExists(backupServerDTO)) {
-            throw new BusinessException(ErrorMessage.SERVER_ADDRESS_ALREADY_EXISTS);
-        }
+//        if (checkAddressExists(backupServerDTO)) {
+//            throw new BusinessException(ErrorMessage.SERVER_ADDRESS_ALREADY_EXISTS);
+//        }
         // 校验备份服务器用户名和密码
         checkServerAuthorization(backupServerDTO.getServerDetailList());
 
