@@ -28,6 +28,19 @@ public class ServiceAccountServiceImpl implements ServiceAccountService {
     }
 
     @Override
+    public void create(String clusterId, String namespace, String name, List<String> secrets) {
+        ServiceAccount sa = new ServiceAccount();
+        sa.getMetadata().setName(name);
+        sa.getMetadata().setNamespace(namespace);
+        if (!CollectionUtils.isEmpty(secrets)) {
+            secrets.forEach(secret -> {
+                sa.getImagePullSecrets().add(new LocalObjectReference(secret));
+            });
+        }
+        serviceAccountWrapper.create(clusterId, sa);
+    }
+
+    @Override
     public void bindImagePullSecret(String clusterId, String namespace, ServiceAccount sa, List<Secret> secrets) {
         List<LocalObjectReference> imagePullSecrets = sa.getImagePullSecrets();
         secrets = secrets.stream().filter(secret -> imagePullSecrets.stream().

@@ -39,14 +39,20 @@ public class MiddlewareApiAddress implements AddressSource {
 
     @Override
     public ForestAddress getAddress(ForestRequest forestRequest) {
-        HttpServletRequest servletRequest =
-            ((ServletRequestAttributes)Objects.requireNonNull(RequestContextHolder.getRequestAttributes()))
-                .getRequest();
-        String url = servletRequest.getRequestURI();
-        Matcher matcher = Pattern.compile("clusters/[a-z|\\-|0-9]+").matcher(url);
         String clusterId = "";
-        if (matcher.find()) {
-            clusterId = matcher.group().split("/")[1];
+        if (Objects.nonNull(forestRequest.getQuery()) && forestRequest.getQuery().containsKey("clusterId")){
+            clusterId = forestRequest.getQuery().get("clusterId").toString();
+        } else {
+            HttpServletRequest servletRequest =
+                    ((ServletRequestAttributes)Objects.requireNonNull(RequestContextHolder.getRequestAttributes()))
+                            .getRequest();
+
+            String url = servletRequest.getRequestURI();
+            Pattern pattern = Pattern.compile("clusters/[a-z|\\-|0-9]+");
+            Matcher matcher = pattern.matcher(url);
+            if (matcher.find()) {
+                clusterId = matcher.group().split("/")[1];
+            }
         }
         // 根据集群id获取middleware-api组件地址
         ClusterComponentsDto clusterComponentsDto =

@@ -6,9 +6,20 @@ import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant
 import static com.middleware.zeus.common.enums.DictEnum.POD;
 import static com.middleware.zeus.common.enums.middleware.MiddlewareTypeEnum.MONGODB;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.middleware.zeus.common.model.middleware.mongodb.MongodbOrgDo;
+import com.middleware.zeus.common.model.middleware.mongodb.MongodbProjectDo;
+import com.middleware.zeus.common.model.user.OrganizationDto;
+import com.middleware.zeus.common.model.user.ProjectDto;
+import com.middleware.zeus.service.k8s.ServiceAccountService;
+import com.middleware.zeus.service.middleware.OpsManagerService;
+import com.middleware.zeus.service.user.OrganizationService;
+import com.middleware.zeus.service.user.ProjectService;
+import com.middleware.zeus.util.RequestUtil;
+import io.fabric8.kubernetes.api.model.ServiceAccount;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -19,7 +30,6 @@ import com.middleware.zeus.common.exception.BusinessException;
 import com.middleware.zeus.common.model.Secret;
 import com.middleware.zeus.common.model.StorageDto;
 import com.middleware.zeus.common.model.middleware.*;
-import com.middleware.zeus.integration.dashboard.MongodbClientWrapper;
 import com.middleware.zeus.operator.api.MongodbOperator;
 import com.middleware.zeus.operator.miiddleware.AbstractMongodbOperator;
 import com.middleware.zeus.util.encrypt.Base64Utils;
@@ -36,10 +46,20 @@ import lombok.extern.slf4j.Slf4j;
 public class MongodbOperatorImpl extends AbstractMongodbOperator implements MongodbOperator {
 
     @Autowired
-    private MongodbClientWrapper mongodbClientWrapper;
+    private OrganizationService organizationService;
+    @Autowired
+    private ProjectService projectService;
+    @Autowired
+    private ServiceAccountService serviceAccountService;
+    @Autowired
+    private OpsManagerService opsManagerService;
 
     @Override
     protected void replaceValues(Middleware middleware, MiddlewareClusterDTO cluster, JSONObject values) {
+        // 刷新组织项目信息
+        opsManagerService.refresh(cluster.getId());
+        // 尝试创建sa
+        tryCreateSa(cluster.getId(), middleware.getNamespace());
         // 替换通用values
         replaceCommonValues(middleware, cluster, values);
         MiddlewareQuota quota = middleware.getQuota().get(middleware.getType());
@@ -61,12 +81,15 @@ public class MongodbOperatorImpl extends AbstractMongodbOperator implements Mong
         // 设置用户认证信息
         values.getJSONObject("credentials").put("privateKey", privateKey);
         values.getJSONObject("credentials").put("publicKey", publicKey);
-        // 查询orgId
-        String orgId = mongodbClientWrapper.getOrgId(publicKey, privateKey);
+        // 获取当前组织所在的映射在ops manager中的组织id
+        String orgId = opsManagerService.getOrgId(RequestUtil.getOrganId());
         if (StringUtils.isEmpty(orgId)) {
             throw new BusinessException(ErrorMessage.MONGODB_GET_ORGAN_ID_FAILED);
         }
         values.getJSONObject(PROJECT).put("organId", orgId);
+        // 根据当前项目id获取项目名称
+        ProjectDto projectDto = projectService.get(RequestUtil.getOrganId(), RequestUtil.getProjectId());
+        values.getJSONObject(PROJECT).put("projectName", projectDto.getName());
 
         // 设置双活信息
         checkAndSetActiveActive(values, middleware);
@@ -189,7 +212,7 @@ public class MongodbOperatorImpl extends AbstractMongodbOperator implements Mong
         String publicKey = new String(Base64Utils.decode(secret.getData().get("publicKey")));
         String privateKey = new String(Base64Utils.decode(secret.getData().get("privateKey")));
         // 删除mongodb项目
-        mongodbClientWrapper.deleteProject(publicKey, privateKey, middleware.getName());
+        //mongodbClientWrapper.deleteProject(middleware.getClusterId(), publicKey, privateKey, middleware.getName());
     }
 
     @Override
@@ -215,5 +238,19 @@ public class MongodbOperatorImpl extends AbstractMongodbOperator implements Mong
     @Override
     public List<IngressDTO> listHostNetworkAddress(String clusterId, String namespace, String middlewareName, String type) {
         return null;
+    }
+
+    @Override
+    public void getPublicKeyAndPrivateKey(String clusterId, String operatorName) {
+
+    }
+
+    private void tryCreateSa(String clusterId, String namespace) {
+        // 查询用户认证信息
+        ServiceAccount serviceAccount = serviceAccountService.get(clusterId, namespace, "mongodb-enterprise-database-pods");
+        if (serviceAccount != null){
+            return;
+        }
+        serviceAccountService.create(clusterId, namespace, "mongodb-enterprise-database-pods", null);
     }
 }

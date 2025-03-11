@@ -18,6 +18,7 @@ import com.middleware.zeus.common.model.ResourceQuotaDo;
 import com.middleware.zeus.common.model.StorageDto;
 import com.middleware.zeus.common.model.StorageQuota;
 import com.middleware.zeus.service.k8s.*;
+import com.middleware.zeus.service.middleware.OpsManagerService;
 import com.middleware.zeus.service.system.AlertUserService;
 import com.skyview.language.annotations.TranslateAfterResult;
 import org.apache.commons.lang3.StringUtils;
@@ -68,6 +69,9 @@ import lombok.extern.slf4j.Slf4j;
 @Skyview(target = "zeus")
 public class ProjectServiceImpl extends AbstractProjectService implements ProjectService {
 
+    @Value("${system.opsManager.enable:false}")
+    private Boolean opsManager;
+
     @Autowired
     private BeanProjectMapper beanProjectMapper;
     @Autowired
@@ -100,6 +104,8 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
     private AlertUserService alertUserService;
     @Autowired
     private RoleBindingService roleBindingService;
+    @Autowired
+    private OpsManagerService opsManagerService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -119,6 +125,10 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
             for (UserDto userDto : projectDto.getUserDtoList()){
                 userRoleService.insert(projectDto.getOrganId(), projectId, userDto.getUserName(), 2);
             }
+        }
+        if (opsManager) {
+            // 创建ops manager项目
+            opsManagerService.createProject(null, projectDto.getOrganId(), projectId, projectDto.getName());
         }
     }
 
@@ -276,6 +286,11 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
             userDto -> userRoleService.insert(projectDto.getOrganId(), projectDto.getProjectId(), userDto.getUserName(), userDto.getRoleId()));
         // 更新用户在k8s中的角色绑定
         refreshUserRoleBinding(projectDto.getOrganId(), projectDto.getProjectId(), null, projectDto.getUserDtoList(), true);
+
+        // todo 同步更新至ops manager
+        if (opsManager) {
+
+        }
     }
 
     @Override
@@ -285,6 +300,11 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
             .setUserName(userDto.getUserName()).setRoleId(userDto.getRoleId()));
         // 更新用户在k8s中的角色绑定
         refreshUserRoleBinding(organId, projectId, null, Collections.singletonList(userDto), true);
+
+        // todo 同步更新至ops manager
+        if (opsManager){
+
+        }
     }
 
     @Override
@@ -299,6 +319,10 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
             for (Namespace namespace : namespaceList){
                 alertUserService.delete(username, null, namespace.getName(), null, SERVICE);
             }
+        }
+
+        // todo 同步更新至ops manager(暂不支持)
+        if (opsManager){
         }
     }
 
@@ -346,11 +370,10 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
             // 更新k8s用户角色绑定
             refreshUserRoleBinding(projectDto.getOrganId(), projectDto.getProjectId(), null, projectDto.getUserDtoList(), true);
         }
-    }
-
-    @Override
-    public void update(BeanProject beanProject) {
-        beanProjectMapper.updateById(beanProject);
+        // 更新项目名称
+        if (opsManager) {
+            opsManagerService.updateProject(null, projectDto.getProjectId(), projectDto.getName());
+        }
     }
 
     @Override

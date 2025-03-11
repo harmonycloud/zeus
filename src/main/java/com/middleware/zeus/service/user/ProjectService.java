@@ -129,12 +129,6 @@ public interface ProjectService {
     void update(ProjectDto projectDto);
 
     /**
-     * 更新项目
-     * @param beanProject
-     */
-    void update(BeanProject beanProject);
-
-    /**
      * 项目下创建
      * @param namespace  分区对象
      */

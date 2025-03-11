@@ -176,11 +176,6 @@ public class Skyview2ProjectServiceImpl extends AbstractProjectService implement
     }
 
     @Override
-    public void update(BeanProject beanProject) {
-        throw new BusinessException(ErrorMessage.NO_AUTHORITY_WITH_EXTERNAL_SERVICE);
-    }
-
-    @Override
     public void addNamespace(Namespace namespace) {
         throw new BusinessException(ErrorMessage.NO_AUTHORITY_WITH_EXTERNAL_SERVICE);
     }

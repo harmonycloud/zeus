@@ -16,12 +16,14 @@ import com.middleware.zeus.bean.user.BeanPlatformQuota;
 import com.middleware.zeus.dao.user.BeanOrganizationBackupServerMapper;
 import com.middleware.zeus.service.k8s.ClusterService;
 import com.middleware.zeus.service.middleware.BackupServerService;
+import com.middleware.zeus.service.middleware.OpsManagerService;
 import com.middleware.zeus.service.middleware.ProjectBackupServerService;
 import com.middleware.zeus.service.user.abstractService.AbstractOrganizationService;
 import com.skyview.language.annotations.TranslateAfterResult;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -51,6 +53,9 @@ import lombok.extern.slf4j.Slf4j;
 @Skyview(target = "zeus")
 public class OrganizationServiceImpl extends AbstractOrganizationService implements OrganizationService {
 
+    @Value("${system.opsManager.enable:false}")
+    private Boolean opsManager;
+
     @Autowired
     private BeanOrganizationMapper beanOrganizationMapper;
     @Autowired
@@ -64,15 +69,9 @@ public class OrganizationServiceImpl extends AbstractOrganizationService impleme
     @Autowired
     private UserRoleService userRoleService;
     @Autowired
-    private BeanOrganizationBackupServerMapper beanOrganizationBackupServerMapper;
-    @Autowired
-    private BackupServerService backupServerService;
-    @Autowired
-    private StorageService storageService;
-    @Autowired
     private ClusterService clusterService;
     @Autowired
-    private ProjectBackupServerService projectBackupServerService;
+    private OpsManagerService opsManagerService;
 
     @Override
     public void add(OrganizationDto organizationDto) {
@@ -90,6 +89,9 @@ public class OrganizationServiceImpl extends AbstractOrganizationService impleme
             && organizationDto.getOrganizationManagerRoleId() != null) {
             organizationUserService.insert(beanOrganization.getOrganId(), organizationDto.getOrganizationManager(),
                 organizationDto.getOrganizationManagerRoleId());
+        }
+        if (opsManager){
+            opsManagerService.createOrgan(null, beanOrganization.getOrganId(), beanOrganization.getName());
         }
     }
 
@@ -110,6 +112,10 @@ public class OrganizationServiceImpl extends AbstractOrganizationService impleme
         beanOrganization.setDescription(organizationDto.getDescription());
 
         beanOrganizationMapper.update(beanOrganization, wrapper);
+        // 更新ops manager组织名称
+        if (opsManager){
+            opsManagerService.updateOrgan(null, organizationDto.getOrganId(), organizationDto.getName());
+        }
     }
 
     @Override
@@ -327,6 +333,12 @@ public class OrganizationServiceImpl extends AbstractOrganizationService impleme
         }
         organizationDto.getUserDtoList()
             .forEach(userDto -> organizationUserService.insert(organId, userDto.getUserName(), userDto.getRoleId()));
+        // 同步更新至ops manager
+        if (opsManager){
+            for (UserDto userDto : organizationDto.getUserDtoList()){
+                opsManagerService.allocateOrganUser(null, organId, userDto.getUserName(), userDto.getRoleId());
+            }
+        }
     }
 
     @Override
@@ -335,6 +347,10 @@ public class OrganizationServiceImpl extends AbstractOrganizationService impleme
             throw new BusinessException(ErrorMessage.ORGANIZATION_NOT_EXIST);
         }
         organizationUserService.update(organId, username, roleId);
+
+        // todo 同步更新至ops manager(暂不支持)
+        if (opsManager){
+        }
     }
 
     @Override
@@ -348,6 +364,10 @@ public class OrganizationServiceImpl extends AbstractOrganizationService impleme
             throw new BusinessException(ErrorMessage.ORGANIZATION_USER_USED_IN_PROJECT);
         }
         organizationUserService.delete(organId, username);
+
+        // todo 同步更新至ops manager(暂不支持)
+        if (opsManager){
+        }
     }
 
     @Override

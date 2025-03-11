@@ -21,6 +21,7 @@ import com.middleware.zeus.common.model.middleware.Namespace;
 import com.middleware.zeus.dao.user.BeanOrganizationMapper;
 import com.middleware.zeus.dao.user.BeanProjectMapper;
 import com.middleware.zeus.service.k8s.*;
+import com.middleware.zeus.service.middleware.OpsManagerService;
 import com.middleware.zeus.service.system.AlertUserService;
 import com.middleware.zeus.service.user.*;
 import com.middleware.zeus.util.OpenSSLUtil;
@@ -99,9 +100,13 @@ public class UserServiceImpl extends AbstractUserService implements UserService 
     private AlertUserService alertUserService;
     @Autowired
     protected ClusterRoleBindingService clusterRoleBindingService;
+    @Autowired
+    private OpsManagerService opsManagerService;
 
     @Value("${system.user.passwordExpiredDate:90}")
     private Integer defaultPasswordExpiredDate;
+    @Value("${system.opsManager.enable:false}")
+    private Boolean opsManager;
 
 
     @Override
@@ -186,6 +191,11 @@ public class UserServiceImpl extends AbstractUserService implements UserService 
         // 分配超级管理员角色
         if (userDto.getManager() != null) {
             bindManager(userDto);
+        }
+
+        // 根据mongodb的逻辑处理额外的事务
+        if (opsManager){
+            opsManagerService.createUser(null, userDto);
         }
     }
 
