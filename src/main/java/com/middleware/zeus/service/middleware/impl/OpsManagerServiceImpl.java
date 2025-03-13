@@ -158,6 +158,7 @@ public class OpsManagerServiceImpl implements OpsManagerService {
                     log.error("集群: {}, 创建ops manager用户失败", cluster.getId(), e);
                 }
             }
+            return;
         }
 
         // 查询用户认证信息
@@ -185,6 +186,7 @@ public class OpsManagerServiceImpl implements OpsManagerService {
                     log.error("集群: {}, 删除ops manager用户失败", cluster.getId(), e);
                 }
             }
+            return;
         }
         // 查询用户认证信息
         Map<String, String> map = getPublicAndPrivateKey(clusterId);
@@ -233,6 +235,7 @@ public class OpsManagerServiceImpl implements OpsManagerService {
                     log.error("集群: {}, 删除ops manager组织失败", cluster.getId(), e);
                 }
             }
+            return;
         }
         // 查询用户认证信息
         Map<String, String> map = getPublicAndPrivateKey(clusterId);
@@ -263,6 +266,7 @@ public class OpsManagerServiceImpl implements OpsManagerService {
                     log.error("集群: {}, 更新ops manager组织失败", cluster.getId(), e);
                 }
             }
+            return;
         }
         // 查询用户认证信息
         Map<String, String> map = getPublicAndPrivateKey(clusterId);
@@ -319,6 +323,7 @@ public class OpsManagerServiceImpl implements OpsManagerService {
                     log.error("集群: {}, 分配ops manager组织用户失败", cluster.getId(), e);
                 }
             }
+            return;
         }
         // 查询用户认证信息
         Map<String, String> map = getPublicAndPrivateKey(clusterId);
@@ -386,6 +391,7 @@ public class OpsManagerServiceImpl implements OpsManagerService {
                     log.error("集群: {}, 更新ops manager项目失败", cluster.getId(), e);
                 }
             }
+            return;
         }
 
         // 查询用户认证信息
@@ -443,6 +449,7 @@ public class OpsManagerServiceImpl implements OpsManagerService {
                     log.error("集群: {}, 分配ops manager项目用户失败", cluster.getId(), e);
                 }
             }
+            return;
         }
         // 查询用户认证信息
         Map<String, String> map = getPublicAndPrivateKey(clusterId);
@@ -483,6 +490,7 @@ public class OpsManagerServiceImpl implements OpsManagerService {
                     log.error("集群: {}, 删除ops manager项目失败", cluster.getId(), e);
                 }
             }
+            return;
         }
         // 查询用户认证信息
         Map<String, String> map = getPublicAndPrivateKey(clusterId);
