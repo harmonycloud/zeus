@@ -179,6 +179,11 @@ public class OrganizationServiceImpl extends AbstractOrganizationService impleme
 
         // 删除组织下分配资源记录
         platformQuotaService.remove(ORGAN, organId, null, null);
+
+        // 删除ops manager组织
+        if (opsManager){
+            opsManagerService.deleteOrgan(null, organId);
+        }
     }
 
     @Override
@@ -304,6 +309,12 @@ public class OrganizationServiceImpl extends AbstractOrganizationService impleme
         List<UserDto> userDtoList = userService.list(null);
         // 获取超级管理员用户列表
         Map<String, UserRole> adminMap = userRoleService.findByRoleId(NUM_ONE).stream().collect(Collectors.toMap(UserRole::getUserName, ur -> ur));
+
+        // 刷新ops manager中组织下的用户
+        if (opsManager){
+            opsManagerService.refreshOrganUser(null, organId);
+        }
+
         return userDtoList.stream().filter(userDto -> {
             if (allocatable) {
                 return !userMap.containsKey(userDto.getUserName()) && !adminMap.containsKey(userDto.getUserName());

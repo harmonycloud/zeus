@@ -262,6 +262,12 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
         List<UserDto> userDtoList = organizationService.listOrganUser(organId, false);
         Map<String, UserRole> userRoleMap = userRoleService.list(organId, projectId).stream().collect(Collectors.toMap(UserRole::getUserName, ur -> ur));
         Map<String, UserRole> adminMap = userRoleService.findByRoleId(1).stream().collect(Collectors.toMap(UserRole::getUserName, ur -> ur));
+
+        // 刷新 ops manager中项目下的用户
+        if (opsManager) {
+            opsManagerService.refreshProjectUser(null, organId, projectId);
+        }
+
         return userDtoList.stream().filter(userDto -> {
             if (allocatable) {
                 return !userRoleMap.containsKey(userDto.getUserName()) && !adminMap.containsKey(userDto.getUserName());
@@ -349,7 +355,11 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
         unBindBackupPosition(organId, projectId);
         // 解绑项目下备份服务器
         unBindBackupServer(organId, projectId);
-        
+
+        // 删除ops manager项目
+        if (opsManager) {
+            opsManagerService.deleteProject(null, projectId);
+        }
     }
 
     @Override

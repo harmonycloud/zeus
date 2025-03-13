@@ -14,11 +14,11 @@ import java.util.List;
 public interface OpsManagerService {
 
     /**
-     * 获取组织id
-     * @param organId 组织id
+     * 获取组织/项目id
+     * @param id id
      * @return String
      */
-    String getOrgId(String organId);
+    String getMappingId(String id);
 
     /**
      * 刷新组织项目用户信息
@@ -44,6 +44,13 @@ public interface OpsManagerService {
      * @param organName 组织名称
      */
     void createOrgan(String clusterId, String organId, String organName);
+
+    /**
+     * 创建组织
+     * @param clusterId 集群id
+     * @param organId 组织id
+     */
+    void deleteOrgan(String clusterId, String organId);
 
     /**
      * 查询组织列表
@@ -130,8 +137,10 @@ public interface OpsManagerService {
 
     /**
      * 删除项目
+     * @param clusterId 集群id
+     * @param projectId 项目id
      */
-    void deleteProject();
+    void deleteProject(String clusterId, String projectId);
 
 
 }

@@ -82,7 +82,7 @@ public class MongodbOperatorImpl extends AbstractMongodbOperator implements Mong
         values.getJSONObject("credentials").put("privateKey", privateKey);
         values.getJSONObject("credentials").put("publicKey", publicKey);
         // 获取当前组织所在的映射在ops manager中的组织id
-        String orgId = opsManagerService.getOrgId(RequestUtil.getOrganId());
+        String orgId = opsManagerService.getMappingId(RequestUtil.getOrganId());
         if (StringUtils.isEmpty(orgId)) {
             throw new BusinessException(ErrorMessage.MONGODB_GET_ORGAN_ID_FAILED);
         }

@@ -74,6 +74,23 @@ public class  MongodbClientWrapper {
     }
 
     /**
+     * 查询用户信息
+     * @param clusterId 集群id
+     */
+    public MongodbUserDo getUser(String clusterId, String publicKey, String privateKey, String username) {
+        JSONObject res = mongodbClient.getUser(clusterId, Protocol.HTTP.getValue().toLowerCase(), path, port, publicKey, privateKey, username);
+        if (res.containsKey("data")) {
+            try {
+                JSONObject data = res.getJSONObject("data");
+                return data.toJavaObject(MongodbUserDo.class);
+            } catch (Exception e){
+                log.error("查询mongodb 用户失败");
+            }
+        }
+        return null;
+    }
+
+    /**
      * 删除用户
      * @param clusterId 集群id
      * @param userId 用户id
@@ -105,7 +122,7 @@ public class  MongodbClientWrapper {
      */
     public void updateOrgan(String clusterId, MongodbOrgDo mongodbOrgDo) {
         try {
-            mongodbClient.createOrg(clusterId, mongodbOrgDo);
+            mongodbClient.updateOrg(clusterId, mongodbOrgDo);
         } catch (Exception e){
             log.error("创建ops manager组织失败", e);
         }
@@ -176,10 +193,10 @@ public class  MongodbClientWrapper {
      * 更新项目
      * @param mongodbProjectDo 项目信息
      */
-    public void updateProject(MongodbProjectDo mongodbProjectDo) {
+    public void updateProject(String clusterId, MongodbProjectDo mongodbProjectDo) {
         // 创建项目
         try {
-            mongodbClient.updateProject(mongodbProjectDo);
+            mongodbClient.updateProject(clusterId, mongodbProjectDo);
         } catch (Exception e) {
             log.error("更新ops manager项目失败", e);
         }

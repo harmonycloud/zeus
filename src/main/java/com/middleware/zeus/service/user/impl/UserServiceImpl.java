@@ -237,6 +237,10 @@ public class UserServiceImpl extends AbstractUserService implements UserService 
         organizationUserService.delete(null, userName);
         // 删除用户告警通知
         alertUserService.delete(userName, null, null, null, null);
+        // 删除ops manager 中的用户
+        if (opsManager){
+            opsManagerService.deleteUser(null, userName);
+        }
         return true;
     }
 

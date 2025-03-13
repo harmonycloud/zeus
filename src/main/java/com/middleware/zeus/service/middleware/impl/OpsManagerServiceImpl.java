@@ -24,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -71,9 +72,15 @@ public class OpsManagerServiceImpl implements OpsManagerService {
     private UserService userService;
 
     @Override
-    public String getOrgId(String organId) {
-        if (ID_MAP.containsKey(organId)) {
-            return ID_MAP.get(organId);
+    public String getMappingId(String id) {
+        if (ID_MAP.isEmpty()) {
+            List<MiddlewareClusterDTO> clusterList = clusterService.listClusters();
+            for (MiddlewareClusterDTO cluster : clusterList) {
+                refresh(cluster.getId());
+            }
+        }
+        if (ID_MAP.containsKey(id)) {
+            return this.getMappingId(id);
         }
         return null;
     }
@@ -145,7 +152,11 @@ public class OpsManagerServiceImpl implements OpsManagerService {
         if (clusterId == null) {
             List<MiddlewareClusterDTO> clusterList = clusterService.listClusters();
             for (MiddlewareClusterDTO cluster : clusterList) {
-                createUser(cluster.getId(), userDto);
+                try {
+                    createUser(cluster.getId(), userDto);
+                } catch (Exception e) {
+                    log.error("集群: {}, 创建ops manager用户失败", cluster.getId(), e);
+                }
             }
         }
 
@@ -164,9 +175,26 @@ public class OpsManagerServiceImpl implements OpsManagerService {
 
     @Override
     public void deleteUser(String clusterId, String username) {
-        // todo
+        // 多集群遍历
+        if (clusterId == null) {
+            List<MiddlewareClusterDTO> clusterList = clusterService.listClusters();
+            for (MiddlewareClusterDTO cluster : clusterList) {
+                try {
+                    deleteUser(cluster.getId(), username);
+                } catch (Exception e){
+                    log.error("集群: {}, 删除ops manager用户失败", cluster.getId(), e);
+                }
+            }
+        }
+        // 查询用户认证信息
+        Map<String, String> map = getPublicAndPrivateKey(clusterId);
         // 根据用户名称获取用户id
-
+        MongodbUserDo mongodbUserDo = mongodbClientWrapper.getUser(clusterId, map.get(PUBLIC_KEY), map.get(PRIVATE_KEY), username);
+        if (mongodbUserDo == null){
+            return;
+        }
+        // 删除用户
+        mongodbClientWrapper.deleteUser(clusterId, map.get(PUBLIC_KEY), map.get(PRIVATE_KEY), mongodbUserDo.getId());
     }
 
     @Override
@@ -194,6 +222,25 @@ public class OpsManagerServiceImpl implements OpsManagerService {
     }
 
     @Override
+    public void deleteOrgan(String clusterId, String organId) {
+        // 多集群遍历
+        if (clusterId == null) {
+            List<MiddlewareClusterDTO> clusterList = clusterService.listClusters();
+            for (MiddlewareClusterDTO cluster : clusterList) {
+                try {
+                    deleteOrgan(cluster.getId(), organId);
+                } catch (Exception e) {
+                    log.error("集群: {}, 删除ops manager组织失败", cluster.getId(), e);
+                }
+            }
+        }
+        // 查询用户认证信息
+        Map<String, String> map = getPublicAndPrivateKey(clusterId);
+        // 删除组织
+        mongodbClientWrapper.deleteOrg(clusterId, map.get(PUBLIC_KEY), map.get(PRIVATE_KEY), this.getMappingId(organId));
+    }
+
+    @Override
     public List<MongodbOrgDo> listOrgans(String clusterId) {
         if (StringUtils.isEmpty(clusterId)) {
             return null;
@@ -210,14 +257,18 @@ public class OpsManagerServiceImpl implements OpsManagerService {
         if (clusterId == null) {
             List<MiddlewareClusterDTO> clusterList = clusterService.listClusters();
             for (MiddlewareClusterDTO cluster : clusterList) {
-                updateOrgan(cluster.getId(), organId, organName);
+                try {
+                    updateOrgan(cluster.getId(), organId, organName);
+                } catch (Exception e) {
+                    log.error("集群: {}, 更新ops manager组织失败", cluster.getId(), e);
+                }
             }
         }
         // 查询用户认证信息
         Map<String, String> map = getPublicAndPrivateKey(clusterId);
         // 初始化数据结构
         MongodbOrgDo mongodbOrgDo = new MongodbOrgDo(Protocol.HTTP.getValue().toLowerCase(), path, port,
-            map.get(PUBLIC_KEY), map.get(PRIVATE_KEY), ID_MAP.get(organId), organName);
+            map.get(PUBLIC_KEY), map.get(PRIVATE_KEY), this.getMappingId(organId), organName);
 
         mongodbClientWrapper.updateOrgan(clusterId, mongodbOrgDo);
     }
@@ -230,12 +281,11 @@ public class OpsManagerServiceImpl implements OpsManagerService {
         // 查询用户认证信息
         Map<String, String> map = getPublicAndPrivateKey(clusterId);
         // todo 修改接口
-        return mongodbClientWrapper.listOrganUser(clusterId, map.get(PUBLIC_KEY), map.get(PRIVATE_KEY), ID_MAP.get(organId), null);
+        return mongodbClientWrapper.listOrganUser(clusterId, map.get(PUBLIC_KEY), map.get(PRIVATE_KEY), this.getMappingId(organId), null);
     }
 
     @Override
     public void refreshOrganUser(String clusterId, String organId) {
-        // todo 考虑什么触发刷新
         // 获取组织下用户
         List<UserDto> userDtoList = organizationService.listOrganUser(organId, false);
 
@@ -252,7 +302,7 @@ public class OpsManagerServiceImpl implements OpsManagerService {
                 }
             }
             if (!exist) {
-                this.createUser(clusterId, userDto);
+                this.allocateOrganUser(clusterId, organId, userDto.getUserName(), userDto.getRoleId());
             }
         }
     }
@@ -263,7 +313,11 @@ public class OpsManagerServiceImpl implements OpsManagerService {
         if (clusterId == null) {
             List<MiddlewareClusterDTO> clusterList = clusterService.listClusters();
             for (MiddlewareClusterDTO cluster : clusterList) {
-                allocateOrganUser(cluster.getId(), organId, username, roleId);
+                try {
+                    allocateOrganUser(cluster.getId(), organId, username, roleId);
+                } catch (Exception e) {
+                    log.error("集群: {}, 分配ops manager组织用户失败", cluster.getId(), e);
+                }
             }
         }
         // 查询用户认证信息
@@ -282,7 +336,7 @@ public class OpsManagerServiceImpl implements OpsManagerService {
         // 初始化数据结构
         MongodbUserDo mongodbUserDo = new MongodbUserDo(Protocol.HTTP.getValue().toLowerCase(), path, port,
             map.get(PUBLIC_KEY), map.get(PRIVATE_KEY), null, username, null, null, null, null, List.of(mongodbRoleDo));
-        mongodbUserDo.setOrganizationId(ID_MAP.get(organId));
+        mongodbUserDo.setOrganizationId(this.getMappingId(organId));
 
         mongodbClientWrapper.allocateUserToOrgan(clusterId, mongodbUserDo);
     }
@@ -296,7 +350,7 @@ public class OpsManagerServiceImpl implements OpsManagerService {
         Map<String, String> map = getPublicAndPrivateKey(clusterId);
         // 初始化数据结构
         MongodbProjectDo mongodbProjectDo = new MongodbProjectDo(Protocol.HTTP.getValue().toLowerCase(), path, port,
-            map.get(PUBLIC_KEY), map.get(PRIVATE_KEY), null, ID_MAP.get(orgId), projectName);
+            map.get(PUBLIC_KEY), map.get(PRIVATE_KEY), null, this.getMappingId(orgId), projectName);
 
         mongodbClientWrapper.createProject(clusterId, mongodbProjectDo);
 
@@ -326,7 +380,11 @@ public class OpsManagerServiceImpl implements OpsManagerService {
         if (clusterId == null) {
             List<MiddlewareClusterDTO> clusterList = clusterService.listClusters();
             for (MiddlewareClusterDTO cluster : clusterList) {
-                updateProject(cluster.getId(), projectId, projectName);
+                try {
+                    updateProject(cluster.getId(), projectId, projectName);
+                } catch (Exception e) {
+                    log.error("集群: {}, 更新ops manager项目失败", cluster.getId(), e);
+                }
             }
         }
 
@@ -334,9 +392,9 @@ public class OpsManagerServiceImpl implements OpsManagerService {
         Map<String, String> map = getPublicAndPrivateKey(clusterId);
         // 初始化数据结构
         MongodbProjectDo mongodbProjectDo = new MongodbProjectDo(Protocol.HTTP.getValue().toLowerCase(), path, port,
-            map.get(PUBLIC_KEY), map.get(PRIVATE_KEY), ID_MAP.get(projectId), null, projectName);
+            map.get(PUBLIC_KEY), map.get(PRIVATE_KEY), this.getMappingId(projectId), null, projectName);
 
-        mongodbClientWrapper.updateProject(mongodbProjectDo);
+        mongodbClientWrapper.updateProject(clusterId, mongodbProjectDo);
     }
 
     @Override
@@ -347,12 +405,11 @@ public class OpsManagerServiceImpl implements OpsManagerService {
         // 查询用户认证信息
         Map<String, String> map = getPublicAndPrivateKey(clusterId);
         // todo 修改接口
-        return mongodbClientWrapper.listProjectUser(clusterId, map.get(PUBLIC_KEY), map.get(PRIVATE_KEY), null, ID_MAP.get(projectId));
+        return mongodbClientWrapper.listProjectUser(clusterId, map.get(PUBLIC_KEY), map.get(PRIVATE_KEY), null, this.getMappingId(projectId));
     }
 
     @Override
     public void refreshProjectUser(String clusterId, String organId, String projectId) {
-        // todo 考虑什么触发刷新
         // 获取项目下用户
         List<UserDto> userDtoList = projectService.getUser(organId, projectId, false);
 
@@ -369,7 +426,7 @@ public class OpsManagerServiceImpl implements OpsManagerService {
                 }
             }
             if (!exist) {
-                this.createUser(clusterId, userDto);
+                this.allocateProjectUser(clusterId, projectId, userDto.getUserName(), userDto.getRoleId());
             }
         }
     }
@@ -380,7 +437,11 @@ public class OpsManagerServiceImpl implements OpsManagerService {
         if (clusterId == null) {
             List<MiddlewareClusterDTO> clusterList = clusterService.listClusters();
             for (MiddlewareClusterDTO cluster : clusterList) {
-                allocateProjectUser(cluster.getId(), projectId, username, roleId);
+                try {
+                    allocateProjectUser(cluster.getId(), projectId, username, roleId);
+                } catch (Exception e) {
+                    log.error("集群: {}, 分配ops manager项目用户失败", cluster.getId(), e);
+                }
             }
         }
         // 查询用户认证信息
@@ -405,14 +466,28 @@ public class OpsManagerServiceImpl implements OpsManagerService {
         // 初始化数据结构
         MongodbUserDo mongodbUserDo = new MongodbUserDo(Protocol.HTTP.getValue().toLowerCase(), path, port,
             map.get(PUBLIC_KEY), map.get(PRIVATE_KEY), null, username, null, null, null, null, List.of(mongodbRoleDo));
-        mongodbUserDo.setProjectId(ID_MAP.get(projectId));
+        mongodbUserDo.setProjectId(this.getMappingId(projectId));
 
         mongodbClientWrapper.allocateUserToProject(clusterId, mongodbUserDo);
     }
 
     @Override
-    public void deleteProject() {
-        // todo 考虑是否需要删除组织和项目
+    public void deleteProject(String clusterId, String projectId) {
+        // 多集群遍历
+        if (clusterId == null) {
+            List<MiddlewareClusterDTO> clusterList = clusterService.listClusters();
+            for (MiddlewareClusterDTO cluster : clusterList) {
+                try {
+                    deleteProject(cluster.getId(), projectId);
+                } catch (Exception e) {
+                    log.error("集群: {}, 删除ops manager项目失败", cluster.getId(), e);
+                }
+            }
+        }
+        // 查询用户认证信息
+        Map<String, String> map = getPublicAndPrivateKey(clusterId);
+        // 删除项目
+        mongodbClientWrapper.deleteProject(clusterId, map.get(PUBLIC_KEY), map.get(PRIVATE_KEY), this.getMappingId(projectId));
     }
 
     private Map<String, String> getPublicAndPrivateKey(String clusterId) {
