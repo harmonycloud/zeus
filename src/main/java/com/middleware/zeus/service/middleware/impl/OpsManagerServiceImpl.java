@@ -201,7 +201,16 @@ public class OpsManagerServiceImpl implements OpsManagerService {
 
     @Override
     public void createOrgan(String clusterId, String organId, String organName) {
-        if (StringUtils.isAnyEmpty(clusterId, organName)) {
+        // 多集群遍历
+        if (clusterId == null) {
+            List<MiddlewareClusterDTO> clusterList = clusterService.listClusters();
+            for (MiddlewareClusterDTO cluster : clusterList) {
+                try {
+                    createOrgan(cluster.getId(), organId, organName);
+                } catch (Exception e) {
+                    log.error("集群: {}, 创建ops manager组织失败", cluster.getId(), e);
+                }
+            }
             return;
         }
         // 查询用户认证信息
@@ -348,7 +357,16 @@ public class OpsManagerServiceImpl implements OpsManagerService {
 
     @Override
     public void createProject(String clusterId, String orgId, String projectId, String projectName) {
-        if (StringUtils.isAnyEmpty(clusterId, projectName)) {
+        // 多集群遍历
+        if (clusterId == null) {
+            List<MiddlewareClusterDTO> clusterList = clusterService.listClusters();
+            for (MiddlewareClusterDTO cluster : clusterList) {
+                try {
+                    createProject(cluster.getId(), orgId, projectId, projectName);
+                } catch (Exception e) {
+                    log.error("集群: {}, 创建ops manager项目失败", cluster.getId(), e);
+                }
+            }
             return;
         }
         // 查询用户认证信息
