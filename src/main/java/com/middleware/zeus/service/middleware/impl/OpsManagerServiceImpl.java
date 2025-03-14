@@ -80,7 +80,7 @@ public class OpsManagerServiceImpl implements OpsManagerService {
             }
         }
         if (ID_MAP.containsKey(id)) {
-            return this.getMappingId(id);
+            return ID_MAP.get(id);
         }
         return null;
     }
