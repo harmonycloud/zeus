@@ -76,7 +76,11 @@ public class OpsManagerServiceImpl implements OpsManagerService {
         if (ID_MAP.isEmpty()) {
             List<MiddlewareClusterDTO> clusterList = clusterService.listClusters();
             for (MiddlewareClusterDTO cluster : clusterList) {
-                refresh(cluster.getId());
+                try {
+                    refresh(cluster.getId());
+                } catch (Exception ignored) {
+                }
+
             }
         }
         if (ID_MAP.containsKey(id)) {
@@ -184,6 +188,7 @@ public class OpsManagerServiceImpl implements OpsManagerService {
                     deleteUser(cluster.getId(), username);
                 } catch (Exception e){
                     log.error("集群: {}, 删除ops manager用户失败", cluster.getId(), e);
+
                 }
             }
             return;
@@ -310,7 +315,8 @@ public class OpsManagerServiceImpl implements OpsManagerService {
                 try {
                     refreshOrganUser(cluster.getId(), organId, userDtoList);
                 } catch (Exception e) {
-                    log.error("集群: {}, 刷新ops manager组织用户失败", cluster.getId(), e);
+                    log.error("集群: {}, 刷新ops manager组织用户失败", cluster.getId());
+                    log.debug("集群: {}, 刷新ops manager组织用户失败", cluster.getId(), e);
                 }
             }
             return;
@@ -343,7 +349,8 @@ public class OpsManagerServiceImpl implements OpsManagerService {
                 try {
                     allocateOrganUser(cluster.getId(), organId, username, roleId);
                 } catch (Exception e) {
-                    log.error("集群: {}, 分配ops manager组织用户失败", cluster.getId(), e);
+                    log.error("集群: {}, 分配ops manager组织用户失败", cluster.getId());
+                    log.debug("集群: {}, 分配ops manager组织用户失败", cluster.getId(), e);
                 }
             }
             return;
@@ -358,12 +365,9 @@ public class OpsManagerServiceImpl implements OpsManagerService {
             roleName = "ORG_OWNER";
         }
 
-        MongodbRoleDo mongodbRoleDo = new MongodbRoleDo();
-        mongodbRoleDo.setRoleName(roleName);
-
         // 初始化数据结构
         MongodbUserDo mongodbUserDo = new MongodbUserDo(Protocol.HTTP.getValue().toLowerCase(), path, port,
-            map.get(PUBLIC_KEY), map.get(PRIVATE_KEY), null, username, null, null, null, null, List.of(mongodbRoleDo));
+            map.get(PUBLIC_KEY), map.get(PRIVATE_KEY), null, username, null, null, null, null, List.of(roleName));
         mongodbUserDo.setOrganizationId(this.getMappingId(organId));
 
         mongodbClientWrapper.allocateUserToOrgan(clusterId, mongodbUserDo);
@@ -456,7 +460,8 @@ public class OpsManagerServiceImpl implements OpsManagerService {
                 try {
                     refreshProjectUser(cluster.getId(), organId, projectId, userDtoList);
                 } catch (Exception e) {
-                    log.error("集群: {}, 刷新ops manager项目用户失败", cluster.getId(), e);
+                    log.error("集群: {}, 刷新ops manager项目用户失败", cluster.getId());
+                    log.debug("集群: {}, 刷新ops manager项目用户失败", cluster.getId(), e);
                 }
             }
             return;
@@ -489,7 +494,8 @@ public class OpsManagerServiceImpl implements OpsManagerService {
                 try {
                     allocateProjectUser(cluster.getId(), projectId, username, roleId);
                 } catch (Exception e) {
-                    log.error("集群: {}, 分配ops manager项目用户失败", cluster.getId(), e);
+                    log.error("集群: {}, 分配ops manager项目用户失败", cluster.getId());
+                    log.debug("集群: {}, 分配ops manager项目用户失败", cluster.getId(), e);
                 }
             }
             return;
@@ -510,12 +516,9 @@ public class OpsManagerServiceImpl implements OpsManagerService {
                 break;
         }
 
-        MongodbRoleDo mongodbRoleDo = new MongodbRoleDo();
-        mongodbRoleDo.setRoleName(roleName);
-
         // 初始化数据结构
         MongodbUserDo mongodbUserDo = new MongodbUserDo(Protocol.HTTP.getValue().toLowerCase(), path, port,
-            map.get(PUBLIC_KEY), map.get(PRIVATE_KEY), null, username, null, null, null, null, List.of(mongodbRoleDo));
+            map.get(PUBLIC_KEY), map.get(PRIVATE_KEY), null, username, null, null, null, null, List.of(roleName));
         mongodbUserDo.setProjectId(this.getMappingId(projectId));
 
         mongodbClientWrapper.allocateUserToProject(clusterId, mongodbUserDo);
