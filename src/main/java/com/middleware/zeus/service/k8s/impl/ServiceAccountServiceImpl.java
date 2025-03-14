@@ -3,6 +3,7 @@ package com.middleware.zeus.service.k8s.impl;
 import com.middleware.zeus.integration.cluster.ServiceAccountWrapper;
 import com.middleware.zeus.service.k8s.ServiceAccountService;
 import io.fabric8.kubernetes.api.model.LocalObjectReference;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Secret;
 import io.fabric8.kubernetes.api.model.ServiceAccount;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,8 +31,11 @@ public class ServiceAccountServiceImpl implements ServiceAccountService {
     @Override
     public void create(String clusterId, String namespace, String name, List<String> secrets) {
         ServiceAccount sa = new ServiceAccount();
-        sa.getMetadata().setName(name);
-        sa.getMetadata().setNamespace(namespace);
+        ObjectMeta metadata = new ObjectMeta();
+        metadata.setName(name);
+        metadata.setNamespace(namespace);
+        sa.setMetadata(metadata);
+
         if (!CollectionUtils.isEmpty(secrets)) {
             secrets.forEach(secret -> {
                 sa.getImagePullSecrets().add(new LocalObjectReference(secret));
