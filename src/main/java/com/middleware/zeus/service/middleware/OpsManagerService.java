@@ -78,8 +78,9 @@ public interface OpsManagerService {
      * 更新组织下用户
      * @param clusterId 集群id
      * @param organId 组织id
+     * @param userDtoList 用户列表
      */
-    void refreshOrganUser(String clusterId, String organId);
+    void refreshOrganUser(String clusterId, String organId, List<UserDto> userDtoList);
 
     /**
      * 分配组织下用户
@@ -124,8 +125,9 @@ public interface OpsManagerService {
      * @param clusterId 集群id
      * @param organId 组织id
      * @param projectId 项目id
+     * @param userDtoList 用户列表
      */
-    void refreshProjectUser(String clusterId, String organId, String projectId);
+    void refreshProjectUser(String clusterId, String organId, String projectId, List<UserDto> userDtoList);
 
     /**
      * 分配项目下用户

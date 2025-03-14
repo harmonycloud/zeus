@@ -300,9 +300,9 @@ public class OpsManagerServiceImpl implements OpsManagerService {
     }
 
     @Override
-    public void refreshOrganUser(String clusterId, String organId) {
+    public void refreshOrganUser(String clusterId, String organId, List<UserDto> userDtoList) {
         // 获取组织下用户
-        List<UserDto> userDtoList = organizationService.listOrganUser(organId, false);
+        // List<UserDto> userDtoList = organizationService.listOrganUser(organId, false);
 
         // 获取ops manager中的组织下的用户
         List<MongodbUserDo> mongodbUserDoList = this.listOrganUser(clusterId, organId);
@@ -435,9 +435,9 @@ public class OpsManagerServiceImpl implements OpsManagerService {
     }
 
     @Override
-    public void refreshProjectUser(String clusterId, String organId, String projectId) {
+    public void refreshProjectUser(String clusterId, String organId, String projectId, List<UserDto> userDtoList) {
         // 获取项目下用户
-        List<UserDto> userDtoList = projectService.getUser(organId, projectId, false);
+        // List<UserDto> userDtoList = projectService.getUser(organId, projectId, false);
 
         // 获取ops manager中的项目下的用户
         List<MongodbUserDo> mongodbUserDoList = this.listProjectUser(clusterId, projectId);

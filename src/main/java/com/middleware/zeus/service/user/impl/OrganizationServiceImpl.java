@@ -310,12 +310,7 @@ public class OrganizationServiceImpl extends AbstractOrganizationService impleme
         // 获取超级管理员用户列表
         Map<String, UserRole> adminMap = userRoleService.findByRoleId(NUM_ONE).stream().collect(Collectors.toMap(UserRole::getUserName, ur -> ur));
 
-        // 刷新ops manager中组织下的用户
-        if (opsManager){
-            opsManagerService.refreshOrganUser(null, organId);
-        }
-
-        return userDtoList.stream().filter(userDto -> {
+        userDtoList = userDtoList.stream().filter(userDto -> {
             if (allocatable) {
                 return !userMap.containsKey(userDto.getUserName()) && !adminMap.containsKey(userDto.getUserName());
             } else {
@@ -331,6 +326,13 @@ public class OrganizationServiceImpl extends AbstractOrganizationService impleme
                 return false;
             }
         }).collect(Collectors.toList());
+
+        // 刷新ops manager中组织下的用户
+        if (opsManager){
+            opsManagerService.refreshOrganUser(null, organId, userDtoList);
+        }
+
+        return userDtoList;
     }
 
     @Override
