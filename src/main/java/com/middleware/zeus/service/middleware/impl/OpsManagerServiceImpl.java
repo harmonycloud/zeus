@@ -250,6 +250,8 @@ public class OpsManagerServiceImpl implements OpsManagerService {
         Map<String, String> map = getPublicAndPrivateKey(clusterId);
         // 删除组织
         mongodbClientWrapper.deleteOrg(clusterId, map.get(PUBLIC_KEY), map.get(PRIVATE_KEY), this.getMappingId(organId));
+        // 移除缓存
+        ID_MAP.remove(organId);
     }
 
     @Override
@@ -514,6 +516,8 @@ public class OpsManagerServiceImpl implements OpsManagerService {
         Map<String, String> map = getPublicAndPrivateKey(clusterId);
         // 删除项目
         mongodbClientWrapper.deleteProject(clusterId, map.get(PUBLIC_KEY), map.get(PRIVATE_KEY), this.getMappingId(projectId));
+        // 移除缓存
+        ID_MAP.remove(projectId);
     }
 
     private Map<String, String> getPublicAndPrivateKey(String clusterId) {
