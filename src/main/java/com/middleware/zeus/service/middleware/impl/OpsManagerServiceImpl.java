@@ -300,8 +300,8 @@ public class OpsManagerServiceImpl implements OpsManagerService {
         }
         // 查询用户认证信息
         Map<String, String> map = getPublicAndPrivateKey(clusterId);
-        // todo 修改接口
-        return mongodbClientWrapper.listOrganUser(clusterId, map.get(PUBLIC_KEY), map.get(PRIVATE_KEY), this.getMappingId(organId), null);
+        // 查询组织下用户
+        return mongodbClientWrapper.listOrganUser(clusterId, map.get(PUBLIC_KEY), map.get(PRIVATE_KEY), this.getMappingId(organId));
     }
 
     @Override
@@ -315,7 +315,7 @@ public class OpsManagerServiceImpl implements OpsManagerService {
                 try {
                     refreshOrganUser(cluster.getId(), organId, userDtoList);
                 } catch (Exception e) {
-                    log.error("集群: {}, 刷新ops manager组织用户失败", cluster.getId());
+                    log.error("集群: {}, 刷新ops manager组织用户失败", cluster.getId(), e);
                     log.debug("集群: {}, 刷新ops manager组织用户失败", cluster.getId(), e);
                 }
             }
@@ -446,7 +446,7 @@ public class OpsManagerServiceImpl implements OpsManagerService {
         }
         // 查询用户认证信息
         Map<String, String> map = getPublicAndPrivateKey(clusterId);
-        // todo 修改接口
+        // 查询项目下用户
         return mongodbClientWrapper.listProjectUser(clusterId, map.get(PUBLIC_KEY), map.get(PRIVATE_KEY), null, this.getMappingId(projectId));
     }
 
@@ -512,7 +512,7 @@ public class OpsManagerServiceImpl implements OpsManagerService {
                 roleName = "GROUP_DATA_ACCESS_ADMIN";
                 break;
             default:
-                roleName = "Project Data Access Read Only";
+                roleName = "GROUP_DATA_ACCESS_READ_ONLY";
                 break;
         }
 

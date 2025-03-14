@@ -297,9 +297,11 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
         // 更新用户在k8s中的角色绑定
         refreshUserRoleBinding(projectDto.getOrganId(), projectDto.getProjectId(), null, projectDto.getUserDtoList(), true);
 
-        // todo 同步更新至ops manager
+        // 同步用户更新至ops manager
         if (opsManager) {
-
+            for (UserDto userDto : projectDto.getUserDtoList()){
+                opsManagerService.allocateProjectUser(null, projectDto.getProjectId(), userDto.getUserName(), userDto.getRoleId());
+            }
         }
     }
 
@@ -311,7 +313,7 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
         // 更新用户在k8s中的角色绑定
         refreshUserRoleBinding(organId, projectId, null, Collections.singletonList(userDto), true);
 
-        // todo 同步更新至ops manager
+        // todo 同步更新至ops manager(暂不支持)
         if (opsManager){
 
         }

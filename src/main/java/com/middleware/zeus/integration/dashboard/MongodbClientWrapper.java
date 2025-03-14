@@ -255,11 +255,10 @@ public class  MongodbClientWrapper {
      * @param publicKey 公钥
      * @param privateKey 私钥
      * @param orgId 组织id
-     * @param projectId 项目id
      * @return JSONObject
      */
-    public List<MongodbUserDo> listOrganUser(String clusterId, String publicKey, String privateKey, String orgId, String projectId) {
-        JSONObject res = mongodbClient.listOrganUser(clusterId, publicKey, privateKey, orgId, projectId);
+    public List<MongodbUserDo> listOrganUser(String clusterId, String publicKey, String privateKey, String orgId) {
+        JSONObject res = mongodbClient.listOrganUser(clusterId, Protocol.HTTP.getValue().toLowerCase(), path, port, orgId, publicKey, privateKey);
         if (res.containsKey("data")) {
             try {
                 JSONArray data = res.getJSONArray("data");
@@ -280,7 +279,7 @@ public class  MongodbClientWrapper {
      * @return JSONObject
      */
     public List<MongodbUserDo> listProjectUser(String clusterId, String publicKey, String privateKey, String orgId, String projectId) {
-        JSONObject res = mongodbClient.listProjectUser(clusterId, publicKey, privateKey, orgId, projectId);
+        JSONObject res = mongodbClient.listProjectUser(clusterId, Protocol.HTTP.getValue().toLowerCase(), path, port, orgId, projectId, publicKey, privateKey);
         if (res.containsKey("data")) {
             try {
                 JSONArray data = res.getJSONArray("data");

@@ -158,10 +158,12 @@ public interface MongodbClient {
     /**
      * 获取组织下所有用户
      */
-    @Get(url = "/mongodb/ops/org/users?clusterId={clusterId}&protocol={protocol}&path={path}&port={port}&publicKey={publicKey}&privateKey={privateKey}&projectId={projectId}")
+    @Get(url = "/mongodb/ops/org/users?clusterId={clusterId}&protocol={protocol}&path={path}&port={port}&publicKey={publicKey}&privateKey={privateKey}&orgId={orgId}")
     JSONObject listOrganUser(@Var("clusterId") String clusterId,
+                             @Var("protocol") String protocol,
+                             @Var("path") String path,
+                             @Var("port") String port,
                              @Var("orgId") String orgId,
-                             @Var("projectId") String projectId,
                              @Var("publicKey") String publicKey,
                              @Var("privateKey") String privateKey);
 
@@ -170,6 +172,9 @@ public interface MongodbClient {
      */
     @Get(url = "/mongodb/ops/project/users?clusterId={clusterId}&protocol={protocol}&path={path}&port={port}&publicKey={publicKey}&privateKey={privateKey}&projectId={projectId}")
     JSONObject listProjectUser(@Var("clusterId") String clusterId,
+                               @Var("protocol") String protocol,
+                               @Var("path") String path,
+                               @Var("port") String port,
                                @Var("orgId") String orgId,
                                @Var("projectId") String projectId,
                                @Var("publicKey") String publicKey,
