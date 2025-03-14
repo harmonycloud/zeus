@@ -304,6 +304,18 @@ public class OpsManagerServiceImpl implements OpsManagerService {
         // 获取组织下用户
         // List<UserDto> userDtoList = organizationService.listOrganUser(organId, false);
 
+        if (clusterId == null) {
+            List<MiddlewareClusterDTO> clusterList = clusterService.listClusters();
+            for (MiddlewareClusterDTO cluster : clusterList) {
+                try {
+                    refreshOrganUser(cluster.getId(), organId, userDtoList);
+                } catch (Exception e) {
+                    log.error("集群: {}, 刷新ops manager组织用户失败", cluster.getId(), e);
+                }
+            }
+            return;
+        }
+
         // 获取ops manager中的组织下的用户
         List<MongodbUserDo> mongodbUserDoList = this.listOrganUser(clusterId, organId);
 
@@ -438,6 +450,17 @@ public class OpsManagerServiceImpl implements OpsManagerService {
     public void refreshProjectUser(String clusterId, String organId, String projectId, List<UserDto> userDtoList) {
         // 获取项目下用户
         // List<UserDto> userDtoList = projectService.getUser(organId, projectId, false);
+        if (clusterId == null) {
+            List<MiddlewareClusterDTO> clusterList = clusterService.listClusters();
+            for (MiddlewareClusterDTO cluster : clusterList) {
+                try {
+                    refreshProjectUser(cluster.getId(), organId, projectId, userDtoList);
+                } catch (Exception e) {
+                    log.error("集群: {}, 刷新ops manager项目用户失败", cluster.getId(), e);
+                }
+            }
+            return;
+        }
 
         // 获取ops manager中的项目下的用户
         List<MongodbUserDo> mongodbUserDoList = this.listProjectUser(clusterId, projectId);

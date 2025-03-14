@@ -278,7 +278,7 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
         }).collect(Collectors.toList());
 
         // 刷新 ops manager中项目下的用户
-        if (opsManager) {
+        if (opsManager && allocatable != null && !allocatable) {
             opsManagerService.refreshProjectUser(null, organId, projectId, userDtoList);
         }
 

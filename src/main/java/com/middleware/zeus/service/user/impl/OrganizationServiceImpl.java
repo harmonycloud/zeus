@@ -328,7 +328,7 @@ public class OrganizationServiceImpl extends AbstractOrganizationService impleme
         }).collect(Collectors.toList());
 
         // 刷新ops manager中组织下的用户
-        if (opsManager){
+        if (opsManager && allocatable != null && !allocatable){
             opsManagerService.refreshOrganUser(null, organId, userDtoList);
         }
 
