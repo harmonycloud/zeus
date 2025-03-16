@@ -67,6 +67,8 @@ public class MongodbOperatorImpl extends AbstractMongodbOperator implements Mong
         replaceCommonStorages(quota, values.getJSONObject(PERSISTENCE));
         // 设置实例数
         values.getJSONObject(MONGODB.getType()).put("members", quota.getNum());
+        // 设置版本
+        values.getJSONObject(MONGODB.getType()).put("version", middleware.getVersion());
 
         if (StringUtils.isNotEmpty(middleware.getMode())) {
             JSONObject mongodb = values.getJSONObject(MONGODB.getType());
@@ -109,6 +111,9 @@ public class MongodbOperatorImpl extends AbstractMongodbOperator implements Mong
         if (values.getJSONObject(MONGODB.getType()).containsKey(TYPE)) {
             middleware.setMode(values.getJSONObject(MONGODB.getType()).getString(TYPE));
         }
+        // 设置版本
+        middleware.setVersion(values.getJSONObject(MONGODB.getType()).getString("version"));
+
         convertRegistry(middleware, values);
         return middleware;
     }
