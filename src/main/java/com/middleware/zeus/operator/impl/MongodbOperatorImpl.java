@@ -1,6 +1,5 @@
 package com.middleware.zeus.operator.impl;
 
-import static com.middleware.zeus.common.constants.CommonConstant.SLASH;
 import static com.middleware.zeus.common.constants.NameConstant.*;
 import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.ACTIVE_ACTIVE;
 import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_OPERATOR;
@@ -84,7 +83,7 @@ public class MongodbOperatorImpl extends AbstractMongodbOperator implements Mong
         values.getJSONObject(PROJECT).put("organId", orgId);
         // 根据当前项目id获取项目名称
         ProjectDto projectDto = projectService.get(RequestUtil.getOrganId(), RequestUtil.getProjectId());
-        values.getJSONObject(PROJECT).put("projectName", projectDto.getName() + SLASH + middleware.getName());
+        values.getJSONObject(PROJECT).put("projectName", projectDto.getName() + "@" + middleware.getName());
 
         // 设置双活信息
         checkAndSetActiveActive(values, middleware);
@@ -206,7 +205,7 @@ public class MongodbOperatorImpl extends AbstractMongodbOperator implements Mong
         super.deleteStorage(middleware);
         ProjectDto projectDto = projectService.get(RequestUtil.getOrganId(), RequestUtil.getProjectId());
         // 删除mongodb项目
-        opsManagerService.deleteProject(middleware.getClusterId(), projectDto.getName() + SLASH + middleware.getName());
+        opsManagerService.deleteProject(middleware.getClusterId(), projectDto.getName() + "@" + middleware.getName());
     }
 
     @Override

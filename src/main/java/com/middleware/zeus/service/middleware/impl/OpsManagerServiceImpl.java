@@ -121,7 +121,7 @@ public class OpsManagerServiceImpl implements OpsManagerService {
         for (ProjectDto projectDto : projectDtoList) {
             for (MongodbProjectDo mongodbProjectDo : mongodbProjectDoList) {
                 // 判断名称开头是否相同，并判断组织是否匹配
-                if (mongodbProjectDo.getName().startsWith(projectDto.getName() + SLASH)
+                if (mongodbProjectDo.getName().startsWith(projectDto.getName() + "@")
                         && this.getMappingId(projectDto.getOrganId()).get(0).equals(mongodbProjectDo.getOrgId())) {
                     // 若匹配，则记录映射
                     if (ID_MAP.containsKey(projectDto.getProjectId())) {
@@ -442,7 +442,7 @@ public class OpsManagerServiceImpl implements OpsManagerService {
             if (idList.contains(mpd.getId())) {
                 // 设置匹配上的项目的id和修改后的名称
                 mongodbProjectDo.setId(mpd.getId());
-                mongodbProjectDo.setName(projectName + SLASH + mpd.getName().split(SLASH)[1]);
+                mongodbProjectDo.setName(projectName + "@" + mpd.getName().split("@")[1]);
                 // 调用更新接口
                 mongodbClientWrapper.updateProject(clusterId, mongodbProjectDo);
             }
