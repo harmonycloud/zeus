@@ -18,7 +18,7 @@ public interface OpsManagerService {
      * @param id id
      * @return String
      */
-    String getMappingId(String id);
+    List<String> getMappingId(String id);
 
     /**
      * 刷新组织项目用户信息
@@ -140,9 +140,9 @@ public interface OpsManagerService {
     /**
      * 删除项目
      * @param clusterId 集群id
-     * @param projectId 项目id
+     * @param projectName 项目名称
      */
-    void deleteProject(String clusterId, String projectId);
+    void deleteProject(String clusterId, String projectName);
 
 
 }

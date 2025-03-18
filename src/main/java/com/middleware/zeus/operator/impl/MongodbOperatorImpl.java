@@ -1,25 +1,14 @@
 package com.middleware.zeus.operator.impl;
 
+import static com.middleware.zeus.common.constants.CommonConstant.SLASH;
 import static com.middleware.zeus.common.constants.NameConstant.*;
 import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.ACTIVE_ACTIVE;
 import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_OPERATOR;
-import static com.middleware.zeus.common.enums.DictEnum.POD;
 import static com.middleware.zeus.common.enums.middleware.MiddlewareTypeEnum.MONGODB;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.middleware.zeus.common.model.middleware.mongodb.MongodbOrgDo;
-import com.middleware.zeus.common.model.middleware.mongodb.MongodbProjectDo;
-import com.middleware.zeus.common.model.user.OrganizationDto;
-import com.middleware.zeus.common.model.user.ProjectDto;
-import com.middleware.zeus.service.k8s.ServiceAccountService;
-import com.middleware.zeus.service.middleware.OpsManagerService;
-import com.middleware.zeus.service.user.OrganizationService;
-import com.middleware.zeus.service.user.ProjectService;
-import com.middleware.zeus.util.RequestUtil;
-import io.fabric8.kubernetes.api.model.ServiceAccount;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -30,11 +19,17 @@ import com.middleware.zeus.common.exception.BusinessException;
 import com.middleware.zeus.common.model.Secret;
 import com.middleware.zeus.common.model.StorageDto;
 import com.middleware.zeus.common.model.middleware.*;
+import com.middleware.zeus.common.model.user.ProjectDto;
 import com.middleware.zeus.operator.api.MongodbOperator;
 import com.middleware.zeus.operator.miiddleware.AbstractMongodbOperator;
+import com.middleware.zeus.service.k8s.ServiceAccountService;
+import com.middleware.zeus.service.middleware.OpsManagerService;
+import com.middleware.zeus.service.user.ProjectService;
+import com.middleware.zeus.util.RequestUtil;
 import com.middleware.zeus.util.encrypt.Base64Utils;
 
 import io.fabric8.kubernetes.api.model.ConfigMap;
+import io.fabric8.kubernetes.api.model.ServiceAccount;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -45,8 +40,6 @@ import lombok.extern.slf4j.Slf4j;
 @Operator(paramTypes4One = Middleware.class)
 public class MongodbOperatorImpl extends AbstractMongodbOperator implements MongodbOperator {
 
-    @Autowired
-    private OrganizationService organizationService;
     @Autowired
     private ProjectService projectService;
     @Autowired
@@ -84,14 +77,14 @@ public class MongodbOperatorImpl extends AbstractMongodbOperator implements Mong
         values.getJSONObject("credentials").put("privateKey", privateKey);
         values.getJSONObject("credentials").put("publicKey", publicKey);
         // 获取当前组织所在的映射在ops manager中的组织id
-        String orgId = opsManagerService.getMappingId(RequestUtil.getOrganId());
+        String orgId = opsManagerService.getMappingId(RequestUtil.getOrganId()).get(0);
         if (StringUtils.isEmpty(orgId)) {
             throw new BusinessException(ErrorMessage.MONGODB_GET_ORGAN_ID_FAILED);
         }
         values.getJSONObject(PROJECT).put("organId", orgId);
         // 根据当前项目id获取项目名称
         ProjectDto projectDto = projectService.get(RequestUtil.getOrganId(), RequestUtil.getProjectId());
-        values.getJSONObject(PROJECT).put("projectName", projectDto.getName());
+        values.getJSONObject(PROJECT).put("projectName", projectDto.getName() + SLASH + middleware.getName());
 
         // 设置双活信息
         checkAndSetActiveActive(values, middleware);
@@ -211,13 +204,9 @@ public class MongodbOperatorImpl extends AbstractMongodbOperator implements Mong
     @Override
     public void deleteStorage(Middleware middleware) {
         super.deleteStorage(middleware);
-        // 查询用户认证信息
-        Secret secret = secretService.get(middleware.getClusterId(), MIDDLEWARE_OPERATOR,
-                "middleware-operator-mongodb-enterprise-operator-om-admin-key");
-        String publicKey = new String(Base64Utils.decode(secret.getData().get("publicKey")));
-        String privateKey = new String(Base64Utils.decode(secret.getData().get("privateKey")));
+        ProjectDto projectDto = projectService.get(RequestUtil.getOrganId(), RequestUtil.getProjectId());
         // 删除mongodb项目
-        //mongodbClientWrapper.deleteProject(middleware.getClusterId(), publicKey, privateKey, middleware.getName());
+        opsManagerService.deleteProject(middleware.getClusterId(), projectDto.getName() + SLASH + middleware.getName());
     }
 
     @Override

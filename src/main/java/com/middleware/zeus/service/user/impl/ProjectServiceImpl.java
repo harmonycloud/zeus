@@ -361,11 +361,6 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
         unBindBackupPosition(organId, projectId);
         // 解绑项目下备份服务器
         unBindBackupServer(organId, projectId);
-
-        // 删除ops manager项目
-        if (opsManager) {
-            opsManagerService.deleteProject(null, projectId);
-        }
     }
 
     @Override
