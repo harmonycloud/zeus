@@ -80,7 +80,7 @@ public class MiddlewareBackupWrapper {
         if (forceDelete) {
             MiddlewareBackup middlewareBackup = get(clusterId, namespace, name);
             middlewareBackup.getMetadata().setFinalizers(Collections.emptyList());
-            middlewareBackupClient.resource(middlewareBackup).update();
+            middlewareBackupClient.resource(middlewareBackup).patch();
         } else {
             middlewareBackupClient.withName(name).delete();
         }

@@ -30,7 +30,7 @@ public class PostgresqlWrapper {
         NonNamespaceOperation<Postgresql, PostgresqlList, Resource<Postgresql>> postgresqlClient =
             K8sClient.getClient(clusterId).resources(Postgresql.class, PostgresqlList.class).inNamespace(namespace);
         // update
-        postgresqlClient.resource(postgresql).update();
+        postgresqlClient.resource(postgresql).patch();
     }
 
 }

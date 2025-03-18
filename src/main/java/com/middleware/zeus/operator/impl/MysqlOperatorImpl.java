@@ -506,7 +506,7 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
             if (i > 0) {
                 log.error("411异常重发请求，进行第{}次重发", i);
             }
-            results = CmdExecUtil.runCmd(execCommand);
+            results = CmdExecUtil.execCmd(execCommand, null);
             if (!"411".equals(results.get(1)) || !results.get(0).endsWith("please apply your changes to the latest version and try again")) {
                 break;
             }

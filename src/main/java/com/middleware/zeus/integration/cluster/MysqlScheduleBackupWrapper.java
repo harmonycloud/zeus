@@ -86,7 +86,7 @@ public class MysqlScheduleBackupWrapper {
             Resource<MysqlScheduleBackupCR>> mysqlScheduleClient =
                 K8sClient.getClient(clusterId).resources(MysqlScheduleBackupCR.class, ScheduleBackupList.class);
         // update
-        mysqlScheduleClient.resource(mysqlScheduleBackupCR).update();
+        mysqlScheduleClient.resource(mysqlScheduleBackupCR).patch();
     }
 
     /**

@@ -66,7 +66,7 @@ public class IngressWrapper {
     }
 
     public Ingress update(String clusterId, String namespace, Ingress ingress) {
-        Ingress res = K8sClient.getClient(clusterId).network().v1().ingresses().inNamespace(namespace).resource(ingress).update();
+        Ingress res = K8sClient.getClient(clusterId).network().v1().ingresses().inNamespace(namespace).resource(ingress).patch();
         return res;
     }
 

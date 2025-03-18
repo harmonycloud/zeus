@@ -15,16 +15,16 @@ resources:
     memory: 256Mi
 
 nodeSelector:
-  node-role.kubernetes.io/master: ""
+  node-role.kubernetes.io/control-plane: ""
 
 tolerations:
-  - effect: NoSchedule
-    key: harm.cn/system
-  - effect: NoSchedule
-    key: harm.cn/type
-    value: active-active
-  - effect: NoSchedule
-    key: node-role.kubernetes.io/master
+    - effect: NoSchedule
+      key: harm.cn/system
+    - effect: NoSchedule
+      key: harm.cn/type
+      value: active-active
+    - effect: NoSchedule
+      key: node-role.kubernetes.io/control-plane
 
 affinity: {}
 

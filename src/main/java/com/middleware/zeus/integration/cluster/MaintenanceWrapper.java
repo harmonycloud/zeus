@@ -122,7 +122,7 @@ public class MaintenanceWrapper {
         NonNamespaceOperation<Maintenance, MaintenanceList, Resource<Maintenance>> maintenanceClient =
             K8sClient.getClient(clusterId).resources(Maintenance.class, MaintenanceList.class).inNamespace(namespace);
         // delete
-        maintenanceClient.resource(mt).update();
+        maintenanceClient.resource(mt).patch();
     }
 
 }

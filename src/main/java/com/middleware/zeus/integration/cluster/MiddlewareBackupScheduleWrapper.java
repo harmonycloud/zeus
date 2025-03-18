@@ -52,7 +52,7 @@ public class MiddlewareBackupScheduleWrapper {
         if(schedule == null){
             backupScheduleClient.resource(backupScheduleCr).create();
         }else{
-            backupScheduleClient.resource(backupScheduleCr).update();
+            backupScheduleClient.resource(backupScheduleCr).patch();
         }
     }
 
@@ -69,7 +69,7 @@ public class MiddlewareBackupScheduleWrapper {
                 Resource<MiddlewareBackupSchedule>> backupScheduleClient = K8sClient.getClient(clusterId)
                 .resources(MiddlewareBackupSchedule.class, MiddlewareBackupScheduleList.class);
         // create
-        backupScheduleClient.resource(backupScheduleCr).update();
+        backupScheduleClient.resource(backupScheduleCr).patch();
     }
 
 
@@ -122,7 +122,7 @@ public class MiddlewareBackupScheduleWrapper {
         if (forceDelete) {
             MiddlewareBackupSchedule schedule = get(clusterId, namespace, name);
             schedule.getMetadata().setFinalizers(Collections.emptyList());
-            backupScheduleClient.resource(schedule).update();
+            backupScheduleClient.resource(schedule).patch();
         } else {
             backupScheduleClient.withName(name).delete();
         }

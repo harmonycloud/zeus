@@ -35,7 +35,7 @@ public class MysqlClusterWrapper {
         NonNamespaceOperation<MysqlCluster, MysqlClusterList, Resource<MysqlCluster>> mysqlClusterClient =
             K8sClient.getClient(clusterId).resources(MysqlCluster.class, MysqlClusterList.class).inNamespace(namespace);
         // update
-        mysqlClusterClient.resource(mysqlCluster).update();
+        mysqlClusterClient.resource(mysqlCluster).patch();
     }
 
     public MysqlCluster get(String namespace, String name) {

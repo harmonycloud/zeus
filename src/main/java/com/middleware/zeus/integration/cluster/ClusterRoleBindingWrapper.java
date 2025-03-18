@@ -18,7 +18,7 @@ public class ClusterRoleBindingWrapper {
     }
 
     public void update(String clusterId, ClusterRoleBinding clusterRoleBinding){
-        K8sClient.getClient(clusterId).rbac().clusterRoleBindings().resource(clusterRoleBinding).update();
+        K8sClient.getClient(clusterId).rbac().clusterRoleBindings().resource(clusterRoleBinding).patch();
     }
 
     public void create(String clusterId, ClusterRoleBinding clusterRoleBinding){

@@ -76,7 +76,7 @@ public class ClusterWrapper {
     public void update(MiddlewareCluster cluster) throws IOException {
         k8sClient.getDefaultClient().genericKubernetesResources(CONTEXT)
             .resource(JSONObject.parseObject(JSONObject.toJSONString(cluster), GenericKubernetesResource.class))
-            .update();
+            .patch();
     }
 
     /**
