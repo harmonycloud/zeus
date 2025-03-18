@@ -1,9 +1,9 @@
 apiVersion: v2
-appVersion: v1.4.0
+appVersion: v1.5.1
 description: Universal mounted-pv storage usage monitoring
 maintainers:
 - email: zhangyiyan@harmonycloud.cn
   name: zhangyiyan
 name: fs-exporter
 type: application
-version: v1.4.0
+version: v1.5.0

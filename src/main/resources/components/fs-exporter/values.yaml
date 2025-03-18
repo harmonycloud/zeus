@@ -5,9 +5,9 @@ web:
 logLevel: 4 # Info Level
 
 image:
-  # registry: "10.120.1.233:8443/zyydebug/"
+  registry: "" # 10.10.102.124/middleware/
   repository: fs-exporter
-  tag: "v1.4.0" # Overrides the image tag whose default is the chart appVersion.
+  tag: "v1.5.1" # Overrides the image tag whose default is the chart appVersion.
   pullPolicy: IfNotPresent
 
 hostNetWork: false
@@ -24,9 +24,9 @@ nodeSelector: {}
 tolerations:
   - operator: Exists
 affinity: {}
+podAnnotations: {}
 # imagePullSecrets: []
 # nameOverride: ""
 # fullnameOverride: ""
-# podAnnotations: {}
 # podSecurityContext: {}
 # securityContext: {}

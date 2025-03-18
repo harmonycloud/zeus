@@ -21,14 +21,15 @@ spec:
         app: fs-exporter
         {{- include "fs-exporter.selectorLabels" . | nindent 8 }}
     spec:
+      serviceAccount: {{ include "fs-exporter.fullname" . }}
       containers:
         - name: fs-exporter
-          image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
+          image: "{{ .Values.image.registry }}{{ .Values.image.repository }}:{{ .Values.image.tag | default .Chart.AppVersion }}"
           command:
             - /fs-exporter
             - "--web.listen-address={{ .Values.web.listenAddress }}"
             - "--log-level={{ .Values.logLevel | default 4 }}"
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: {{ .Values.image.pullPolicy | default "IfNotPresent"}}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
           ports:
