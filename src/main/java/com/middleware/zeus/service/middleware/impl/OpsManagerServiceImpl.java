@@ -127,9 +127,11 @@ public class OpsManagerServiceImpl implements OpsManagerService {
                     if (ID_MAP.containsKey(projectDto.getProjectId())) {
                         ID_MAP.get(projectDto.getProjectId()).add(mongodbProjectDo.getId());
                     } else {
-                        ID_MAP.put(projectDto.getProjectId(), Collections.singletonList(mongodbProjectDo.getId()));
+                        List<String> idList = new ArrayList<>();
+                        idList.add(mongodbProjectDo.getId());
+
+                        ID_MAP.put(projectDto.getProjectId(), idList);
                     }
-                    break;
                 }
             }
         }
@@ -529,15 +531,19 @@ public class OpsManagerServiceImpl implements OpsManagerService {
         MongodbUserDo mongodbUserDo = new MongodbUserDo(Protocol.HTTP.getValue().toLowerCase(), path, port,
             map.get(PUBLIC_KEY), map.get(PRIVATE_KEY), null, username, null, null, null, null, List.of(roleName));
 
+        // 获取匹配的项目idList
+        List<String> idList = this.getMappingId(projectId);
+
         // 获取匹配的项目列表
         this.listProjects(clusterId).forEach(mongodbProjectDo -> {
-            if (mongodbProjectDo.getName().equals(projectId)) {
+            if (idList.contains(mongodbProjectDo.getId())) {
+                // 设置项目id
                 mongodbUserDo.setProjectId(mongodbProjectDo.getId());
+                // 调用接口进行分配
+                mongodbClientWrapper.allocateUserToProject(clusterId, mongodbUserDo);
+
             }
-
         });
-
-        mongodbClientWrapper.allocateUserToProject(clusterId, mongodbUserDo);
     }
 
     @Override
