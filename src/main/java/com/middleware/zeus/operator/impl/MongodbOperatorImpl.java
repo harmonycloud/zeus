@@ -48,6 +48,8 @@ public class MongodbOperatorImpl extends AbstractMongodbOperator implements Mong
 
     @Override
     protected void replaceValues(Middleware middleware, MiddlewareClusterDTO cluster, JSONObject values) {
+        // 清理ID_MAP
+        opsManagerService.clearIdMap();
         // 刷新组织项目信息
         opsManagerService.refresh(cluster.getId());
         // 尝试创建sa
@@ -206,6 +208,8 @@ public class MongodbOperatorImpl extends AbstractMongodbOperator implements Mong
         ProjectDto projectDto = projectService.get(RequestUtil.getOrganId(), RequestUtil.getProjectId());
         // 删除mongodb项目
         opsManagerService.deleteProject(middleware.getClusterId(), projectDto.getName() + "@" + middleware.getName());
+        // 清理ID_MAP
+        opsManagerService.clearIdMap();
     }
 
     @Override

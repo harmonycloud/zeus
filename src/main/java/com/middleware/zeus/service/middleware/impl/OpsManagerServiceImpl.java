@@ -69,6 +69,11 @@ public class OpsManagerServiceImpl implements OpsManagerService {
     private UserService userService;
 
     @Override
+    public void clearIdMap() {
+        ID_MAP.clear();
+    }
+
+    @Override
     public List<String> getMappingId(String id) {
         if (ID_MAP.isEmpty()) {
             List<MiddlewareClusterDTO> clusterList = clusterService.listClusters();

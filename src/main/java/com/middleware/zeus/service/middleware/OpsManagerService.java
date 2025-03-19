@@ -14,6 +14,11 @@ import java.util.List;
 public interface OpsManagerService {
 
     /**
+     * 刷新ID_MAP
+     */
+    void clearIdMap();
+
+    /**
      * 获取组织/项目id
      * @param id id
      * @return String
