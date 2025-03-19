@@ -300,7 +300,7 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
         // 同步用户更新至ops manager
         if (opsManager) {
             for (UserDto userDto : projectDto.getUserDtoList()){
-                opsManagerService.allocateProjectUser(null, projectDto.getProjectId(), userDto.getUserName(), userDto.getRoleId());
+                opsManagerService.allocateProjectUser(null, projectDto.getProjectId(), userDto.getUserName(), userDto.getRoleId(), null);
             }
         }
     }

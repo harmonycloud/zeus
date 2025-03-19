@@ -17,6 +17,7 @@ import com.middleware.zeus.service.middleware.OpsManagerService;
 import com.middleware.zeus.service.user.OrganizationService;
 import com.middleware.zeus.service.user.ProjectService;
 import com.middleware.zeus.service.user.UserService;
+import com.middleware.zeus.util.ThreadPoolExecutorFactory;
 import com.middleware.zeus.util.encrypt.Base64Utils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -27,6 +28,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import static com.middleware.zeus.common.constants.CommonConstant.SLASH;
 import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_OPERATOR;
@@ -457,15 +459,20 @@ public class OpsManagerServiceImpl implements OpsManagerService {
     }
 
     @Override
-    public List<MongodbUserDo> listProjectUser(String clusterId, String projectId) {
+    public Map<String, List<MongodbUserDo>> listProjectUser(String clusterId, String projectId) {
         if (StringUtils.isEmpty(clusterId)) {
             return null;
         }
+        Map<String, List<MongodbUserDo>> userMap = new HashMap<>();
         // 查询用户认证信息
         Map<String, String> map = getPublicAndPrivateKey(clusterId);
         // 查询项目下用户
-        return mongodbClientWrapper.listProjectUser(clusterId, map.get(PUBLIC_KEY), map.get(PRIVATE_KEY), null,
-            this.getMappingId(projectId).get(0));
+        List<String> IdList = this.getMappingId(projectId);
+        for (String id : IdList) {
+            List<MongodbUserDo> mongodbUserDoList = mongodbClientWrapper.listProjectUser(clusterId, map.get(PUBLIC_KEY), map.get(PRIVATE_KEY), null, id);
+            userMap.put(id, mongodbUserDoList);
+        }
+        return userMap;
     }
 
     @Override
@@ -484,31 +491,30 @@ public class OpsManagerServiceImpl implements OpsManagerService {
         }
 
         // 获取ops manager中的项目下的用户
-        List<MongodbUserDo> mongodbUserDoList = this.listProjectUser(clusterId, projectId);
+        Map<String, List<MongodbUserDo>> mongodbUserMap = this.listProjectUser(clusterId, projectId);
 
-        // 比较用户，更新ops manager中的项目下的用户
-        for (UserDto userDto : userDtoList) {
-            boolean exist = false;
-            for (MongodbUserDo mongodbUserDo : mongodbUserDoList) {
-                if (userDto.getUserName().equals(mongodbUserDo.getUsername())) {
-                    exist = true;
-                    break;
-                }
-            }
-            if (!exist) {
-                this.allocateProjectUser(clusterId, projectId, userDto.getUserName(), userDto.getRoleId());
+        // 遍历所有项目下的用户
+        for (String id : mongodbUserMap.keySet()) {
+            // 根据项目下的用户列表，过滤获取在ops manager中不存在的用户
+            List<UserDto> userDtoNotExistList = userDtoList.stream()
+                .filter(userDto -> mongodbUserMap.get(id).stream()
+                    .noneMatch(mongodbUserDo -> userDto.getUserName().equals(mongodbUserDo.getUsername())))
+                .collect(Collectors.toList());
+            // 针对在ops manager中不存在的用户，调用接口进行分配
+            for (UserDto userDto : userDtoNotExistList) {
+                this.allocateProjectUser(clusterId, projectId, userDto.getUserName(), userDto.getRoleId(), id);
             }
         }
     }
 
     @Override
-    public void allocateProjectUser(String clusterId, String projectId, String username, Integer roleId) {
+    public void allocateProjectUser(String clusterId, String projectId, String username, Integer roleId, String id) {
         // 多集群遍历
         if (clusterId == null) {
             List<MiddlewareClusterDTO> clusterList = clusterService.listClusters();
             for (MiddlewareClusterDTO cluster : clusterList) {
                 try {
-                    allocateProjectUser(cluster.getId(), projectId, username, roleId);
+                    allocateProjectUser(cluster.getId(), projectId, username, roleId, id);
                 } catch (Exception e) {
                     log.error("集群: {}, 分配ops manager项目用户失败", cluster.getId());
                     log.debug("集群: {}, 分配ops manager项目用户失败", cluster.getId(), e);
@@ -545,8 +551,9 @@ public class OpsManagerServiceImpl implements OpsManagerService {
                 // 设置项目id
                 mongodbUserDo.setProjectId(mongodbProjectDo.getId());
                 // 调用接口进行分配
-                mongodbClientWrapper.allocateUserToProject(clusterId, mongodbUserDo);
-
+                ThreadPoolExecutorFactory.executor.execute(() -> {
+                    mongodbClientWrapper.allocateUserToProject(clusterId, mongodbUserDo);
+                });
             }
         });
     }

@@ -26,12 +26,16 @@ public class MiddlewareApiInterceptor implements Interceptor {
     @Override
     public boolean beforeExecute(ForestRequest request) {
         // setToken
-        HttpServletRequest servletRequest =
-            ((ServletRequestAttributes)Objects.requireNonNull(RequestContextHolder.getRequestAttributes()))
-                .getRequest();
-        String mwToken = servletRequest.getHeader("mwToken");
-        if (StringUtils.isNotEmpty(mwToken)){
-            request.addHeader("Authorization", mwToken);
+        try {
+            HttpServletRequest servletRequest =
+                    ((ServletRequestAttributes)Objects.requireNonNull(RequestContextHolder.getRequestAttributes()))
+                            .getRequest();
+            String mwToken = servletRequest.getHeader("mwToken");
+            if (StringUtils.isNotEmpty(mwToken)){
+                request.addHeader("Authorization", mwToken);
+            }
+        } catch (Exception e){
+            log.error("访问middleware-api, 获取token失败");
         }
         return true;
     }
@@ -40,11 +44,15 @@ public class MiddlewareApiInterceptor implements Interceptor {
     public void onSuccess(Object data, ForestRequest request, ForestResponse response) {
         String mwToken = response.getHeaderValue("token");
         log.info("打印接口执行时间: {}", response.getTimeAsMillisecond());
-        HttpServletResponse servletResponse =
-            ((ServletRequestAttributes)Objects.requireNonNull(RequestContextHolder.getRequestAttributes()))
-                .getResponse();
-        if (servletResponse != null && StringUtils.isNotEmpty(mwToken)) {
-            servletResponse.setHeader("mwToken", mwToken);
+        try {
+            HttpServletResponse servletResponse =
+                    ((ServletRequestAttributes)Objects.requireNonNull(RequestContextHolder.getRequestAttributes()))
+                            .getResponse();
+            if (servletResponse != null && StringUtils.isNotEmpty(mwToken)) {
+                servletResponse.setHeader("mwToken", mwToken);
+            }
+        } catch (Exception e){
+            log.error("访问middleware-api, 设置token失败");
         }
     }
 

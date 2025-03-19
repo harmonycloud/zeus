@@ -6,6 +6,7 @@ import com.middleware.zeus.common.model.middleware.mongodb.MongodbUserDo;
 import com.middleware.zeus.common.model.user.UserDto;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author xutianhong
@@ -123,7 +124,7 @@ public interface OpsManagerService {
      * @param clusterId 集群id
      * @param projectId 项目id
      */
-    List<MongodbUserDo> listProjectUser(String clusterId, String projectId);
+    Map<String, List<MongodbUserDo>> listProjectUser(String clusterId, String projectId);
 
     /**
      * 更新项目下用户
@@ -139,8 +140,10 @@ public interface OpsManagerService {
      * @param clusterId 集群id
      * @param projectId 项目id
      * @param username 项目名称
+     * @param roleId 角色id
+     * @param id ops manager中项目id
      */
-    void allocateProjectUser(String clusterId, String projectId, String username, Integer roleId);
+    void allocateProjectUser(String clusterId, String projectId, String username, Integer roleId, String id);
 
     /**
      * 删除项目

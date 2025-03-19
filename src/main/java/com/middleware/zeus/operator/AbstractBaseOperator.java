@@ -21,6 +21,8 @@ import com.middleware.zeus.common.model.registry.HelmChartFile;
 import com.middleware.zeus.service.k8s.IngressService;
 import com.middleware.zeus.service.middleware.impl.MiddlewareServiceImpl;
 import com.middleware.zeus.service.system.AlertUserService;
+import com.middleware.zeus.service.user.ProjectService;
+import com.middleware.zeus.util.RequestUtil;
 import com.middleware.zeus.util.ThreadPoolExecutorFactory;
 import com.middleware.zeus.util.collection.JsonUtils;
 import com.middleware.zeus.util.numeric.ResourceCalculationUtil;
@@ -83,6 +85,8 @@ public abstract class AbstractBaseOperator {
 
     @Value("${active-active.label.key:topology.kubernetes.io/zone}")
     private String zoneKey;
+    @Value("${system.opsManager.enable:false}")
+    private Boolean opsManager;
 
     /**
      * 此处的注入，实际上是由各个OperatorImpl子类（如MysqlOperatorImpl）进行注入了，如果直接初始化当前类，会发现值为空
@@ -153,6 +157,8 @@ public abstract class AbstractBaseOperator {
     protected AlertUserService alertUserService;
     @Autowired
     protected SecretService secretService;
+    @Autowired
+    protected ProjectService projectService;
 
     /**
      * 是否支持该中间件
@@ -240,6 +246,10 @@ public abstract class AbstractBaseOperator {
         deleteRecord(middleware.getClusterId(), middleware.getNamespace(), middleware.getType(), middleware.getName());
         // license资源计算
         licenseService.addMiddlewareResource(cluster.getType(), calculateCpuRequest(values));
+        // 刷新ops manager用户
+        if (opsManager) {
+            projectService.getUser(RequestUtil.getOrganId(), RequestUtil.getOrganId(), false);
+        }
     }
 
     protected void syncBackupSourceConfig(Middleware middleware, JSONObject values) {
