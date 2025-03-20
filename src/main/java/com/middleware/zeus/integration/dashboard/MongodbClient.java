@@ -1,9 +1,7 @@
 package com.middleware.zeus.integration.dashboard;
 
 import com.dtflys.forest.annotation.*;
-import com.middleware.zeus.common.model.middleware.mongodb.MongodbOrgDo;
-import com.middleware.zeus.common.model.middleware.mongodb.MongodbProjectDo;
-import com.middleware.zeus.common.model.middleware.mongodb.MongodbUserDo;
+import com.middleware.zeus.common.model.middleware.mongodb.*;
 import org.springframework.stereotype.Component;
 
 import com.alibaba.fastjson.JSONObject;
@@ -101,7 +99,7 @@ public interface MongodbClient {
      */
     @Post(url = "/mongodb/ops/org/user?clusterId={clusterId}")
     JSONObject allocateUserToOrgan(@Var("clusterId") String clusterId,
-                                   @JSONBody MongodbUserDo mongodbUserDo);
+                                   @JSONBody MongodbOrgInviteUserDo mongodbOrgInviteUserDo);
 
     /**
      * 将用户分配给项目
@@ -153,7 +151,7 @@ public interface MongodbClient {
      */
     @Post(url = "/mongodb/ops/project/user?clusterId={clusterId}")
     JSONObject allocateUserToProject(@Var("clusterId") String clusterId,
-                                     @JSONBody MongodbUserDo mongodbUserDo);
+                                     @JSONBody MongodbProjectInviteUserDo mongodbProjectInviteUserDo);
 
     /**
      * 获取组织下所有用户

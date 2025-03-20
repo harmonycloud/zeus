@@ -2,6 +2,7 @@ package com.middleware.zeus.integration.dashboard;
 
 import java.util.List;
 
+import com.middleware.zeus.common.model.middleware.mongodb.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -9,9 +10,6 @@ import org.springframework.stereotype.Component;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.middleware.zeus.common.enums.Protocol;
-import com.middleware.zeus.common.model.middleware.mongodb.MongodbOrgDo;
-import com.middleware.zeus.common.model.middleware.mongodb.MongodbProjectDo;
-import com.middleware.zeus.common.model.middleware.mongodb.MongodbUserDo;
 
 
 import lombok.extern.slf4j.Slf4j;
@@ -165,11 +163,11 @@ public class  MongodbClientWrapper {
     /**
      * 将用户分配给项目
      * @param clusterId 集群id
-     * @param mongodbUserDo 用户信息
+     * @param mongodbOrgInviteUserDo 用户信息
      */
-    public void allocateUserToOrgan(String clusterId, MongodbUserDo mongodbUserDo) {
+    public void allocateUserToOrgan(String clusterId, MongodbOrgInviteUserDo mongodbOrgInviteUserDo) {
         try {
-            mongodbClient.allocateUserToOrgan(clusterId, mongodbUserDo);
+            mongodbClient.allocateUserToOrgan(clusterId, mongodbOrgInviteUserDo);
         } catch (Exception e){
             log.error("分配ops manager用户失败", e);
         }
@@ -240,11 +238,11 @@ public class  MongodbClientWrapper {
     /**
      * 将用户分配给项目
      * @param clusterId 集群id
-     * @param mongodbUserDo 用户信息
+     * @param mongodbProjectInviteUserDo 用户信息
      */
-    public void allocateUserToProject(String clusterId, MongodbUserDo mongodbUserDo) {
+    public void allocateUserToProject(String clusterId, MongodbProjectInviteUserDo mongodbProjectInviteUserDo) {
         try {
-            mongodbClient.allocateUserToProject(clusterId, mongodbUserDo);
+            mongodbClient.allocateUserToProject(clusterId, mongodbProjectInviteUserDo);
         } catch (Exception e){
             log.error("分配ops manager用户失败", e);
         }

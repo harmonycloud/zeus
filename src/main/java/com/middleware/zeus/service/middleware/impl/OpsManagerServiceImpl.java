@@ -3,10 +3,7 @@ package com.middleware.zeus.service.middleware.impl;
 import com.middleware.zeus.common.enums.Protocol;
 import com.middleware.zeus.common.model.Secret;
 import com.middleware.zeus.common.model.middleware.MiddlewareClusterDTO;
-import com.middleware.zeus.common.model.middleware.mongodb.MongodbOrgDo;
-import com.middleware.zeus.common.model.middleware.mongodb.MongodbProjectDo;
-import com.middleware.zeus.common.model.middleware.mongodb.MongodbRoleDo;
-import com.middleware.zeus.common.model.middleware.mongodb.MongodbUserDo;
+import com.middleware.zeus.common.model.middleware.mongodb.*;
 import com.middleware.zeus.common.model.user.OrganizationDto;
 import com.middleware.zeus.common.model.user.ProjectDto;
 import com.middleware.zeus.common.model.user.UserDto;
@@ -372,11 +369,12 @@ public class OpsManagerServiceImpl implements OpsManagerService {
         }
 
         // 初始化数据结构
-        MongodbUserDo mongodbUserDo = new MongodbUserDo(Protocol.HTTP.getValue().toLowerCase(), path, port,
-            map.get(PUBLIC_KEY), map.get(PRIVATE_KEY), null, username, null, null, null, null, List.of(roleName));
-        mongodbUserDo.setOrganizationId(this.getMappingId(organId).get(0));
+        MongodbOrgInviteUserDo mongodbOrgInviteUserDo = new MongodbOrgInviteUserDo(Protocol.HTTP.getValue().toLowerCase(), path, port,
+                map.get(PUBLIC_KEY), map.get(PRIVATE_KEY), null, username, List.of(roleName));
+        mongodbOrgInviteUserDo.setOrganizationId(this.getMappingId(organId).get(0));
 
-        mongodbClientWrapper.allocateUserToOrgan(clusterId, mongodbUserDo);
+
+        mongodbClientWrapper.allocateUserToOrgan(clusterId, mongodbOrgInviteUserDo);
     }
 
     @Override
@@ -538,9 +536,32 @@ public class OpsManagerServiceImpl implements OpsManagerService {
                 break;
         }
 
+        // 根据username获取userId
+        MongodbUserDo userDo = mongodbClientWrapper.getUser(clusterId, map.get(PUBLIC_KEY), map.get(PRIVATE_KEY), username);
+        if (userDo == null){
+            return;
+        }
+
+        // 初始化角色信息
+        MongodbRoleDo mongodbRoleDo = new MongodbRoleDo();
+        mongodbRoleDo.setRoleName(roleName);
+
+        // 初始化用户信息
+        MongodbUserDo mongodbUserDo = new MongodbUserDo();
+        mongodbUserDo.setId(userDo.getId());
+        mongodbUserDo.setRoles(List.of(mongodbRoleDo));
+
         // 初始化数据结构
-        MongodbUserDo mongodbUserDo = new MongodbUserDo(Protocol.HTTP.getValue().toLowerCase(), path, port,
-            map.get(PUBLIC_KEY), map.get(PRIVATE_KEY), null, username, null, null, null, null, List.of(roleName));
+        MongodbProjectInviteUserDo mongodbProjectInviteUserDo = new MongodbProjectInviteUserDo(Protocol.HTTP.getValue().toLowerCase(), path, port,
+            map.get(PUBLIC_KEY), map.get(PRIVATE_KEY), List.of(mongodbUserDo));
+
+        if (id != null){
+            //mongodbRoleDo.setGroupId(id);
+            mongodbProjectInviteUserDo.setProjectId(id);
+            // 调用接口进行分配
+            mongodbClientWrapper.allocateUserToProject(clusterId, mongodbProjectInviteUserDo);
+            return;
+        }
 
         // 获取匹配的项目idList
         List<String> idList = this.getMappingId(projectId);
@@ -549,11 +570,10 @@ public class OpsManagerServiceImpl implements OpsManagerService {
         this.listProjects(clusterId).forEach(mongodbProjectDo -> {
             if (idList.contains(mongodbProjectDo.getId())) {
                 // 设置项目id
-                mongodbUserDo.setProjectId(mongodbProjectDo.getId());
+                //mongodbRoleDo.setGroupId(mongodbProjectDo.getId());
+                mongodbProjectInviteUserDo.setProjectId(mongodbProjectDo.getId());
                 // 调用接口进行分配
-                ThreadPoolExecutorFactory.executor.execute(() -> {
-                    mongodbClientWrapper.allocateUserToProject(clusterId, mongodbUserDo);
-                });
+                mongodbClientWrapper.allocateUserToProject(clusterId, mongodbProjectInviteUserDo);
             }
         });
     }

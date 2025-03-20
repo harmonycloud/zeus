@@ -43,11 +43,11 @@ public class MongodbUserDo extends MongodbBaseDo {
     private String password;
 
     @ApiModelProperty("角色")
-    private List<String> roles;
+    private List<MongodbRoleDo> roles;
     
     public MongodbUserDo(String protocol, String path, String port, String publicKey, String privateKey, String id,
         String username, String emailAddress, String firstName, String lastName, String password,
-        List<String> roles) {
+        List<MongodbRoleDo> roles) {
         super(protocol, path, port, publicKey, privateKey);
         this.id = id;
         this.username = username;

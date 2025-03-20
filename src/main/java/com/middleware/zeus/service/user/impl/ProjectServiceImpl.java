@@ -298,11 +298,11 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
         refreshUserRoleBinding(projectDto.getOrganId(), projectDto.getProjectId(), null, projectDto.getUserDtoList(), true);
 
         // 同步用户更新至ops manager
-        if (opsManager) {
-            for (UserDto userDto : projectDto.getUserDtoList()){
-                opsManagerService.allocateProjectUser(null, projectDto.getProjectId(), userDto.getUserName(), userDto.getRoleId(), null);
-            }
-        }
+//        if (opsManager) {
+//            for (UserDto userDto : projectDto.getUserDtoList()){
+//                opsManagerService.allocateProjectUser(null, projectDto.getProjectId(), userDto.getUserName(), userDto.getRoleId(), null);
+//            }
+//        }
     }
 
     @Override
