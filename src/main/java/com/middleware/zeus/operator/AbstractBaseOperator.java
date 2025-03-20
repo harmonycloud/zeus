@@ -85,8 +85,6 @@ public abstract class AbstractBaseOperator {
 
     @Value("${active-active.label.key:topology.kubernetes.io/zone}")
     private String zoneKey;
-    @Value("${system.opsManager.enable:false}")
-    private Boolean opsManager;
 
     /**
      * 此处的注入，实际上是由各个OperatorImpl子类（如MysqlOperatorImpl）进行注入了，如果直接初始化当前类，会发现值为空
@@ -246,10 +244,6 @@ public abstract class AbstractBaseOperator {
         deleteRecord(middleware.getClusterId(), middleware.getNamespace(), middleware.getType(), middleware.getName());
         // license资源计算
         licenseService.addMiddlewareResource(cluster.getType(), calculateCpuRequest(values));
-        // 刷新ops manager用户
-        if (opsManager) {
-            projectService.getUser(RequestUtil.getOrganId(), RequestUtil.getProjectId(), false);
-        }
     }
 
     protected void syncBackupSourceConfig(Middleware middleware, JSONObject values) {

@@ -37,6 +37,7 @@ import com.middleware.zeus.service.user.ProjectService;
 import com.middleware.zeus.service.user.RoleAuthorityService;
 import com.middleware.zeus.service.user.UserService;
 import com.middleware.zeus.util.DateUtil;
+import com.middleware.zeus.util.RequestUtil;
 import com.middleware.zeus.util.ThreadPoolExecutorFactory;
 import com.middleware.zeus.util.YamlUtil;
 import com.middleware.zeus.util.date.DateUtils;
@@ -78,6 +79,9 @@ import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant
 @Slf4j
 @Service
 public class MiddlewareServiceImpl extends AbstractBaseService implements MiddlewareService {
+
+    @Value("${system.opsManager.enable:false}")
+    private Boolean opsManager;
 
     @Autowired
     private MiddlewareCRService middlewareCRService;
@@ -198,6 +202,10 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         Middleware middleware =
                 new Middleware().setClusterId(clusterId).setNamespace(namespace).setType(type).setName(name);
         Middleware detail = getOperator(BaseOperator.class, BaseOperator.class, middleware).detail(middleware);
+        // 刷新ops manager用户
+        if (opsManager) {
+            projectService.getUser(RequestUtil.getOrganId(), RequestUtil.getProjectId(), false);
+        }
         return detail;
     }
 
