@@ -126,10 +126,6 @@ public class ProjectServiceImpl extends AbstractProjectService implements Projec
                 userRoleService.insert(projectDto.getOrganId(), projectId, userDto.getUserName(), 2);
             }
         }
-        if (opsManager) {
-            // 创建ops manager项目
-            opsManagerService.createProject(null, projectDto.getOrganId(), projectId, projectDto.getName());
-        }
     }
 
     @Override
