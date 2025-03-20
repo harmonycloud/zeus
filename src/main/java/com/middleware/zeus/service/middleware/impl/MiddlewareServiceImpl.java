@@ -135,6 +135,8 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     private MiddlewareConfigYamlService middlewareConfigYamlService;
     @Autowired
     private MiddlewarePvcService middlewarePvcService;
+    @Autowired
+    private OpsManagerService opsManagerService;
 
     @Value("${system.privateRegistry.middlewareServiceAccount:default}")
     private String middlewareServiceAccount;
@@ -271,6 +273,10 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                     e.printStackTrace();
                 }
             }
+        }
+        // 清理ID_MAP
+        if (opsManager) {
+            opsManagerService.clearIdMap();
         }
         if (result) {
             return middleware;
