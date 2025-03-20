@@ -248,7 +248,7 @@ public abstract class AbstractBaseOperator {
         licenseService.addMiddlewareResource(cluster.getType(), calculateCpuRequest(values));
         // 刷新ops manager用户
         if (opsManager) {
-            projectService.getUser(RequestUtil.getOrganId(), RequestUtil.getOrganId(), false);
+            projectService.getUser(RequestUtil.getOrganId(), RequestUtil.getProjectId(), false);
         }
     }
 
