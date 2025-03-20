@@ -95,9 +95,9 @@ public interface MongodbClient {
                           @Var("privateKey") String privateKey);
 
     /**
-     * 将用户分配给项目
+     * 将用户分配给组织
      */
-    @Post(url = "/mongodb/ops/org/user?clusterId={clusterId}")
+    @Post(url = "/mongodb/ops/org/invite?clusterId={clusterId}")
     JSONObject allocateUserToOrgan(@Var("clusterId") String clusterId,
                                    @JSONBody MongodbOrgInviteUserDo mongodbOrgInviteUserDo);
 
