@@ -205,7 +205,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
                 new Middleware().setClusterId(clusterId).setNamespace(namespace).setType(type).setName(name);
         Middleware detail = getOperator(BaseOperator.class, BaseOperator.class, middleware).detail(middleware);
         // 刷新ops manager用户
-        if (opsManager) {
+        if (opsManager && type.equals(MiddlewareTypeEnum.MONGODB.getType())) {
             projectService.getUser(RequestUtil.getOrganId(), RequestUtil.getProjectId(), false);
         }
         return detail;
