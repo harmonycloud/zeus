@@ -63,6 +63,10 @@ public class MongodbOperatorImpl extends AbstractMongodbOperator implements Mong
         values.getJSONObject(MONGODB.getType()).put("members", quota.getNum());
         // 设置版本
         values.getJSONObject(MONGODB.getType()).put("version", middleware.getVersion());
+        // 设置密码
+        if (StringUtils.isNotEmpty(middleware.getPassword())) {
+            values.getJSONObject("user").put("password", middleware.getPassword());
+        }
 
         if (StringUtils.isNotEmpty(middleware.getMode())) {
             JSONObject mongodb = values.getJSONObject(MONGODB.getType());
