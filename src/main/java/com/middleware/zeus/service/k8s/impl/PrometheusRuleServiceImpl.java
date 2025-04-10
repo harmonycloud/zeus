@@ -83,6 +83,9 @@ public class PrometheusRuleServiceImpl implements PrometheusRuleService {
 
     @Override
     public List<MiddlewareAlertsDTO> convertPrometheusRule(PrometheusRule prometheusRule) {
+        if (prometheusRule == null) {
+            return new ArrayList<>();
+        }
         List<MiddlewareAlertsDTO> middlewareAlertsDTOList = new ArrayList<>();
         prometheusRule.getSpec().getGroups().forEach(prometheusRuleGroups -> {
             prometheusRuleGroups.getRules().forEach(prometheusRules -> {
