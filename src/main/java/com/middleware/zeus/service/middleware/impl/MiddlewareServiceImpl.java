@@ -356,12 +356,15 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         // 获取面板配置文件名称
         String dashboardName = getDashboardName(middleware);
         // 查询配置文件
-        ConfigMap configMap;
+        ConfigMap configMap = null;
         try {
-            configMap = configMapService.get(clusterId, "middleware-operator", dashboardName);
-        } catch (Exception e){
+            if (dashboardName.equals(name + "-dashboard")) {
+                configMap = configMapService.get(clusterId, namespace, dashboardName);
+            } else {
+                configMap = configMapService.get(clusterId, MIDDLEWARE_OPERATOR, dashboardName);
+            }
+        } catch (Exception e) {
             log.error("集群{} 分区{} 中间件{} 查询监控面板失败", clusterId, namespace, name, e);
-            throw new BusinessException(ErrorMessage.GRAFANA_DASHBOARD_NOT_FOUND);
         }
 
         //获取组件信息
@@ -745,7 +748,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     public String getDashboardName(Middleware middleware) {
         HelmChartFile helm = helmChartService.getHelmChartFromMysql(middleware.getType(), middleware.getChartVersion());
         String alias;
-        if (!CollectionUtils.isEmpty(helm.getDependency())) {
+        if (!CollectionUtils.isEmpty(helm.getDependency()) && helm.getDependency().containsKey("alias")) {
             alias = helm.getDependency().get("alias");
         } else {
             alias = middleware.getName();
