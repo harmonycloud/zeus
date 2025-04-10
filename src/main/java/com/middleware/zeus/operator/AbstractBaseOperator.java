@@ -1170,7 +1170,7 @@ public abstract class AbstractBaseOperator {
         if (!CollectionUtils.isEmpty(dependencies)) {
             for (int i = 0; i < dependencies.size(); i++) {
                 JSONObject dependence = dependencies.getJSONObject(i);
-                if (dependence.getString("alias").contains("operator")) {
+                if (dependence.getString("alias") != null && dependence.getString("alias").contains("operator")) {
                     StringBuilder sb = new StringBuilder();
                     String[] condKeys = dependence.getString("condition").split("\\.");
                     for (int j = 1; j < condKeys.length; j++) {
