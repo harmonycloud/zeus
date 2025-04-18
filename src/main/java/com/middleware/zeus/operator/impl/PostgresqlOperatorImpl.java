@@ -649,6 +649,9 @@ public class PostgresqlOperatorImpl extends AbstractPostgresqlOperator implement
     public void replaceNodeAffinity(Middleware middleware, JSONObject values) {
         super.replaceNodeAffinity(middleware,values);
         JSONObject connectionPooler = values.getJSONObject("connectionPooler");
+        if(connectionPooler == null){
+            connectionPooler = new JSONObject();
+        }
         if (!CollectionUtils.isEmpty(middleware.getNodeAffinity())) {
             JSONObject nodeAffinity = K8sConvert.convertNodeAffinity2Json(middleware.getNodeAffinity());
             if (nodeAffinity != null) {
