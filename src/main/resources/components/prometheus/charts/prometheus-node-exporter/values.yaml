@@ -150,6 +150,11 @@ tolerations:
   - effect: NoSchedule
     key: harm.cn/system
     operator: Exists
+  - key: harm.cn/type
+    operator: Equal
+    value: active-active  
+  - key: node-role.kubernetes.io/control-plane
+    operator: Exists    
 ## Assign a PriorityClassName to pods if set
 # priorityClassName: ""
 
