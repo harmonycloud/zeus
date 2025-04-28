@@ -56,16 +56,16 @@ public class PlatformServiceImpl implements PlatformService {
 
     @PostConstruct
     public void init(){
-        try {
-            JSONObject values = helmChartService.getZeusMysqlInstallValues();
-            boolean isSlave = "master-slave".equals(values.getString("type"));
-            if (!isSlave && values.getJSONObject("args") != null && values.getJSONObject("args").containsKey("disasterRecoverySwitched")
-                    && values.getJSONObject("args").getBoolean("disasterRecoverySwitched")){
-                AVAILABLE.put("available", false);
-            }
-        } catch (Exception e){
-            log.error("初始化平台灾备可访问失败");
-        }
+//        try {
+//            JSONObject values = helmChartService.getZeusMysqlInstallValues();
+//            boolean isSlave = "master-slave".equals(values.getString("type"));
+//            if (!isSlave && values.getJSONObject("args") != null && values.getJSONObject("args").containsKey("disasterRecoverySwitched")
+//                    && values.getJSONObject("args").getBoolean("disasterRecoverySwitched")){
+//                AVAILABLE.put("available", false);
+//            }
+//        } catch (Exception e){
+//            log.error("初始化平台灾备可访问失败");
+//        }
     }
 
 

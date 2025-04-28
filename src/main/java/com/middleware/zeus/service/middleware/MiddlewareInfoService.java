@@ -1,10 +1,7 @@
 package com.middleware.zeus.service.middleware;
 
 import com.middleware.zeus.common.model.MiddlewareVersionDto;
-import com.middleware.zeus.common.model.middleware.Middleware;
-import com.middleware.zeus.common.model.middleware.MiddlewareClusterDTO;
-import com.middleware.zeus.common.model.middleware.MiddlewareInfoDTO;
-import com.middleware.zeus.common.model.middleware.MiddlewareOperatorDTO;
+import com.middleware.zeus.common.model.middleware.*;
 import com.middleware.zeus.common.model.registry.HelmChartFile;
 import com.middleware.zeus.bean.BeanMiddlewareInfo;
 
@@ -139,7 +136,25 @@ public interface MiddlewareInfoService {
      * @param chartVersion 中间件chart版本
      * @return List<MiddlewareVersionDto>
      */
-    List<MiddlewareVersionDto> version(String type, String chartVersion);
+    List<MiddlewareVersionDto> version(String type, String chartVersion, String clusterId);
+
+    /**
+     * 查询指定中间件的禁用版本列表
+     *
+     * @param clusterId 集群id
+     * @param type 类型
+     * @param chartVersion 中间件chart版本
+     * @return List<MiddlewareDisableVersionDto>
+     */
+    List<MiddlewareDisableVersionDto> disableVersion(String clusterId, String type, String chartVersion);
+
+    /**
+     * 设置指定中间件的禁用版本列表
+     *
+     * @param middlewareDisableVersionDtoList 禁用版本列表
+     */
+    void setDisableVersion(List<MiddlewareDisableVersionDto> middlewareDisableVersionDtoList);
+
 
     /**
      * 查询用户在指定项目下可见的operator

@@ -20,6 +20,7 @@ import com.middleware.zeus.service.k8s.ClusterService;
 import com.middleware.zeus.service.k8s.MiddlewareClusterService;
 import com.middleware.zeus.service.k8s.PodService;
 import com.middleware.zeus.service.middleware.ClusterMiddlewareInfoService;
+import com.middleware.zeus.service.middleware.MiddlewareDisableVersionService;
 import com.middleware.zeus.service.middleware.MiddlewareInfoService;
 import com.middleware.zeus.service.middleware.MiddlewareService;
 import com.middleware.zeus.service.registry.HelmChartService;
@@ -85,6 +86,8 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
     private RoleAuthorityService roleAuthorityService;
     @Autowired
     private UserService userService;
+    @Autowired
+    private MiddlewareDisableVersionService middlewareDisableVersionService;
 
     @Override
     public List<BeanMiddlewareInfo> list(Boolean all) {
@@ -491,7 +494,7 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
     }
 
     @Override
-    public List<MiddlewareVersionDto> version(String type, String chartVersion) {
+    public List<MiddlewareVersionDto> version(String type, String chartVersion, String clusterId) {
         BeanMiddlewareInfo mwInfo = get(type, chartVersion);
         String version = mwInfo.getVersion();
         if (StringUtils.isEmpty(version)) {
@@ -506,13 +509,69 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         res.putAll(MiddlewareVersionUtil.convertVersion(version));
 
         List<MiddlewareVersionDto> versionList = new ArrayList<>();
-        for (String key : res.keySet()){
+        for (String key : res.keySet()) {
             MiddlewareVersionDto versionDto = new MiddlewareVersionDto();
             versionDto.setMasterVersion(key);
             versionDto.setSlaveVersion(res.get(key));
             versionList.add(versionDto);
         }
+        // 查询当前禁用版本，并对返回数据进行过滤
+        // 获取禁用版本
+        List<MiddlewareDisableVersionDo> disableVersionDoList =
+            middlewareDisableVersionService.get(clusterId, type, chartVersion);
+        // 根据version转化为List<String>
+        List<String> disableVersionList =
+            disableVersionDoList.stream().map(MiddlewareDisableVersionDo::getVersion).collect(Collectors.toList());
+
+        for (MiddlewareVersionDto middlewareVersionDto : versionList) {
+            // 移除位于禁用版本列表中的版本
+            middlewareVersionDto.getSlaveVersion().removeIf(disableVersionList::contains);
+        }
+        // 当slaveVersion为空时，移除大版本号
+        versionList.removeIf(versionDto -> CollectionUtils.isEmpty(versionDto.getSlaveVersion()));
+
         return versionList;
+    }
+
+    @Override
+    public List<MiddlewareDisableVersionDto> disableVersion(String clusterId, String type, String chartVersion) {
+        BeanMiddlewareInfo mwInfo = get(type, chartVersion);
+        String versions = mwInfo.getVersion();
+        if (StringUtils.isEmpty(versions)) {
+            return null;
+        }
+        // 根据逗号切分version，并转化为list
+        List<String> versionList = Arrays.asList(versions.split(","));
+        // 获取禁用版本
+        List<MiddlewareDisableVersionDo> disableVersionDoList =
+            middlewareDisableVersionService.get(clusterId, type, chartVersion);
+        // 根据version转化为List<String>
+        List<String> disableVersionList =
+            disableVersionDoList.stream().map(MiddlewareDisableVersionDo::getVersion).collect(Collectors.toList());
+
+        return versionList.stream().map(version -> {
+            MiddlewareDisableVersionDto versionDto = new MiddlewareDisableVersionDto();
+            versionDto.setVersion(version);
+            if (disableVersionList.contains(version)) {
+                versionDto.setEnable(false);
+            }
+            return versionDto;
+        }).collect(Collectors.toList());
+    }
+
+    @Override
+    public synchronized void setDisableVersion(List<MiddlewareDisableVersionDto> middlewareDisableVersionDtoList) {
+        if (CollectionUtils.isEmpty(middlewareDisableVersionDtoList)) {
+            return;
+        }
+        MiddlewareDisableVersionDto middlewareDisableVersionDto = middlewareDisableVersionDtoList.get(0);
+        // 清理当前的中间件禁用版本
+        middlewareDisableVersionService.clear(middlewareDisableVersionDto.getClusterId(),
+            middlewareDisableVersionDto.getChartName(), middlewareDisableVersionDto.getChartVersion());
+        // 设置新的中间件禁用版本
+        for (MiddlewareDisableVersionDto dto : middlewareDisableVersionDtoList) {
+            middlewareDisableVersionService.add(new MiddlewareDisableVersionDo(dto));
+        }
     }
 
 

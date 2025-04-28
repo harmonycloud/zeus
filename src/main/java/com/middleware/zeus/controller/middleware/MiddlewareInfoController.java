@@ -1,5 +1,8 @@
 package com.middleware.zeus.controller.middleware;
 
+import com.dtflys.forest.annotation.Post;
+import com.middleware.zeus.common.model.middleware.MiddlewareDisableVersionDto;
+import com.middleware.zeus.common.model.middleware.MiddlewareDisableVersionDtoList;
 import com.middleware.zeus.service.middleware.MiddlewareInfoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -90,10 +93,37 @@ public class MiddlewareInfoController {
     @ApiImplicitParams({
             @ApiImplicitParam(name = "type", value = "类型", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "chartVersion", value = "chart版本", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping("/{type}/version")
     public BaseResult<List<MiddlewareVersionDto>> version(@PathVariable("type") String type,
-                                                          @RequestParam("chartVersion") String chartVersion) {
-        return BaseResult.ok(middlewareInfoService.version(type, chartVersion));
+                                                          @RequestParam("chartVersion") String chartVersion,
+                                                          @RequestParam("clusterId") String clusterId) {
+        return BaseResult.ok(middlewareInfoService.version(type, chartVersion, clusterId));
+    }
+
+    @ApiOperation(value = "查询指定中间件的禁用版本列表", notes = "查询指定中间件发布时的禁用版本列表")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "type", value = "类型", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "clusterId", value = "chart版本", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "chartVersion", value = "chart版本", paramType = "query", dataTypeClass = String.class),
+    })
+    @GetMapping("/{type}/disableVersion")
+    public BaseResult<List<MiddlewareDisableVersionDto>> disableVersion(@PathVariable("type") String type,
+                                                                        @RequestParam("clusterId") String clusterId,
+                                                                        @RequestParam("chartVersion") String chartVersion) {
+        return BaseResult.ok(middlewareInfoService.disableVersion(clusterId, type, chartVersion));
+    }
+
+    @ApiOperation(value = "查询指定中间件的禁用版本列表", notes = "查询指定中间件发布时的禁用版本列表")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "type", value = "类型", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareDisableVersionDtoList", value = "禁用版本列表", paramType = "query", dataTypeClass = MiddlewareDisableVersionDtoList.class)
+    })
+    @PostMapping("/{type}/disableVersion")
+    public BaseResult addDisableVersion(@PathVariable("type") String type,
+                                        @RequestBody MiddlewareDisableVersionDtoList middlewareDisableVersionDtoList) {
+        middlewareInfoService.setDisableVersion(middlewareDisableVersionDtoList.getMiddlewareDisableVersionDtoList());
+        return BaseResult.ok();
     }
 }
