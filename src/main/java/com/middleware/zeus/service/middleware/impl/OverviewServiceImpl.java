@@ -981,6 +981,57 @@ public class OverviewServiceImpl implements OverviewService {
     }
 
     @Override
+    public List<MiddlewareOverviewInfoDto> getClusterMiddlewareInfoDetail(String clusterId, String type) {
+        List<MiddlewareClusterDTO> clusterList = new ArrayList<>();
+        if (StringUtils.isNotEmpty(clusterId)) {
+            clusterList.add(clusterService.findById(clusterId));
+        } else {
+            clusterList.addAll(clusterService.listClusters());
+        }
+
+        List<MiddlewareOverviewInfoDto> list = new ArrayList<>();
+
+        for (MiddlewareClusterDTO cluster : clusterList) {
+            // 获取集群中间件管理组件安装状态，若未安装，则不统计该集群服务信息
+            if (!checkInstallMiddlewareController(cluster)) {
+                continue;
+            }
+            // 获取多集群中间件类型并集
+            try {
+                List<Middleware> middlewareList = middlewareCRService.list(cluster.getId(), null, type, false);
+                // 设置中间件所在的组织项目
+                List<ProjectNamespaceDo> projectNamespaceDoList = projectService.listNamespace(cluster.getId());
+                Map<String, ProjectNamespaceDo> projectNamespaceDoMap = projectNamespaceDoList.stream()
+                    .collect(Collectors.toMap(ProjectNamespaceDo::getNamespace, Function.identity()));
+
+                List<MiddlewareOverviewInfoDto> middlewareOverviewInfoDtoList =
+                    middlewareList.stream().map(middleware -> {
+                        MiddlewareOverviewInfoDto middlewareOverviewInfoDto = new MiddlewareOverviewInfoDto();
+                        middlewareOverviewInfoDto.setClusterId(cluster.getId());
+                        middlewareOverviewInfoDto.setNamespace(middleware.getNamespace());
+                        middlewareOverviewInfoDto.setName(middleware.getName());
+                        middlewareOverviewInfoDto.setStatus(middleware.getStatus());
+
+                        ProjectNamespaceDo projectNamespaceDo = projectNamespaceDoMap.get(middleware.getNamespace());
+                        if (projectNamespaceDo == null) {
+                            return null;
+                        }
+                        middlewareOverviewInfoDto.setOrganId(projectNamespaceDo.getOrganId());
+                        middlewareOverviewInfoDto.setProjectId(projectNamespaceDo.getProjectId());
+                        middlewareOverviewInfoDto.setProjectName(projectNamespaceDo.getProjectName());
+
+                        return middlewareOverviewInfoDto;
+                    }).filter(Objects::nonNull).collect(Collectors.toList());
+
+                list.addAll(middlewareOverviewInfoDtoList);
+            } catch (Exception e) {
+                log.debug("查询多集群中间件信息失败", e);
+            }
+        }
+        return list;
+    }
+
+    @Override
     public List<BeanOperationAudit> recentAudit() {
         return operationAuditService.listRecent(20);
     }

@@ -96,6 +96,14 @@ public interface OverviewService {
     List<MiddlewareBriefInfoDTO> getClusterMiddlewareInfo(String clusterId);
 
     /**
+     * 概览页获取指定中间件的详细信息
+     * @param clusterId 集群id
+     * @param type 中间件类型
+     * @return List<MiddlewareOverviewInfoDto>
+     */
+    List<MiddlewareOverviewInfoDto> getClusterMiddlewareInfoDetail(String clusterId, String type);
+
+    /**
      * 告警信息
      * @param clusterId
      * @param current

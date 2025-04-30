@@ -9,16 +9,14 @@ import com.middleware.zeus.annotation.Authority;
 import com.middleware.zeus.bean.AlertMessageDTO;
 import com.middleware.zeus.bean.BeanOperationAudit;
 import com.middleware.zeus.bean.PlatformOverviewDTO;
+import com.middleware.zeus.common.model.middleware.MiddlewareOverviewInfoDto;
 import com.middleware.zeus.service.middleware.OverviewService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
@@ -84,6 +82,17 @@ public class PlatformOverviewController {
     @GetMapping("/middlewareInfo")
     public BaseResult<List<MiddlewareBriefInfoDTO>> getMiddlewareInfo(@RequestParam(value = "clusterId", required = false) String clusterId) {
         return BaseResult.ok(overviewService.getClusterMiddlewareInfo(clusterId));
+    }
+
+    @ApiOperation(value = "概览页获取指定中间件的详细信息", notes = "概览页获取指定中间件的详细信息")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "type", value = "中间件类型", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class)
+    })
+    @GetMapping("/middlewareInfo/{type}")
+    public BaseResult<List<MiddlewareOverviewInfoDto>> getMiddlewareInfoDetail(@PathVariable("type") String type,
+                                                                               @RequestParam(value = "clusterId", required = false) String clusterId) {
+        return BaseResult.ok(overviewService.getClusterMiddlewareInfoDetail(clusterId, type));
     }
 
     @ApiOperation(value = "操作审计信息", notes = "操作审计信息")
