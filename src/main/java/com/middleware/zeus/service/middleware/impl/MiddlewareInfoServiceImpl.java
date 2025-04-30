@@ -564,12 +564,35 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         if (CollectionUtils.isEmpty(middlewareDisableVersionDtoList)) {
             return;
         }
+
         MiddlewareDisableVersionDto middlewareDisableVersionDto = middlewareDisableVersionDtoList.get(0);
+        String clusterId = middlewareDisableVersionDto.getClusterId();
+        String type = middlewareDisableVersionDto.getChartName();
+        String chartVersion = middlewareDisableVersionDto.getChartVersion();
+        // 获取当前的所有版本
+        BeanMiddlewareInfo mwInfo = get(type, chartVersion);
+        String versions = mwInfo.getVersion();
+        if (StringUtils.isEmpty(versions)) {
+            return;
+        }
+        // 根据逗号切分version，并转化为list
+        List<String> versionList = Arrays.asList(versions.split(","));
+        // 过滤获取应当被禁用了的版本，middlewareDisableVersionDtoList中的是被勾选为可用的版本列表
+        versionList = versionList.stream()
+                .filter(version -> middlewareDisableVersionDtoList.stream()
+                        .noneMatch(dto -> dto.getVersion().equals(version)))
+                .collect(Collectors.toList());
+
         // 清理当前的中间件禁用版本
-        middlewareDisableVersionService.clear(middlewareDisableVersionDto.getClusterId(),
-            middlewareDisableVersionDto.getChartName(), middlewareDisableVersionDto.getChartVersion());
+        middlewareDisableVersionService.clear(clusterId, type, chartVersion);
+
         // 设置新的中间件禁用版本
-        for (MiddlewareDisableVersionDto dto : middlewareDisableVersionDtoList) {
+        for (String version : versionList) {
+            MiddlewareDisableVersionDto dto = new MiddlewareDisableVersionDto();
+            dto.setClusterId(clusterId);
+            dto.setChartName(type);
+            dto.setChartVersion(chartVersion);
+            dto.setVersion(version);
             middlewareDisableVersionService.add(new MiddlewareDisableVersionDo(dto));
         }
     }
