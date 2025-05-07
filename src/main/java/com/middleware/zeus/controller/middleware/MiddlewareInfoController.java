@@ -115,7 +115,7 @@ public class MiddlewareInfoController {
         return BaseResult.ok(middlewareInfoService.disableVersion(clusterId, type, chartVersion));
     }
 
-    @ApiOperation(value = "查询指定中间件的禁用版本列表", notes = "查询指定中间件发布时的禁用版本列表")
+    @ApiOperation(value = "设置中间件禁用版本", notes = "设置中间件禁用版本")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "type", value = "类型", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "middlewareDisableVersionDtoList", value = "禁用版本列表", paramType = "query", dataTypeClass = MiddlewareDisableVersionDtoList.class)

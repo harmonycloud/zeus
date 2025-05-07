@@ -500,12 +500,9 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         if (StringUtils.isEmpty(version)) {
             return null;
         }
-        Map<String, List<String>> res;
-        if (type.equals(MiddlewareTypeEnum.POSTGRESQL.getType())) {
-            res = new TreeMap<>(Comparator.comparing(key -> Integer.valueOf(key.toString())).reversed());
-        } else {
-            res = new TreeMap<>();
-        }
+        // 所有中间件的版本默认倒序排列，默认发布最新版本的中间件
+        Map<String, List<String>> res = new TreeMap<>(Comparator.comparing(key -> Integer.valueOf(key.toString())).reversed());
+
         res.putAll(MiddlewareVersionUtil.convertVersion(version));
 
         List<MiddlewareVersionDto> versionList = new ArrayList<>();
