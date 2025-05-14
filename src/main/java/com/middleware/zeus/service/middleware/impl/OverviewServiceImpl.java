@@ -1028,6 +1028,22 @@ public class OverviewServiceImpl implements OverviewService {
                 log.debug("查询多集群中间件信息失败", e);
             }
         }
+        // 对list进行排序，优先运行异常，然后启动中等其他状态，最后运行正常
+        list.sort(Comparator.comparingInt(middleware -> {
+            if (StringUtils.isEmpty(middleware.getStatus())) {
+                return 0;
+            }
+            if (!NameConstant.RUNNING.equalsIgnoreCase(middleware.getStatus())) {
+                if ("Creating".equals(middleware.getStatus()) || "Recover".equals(middleware.getStatus())
+                        || "GracefulRestart".equals(middleware.getStatus()) || "Preparing".equals(middleware.getStatus())
+                        || "Deleted".equals(middleware.getStatus()) || "Deleting".equals(middleware.getStatus())) {
+                    return 1;
+                } else {
+                    return 0;
+                }
+            }
+            return 1; // 正常运行状态
+        }));
         return list;
     }
 
