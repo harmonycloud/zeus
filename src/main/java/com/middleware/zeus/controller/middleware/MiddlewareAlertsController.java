@@ -11,6 +11,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiImplicitParam;
 import io.swagger.annotations.ApiImplicitParams;
 import io.swagger.annotations.ApiOperation;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,6 +24,7 @@ import java.util.List;
 @Api(tags = {"监控告警","服务告警"}, value = "中间件告警")
 @RestController
 @RequestMapping(value = {"/clusters/{clusterId}/namespaces/{namespace}/middlewares/{middlewareName}/alert"})
+@Slf4j
 public class MiddlewareAlertsController {
 
     @Autowired
@@ -174,12 +176,19 @@ public class MiddlewareAlertsController {
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "username", value = "用户名", paramType = "path", dataTypeClass = Boolean.class),
     })
-    @DeleteMapping("/user/{username}")
+    @DeleteMapping("/user")
     public BaseResult removeAlertUser(@PathVariable("clusterId") String clusterId,
                                       @PathVariable("namespace") String namespace,
                                       @PathVariable("middlewareName") String middlewareName,
-                                      @PathVariable("username") String username) {
-        middlewareAlertsService.removeAlertUser(clusterId, namespace, middlewareName, username);
+                                      @RequestBody AlertUserListDto alertUserListDto) {
+        for (AlertUserDto alertUserDto : alertUserListDto.getAlertUserDtoList()) {
+            try {
+                middlewareAlertsService.removeAlertUser(clusterId, namespace, middlewareName,
+                    alertUserDto.getUsername());
+            } catch (Exception e) {
+                log.error("remove alert user failed: {}", alertUserDto.getUsername(), e);
+            }
+        }
         return BaseResult.ok();
     }
 
