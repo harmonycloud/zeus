@@ -2,11 +2,16 @@ package com.middleware.zeus.common.model.middleware;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
 
 /**
@@ -33,9 +38,6 @@ public class MiddlewareAlertsDTO {
     @ApiModelProperty("中间件名称")
     private String middlewareName;
 
-    @ApiModelProperty("是否启用")
-    private String enable;
-
     @ApiModelProperty("规则名称")
     private String alert;
 
@@ -54,11 +56,11 @@ public class MiddlewareAlertsDTO {
     @ApiModelProperty("中间件类型")
     private String type;
 
+    @ApiModelProperty("告警模式")
+    private String alertMode;
+
     @ApiModelProperty("执行规则")
     private String expr;
-
-    @ApiModelProperty("状态")
-    private String status;
 
     @ApiModelProperty("监控项(规则中文名)")
     private String description;
@@ -80,6 +82,12 @@ public class MiddlewareAlertsDTO {
 
     @ApiModelProperty("标签")
     private Map<String, String> labels;
+
+    @ApiModelProperty("完全匹配")
+    private Map<String, String> exactMatch;
+
+    @ApiModelProperty("模糊匹配")
+    private Map<String, String> fuzzyMatch;
 
     @ApiModelProperty("单位")
     private String unit;
