@@ -136,7 +136,7 @@ public interface MiddlewareInfoService {
      * @param chartVersion 中间件chart版本
      * @return List<MiddlewareVersionDto>
      */
-    List<MiddlewareVersionDto> version(String type, String chartVersion, String clusterId);
+    List<MiddlewareVersionDto> version(String type, String chartVersion, String clusterId, Boolean filter);
 
     /**
      * 查询指定中间件的禁用版本列表

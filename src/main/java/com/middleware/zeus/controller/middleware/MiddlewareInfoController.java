@@ -94,12 +94,14 @@ public class MiddlewareInfoController {
             @ApiImplicitParam(name = "type", value = "类型", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "chartVersion", value = "chart版本", paramType = "query", dataTypeClass = String.class),
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "filter", value = "是否过滤隐藏", required = false, paramType = "query", dataTypeClass = Boolean.class),
     })
     @GetMapping("/{type}/version")
     public BaseResult<List<MiddlewareVersionDto>> version(@PathVariable("type") String type,
                                                           @RequestParam("chartVersion") String chartVersion,
-                                                          @RequestParam("clusterId") String clusterId) {
-        return BaseResult.ok(middlewareInfoService.version(type, chartVersion, clusterId));
+                                                          @RequestParam("clusterId") String clusterId,
+                                                          @RequestParam(value = "filter", required = false, defaultValue = "true") Boolean filter) {
+        return BaseResult.ok(middlewareInfoService.version(type, chartVersion, clusterId, filter));
     }
 
     @ApiOperation(value = "查询指定中间件的禁用版本列表", notes = "查询指定中间件发布时的禁用版本列表")

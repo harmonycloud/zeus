@@ -494,7 +494,7 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
     }
 
     @Override
-    public List<MiddlewareVersionDto> version(String type, String chartVersion, String clusterId) {
+    public List<MiddlewareVersionDto> version(String type, String chartVersion, String clusterId, Boolean filter) {
         BeanMiddlewareInfo mwInfo = get(type, chartVersion);
         String version = mwInfo.getVersion();
         if (StringUtils.isEmpty(version)) {
