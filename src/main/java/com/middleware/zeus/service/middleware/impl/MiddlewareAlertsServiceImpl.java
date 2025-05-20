@@ -544,12 +544,15 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
     public List<AlertUserDto> listAlertUser(String clusterId, String namespace, String middlewareName) {
         // 获取告警用户列表
         List<AlertUserDo> alertUserDoList = alertUserService.list(clusterId, namespace, middlewareName, SERVICE);
-        // 返回封装数据
-        return alertUserDoList.stream().map(alertUserDo -> {
+        // 获取用户集
+        List<UserDto> userDtoList = userService.list(null);
+        // 返回封装数据并过滤未分配的告警用户
+        return userDtoList.stream().filter(userDto -> alertUserDoList.stream()
+                .anyMatch(alertUserDo -> alertUserDo.getUsername().equals(userDto.getUserName()))).map(userDto -> {
             AlertUserDto alertUserDto = new AlertUserDto();
-            alertUserDto.setUsername(alertUserDo.getUsername());
-            alertUserDto.setMailAlert(alertUserDo.getMailAlert());
-            alertUserDto.setMessageAlert(alertUserDo.getMessageAlert());
+            BeanUtils.copyProperties(userDto, alertUserDto);
+            alertUserDto.setMail(userDto.getEmail());
+            alertUserDto.setUsername(userDto.getUserName());
             return alertUserDto;
         }).collect(Collectors.toList());
     }
