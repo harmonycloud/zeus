@@ -6,6 +6,8 @@ import java.util.Map;
 
 import com.alibaba.fastjson.annotation.JSONField;
 
+import com.middleware.zeus.util.DateUtil;
+import com.middleware.zeus.util.date.DateUtils;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
@@ -164,7 +166,11 @@ public class MiddlewareLogAlertDo {
         // 设置默认alertmanager labels和annotations
         this.alertmanagerLabels = Map.of("source", "elastalert");
         this.alertmanagerAnnotations = Map.of("severity", alertDTto.getLevel());
-
+        // 当存在更新时间时，设置更新时间
+        if (alertDTto.getUpdateTime() != null) {
+            this.alertmanagerAnnotations.put("update_time",
+                DateUtils.DateToString(alertDTto.getUpdateTime(), DateUtils.YYYY_MM_DD_HH_MM_SS));
+        }
     }
 
 }

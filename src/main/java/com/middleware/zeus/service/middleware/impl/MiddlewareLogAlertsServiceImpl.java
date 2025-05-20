@@ -1,6 +1,7 @@
 package com.middleware.zeus.service.middleware.impl;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import com.middleware.zeus.common.enums.ErrorMessage;
@@ -62,6 +63,8 @@ public class MiddlewareLogAlertsServiceImpl implements MiddlewareLogAlertsServic
         if (configMap == null || configMap.getData() == null) {
             return;
         }
+        // 设置更新时间
+        middlewareLogAlertDto.setUpdateTime(new Date());
         // 数据结构转化
         MiddlewareLogAlertDo alertDo = new MiddlewareLogAlertDo(middlewareLogAlertDto);
 
@@ -98,6 +101,8 @@ public class MiddlewareLogAlertsServiceImpl implements MiddlewareLogAlertsServic
             return;
         }
 
+        // 设置更新时间
+        middlewareLogAlertDto.setUpdateTime(new Date());
         MiddlewareLogAlertDo alertDo = new MiddlewareLogAlertDo(middlewareLogAlertDto);
 
         configMap.getData().computeIfPresent(alertDo.getName() + ".yaml", (k, v) -> {

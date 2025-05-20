@@ -1,9 +1,12 @@
 package com.middleware.zeus.common.model.middleware;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.middleware.zeus.util.DateUtil;
+import com.middleware.zeus.util.date.DateUtils;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
@@ -76,6 +79,9 @@ public class MiddlewareLogAlertDto {
     @ApiModelProperty("标签")
     private Map<String, String> labels;
 
+    @ApiModelProperty("更新时间")
+    private Date updateTime;
+
     public MiddlewareLogAlertDto(MiddlewareLogAlertDo alertDo) {
         this.alert = alertDo.getName();
         this.alertMode = alertDo.getType();
@@ -115,6 +121,15 @@ public class MiddlewareLogAlertDto {
             this.exactMatch = exactMatch;
             this.fuzzyMatch = fuzzyMatch;
         }
+        
+        // 设置更新时间
+        if (alertDo.getAlertmanagerAnnotations().containsKey("update_time")) {
+            this.updateTime = DateUtils.parseDate(alertDo.getAlertmanagerAnnotations().get("update_time"),
+                DateUtils.YYYY_MM_DD_HH_MM_SS);
+        }
+
+        // todo 设置告警沉默时间
+
     }
 
 }
