@@ -174,7 +174,7 @@ public class MiddlewareAlertsController {
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "path", dataTypeClass = String.class),
             @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "username", value = "用户名", paramType = "path", dataTypeClass = Boolean.class),
+            @ApiImplicitParam(name = "alertUserListDto", value = "用户列表", paramType = "query", dataTypeClass = AlertUserListDto.class),
     })
     @DeleteMapping("/user")
     public BaseResult removeAlertUser(@PathVariable("clusterId") String clusterId,
