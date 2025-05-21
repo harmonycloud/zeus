@@ -81,7 +81,7 @@ public class EsServiceImpl extends AbstractMiddlewareService implements EsServic
     private ClusterService clusterService;
 
     @Override
-    public RestHighLevelClient getEsClient(String clusterId) throws Exception {
+    public RestHighLevelClient getEsClient(String clusterId) {
         RestHighLevelClient client = esClients.get(clusterId);
         if (client == null) {
             client = this.createEsClient(clusterId);

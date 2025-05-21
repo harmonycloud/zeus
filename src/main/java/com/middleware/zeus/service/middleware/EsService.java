@@ -21,7 +21,7 @@ public interface EsService {
      * @param clusterId 集群信息
      * @return
      */
-    RestHighLevelClient getEsClient(String clusterId) throws Exception;
+    RestHighLevelClient getEsClient(String clusterId);
 
     /**
      * 重置es客户端（集群信息修改，需要重置）

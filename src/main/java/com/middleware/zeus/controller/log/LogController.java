@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
+import java.util.List;
 
 /**
  * @author liyinlong
@@ -29,7 +30,7 @@ import javax.servlet.http.HttpServletResponse;
  */
 @RestController
 @Api(tags = {"服务列表", "日志详情"}, value = "应用日志")
-@RequestMapping("/clusters/{clusterId}/namespaces/{namespace}/middlewares/{middlewareName}/applogs")
+@RequestMapping("/clusters/{clusterId}/namespaces/{namespace}/middlewares/{middlewareName}")
 public class LogController {
 
     private Logger logger = LoggerFactory.getLogger(this.getClass());
@@ -44,7 +45,7 @@ public class LogController {
      */
     @ExcludeAuditMethod
     @ApiOperation(value = "查询日志", notes = "查询日志")
-    @PostMapping
+    @PostMapping("/applogs")
     @Authority(power = 1)
     public BaseResult queryLog(@PathVariable("clusterId") String clusterId,
                                @PathVariable("namespace") String namespace,
@@ -72,7 +73,7 @@ public class LogController {
      * @date 2021/6/21 5:05 下午
      */
     @ApiOperation(value = "导出日志", notes = "导出查询日志")
-    @GetMapping("/export")
+    @GetMapping("/applogs/export")
     @Authority(power = 1)
     public void exportLog(@PathVariable("clusterId") String clusterId,
                           @PathVariable("namespace") String namespace,
@@ -93,7 +94,7 @@ public class LogController {
      * @date 2021/6/21 5:05 下午
      */
     @ApiOperation(value = "查询pod日志文件列表", notes = "从es获取pod的日志文件列表")
-    @PostMapping("/filenames")
+    @PostMapping("/applogs/filenames")
     @Authority(power = 1)
     public BaseResult listLogFilenames(@PathVariable("clusterId") String clusterId,
                                        @PathVariable("namespace") String namespace,
@@ -120,13 +121,29 @@ public class LogController {
             @ApiImplicitParam(name = "auditLogQuery", value = "中间件日志查询", paramType = "query", dataTypeClass = MiddlewareLogQuery.class),
     })
     @Authority(power = 1)
-    @PostMapping("/audit")
+    @PostMapping("/applogs/audit")
     public BaseResult<PageObject<MysqlLogDTO>> queryAuditSql(@PathVariable("clusterId") String clusterId,
                                                              @PathVariable("namespace") String namespace,
                                                              @PathVariable("middlewareName") String middlewareName,
                                                              @RequestBody MiddlewareLogQuery auditLogQuery) throws Exception {
         auditLogQuery.setClusterId(clusterId).setNamespace(namespace).setMiddlewareName(middlewareName);
         return BaseResult.ok(logService.andit(auditLogQuery));
+    }
+
+    @ApiOperation(value = "查询索引列信息", notes = "查询索引列信息")
+    @ApiImplicitParams({
+            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "namespace", value = "命名空间", paramType = "query", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "middlewareName", value = "中间件名称", paramType = "path", dataTypeClass = String.class),
+            @ApiImplicitParam(name = "index", value = "索引", paramType = "path", dataTypeClass = String.class),
+    })
+    @Authority(power = 1)
+    @GetMapping("/index/{index}/column")
+    public BaseResult<List<String>> getIndexColumnInfo(@PathVariable("clusterId") String clusterId,
+                                                       @PathVariable("namespace") String namespace,
+                                                       @PathVariable("middlewareName") String middlewareName,
+                                                       @PathVariable("index") String index) {
+        return BaseResult.ok(logService.getIndexColumnInfo(clusterId, namespace, index));
     }
 
 

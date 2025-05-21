@@ -8,6 +8,7 @@ import com.middleware.zeus.common.model.middleware.MysqlLogDTO;
 import com.middleware.zeus.util.page.PageObject;
 
 import javax.servlet.http.HttpServletResponse;
+import java.util.List;
 
 /**
  * @author dengyulong
@@ -84,5 +85,13 @@ public interface LogService {
      * @throws Exception 查询条件转换失败异常
      */
     PageObject<MysqlLogDTO> andit(MiddlewareLogQuery middlewareLogQuery) throws Exception;
+
+    /**
+     * 查询索引列信息
+     * @param clusterId 集群id
+     * @param namespace 命名空间
+     * @param index 索引名称
+     */
+    List<String> getIndexColumnInfo(String clusterId, String namespace, String index);
 
 }

@@ -20,11 +20,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.ConnectionClosedException;
 import org.elasticsearch.ElasticsearchStatusException;
+import org.elasticsearch.client.indices.GetIndexRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchScrollRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.client.indices.GetIndexResponse;
 import org.elasticsearch.core.TimeValue;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -493,6 +495,49 @@ public class LogServiceImpl implements LogService {
             e.printStackTrace();
         }
         return slowSqlDTOS;
+    }
+
+    @Override
+    public List<String> getIndexColumnInfo(String clusterId, String namespace, String index) {
+        List<String> columns = new ArrayList<>();
+
+        // 获取client
+        RestHighLevelClient client = esService.getEsClient(clusterId);
+
+
+        String[] indices = null;
+
+        GetIndexRequest request = new GetIndexRequest(index);
+        try {
+            GetIndexResponse response = client.indices().get(request, RequestOptions.DEFAULT);
+            indices = response.getIndices();
+        } catch (Exception e) {
+            log.error("获取索引信息出错了", e);
+            return columns;
+        }
+
+        if (indices == null || indices.length == 0) {
+            return columns;
+        }
+        // 构建查询请求
+        SearchRequest searchRequest = new SearchRequest(indices);
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        searchSourceBuilder.size(1); // 只需要一条数据来获取字段信息
+        searchRequest.source(searchSourceBuilder);
+
+        // 执行查询
+        try {
+            SearchResponse response = client.search(searchRequest, RequestOptions.DEFAULT);
+            // 从第一条文档中获取所有字段名
+            if (response.getHits().getHits().length > 0) {
+                SearchHit hit = response.getHits().getHits()[0];
+                Map<String, Object> sourceMap = hit.getSourceAsMap();
+                columns.addAll(sourceMap.keySet());
+            }
+        } catch (Exception e) {
+            log.error("获取索引字段信息出错了", e);
+        }
+        return columns;
     }
 
     /**
