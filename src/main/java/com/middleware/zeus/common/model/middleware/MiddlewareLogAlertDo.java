@@ -5,9 +5,8 @@ import java.util.List;
 import java.util.Map;
 
 import com.alibaba.fastjson.annotation.JSONField;
-
-import com.middleware.zeus.util.DateUtil;
 import com.middleware.zeus.util.date.DateUtils;
+
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
@@ -124,12 +123,14 @@ public class MiddlewareLogAlertDo {
         filterList.add(new Filter().setTerm(Map.of("k8s_pod_namespace", alertDTto.getNamespace())));
         // 对用户设置的命中规则进行处理
         // 设置模糊匹配规则
-        alertDTto.getFuzzyMatch().forEach((k, v) -> {
-            filterList.add(new Filter().setQueryString(Map.of(k, v)));
-        });
-        // 设置玩去哪匹配规则
-        alertDTto.getExactMatch().forEach((k, v) -> {
-            filterList.add(new Filter().setTerm(Map.of(k, v)));
+        alertDTto.getMatchRuleList().forEach(rule -> {
+            // 若fuzzy为true，则为模糊匹配
+            if (rule.getFuzzy() != null && rule.getFuzzy()) {
+                filterList.add(new Filter().setQueryString(Map.of(rule.getKey(), rule.getValue())));
+            }
+            if (rule.getFuzzy() != null && !rule.getFuzzy()) {
+                filterList.add(new Filter().setTerm(Map.of(rule.getKey(), rule.getValue())));
+            }
         });
         this.filter = filterList;
 

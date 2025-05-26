@@ -1,12 +1,9 @@
 package com.middleware.zeus.common.model.middleware;
 
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
-import com.middleware.zeus.util.DateUtil;
 import com.middleware.zeus.util.date.DateUtils;
+
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
@@ -58,11 +55,8 @@ public class MiddlewareLogAlertDto {
     @ApiModelProperty("黑名单")
     private List<String> blacklist;
 
-    @ApiModelProperty("完全匹配")
-    private Map<String, String> exactMatch;
-
-    @ApiModelProperty("模糊匹配")
-    private Map<String, String> fuzzyMatch;
+    @ApiModelProperty("匹配规则")
+    private List<MatchRule> matchRuleList;
 
     @ApiModelProperty("周期")
     private Integer timeframe;
@@ -73,6 +67,9 @@ public class MiddlewareLogAlertDto {
     @ApiModelProperty("沉默时间")
     private Integer silence;
 
+    @ApiModelProperty("沉没事件单位")
+    private String unit;
+
     @ApiModelProperty("备注")
     private Map<String, String> annotations;
 
@@ -81,6 +78,20 @@ public class MiddlewareLogAlertDto {
 
     @ApiModelProperty("更新时间")
     private Date updateTime;
+
+    @Data
+    @Accessors(chain = true)
+    public static class MatchRule {
+
+        @ApiModelProperty("键值对key")
+        private String key;
+
+        @ApiModelProperty("键值对value")
+        private String value;
+
+        @ApiModelProperty("模糊匹配")
+        private Boolean fuzzy;
+    }
 
     public MiddlewareLogAlertDto(MiddlewareLogAlertDo alertDo) {
         this.alert = alertDo.getName();
@@ -106,21 +117,27 @@ public class MiddlewareLogAlertDto {
             this.content = alertText;
         }
 
-        // 通过解析filter中的内容，分别设置完全匹配和模糊匹配的规则
+        List<MatchRule> matchRuleList = new ArrayList<>();
+        // 通过解析filter中的内容，设置完全匹配和模糊匹配的规则
         if (alertDo.getFilter() != null) {
             Map<String, String> exactMatch = new HashMap<>();
             Map<String, String> fuzzyMatch = new HashMap<>();
             for (MiddlewareLogAlertDo.Filter filter : alertDo.getFilter()) {
                 if (filter.getTerm() != null) {
-                    exactMatch.putAll(filter.getTerm());
+                    for (String key : filter.getTerm().keySet()) {
+                        matchRuleList
+                            .add(new MatchRule().setKey(key).setValue(filter.getTerm().get(key)).setFuzzy(false));
+                    }
                 }
                 if (filter.getQueryString() != null) {
-                    fuzzyMatch.putAll(filter.getQueryString());
+                    for (String key : filter.getQueryString().keySet()) {
+                        matchRuleList.add(
+                            new MatchRule().setKey(key).setValue(filter.getQueryString().get(key)).setFuzzy(true));
+                    }
                 }
             }
-            this.exactMatch = exactMatch;
-            this.fuzzyMatch = fuzzyMatch;
         }
+        this.matchRuleList = matchRuleList;
         
         // 设置更新时间
         if (alertDo.getAlertmanagerAnnotations().containsKey("update_time")) {
