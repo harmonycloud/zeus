@@ -105,23 +105,25 @@ public class MiddlewareLogAlertDo {
         private Integer minutes;
     }
 
-    public MiddlewareLogAlertDo(MiddlewareLogAlertDto alertDTto) {
-        this.name = alertDTto.getAlert();
-        this.type = alertDTto.getAlertMode();
-        this.index = alertDTto.getIndex();
-        this.alert = List.of(alertDTto.getAlert());
+    public MiddlewareLogAlertDo(MiddlewareLogAlertDto alertDto) {
+        this.name = alertDto.getAlert();
+        this.type = alertDto.getAlertMode();
+        this.index = alertDto.getIndex();
+        this.alert = List.of(alertDto.getAlert());
+        this.compareKey = alertDto.getCompareKey();
+        this.blacklist = alertDto.getBlacklist();
 
-        if (alertDTto.getAlertMode().equals("frequency")) {
+        if (alertDto.getAlertMode().equals("frequency")) {
             TimeFrame timeframe = new TimeFrame();
-            timeframe.setMinutes(alertDTto.getTimeframe());
+            timeframe.setMinutes(alertDto.getTimeframe());
             this.timeframe = timeframe;
-            this.numEvents = alertDTto.getNumEvents();
+            this.numEvents = alertDto.getNumEvents();
         }
 
         List<Filter> filterList = new ArrayList<>();
         // 对用户设置的命中规则进行处理
         // 设置模糊匹配规则
-        alertDTto.getMatchRuleList().forEach(rule -> {
+        alertDto.getMatchRuleList().forEach(rule -> {
             // 若fuzzy为true，则为模糊匹配
             if (rule.getFuzzy() != null && rule.getFuzzy()) {
                 filterList.add(new Filter().setQueryString(Map.of(rule.getKey(), rule.getValue())));
@@ -131,7 +133,7 @@ public class MiddlewareLogAlertDo {
         });
         this.filter = filterList;
 
-        String content = alertDTto.getContent();
+        String content = alertDto.getContent();
         if (content != null) {
             StringBuilder updatedContent = new StringBuilder(content);
             int index = 0;
@@ -150,11 +152,11 @@ public class MiddlewareLogAlertDo {
             this.alertTextArgs = alertTextArgs;
             this.alertText = updatedContent.toString();
         }
-        
+
         // 设置alertmanager信息
         this.alertTextType = "alert_text_only";
         this.alertmanagerHosts = List.of("http://alertmanager-alertmanager.monitoring:9093");
-        this.alertmanagerAlertname = alertDTto.getAlert();
+        this.alertmanagerAlertname = alertDto.getAlert();
 
         // 设置默认alertmanager resolve time
         ResolveTime resolveTime = new ResolveTime();
@@ -163,14 +165,22 @@ public class MiddlewareLogAlertDo {
 
         // 设置默认alertmanager labels和annotations
         this.alertmanagerLabels = Map.of("source", "elastalert");
-        Map<String, String> alertmanagerAnnotations = new HashMap<>();
-        alertmanagerAnnotations.put("severity", alertDTto.getLevel());
+        this.alertmanagerAnnotations = new HashMap<>();
+        this.alertmanagerAnnotations.put("severity", alertDto.getLevel());
         // 当存在更新时间时，设置更新时间
-        if (alertDTto.getUpdateTime() != null) {
-            alertmanagerAnnotations.put("update_time",
-                DateUtils.DateToString(alertDTto.getUpdateTime(), DateUtils.YYYY_MM_DD_HH_MM_SS));
+        if (alertDto.getUpdateTime() != null) {
+            this.alertmanagerAnnotations.put("update_time",
+                DateUtils.DateToString(alertDto.getUpdateTime(), DateUtils.YYYY_MM_DD_HH_MM_SS));
         }
-        this.alertmanagerAnnotations = alertmanagerAnnotations;
+        // 当存在静默时间时，设置静默时间
+        if (alertDto.getSilence() != null) {
+            this.alertmanagerAnnotations.put("silence", alertDto.getSilence().toString());
+        }
+
+        // 当存在静默时间单位
+        if (alertDto.getUnit() != null) {
+            this.alertmanagerAnnotations.put("unit", alertDto.getUnit());
+        }
     }
 
 }

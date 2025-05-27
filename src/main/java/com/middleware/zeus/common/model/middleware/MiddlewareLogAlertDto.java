@@ -101,14 +101,14 @@ public class MiddlewareLogAlertDto {
         this.index = alertDo.getIndex();
         this.compareKey = alertDo.getCompareKey();
         this.blacklist = alertDo.getBlacklist();
-        if (alertDo.getTimeframe() != null){
+        if (alertDo.getTimeframe() != null) {
             this.timeframe = alertDo.getTimeframe().getMinutes();
         }
         this.numEvents = alertDo.getNumEvents();
         this.annotations = alertDo.getAlertmanagerAnnotations();
         this.labels = alertDo.getAlertmanagerLabels();
         // 从annotations中获取告警等级
-        if (alertDo.getAlertmanagerAnnotations().containsKey("severity")){
+        if (alertDo.getAlertmanagerAnnotations().containsKey("severity")) {
             this.level = alertDo.getAlertmanagerAnnotations().get("severity");
         }
 
@@ -124,8 +124,6 @@ public class MiddlewareLogAlertDto {
         List<MatchRule> matchRuleList = new ArrayList<>();
         // 通过解析filter中的内容，设置完全匹配和模糊匹配的规则
         if (alertDo.getFilter() != null) {
-            Map<String, String> exactMatch = new HashMap<>();
-            Map<String, String> fuzzyMatch = new HashMap<>();
             for (MiddlewareLogAlertDo.Filter filter : alertDo.getFilter()) {
                 if (filter.getTerm() != null) {
                     for (String key : filter.getTerm().keySet()) {
@@ -135,22 +133,28 @@ public class MiddlewareLogAlertDto {
                 }
                 if (filter.getQueryString() != null) {
                     for (String key : filter.getQueryString().keySet()) {
-                        matchRuleList.add(
-                            new MatchRule().setKey(key).setValue(filter.getQueryString().get(key)).setFuzzy(true));
+                        matchRuleList
+                            .add(new MatchRule().setKey(key).setValue(filter.getQueryString().get(key)).setFuzzy(true));
                     }
                 }
             }
         }
         this.matchRuleList = matchRuleList;
-        
+
         // 设置更新时间
         if (alertDo.getAlertmanagerAnnotations().containsKey("update_time")) {
             this.updateTime = DateUtils.parseDate(alertDo.getAlertmanagerAnnotations().get("update_time"),
                 DateUtils.YYYY_MM_DD_HH_MM_SS);
         }
 
-        // todo 设置告警沉默时间
-
+        // 设置告警沉默时间
+        if (alertDo.getAlertmanagerAnnotations().containsKey("silence")) {
+            this.silence = Integer.parseInt(alertDo.getAlertmanagerAnnotations().get("silence"));
+        }
+        // 设置告警时间单位
+        if (alertDo.getAlertmanagerAnnotations().containsKey("unit")) {
+            this.unit = alertDo.getAlertmanagerAnnotations().get("unit");
+        }
     }
 
 }
