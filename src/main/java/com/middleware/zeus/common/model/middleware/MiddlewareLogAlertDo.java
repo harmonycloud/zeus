@@ -1,6 +1,7 @@
 package com.middleware.zeus.common.model.middleware;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -118,17 +119,13 @@ public class MiddlewareLogAlertDo {
         }
 
         List<Filter> filterList = new ArrayList<>();
-        // 设置中间件通用的命中规则
-        filterList.add(new Filter().setTerm(Map.of("middleware_name", alertDTto.getMiddlewareName())));
-        filterList.add(new Filter().setTerm(Map.of("k8s_pod_namespace", alertDTto.getNamespace())));
         // 对用户设置的命中规则进行处理
         // 设置模糊匹配规则
         alertDTto.getMatchRuleList().forEach(rule -> {
             // 若fuzzy为true，则为模糊匹配
             if (rule.getFuzzy() != null && rule.getFuzzy()) {
                 filterList.add(new Filter().setQueryString(Map.of(rule.getKey(), rule.getValue())));
-            }
-            if (rule.getFuzzy() != null && !rule.getFuzzy()) {
+            } else {
                 filterList.add(new Filter().setTerm(Map.of(rule.getKey(), rule.getValue())));
             }
         });
@@ -163,15 +160,17 @@ public class MiddlewareLogAlertDo {
         ResolveTime resolveTime = new ResolveTime();
         resolveTime.setMinutes(10);
         this.alertmanagerResolveTime = resolveTime;
-        
+
         // 设置默认alertmanager labels和annotations
         this.alertmanagerLabels = Map.of("source", "elastalert");
-        this.alertmanagerAnnotations = Map.of("severity", alertDTto.getLevel());
+        Map<String, String> alertmanagerAnnotations = new HashMap<>();
+        alertmanagerAnnotations.put("severity", alertDTto.getLevel());
         // 当存在更新时间时，设置更新时间
         if (alertDTto.getUpdateTime() != null) {
-            this.alertmanagerAnnotations.put("update_time",
+            alertmanagerAnnotations.put("update_time",
                 DateUtils.DateToString(alertDTto.getUpdateTime(), DateUtils.YYYY_MM_DD_HH_MM_SS));
         }
+        this.alertmanagerAnnotations = alertmanagerAnnotations;
     }
 
 }

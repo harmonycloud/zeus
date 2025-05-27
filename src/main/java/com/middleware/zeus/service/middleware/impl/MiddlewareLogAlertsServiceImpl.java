@@ -65,6 +65,14 @@ public class MiddlewareLogAlertsServiceImpl implements MiddlewareLogAlertsServic
         }
         // 设置更新时间
         middlewareLogAlertDto.setUpdateTime(new Date());
+        // 设置默认匹配规则
+        if (middlewareLogAlertDto.getMatchRuleList() == null || middlewareLogAlertDto.getMatchRuleList().isEmpty()) {
+            middlewareLogAlertDto.setMatchRuleList(new ArrayList<>());
+        }
+        middlewareLogAlertDto.getMatchRuleList().add(new MiddlewareLogAlertDto.MatchRule("middleware_name.keyword",
+            middlewareLogAlertDto.getMiddlewareName(), false));
+        middlewareLogAlertDto.getMatchRuleList()
+            .add(new MiddlewareLogAlertDto.MatchRule("k8s_pod_namesapce", middlewareLogAlertDto.getNamespace(), false));
         // 数据结构转化
         MiddlewareLogAlertDo alertDo = new MiddlewareLogAlertDo(middlewareLogAlertDto);
 

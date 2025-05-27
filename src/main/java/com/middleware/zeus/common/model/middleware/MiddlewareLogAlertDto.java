@@ -81,6 +81,8 @@ public class MiddlewareLogAlertDto {
 
     @Data
     @Accessors(chain = true)
+    @AllArgsConstructor
+    @NoArgsConstructor
     public static class MatchRule {
 
         @ApiModelProperty("键值对key")
@@ -99,7 +101,9 @@ public class MiddlewareLogAlertDto {
         this.index = alertDo.getIndex();
         this.compareKey = alertDo.getCompareKey();
         this.blacklist = alertDo.getBlacklist();
-        this.timeframe = alertDo.getTimeframe().getMinutes();
+        if (alertDo.getTimeframe() != null){
+            this.timeframe = alertDo.getTimeframe().getMinutes();
+        }
         this.numEvents = alertDo.getNumEvents();
         this.annotations = alertDo.getAlertmanagerAnnotations();
         this.labels = alertDo.getAlertmanagerLabels();
