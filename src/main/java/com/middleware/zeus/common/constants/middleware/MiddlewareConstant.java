@@ -117,4 +117,10 @@ public class MiddlewareConstant {
 
     public static final String NAMESERVER = "nameserver";
 
+    public static final String K8S_POD_NAMESPACE = "k8s_pod_namesapce";
+    public static final String YAML = "yaml";
+    public static final String MIDDLEWARE_NAME = "middleware_name";
+    public static final String KEYWORD = "keyword";
+    public static final String ALERT_RULE = "alertrule";
+
 }

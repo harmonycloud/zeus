@@ -110,4 +110,7 @@ public class MiddlewareAlertsDTO {
     @ApiModelProperty("ip")
     private String ip;
 
+    @ApiModelProperty("自定义规则")
+    private Boolean custom;
+
 }

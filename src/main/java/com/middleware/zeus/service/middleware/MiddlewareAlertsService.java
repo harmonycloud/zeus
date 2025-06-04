@@ -63,17 +63,14 @@ public interface MiddlewareAlertsService {
     /**
      * 删除告警规则
      *
-     * @param clusterId
-     *            集群id
-     * @param namespace
-     *            命名空间
-     * @param middlewareName
-     *            中间件名称
-     * @param alert
-     *            告警名称
+     * @param clusterId 集群id
+     * @param namespace 命名空间
+     * @param middlewareName 中间件名称
+     * @param alert 告警名称
+     * @param type 中间件类型
      * @return List<BeanPrometheusRules>
      */
-    void deleteRules(String clusterId, String namespace, String middlewareName, String alert);
+    void deleteRules(String clusterId, String namespace, String middlewareName, String type, String alert);
 
     /***
      *
@@ -91,7 +88,7 @@ public interface MiddlewareAlertsService {
      *            helm包
      * @return String
      */
-    String updateAlerts2Mysql(HelmChartFile helmChart);
+    //String updateAlerts2Mysql(HelmChartFile helmChart);
 
     /**
      * 同步告警规则进数据库
@@ -102,7 +99,7 @@ public interface MiddlewareAlertsService {
      *            是否更新
      * @return String
      */
-    String updateAlerts2Mysql(HelmChartFile helmChart, Boolean update);
+    //String updateAlerts2Mysql(HelmChartFile helmChart, Boolean update);
 
     /**
      * 修改告警规则

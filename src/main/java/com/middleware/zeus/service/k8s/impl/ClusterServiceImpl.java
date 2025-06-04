@@ -365,7 +365,7 @@ public class ClusterServiceImpl extends AbstractClusterService implements Cluste
                 if (f.getAbsolutePath().contains(".tgz")) {
                     HelmChartFile chartFile = helmChartService.getHelmChartFromFile(null, null, f);
                     middlewareInfoService.insert(chartFile, f);
-                    middlewareAlertsService.updateAlerts2Mysql(chartFile);
+                    //middlewareAlertsService.updateAlerts2Mysql(chartFile);
                 }
             });
         }
