@@ -228,6 +228,10 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
         }
         List<Map<String, String>> dependencies = infoMap.containsKey("dependencies")
             ? (List<Map<String, String>>)infoMap.get("dependencies") : new ArrayList<>();
+        // 过滤多种可能存在的依赖，获取其中的operator
+        dependencies = dependencies.stream()
+            .filter(dependency -> dependency.get("alias") != null && dependency.get("alias").contains("operator"))
+            .collect(Collectors.toList());
         String chartName = infoMap.get("name") == null ? null : infoMap.get("name").toString();
         String chartVersion = infoMap.get("version") == null ? null : infoMap.get("version").toString();
 
