@@ -101,12 +101,12 @@ public class MiddlewareLogAlertsServiceImpl implements MiddlewareLogAlertsServic
         MiddlewareLogAlertDo alertDo = new MiddlewareLogAlertDo(middlewareLogAlertDto);
 
         // 告警名称同名校验
-        if (customElasticAlert.containsKey(alertDo.getName()) || elasticAlert.containsKey(alertDo.getName())) {
+        if (customElasticAlert.containsKey(alertDo.getAlertmanagerAlertname()) || elasticAlert.containsKey(alertDo.getAlertmanagerAlertname())) {
             throw new BusinessException(ErrorMessage.LOG_ALERT_NAME_EXISTS);
         }
 
         // 将对象转换为jsonObject，并添加进values
-        customElasticAlert.put(alertDo.getName(),
+        customElasticAlert.put(alertDo.getAlertmanagerAlertname(),
             JSONObject.parseObject(JSONObject.toJSONString(alertDo)));
 
         values.put("customElasticAlert", customElasticAlert);
@@ -145,7 +145,7 @@ public class MiddlewareLogAlertsServiceImpl implements MiddlewareLogAlertsServic
         MiddlewareLogAlertDo alertDo = new MiddlewareLogAlertDo(middlewareLogAlertDto);
 
         // 更新原生告警规则
-        elasticAlert.computeIfPresent(alertDo.getName(), (k, v) -> {
+        elasticAlert.computeIfPresent(alertDo.getAlertmanagerAlertname(), (k, v) -> {
             // 序列化
             JSONObject rule = JSONObject.parseObject(JSONObject.toJSONString(v));
             rule.put("alertLevel", middlewareLogAlertDto.getLevel());
@@ -157,7 +157,7 @@ public class MiddlewareLogAlertsServiceImpl implements MiddlewareLogAlertsServic
         });
         values.put("elasticAlert", elasticAlert);
         // 更新自定义告警规则
-        customElasticAlert.computeIfPresent(alertDo.getName(), (k, v) -> {
+        customElasticAlert.computeIfPresent(alertDo.getAlertmanagerAlertname(), (k, v) -> {
             // 序列化
             JSONObject rule = JSONObject.parseObject(JSONObject.toJSONString(v));
             rule.put("alertLevel", middlewareLogAlertDto.getLevel());

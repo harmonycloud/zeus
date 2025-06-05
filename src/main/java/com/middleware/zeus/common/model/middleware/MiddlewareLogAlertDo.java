@@ -26,9 +26,6 @@ import lombok.experimental.Accessors;
 @Accessors(chain = true)
 public class MiddlewareLogAlertDo {
 
-    @ApiModelProperty("告警名称")
-    private String name;
-
     @ApiModelProperty("告警类型")
     private String type;
 
@@ -106,7 +103,6 @@ public class MiddlewareLogAlertDo {
     }
 
     public MiddlewareLogAlertDo(MiddlewareLogAlertDto alertDto) {
-        this.name = alertDto.getAlert();
         this.type = alertDto.getAlertMode();
         this.index = alertDto.getIndex();
         this.alert = List.of(alertDto.getAlert());

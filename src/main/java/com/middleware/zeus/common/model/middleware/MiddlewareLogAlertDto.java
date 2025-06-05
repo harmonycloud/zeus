@@ -96,7 +96,7 @@ public class MiddlewareLogAlertDto {
     }
 
     public MiddlewareLogAlertDto(MiddlewareLogAlertDo alertDo) {
-        this.alert = alertDo.getName();
+        this.alert = alertDo.getAlertmanagerAlertname();
         this.alertMode = alertDo.getType();
         this.index = alertDo.getIndex();
         this.compareKey = alertDo.getCompareKey();
