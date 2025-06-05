@@ -1,21 +1,29 @@
 package com.middleware.zeus.service.middleware.impl;
 
+import static com.middleware.zeus.common.constants.CommonConstant.DOT;
+import static com.middleware.zeus.common.constants.CommonConstant.LINE;
+import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.*;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import com.middleware.zeus.common.enums.ErrorMessage;
-import com.middleware.zeus.common.exception.BusinessException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
+import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
+import com.middleware.zeus.common.enums.ErrorMessage;
+import com.middleware.zeus.common.exception.BusinessException;
+import com.middleware.zeus.common.model.middleware.Middleware;
+import com.middleware.zeus.common.model.middleware.MiddlewareClusterDTO;
 import com.middleware.zeus.common.model.middleware.MiddlewareLogAlertDo;
 import com.middleware.zeus.common.model.middleware.MiddlewareLogAlertDto;
+import com.middleware.zeus.service.k8s.ClusterService;
 import com.middleware.zeus.service.k8s.ConfigMapService;
 import com.middleware.zeus.service.middleware.MiddlewareLogAlertsService;
+import com.middleware.zeus.service.registry.HelmChartService;
 
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import lombok.extern.slf4j.Slf4j;
@@ -30,12 +38,16 @@ public class MiddlewareLogAlertsServiceImpl implements MiddlewareLogAlertsServic
 
     @Autowired
     private ConfigMapService configMapService;
+    @Autowired
+    private HelmChartService helmChartService;
+    @Autowired
+    private ClusterService clusterService;
 
 
     @Override
     public List<MiddlewareLogAlertDto> listRules(String clusterId, String namespace, String middlewareName, String type) {
         // 查询该中间件的config
-        ConfigMap configMap = configMapService.get(clusterId, namespace, middlewareName + "-alertrule-code28000");
+        ConfigMap configMap = configMapService.get(clusterId, namespace, middlewareName + LINE + ALERT_RULE);
 
         List<MiddlewareLogAlertDto> middlewareLogAlertDtoList = new ArrayList<>();
         configMap.getData().forEach((k, v) -> {
@@ -57,43 +69,52 @@ public class MiddlewareLogAlertsServiceImpl implements MiddlewareLogAlertsServic
         String clusterId = middlewareLogAlertDto.getClusterId();
         String namespace = middlewareLogAlertDto.getNamespace();
         String middlewareName = middlewareLogAlertDto.getMiddlewareName();
+        String type = middlewareLogAlertDto.getType();
 
-        // 获取对应configmap
-        ConfigMap configMap = configMapService.get(clusterId, namespace, middlewareName + "-alertrule-code28000");
-        if (configMap == null || configMap.getData() == null) {
+        MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
+
+        JSONObject values = helmChartService.getInstalledValues(middlewareName, namespace, cluster);
+        if (values == null) {
             return;
         }
+        JSONObject customElasticAlert = values.getJSONObject("customElasticAlert");
+        if (customElasticAlert == null) {
+            customElasticAlert = new JSONObject();
+        }
+
+        JSONObject elasticAlert = values.getJSONObject("elasticAlert");
+        if (elasticAlert == null) {
+            elasticAlert = new JSONObject();
+        }
+
         // 设置更新时间
         middlewareLogAlertDto.setUpdateTime(new Date());
         // 设置默认匹配规则
         if (middlewareLogAlertDto.getMatchRuleList() == null || middlewareLogAlertDto.getMatchRuleList().isEmpty()) {
             middlewareLogAlertDto.setMatchRuleList(new ArrayList<>());
         }
-        middlewareLogAlertDto.getMatchRuleList().add(new MiddlewareLogAlertDto.MatchRule("middleware_name.keyword",
-            middlewareLogAlertDto.getMiddlewareName(), false));
+        middlewareLogAlertDto.getMatchRuleList().add(new MiddlewareLogAlertDto.MatchRule(
+            MIDDLEWARE_NAME + DOT + KEYWORD, middlewareLogAlertDto.getMiddlewareName(), false));
         middlewareLogAlertDto.getMatchRuleList()
-            .add(new MiddlewareLogAlertDto.MatchRule("k8s_pod_namesapce", middlewareLogAlertDto.getNamespace(), false));
+            .add(new MiddlewareLogAlertDto.MatchRule(K8S_POD_NAMESPACE, middlewareLogAlertDto.getNamespace(), false));
         // 数据结构转化
         MiddlewareLogAlertDo alertDo = new MiddlewareLogAlertDo(middlewareLogAlertDto);
 
         // 告警名称同名校验
-        if (configMap.getData().containsKey(alertDo.getName() + ".yaml")){
+        if (customElasticAlert.containsKey(alertDo.getName()) || elasticAlert.containsKey(alertDo.getName())) {
             throw new BusinessException(ErrorMessage.LOG_ALERT_NAME_EXISTS);
         }
 
-        DumperOptions options = new DumperOptions();
-        options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK); // 使用块格式
-        options.setPrettyFlow(true); // 美化输出
+        // 将对象转换为jsonObject，并添加进values
+        customElasticAlert.put(alertDo.getName(),
+            JSONObject.parseObject(JSONObject.toJSONString(alertDo)));
 
-        // 创建 Yaml 实例
-        Yaml yaml = new Yaml(options);
-
-        // 将对象转换为 YAML 字符串，并添加进configmap的data中
-        String yamlString = yaml.dump(JSONObject.toJSON(alertDo));
-        configMap.getData().put(alertDo.getName() + ".yaml", yamlString);
-
-        // 更新configmap
-        configMapService.update(clusterId, namespace, configMap);
+        values.put("customElasticAlert", customElasticAlert);
+        // 更新helm values
+        Middleware middleware = new Middleware(clusterId, namespace, middlewareName, type);
+        middleware.setChartName(type);
+        middleware.setChartVersion(helmChartService.getChartVersion(values, type));
+        helmChartService.upgrade(middleware, values, values, cluster);
     }
 
     @Override
@@ -102,53 +123,80 @@ public class MiddlewareLogAlertsServiceImpl implements MiddlewareLogAlertsServic
         String clusterId = middlewareLogAlertDto.getClusterId();
         String namespace = middlewareLogAlertDto.getNamespace();
         String middlewareName = middlewareLogAlertDto.getMiddlewareName();
+        String type = middlewareLogAlertDto.getType();
 
-        // 获取对应configmap
-        ConfigMap configMap = configMapService.get(clusterId, namespace, middlewareName + "-alertrule-code28000");
-        if (configMap == null || configMap.getData() == null) {
+        MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
+        JSONObject values = helmChartService.getInstalledValues(middlewareName, namespace, cluster);
+        if (values == null) {
             return;
+        }
+        JSONObject customElasticAlert = values.getJSONObject("customElasticAlert");
+        if (customElasticAlert == null) {
+            customElasticAlert = new JSONObject();
+        }
+
+        JSONObject elasticAlert = values.getJSONObject("elasticAlert");
+        if (elasticAlert == null) {
+            elasticAlert = new JSONObject();
         }
 
         // 设置更新时间
         middlewareLogAlertDto.setUpdateTime(new Date());
         MiddlewareLogAlertDo alertDo = new MiddlewareLogAlertDo(middlewareLogAlertDto);
 
-        configMap.getData().computeIfPresent(alertDo.getName() + ".yaml", (k, v) -> {
+        // 更新原生告警规则
+        elasticAlert.computeIfPresent(alertDo.getName(), (k, v) -> {
             // 序列化
-            Yaml yaml = new Yaml();
-            JSONObject object = yaml.loadAs(v, JSONObject.class);
-            MiddlewareLogAlertDo middlewareLogAlertDo = JSONObject.parseObject(object.toJSONString(), MiddlewareLogAlertDo.class);
-
-            middlewareLogAlertDo.setTimeframe(alertDo.getTimeframe());
-            middlewareLogAlertDo.setNumEvents(alertDo.getNumEvents());
-            middlewareLogAlertDo.setBlacklist(alertDo.getBlacklist());
-            middlewareLogAlertDo.setFilter(alertDo.getFilter());
-
-            DumperOptions options = new DumperOptions();
-            options.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK); // 使用块格式
-            options.setPrettyFlow(true); // 美化输出
-
-            // 创建 Yaml 实例
-            yaml = new Yaml(options);
-
-            // 将对象转换为 YAML 字符串，并添加进configmap的data中
-            return yaml.dump(JSONObject.toJSON(alertDo));
+            JSONObject rule = JSONObject.parseObject(JSONObject.toJSONString(v));
+            rule.put("alertLevel", middlewareLogAlertDto.getLevel());
+            rule.put("threshold", middlewareLogAlertDto.getNumEvents());
+            rule.put("silence", middlewareLogAlertDto.getSilence());
+            rule.put("interval", middlewareLogAlertDto.getTimeframe());
+            // 返回rule
+            return rule;
         });
+        values.put("elasticAlert", elasticAlert);
+        // 更新自定义告警规则
+        customElasticAlert.computeIfPresent(alertDo.getName(), (k, v) -> {
+            // 序列化
+            JSONObject rule = JSONObject.parseObject(JSONObject.toJSONString(v));
+            rule.put("alertLevel", middlewareLogAlertDto.getLevel());
+            rule.put("threshold", middlewareLogAlertDto.getNumEvents());
+            rule.put("silence", middlewareLogAlertDto.getSilence());
+            rule.put("interval", middlewareLogAlertDto.getTimeframe());
 
-        configMapService.update(clusterId, namespace, configMap);
+            rule.put("type", alertDo.getType());
+            rule.put("filter", JSONObject.parseArray(JSONObject.toJSONString(alertDo.getFilter())));
+            rule.put("alertTextArgs", JSONObject.parseArray(JSONObject.toJSONString(alertDo.getAlertTextArgs())));
+            rule.put("alertText", alertDo.getAlertText());
+            if ("blacklist".equals(alertDo.getType())){
+                rule.put("compare_key", alertDo.getCompareKey());
+                rule.put("blacklist", JSONArray.parseArray(JSONObject.toJSONString(alertDo.getBlacklist())));
+            }
+            // 返回rule
+            return rule;
+        });
+        values.put("customElasticAlert", customElasticAlert);
+
+        // 更新helm values
+        Middleware middleware = new Middleware(clusterId, namespace, middlewareName, type);
+        middleware.setChartName(type);
+        middleware.setChartVersion(helmChartService.getChartVersion(values, type));
+        helmChartService.upgrade(middleware, values, values, cluster);
     }
 
     @Override
     public void deleteRules(String clusterId, String namespace, String middlewareName, String type, String alertName) {
-        // 获取对应configmap
-        ConfigMap configMap = configMapService.get(clusterId, namespace, middlewareName + "-alertrule-code28000");
-        // 遍历data
-        if (configMap == null || configMap.getData() == null){
+        // 获取集群对象
+        MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
+        // 获取helm values
+        JSONObject values = helmChartService.getInstalledValues(middlewareName, namespace, cluster);
+        if (values == null || !values.containsKey("customElasticAlert") || !values.containsKey("elasticAlert")) {
             return;
         }
-        Yaml yaml = new Yaml();
-        configMap.getData().computeIfPresent(alertName + ".yaml", (key, value) -> null);
-        // 更新configmap
-        configMapService.update(clusterId, namespace, configMap);
+        // 删除自定义告警规则
+        values.getJSONObject("customElasticAlert").remove(alertName);
+        // 更新helm values
+        helmChartService.upgrade(new Middleware(clusterId, namespace, middlewareName, type), values, values, cluster);
     }
 }
