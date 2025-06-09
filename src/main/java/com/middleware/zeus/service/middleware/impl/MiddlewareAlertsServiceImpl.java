@@ -273,7 +273,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             }
             // 获取告警规则annotations
             Map<String, String> annotations = middlewareAlertsDTO.getAnnotations();
-            JSONObject alert = values.getJSONObject(CUSTOM_ALERT_RULES).getJSONObject(middlewareAlertsDTO.getAlert());
+            JSONObject alert = customAlertRules.getJSONObject(middlewareAlertsDTO.getAlert());
             if (alert == null) {
                 alert = new JSONObject();
             }
