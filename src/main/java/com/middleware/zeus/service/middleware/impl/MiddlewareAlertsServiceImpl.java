@@ -203,7 +203,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
 
         // 根据告警名称进行过滤
         middlewareAlertsDTOList = middlewareAlertsDTOList.stream()
-            .filter(middlewareAlertsDTO -> middlewareAlertsDTO.getName().equals(alert)).collect(Collectors.toList());
+            .filter(middlewareAlertsDTO -> middlewareAlertsDTO.getAlert().equals(alert)).collect(Collectors.toList());
         if (CollectionUtils.isEmpty(middlewareAlertsDTOList)) {
             return null;
         }
