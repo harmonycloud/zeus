@@ -252,7 +252,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         }
 
         // 修改非自定义告警规则对象
-        if (middlewareAlertsDTO.getCustom() == null && !middlewareAlertsDTO.getCustom()) {
+        if (middlewareAlertsDTO.getCustom() != null && !middlewareAlertsDTO.getCustom()) {
             JSONObject alertRules = values.getJSONObject("alertRules");
             if (alertRules == null) {
                 alertRules = new JSONObject();
