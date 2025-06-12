@@ -118,6 +118,7 @@ public class PrometheusRuleServiceImpl implements PrometheusRuleService {
                         .setCreateTime(DateUtils.parseUTCDate(prometheusRule.getMetadata().getCreationTimestamp()));
                 }
                 // 设置是否为自定义告警规则
+                middlewareAlertsDTO.setCustom(false);
                 if ("custom-alert-rules".equals(prometheusRuleGroups.getName())){
                     middlewareAlertsDTO.setCustom(true);
                 }
