@@ -210,6 +210,9 @@ public class MiddlewareLogAlertsServiceImpl implements MiddlewareLogAlertsServic
         // 删除自定义告警规则
         values.getJSONObject("common").getJSONObject("customElasticAlert").remove(alertName);
         // 更新helm values
-        helmChartService.upgrade(new Middleware(clusterId, namespace, middlewareName, type), values, values, cluster);
+        Middleware middleware = new Middleware(clusterId, namespace, middlewareName, type);
+        middleware.setChartName(type);
+        middleware.setChartVersion(helmChartService.getChartVersion(values, type));
+        helmChartService.upgrade(middleware, values, values, cluster);
     }
 }
