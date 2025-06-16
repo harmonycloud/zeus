@@ -203,11 +203,12 @@ public class MiddlewareLogAlertsServiceImpl implements MiddlewareLogAlertsServic
         MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
         // 获取helm values
         JSONObject values = helmChartService.getInstalledValues(middlewareName, namespace, cluster);
-        if (values == null || !values.containsKey("customElasticAlert") || !values.containsKey("elasticAlert")) {
+        if (values == null || values.getJSONObject("common") == null
+            || values.getJSONObject("common").getJSONObject("customElasticAlert") == null) {
             return;
         }
         // 删除自定义告警规则
-        values.getJSONObject("customElasticAlert").remove(alertName);
+        values.getJSONObject("common").getJSONObject("customElasticAlert").remove(alertName);
         // 更新helm values
         helmChartService.upgrade(new Middleware(clusterId, namespace, middlewareName, type), values, values, cluster);
     }
