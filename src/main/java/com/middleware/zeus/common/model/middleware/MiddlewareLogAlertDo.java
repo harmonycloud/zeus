@@ -32,6 +32,9 @@ public class MiddlewareLogAlertDo {
     @ApiModelProperty("匹配索引")
     private String index;
 
+    @ApiModelProperty("静默时间")
+    private String silence;
+
     @ApiModelProperty("周期")
     private TimeFrame timeframe;
 
@@ -170,8 +173,9 @@ public class MiddlewareLogAlertDo {
         }
         // 当存在静默时间时，设置静默时间
         if (alertDto.getSilence() != null) {
-            this.alertmanagerAnnotations.put("silence", alertDto.getSilence().toString());
+            this.alertmanagerAnnotations.put("silence", alertDto.getSilence());
         }
+
 
         // 当存在静默时间单位
         if (alertDto.getUnit() != null) {

@@ -65,7 +65,7 @@ public class MiddlewareLogAlertDto {
     private Integer numEvents;
 
     @ApiModelProperty("沉默时间")
-    private Integer silence;
+    private String silence;
 
     @ApiModelProperty("沉没事件单位")
     private String unit;
@@ -149,7 +149,7 @@ public class MiddlewareLogAlertDto {
 
         // 设置告警沉默时间
         if (alertDo.getAlertmanagerAnnotations().containsKey("silence")) {
-            this.silence = Integer.parseInt(alertDo.getAlertmanagerAnnotations().get("silence"));
+            this.silence = alertDo.getAlertmanagerAnnotations().get("silence");
         }
         // 设置告警时间单位
         if (alertDo.getAlertmanagerAnnotations().containsKey("unit")) {

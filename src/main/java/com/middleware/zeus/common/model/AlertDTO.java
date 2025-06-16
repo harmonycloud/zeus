@@ -67,6 +67,9 @@ public class AlertDTO {
     @ApiModelProperty("告警层面")
     private String lay;
 
+    @ApiModelProperty("告警类型")
+    private String alertType;
+
     @ApiModelProperty("规则描述")
     private String expr;
 

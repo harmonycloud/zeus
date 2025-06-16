@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+import static com.middleware.zeus.common.constants.AlertConstant.SERVICE;
 import static com.middleware.zeus.common.constants.CommonConstant.ASC;
 import static com.middleware.zeus.common.constants.CommonConstant.DESC;
 
@@ -65,6 +66,7 @@ public class MiddlewareAlertRecordServiceImpl implements MiddlewareAlertRecordSe
         // 封装数据
         PageInfo<AlertDTO> alertDtoPageInfo = new PageInfo<>();
         BeanUtils.copyProperties(new PageInfo<>(alertRecordList), alertDtoPageInfo);
+        alertDtoPageInfo.getList().forEach(alertRecord -> alertRecord.setAlertType(alertRecord.getLay()));
 
         return alertDtoPageInfo;
     }
