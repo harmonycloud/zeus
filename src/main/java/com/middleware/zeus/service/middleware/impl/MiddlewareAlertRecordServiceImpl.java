@@ -13,6 +13,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.middleware.zeus.common.constants.AlertConstant.SERVICE;
@@ -63,11 +64,31 @@ public class MiddlewareAlertRecordServiceImpl implements MiddlewareAlertRecordSe
         PageHelper.startPage(queryDto.getCurrent(), queryDto.getSize());
         // 查询告警记录数据
         List<BeanAlertRecord> alertRecordList = alertRecordMapper.selectList(wrapper);
-        // 封装数据
+        // 初始化返回数据
         PageInfo<AlertDTO> alertDtoPageInfo = new PageInfo<>();
-        BeanUtils.copyProperties(new PageInfo<>(alertRecordList), alertDtoPageInfo);
-        alertDtoPageInfo.getList().forEach(alertRecord -> alertRecord.setAlertType(alertRecord.getLay()));
+        // 对数据库返回结果进行page封装
+        PageInfo<BeanAlertRecord> alertRecordPageInfo = new PageInfo<>(alertRecordList);
 
+        // 封装数据
+        alertDtoPageInfo.setTotal(alertRecordPageInfo.getTotal());
+        alertDtoPageInfo.setPages(alertRecordPageInfo.getPages());
+        alertDtoPageInfo.setPageNum(alertRecordPageInfo.getPageNum());
+        alertDtoPageInfo.setPageSize(alertRecordPageInfo.getPageSize());
+        alertDtoPageInfo.setEndRow(alertRecordPageInfo.getEndRow());
+        alertDtoPageInfo.setStartRow(alertRecordPageInfo.getStartRow());
+
+        List<AlertDTO> alertDTOList = new ArrayList<>();
+        alertRecordList.forEach(alertRecord -> {
+            AlertDTO alertDTO = new AlertDTO();
+            BeanUtils.copyProperties(alertRecord, alertDTO);
+            alertDTO.setAlertType(alertDTO.getLay());
+            alertDTOList.add(alertDTO);
+        });
+        alertDtoPageInfo.setList(alertDTOList);
+//        BeanUtils.copyProperties(new PageInfo<>(alertRecordList), alertDtoPageInfo);
+//        for (AlertDTO alertDTO : alertDtoPageInfo.getList()) {
+//            alertDTO.setAlertType(alertDTO.getLay());
+//        }
         return alertDtoPageInfo;
     }
 
