@@ -48,7 +48,9 @@ public class MiddlewareLogAlertsServiceImpl implements MiddlewareLogAlertsServic
     public List<MiddlewareLogAlertDto> listRules(String clusterId, String namespace, String middlewareName, String type) {
         // 查询该中间件的config
         ConfigMap configMap = configMapService.get(clusterId, namespace, middlewareName + LINE + ALERT_RULE);
-
+        if (configMap == null) {
+            return new ArrayList<>();
+        }
         List<MiddlewareLogAlertDto> middlewareLogAlertDtoList = new ArrayList<>();
         configMap.getData().forEach((k, v) -> {
             // 序列化
