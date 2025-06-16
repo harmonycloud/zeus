@@ -124,6 +124,9 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             middlewareAlertsDTO.setDescription(rule.getAlert());
             middlewareAlertsDTO.setUnit(rule.getAnnotations().getOrDefault("unit", ""));
             middlewareAlertsDTO.setType(type);
+            if (rule.getAnnotations().get("group") != null) {
+                middlewareAlertsDTO.setCustom(!rule.getAnnotations().get("group").equals("custom-alert-rules"));
+            }
             middlewareAlertsDTOList.add(middlewareAlertsDTO);
         });
         return middlewareAlertsDTOList;

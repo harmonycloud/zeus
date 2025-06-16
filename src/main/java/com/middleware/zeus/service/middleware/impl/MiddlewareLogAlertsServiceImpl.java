@@ -77,7 +77,11 @@ public class MiddlewareLogAlertsServiceImpl implements MiddlewareLogAlertsServic
         if (values == null) {
             return;
         }
-        JSONObject customElasticAlert = values.getJSONObject("customElasticAlert");
+        JSONObject common = values.getJSONObject("common");
+        if (common == null) {
+            common = new JSONObject();
+        }
+        JSONObject customElasticAlert = common.getJSONObject("customElasticAlert");
         if (customElasticAlert == null) {
             customElasticAlert = new JSONObject();
         }
@@ -109,7 +113,8 @@ public class MiddlewareLogAlertsServiceImpl implements MiddlewareLogAlertsServic
         customElasticAlert.put(alertDo.getAlertmanagerAlertname(),
             JSONObject.parseObject(JSONObject.toJSONString(alertDo)));
 
-        values.put("customElasticAlert", customElasticAlert);
+        common.put("customElasticAlert", customElasticAlert);
+        values.put("common", common);
         // 更新helm values
         Middleware middleware = new Middleware(clusterId, namespace, middlewareName, type);
         middleware.setChartName(type);
@@ -130,12 +135,16 @@ public class MiddlewareLogAlertsServiceImpl implements MiddlewareLogAlertsServic
         if (values == null) {
             return;
         }
-        JSONObject customElasticAlert = values.getJSONObject("customElasticAlert");
+        JSONObject common = values.getJSONObject("common");
+        if (common == null) {
+            common = new JSONObject();
+        }
+        JSONObject customElasticAlert = common.getJSONObject("customElasticAlert");
         if (customElasticAlert == null) {
             customElasticAlert = new JSONObject();
         }
 
-        JSONObject elasticAlert = values.getJSONObject("elasticAlert");
+        JSONObject elasticAlert = common.getJSONObject("elasticAlert");
         if (elasticAlert == null) {
             elasticAlert = new JSONObject();
         }
@@ -155,7 +164,7 @@ public class MiddlewareLogAlertsServiceImpl implements MiddlewareLogAlertsServic
             // 返回rule
             return rule;
         });
-        values.put("elasticAlert", elasticAlert);
+        common.put("elasticAlert", elasticAlert);
         // 更新自定义告警规则
         customElasticAlert.computeIfPresent(alertDo.getAlertmanagerAlertname(), (k, v) -> {
             // 序列化
@@ -176,8 +185,9 @@ public class MiddlewareLogAlertsServiceImpl implements MiddlewareLogAlertsServic
             // 返回rule
             return rule;
         });
-        values.put("customElasticAlert", customElasticAlert);
+        common.put("customElasticAlert", customElasticAlert);
 
+        values.put("common", common);
         // 更新helm values
         Middleware middleware = new Middleware(clusterId, namespace, middlewareName, type);
         middleware.setChartName(type);
