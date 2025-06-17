@@ -1173,6 +1173,9 @@ public abstract class AbstractBaseOperator {
                 JSONObject dependence = dependencies.getJSONObject(i);
                 if (dependence.getString("alias") != null && dependence.getString("alias").contains("operator")) {
                     StringBuilder sb = new StringBuilder();
+                    if (dependence.getString("condition") == null) {
+                        continue;
+                    }
                     String[] condKeys = dependence.getString("condition").split("\\.");
                     for (int j = 1; j < condKeys.length; j++) {
                         sb.append("{").append("\"").append(condKeys[j]).append("\":");
