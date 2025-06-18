@@ -147,9 +147,13 @@ public class MiddlewareLogAlertDto {
                 DateUtils.YYYY_MM_DD_HH_MM_SS);
         }
 
-        // 设置告警沉默时间
+        // 设置告警沉默时间 并添加默认单位m
         if (alertDo.getAlertmanagerAnnotations().containsKey("silence")) {
-            this.silence = alertDo.getAlertmanagerAnnotations().get("silence");
+            String silence = alertDo.getAlertmanagerAnnotations().get("silence");
+            if (!silence.endsWith("m") || !silence.endsWith("h")) {
+                silence = silence + "m";
+            }
+            this.silence = silence;
         }
         // 设置告警时间单位
         if (alertDo.getAlertmanagerAnnotations().containsKey("unit")) {
