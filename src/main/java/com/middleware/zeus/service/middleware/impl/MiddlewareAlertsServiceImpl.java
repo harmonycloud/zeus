@@ -208,6 +208,11 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         for (MiddlewareAlertsDTO middlewareAlertsDTO : middlewareAlertsDTOList){
             middlewareAlertsDTO.setSymbol(getSymbol(middlewareAlertsDTO.getExpr()));
             middlewareAlertsDTO.setThreshold(getThreshold(middlewareAlertsDTO.getExpr()));
+            if (middlewareAlertsDTO.getSymbol().equals("==") || middlewareAlertsDTO.getSymbol().equals("!=")){
+                middlewareAlertsDTO.setAlertMode("eventAlert");
+            } else {
+                middlewareAlertsDTO.setAlertMode("metricsAlert");
+            }
             if (StringUtils.isNotEmpty(middlewareAlertsDTO.getTime())){
                 String time = middlewareAlertsDTO.getTime();
                 if (time.contains("m")){
