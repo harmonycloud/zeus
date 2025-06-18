@@ -43,6 +43,9 @@ public class MiddlewareAlertRecordServiceImpl implements MiddlewareAlertRecordSe
         if (StringUtils.isNotEmpty(queryDto.getAlertLevel())) {
             wrapper.eq("level", queryDto.getAlertLevel());
         }
+        if (StringUtils.isNotEmpty(queryDto.getAlertType())) {
+            wrapper.eq("lay", queryDto.getAlertType());
+        }
         // 根据告警时间排序
         if (StringUtils.isNotEmpty(queryDto.getAlertTime())) {
             if (queryDto.getAlertTime().equals(ASC)) {
