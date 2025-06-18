@@ -106,21 +106,18 @@ public class PrometheusRuleServiceImpl implements PrometheusRuleService {
                     if (prometheusRules.getAnnotations().containsKey(SILENCE)) {
                         middlewareAlertsDTO.setSilence(prometheusRules.getAnnotations().get(SILENCE));
                     }
-                    middlewareAlertsDTO.setUnit(prometheusRules.getAnnotations().getOrDefault("unit", ""));
-                    if (prometheusRules.getAnnotations().containsKey("createTime")) {
-                        middlewareAlertsDTO.setCreateTime(DateUtils.parseDate(
-                            prometheusRules.getAnnotations().get("createTime"), DateUtils.YYYY_MM_DD_T_HH_MM_SS_Z));
-                    }
+//                    middlewareAlertsDTO.setUnit(prometheusRules.getAnnotations().getOrDefault("unit", ""));
+//                    if (prometheusRules.getAnnotations().containsKey("createTime")) {
+//                        middlewareAlertsDTO.setCreateTime(DateUtils.parseDate(
+//                            prometheusRules.getAnnotations().get("createTime"), DateUtils.YYYY_MM_DD_T_HH_MM_SS_Z));
+//                    }
                 }
-                // 将文件创建时间设置为告警规则时间
-                if (middlewareAlertsDTO.getCreateTime() == null) {
+                // 设置是否为自定义告警规则，并未默认创建的告警规则设置创建时间
+                middlewareAlertsDTO.setCustom(true);
+                if (!"custom-alert-rules".equals(prometheusRuleGroups.getName())) {
+                    middlewareAlertsDTO.setCustom(false);
                     middlewareAlertsDTO
                         .setCreateTime(DateUtils.parseUTCDate(prometheusRule.getMetadata().getCreationTimestamp()));
-                }
-                // 设置是否为自定义告警规则
-                middlewareAlertsDTO.setCustom(false);
-                if ("custom-alert-rules".equals(prometheusRuleGroups.getName())){
-                    middlewareAlertsDTO.setCustom(true);
                 }
                 middlewareAlertsDTOList.add(middlewareAlertsDTO);
             });

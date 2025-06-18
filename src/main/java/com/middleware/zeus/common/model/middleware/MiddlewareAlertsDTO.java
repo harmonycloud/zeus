@@ -56,7 +56,7 @@ public class MiddlewareAlertsDTO {
     @ApiModelProperty("中间件类型")
     private String type;
 
-    @ApiModelProperty("告警模式")
+    @ApiModelProperty("告警模式: 事件告警 eventAlert, 指标告警 metricsAlert")
     private String alertMode;
 
     @ApiModelProperty("执行规则")
@@ -100,6 +100,9 @@ public class MiddlewareAlertsDTO {
 
     @ApiModelProperty("创建时间")
     private Date createTime;
+
+    @ApiModelProperty("更新时间")
+    private Date updateTime;
 
     @ApiModelProperty("是否选择钉钉")
     private String ding;
