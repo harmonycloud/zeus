@@ -7,12 +7,14 @@ import static com.middleware.zeus.common.constants.NameConstant.UPDATE_TIME;
 import static com.middleware.zeus.common.constants.user.UserConstant.ADMIN;
 
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import com.middleware.zeus.util.DateUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +22,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import com.alibaba.fastjson.JSONObject;
-import com.middleware.zeus.common.enums.middleware.MiddlewareTypeEnum;
 import com.middleware.zeus.common.model.AlertUserDo;
 import com.middleware.zeus.common.model.AlertUserDto;
 import com.middleware.zeus.common.model.AlertUserListDto;
@@ -30,8 +31,6 @@ import com.middleware.zeus.common.model.middleware.MiddlewareAlertsDTO;
 import com.middleware.zeus.common.model.middleware.MiddlewareClusterDTO;
 import com.middleware.zeus.common.model.user.UserDto;
 import com.middleware.zeus.integration.cluster.bean.prometheus.PrometheusRule;
-import com.middleware.zeus.integration.cluster.bean.prometheus.PrometheusRuleGroups;
-import com.middleware.zeus.integration.cluster.bean.prometheus.PrometheusRules;
 import com.middleware.zeus.service.k8s.ClusterService;
 import com.middleware.zeus.service.k8s.PrometheusRuleService;
 import com.middleware.zeus.service.middleware.MiddlewareAlertsService;
@@ -291,7 +290,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             alert.put("alertExpr", middlewareAlertsDTO.getExpr().replace(oldThreshold, middlewareAlertsDTO.getThreshold()));
 
             customAlertRules.put(middlewareAlertsDTO.getAlert(), alert);
-            values.put(CUSTOM_ALERT_RULES, cluster);
+            values.put(CUSTOM_ALERT_RULES, customAlertRules);
         }
         // 更新helm values
         Middleware middleware = new Middleware(clusterId, namespace, middlewareName, middlewareAlertsDTO.getType());
