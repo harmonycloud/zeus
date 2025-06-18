@@ -115,6 +115,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             } else {
                 middlewareAlertsDTO.setAlertMode("metricsAlert");
             }
+            middlewareAlertsDTO.setType(type);
             return true;
         }).collect(Collectors.toList());
 
