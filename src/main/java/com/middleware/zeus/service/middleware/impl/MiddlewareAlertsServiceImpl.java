@@ -91,9 +91,9 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         }
         //校验备份告警规则是否存在
         checkBackupAlert(clusterId, namespace, middlewareName, type);
-        // 根据创建时间排序
-        middlewareAlertsDTOList.sort((o1, o2) -> o1.getCreateTime() == null ? -1
-            : o2.getCreateTime() == null ? -1 : o2.getCreateTime().compareTo(o1.getCreateTime()));
+        // 根据更新时间排序
+        middlewareAlertsDTOList.sort((o1, o2) -> o1.getUpdateTime() == null ? -1
+            : o2.getUpdateTime() == null ? -1 : o2.getUpdateTime().compareTo(o1.getUpdateTime()));
         return middlewareAlertsDTOList;
     }
 
@@ -145,8 +145,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             // 生成告警规则名称，避免重名
             String alertName = middlewareAlertsDTO.getAlert() + "_" + UUIDUtils.get8UUID();
             JSONObject alert = new JSONObject();
-            alert.put("alertLevel", annotations.getOrDefault("alertLevel", "warning"));
-            alert.put("threshold", Integer.valueOf(middlewareAlertsDTO.getThreshold()));
+            alert.put("alertLevel", middlewareAlertsDTO.getLevel());
             alert.put("silence", middlewareAlertsDTO.getSilence());
 
             String time = "";
@@ -158,7 +157,9 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             }
             alert.put("interval", Integer.valueOf(time));
             alert.put("alertText", annotations.getOrDefault("message", ""));
-            alert.put("alertExpr", middlewareAlertsDTO.getExpr());
+
+            String oldThreshold = getThreshold(middlewareAlertsDTO.getExpr());
+            alert.put("alertExpr", middlewareAlertsDTO.getExpr().replace(oldThreshold, middlewareAlertsDTO.getThreshold()));
 
             alert.put(CREATE_TIME, DateUtils.dateToString(new Date(), DateUtils.YYYY_MM_DD_HH_MM_SS));
             alert.put(UPDATE_TIME, DateUtils.dateToString(new Date(), DateUtils.YYYY_MM_DD_HH_MM_SS));
@@ -274,13 +275,14 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
                 alert = new JSONObject();
             }
             alert.put("alertLevel", middlewareAlertsDTO.getLevel());
-            alert.put("threshold", middlewareAlertsDTO.getThreshold());
             alert.put("silence", middlewareAlertsDTO.getSilence());
 
             alert.put("interval", Integer.valueOf(time));
             alert.put("alertText", annotations.getOrDefault("message", ""));
-            alert.put("alertExpr", middlewareAlertsDTO.getExpr());
             alert.put(UPDATE_TIME, DateUtils.dateToString(new Date(), DateUtils.YYYY_MM_DD_HH_MM_SS));
+
+            String oldThreshold = getThreshold(middlewareAlertsDTO.getExpr());
+            alert.put("alertExpr", middlewareAlertsDTO.getExpr().replace(oldThreshold, middlewareAlertsDTO.getThreshold()));
 
             customAlertRules.put(middlewareAlertsDTO.getAlert(), alert);
             values.put(CUSTOM_ALERT_RULES, cluster);
