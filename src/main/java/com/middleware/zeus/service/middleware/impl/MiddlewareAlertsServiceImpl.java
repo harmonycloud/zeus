@@ -15,6 +15,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.middleware.zeus.common.enums.ComponentsEnum;
+import com.middleware.zeus.common.model.*;
+import com.middleware.zeus.service.components.api.AlertManagerService;
+import com.middleware.zeus.service.k8s.ClusterComponentService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,10 +26,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import com.alibaba.fastjson.JSONObject;
-import com.middleware.zeus.common.model.AlertUserDo;
-import com.middleware.zeus.common.model.AlertUserDto;
-import com.middleware.zeus.common.model.AlertUserListDto;
-import com.middleware.zeus.common.model.MiddlewareAlertsListDto;
 import com.middleware.zeus.common.model.middleware.Middleware;
 import com.middleware.zeus.common.model.middleware.MiddlewareAlertsDTO;
 import com.middleware.zeus.common.model.middleware.MiddlewareClusterDTO;
@@ -42,6 +42,7 @@ import com.middleware.zeus.util.date.DateUtils;
 import com.middleware.zeus.util.uuid.UUIDUtils;
 
 import lombok.extern.slf4j.Slf4j;
+import org.yaml.snakeyaml.Yaml;
 
 /**
  * @author xutianhong
@@ -68,6 +69,8 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
     private HelmChartService helmChartService;
     @Autowired
     private ClusterService clusterService;
+    @Autowired
+    private AlertManagerService alertManagerService;
 
     @Override
     public List<MiddlewareAlertsDTO> listUsedRules(String clusterId, String namespace, String middlewareName,
@@ -78,6 +81,9 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         middlewareAlertsDTOList = middlewareAlertsDTOList.stream()
             .filter(middlewareAlertsDTO -> !MIDDLEWARE_BACKUP_FAILED.equals(middlewareAlertsDTO.getName()))
             .collect(Collectors.toList());
+        // 获取组件默认告警沉默时间
+        ClusterComponentsDto clusterComponentsDto = new ClusterComponentsDto();
+        alertManagerService.readSystemConfig(clusterComponentsDto);
         // 添加符号和阈值信息
         for (MiddlewareAlertsDTO middlewareAlertsDTO : middlewareAlertsDTOList) {
             middlewareAlertsDTO.setSymbol(getSymbol(middlewareAlertsDTO.getExpr()));
@@ -86,6 +92,9 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
                 middlewareAlertsDTO.setAlertMode("eventAlert");
             } else {
                 middlewareAlertsDTO.setAlertMode("metricsAlert");
+            }
+            if (middlewareAlertsDTO.getSilence() == null){
+                middlewareAlertsDTO.setSilence(clusterComponentsDto.getSilentTime());
             }
         }
         //校验备份告警规则是否存在
@@ -100,6 +109,10 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
     public List<MiddlewareAlertsDTO> listRules(String clusterId, String namespace, String middlewareName, String type) {
         // 获取所有告警规则
         List<MiddlewareAlertsDTO> middlewareAlertsDTOList = getAllRules(clusterId, namespace, middlewareName);
+        // 获取组件默认告警沉默时间
+        ClusterComponentsDto clusterComponentsDto = new ClusterComponentsDto();
+        alertManagerService.readSystemConfig(clusterComponentsDto);
+
         middlewareAlertsDTOList = middlewareAlertsDTOList.stream().filter(middlewareAlertsDTO -> {
             if (middlewareAlertsDTO.getCustom() != null && middlewareAlertsDTO.getCustom()) {
                 return false;
@@ -113,6 +126,9 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
                 middlewareAlertsDTO.setAlertMode("eventAlert");
             } else {
                 middlewareAlertsDTO.setAlertMode("metricsAlert");
+            }
+            if (middlewareAlertsDTO.getSilence() == null){
+                middlewareAlertsDTO.setSilence(clusterComponentsDto.getSilentTime());
             }
             middlewareAlertsDTO.setType(type);
             return true;
@@ -196,7 +212,9 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
     public MiddlewareAlertsDTO detail(String clusterId, String namespace, String middlewareName, String alert) {
         // 获取所有告警规则
         List<MiddlewareAlertsDTO> middlewareAlertsDTOList = getAllRules(clusterId, namespace, middlewareName);
-
+        // 获取组件默认告警沉默时间
+        ClusterComponentsDto clusterComponentsDto = new ClusterComponentsDto();
+        alertManagerService.readSystemConfig(clusterComponentsDto);
         // 根据告警名称进行过滤
         middlewareAlertsDTOList = middlewareAlertsDTOList.stream()
             .filter(middlewareAlertsDTO -> middlewareAlertsDTO.getAlert().equals(alert)).collect(Collectors.toList());
@@ -211,6 +229,9 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
                 middlewareAlertsDTO.setAlertMode("eventAlert");
             } else {
                 middlewareAlertsDTO.setAlertMode("metricsAlert");
+            }
+            if (middlewareAlertsDTO.getSilence() == null){
+                middlewareAlertsDTO.setSilence(clusterComponentsDto.getSilentTime());
             }
             if (StringUtils.isNotEmpty(middlewareAlertsDTO.getTime())){
                 String time = middlewareAlertsDTO.getTime();
