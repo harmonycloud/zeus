@@ -204,24 +204,10 @@ public class MiddlewareLogAlertsServiceImpl implements MiddlewareLogAlertsServic
         // 更新自定义告警规则
         customElasticAlert.computeIfPresent(alertName, (k, v) -> {
             // 序列化
-//            JSONObject rule = JSONObject.parseObject(JSONObject.toJSONString(v));
-//            rule.put("alertLevel", middlewareLogAlertDto.getLevel());
-//            rule.put("threshold", middlewareLogAlertDto.getNumEvents());
-//            rule.put("silence", middlewareLogAlertDto.getSilence());
-//            rule.put("interval", middlewareLogAlertDto.getTimeframe());
-//
-//            rule.put("type", alertDo.getType());
-//            rule.put("filter", JSONObject.parseArray(JSONObject.toJSONString(alertDo.getFilter())));
-//            rule.put("alertTextArgs", JSONObject.parseArray(JSONObject.toJSONString(alertDo.getAlertTextArgs())));
-//            rule.put("alertText", alertDo.getAlertText());
-//            if ("blacklist".equals(alertDo.getType())){
-//                rule.put("compare_key", alertDo.getCompareKey());
-//                rule.put("blacklist", JSONArray.parseArray(JSONObject.toJSONString(alertDo.getBlacklist())));
-//            }
             // 返回rule
             return JSONObject.parseObject(JSONObject.toJSONString(middlewareLogAlertHelmDo));
         });
-        common.put(ELASTIC_ALERT, customElasticAlert);
+        common.put(CUSTOM_ELASTIC_ALERT, customElasticAlert);
 
         values.put(COMMON, common);
         // 更新helm values
