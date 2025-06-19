@@ -2,25 +2,28 @@ package com.middleware.zeus.service.middleware.impl;
 
 import static com.middleware.zeus.common.constants.CommonConstant.DOT;
 import static com.middleware.zeus.common.constants.CommonConstant.LINE;
+import static com.middleware.zeus.common.constants.NameConstant.COMMON;
+import static com.middleware.zeus.common.constants.NameConstant.UPDATE_TIME;
 import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.*;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 
-import com.middleware.zeus.common.model.middleware.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.yaml.snakeyaml.Yaml;
 
-import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.middleware.zeus.common.enums.ErrorMessage;
 import com.middleware.zeus.common.exception.BusinessException;
+import com.middleware.zeus.common.model.middleware.*;
 import com.middleware.zeus.service.k8s.ClusterService;
 import com.middleware.zeus.service.k8s.ConfigMapService;
 import com.middleware.zeus.service.middleware.MiddlewareLogAlertsService;
 import com.middleware.zeus.service.registry.HelmChartService;
+import com.middleware.zeus.util.date.DateUtils;
 
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +35,9 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 public class MiddlewareLogAlertsServiceImpl implements MiddlewareLogAlertsService {
+
+    private static final String CUSTOM_ELASTIC_ALERT = "customElasticAlert";
+    private static final String ELASTIC_ALERT = "elasticAlert";
 
     @Autowired
     private ConfigMapService configMapService;
@@ -59,6 +65,35 @@ public class MiddlewareLogAlertsServiceImpl implements MiddlewareLogAlertsServic
             // 放入list中
             middlewareLogAlertDtoList.add(logAlertDto);
         });
+        
+        // 获取规则更新时间
+        // 查询该中间件部署配置
+        JSONObject values =
+            helmChartService.getInstalledValues(middlewareName, namespace, clusterService.findById(clusterId));
+        if (values != null && values.getJSONObject(COMMON) != null) {
+            JSONObject customElasticAlert = values.getJSONObject(COMMON).getJSONObject(CUSTOM_ELASTIC_ALERT);
+            JSONObject elasticAlert = values.getJSONObject(COMMON).getJSONObject(ELASTIC_ALERT);
+            for (MiddlewareLogAlertDto middlewareLogAlertDto : middlewareLogAlertDtoList) {
+                if (customElasticAlert != null
+                    && customElasticAlert.getJSONObject(middlewareLogAlertDto.getAlert()) != null && customElasticAlert
+                        .getJSONObject(middlewareLogAlertDto.getAlert()).getString(UPDATE_TIME) != null) {
+                    middlewareLogAlertDto.setUpdateTime(DateUtils.parseDate(
+                        customElasticAlert.getJSONObject(middlewareLogAlertDto.getAlert()).getString(UPDATE_TIME),
+                        DateUtils.YYYY_MM_DD_HH_MM_SS));
+                }
+                if (elasticAlert != null && elasticAlert.getJSONObject(middlewareLogAlertDto.getAlert()) != null
+                    && elasticAlert.getJSONObject(middlewareLogAlertDto.getAlert()).getString(UPDATE_TIME) != null) {
+                    middlewareLogAlertDto.setUpdateTime(DateUtils.parseDate(
+                        elasticAlert.getJSONObject(middlewareLogAlertDto.getAlert()).getString(UPDATE_TIME),
+                        DateUtils.YYYY_MM_DD_HH_MM_SS));
+                }
+            }
+        }
+        
+        // 排序
+        middlewareLogAlertDtoList.sort(Comparator.comparing(MiddlewareLogAlertDto::getUpdateTime,
+            Comparator.nullsLast(Comparator.reverseOrder())));
+
         return middlewareLogAlertDtoList;
     }
 
@@ -76,16 +111,16 @@ public class MiddlewareLogAlertsServiceImpl implements MiddlewareLogAlertsServic
         if (values == null) {
             return;
         }
-        JSONObject common = values.getJSONObject("common");
+        JSONObject common = values.getJSONObject(COMMON);
         if (common == null) {
             common = new JSONObject();
         }
-        JSONObject customElasticAlert = common.getJSONObject("customElasticAlert");
+        JSONObject customElasticAlert = common.getJSONObject(CUSTOM_ELASTIC_ALERT);
         if (customElasticAlert == null) {
             customElasticAlert = new JSONObject();
         }
 
-        JSONObject elasticAlert = values.getJSONObject("elasticAlert");
+        JSONObject elasticAlert = values.getJSONObject(ELASTIC_ALERT);
         if (elasticAlert == null) {
             elasticAlert = new JSONObject();
         }
@@ -113,8 +148,8 @@ public class MiddlewareLogAlertsServiceImpl implements MiddlewareLogAlertsServic
         customElasticAlert.put(alertName,
             JSONObject.parseObject(JSONObject.toJSONString(middlewareLogAlertHelmDo)));
 
-        common.put("customElasticAlert", customElasticAlert);
-        values.put("common", common);
+        common.put(CUSTOM_ELASTIC_ALERT, customElasticAlert);
+        values.put(COMMON, common);
         // 更新helm values
         Middleware middleware = new Middleware(clusterId, namespace, middlewareName, type);
         middleware.setChartName(type);
@@ -135,16 +170,16 @@ public class MiddlewareLogAlertsServiceImpl implements MiddlewareLogAlertsServic
         if (values == null) {
             return;
         }
-        JSONObject common = values.getJSONObject("common");
+        JSONObject common = values.getJSONObject(COMMON);
         if (common == null) {
             common = new JSONObject();
         }
-        JSONObject customElasticAlert = common.getJSONObject("customElasticAlert");
+        JSONObject customElasticAlert = common.getJSONObject(CUSTOM_ELASTIC_ALERT);
         if (customElasticAlert == null) {
             customElasticAlert = new JSONObject();
         }
 
-        JSONObject elasticAlert = common.getJSONObject("elasticAlert");
+        JSONObject elasticAlert = common.getJSONObject(ELASTIC_ALERT);
         if (elasticAlert == null) {
             elasticAlert = new JSONObject();
         }
@@ -165,7 +200,7 @@ public class MiddlewareLogAlertsServiceImpl implements MiddlewareLogAlertsServic
             // 返回rule
             return rule;
         });
-        common.put("elasticAlert", elasticAlert);
+        common.put(ELASTIC_ALERT, elasticAlert);
         // 更新自定义告警规则
         customElasticAlert.computeIfPresent(alertName, (k, v) -> {
             // 序列化
@@ -186,9 +221,9 @@ public class MiddlewareLogAlertsServiceImpl implements MiddlewareLogAlertsServic
             // 返回rule
             return JSONObject.parseObject(JSONObject.toJSONString(middlewareLogAlertHelmDo));
         });
-        common.put("customElasticAlert", customElasticAlert);
+        common.put(ELASTIC_ALERT, customElasticAlert);
 
-        values.put("common", common);
+        values.put(COMMON, common);
         // 更新helm values
         Middleware middleware = new Middleware(clusterId, namespace, middlewareName, type);
         middleware.setChartName(type);
@@ -202,12 +237,12 @@ public class MiddlewareLogAlertsServiceImpl implements MiddlewareLogAlertsServic
         MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
         // 获取helm values
         JSONObject values = helmChartService.getInstalledValues(middlewareName, namespace, cluster);
-        if (values == null || values.getJSONObject("common") == null
-            || values.getJSONObject("common").getJSONObject("customElasticAlert") == null) {
+        if (values == null || values.getJSONObject(COMMON) == null
+            || values.getJSONObject(COMMON).getJSONObject(CUSTOM_ELASTIC_ALERT) == null) {
             return;
         }
         // 删除自定义告警规则
-        values.getJSONObject("common").getJSONObject("customElasticAlert").remove(alertName);
+        values.getJSONObject(COMMON).getJSONObject(CUSTOM_ELASTIC_ALERT).remove(alertName);
         // 更新helm values
         Middleware middleware = new Middleware(clusterId, namespace, middlewareName, type);
         middleware.setChartName(type);
