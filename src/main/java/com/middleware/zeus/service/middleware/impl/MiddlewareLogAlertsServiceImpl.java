@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import com.middleware.zeus.common.model.middleware.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.yaml.snakeyaml.Yaml;
@@ -16,10 +17,6 @@ import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
 import com.middleware.zeus.common.enums.ErrorMessage;
 import com.middleware.zeus.common.exception.BusinessException;
-import com.middleware.zeus.common.model.middleware.Middleware;
-import com.middleware.zeus.common.model.middleware.MiddlewareClusterDTO;
-import com.middleware.zeus.common.model.middleware.MiddlewareLogAlertDo;
-import com.middleware.zeus.common.model.middleware.MiddlewareLogAlertDto;
 import com.middleware.zeus.service.k8s.ClusterService;
 import com.middleware.zeus.service.k8s.ConfigMapService;
 import com.middleware.zeus.service.middleware.MiddlewareLogAlertsService;
@@ -104,16 +101,17 @@ public class MiddlewareLogAlertsServiceImpl implements MiddlewareLogAlertsServic
         middlewareLogAlertDto.getMatchRuleList()
             .add(new MiddlewareLogAlertDto.MatchRule(K8S_POD_NAMESPACE, middlewareLogAlertDto.getNamespace(), false));
         // 数据结构转化
-        MiddlewareLogAlertDo alertDo = new MiddlewareLogAlertDo(middlewareLogAlertDto);
+        String alertName = middlewareLogAlertDto.getAlert();
+        MiddlewareLogAlertHelmDo middlewareLogAlertHelmDo = new MiddlewareLogAlertHelmDo(middlewareLogAlertDto);
 
         // 告警名称同名校验
-        if (customElasticAlert.containsKey(alertDo.getAlertmanagerAlertname()) || elasticAlert.containsKey(alertDo.getAlertmanagerAlertname())) {
+        if (customElasticAlert.containsKey(alertName) || elasticAlert.containsKey(alertName)) {
             throw new BusinessException(ErrorMessage.LOG_ALERT_NAME_EXISTS);
         }
 
         // 将对象转换为jsonObject，并添加进values
-        customElasticAlert.put(alertDo.getAlertmanagerAlertname(),
-            JSONObject.parseObject(JSONObject.toJSONString(alertDo)));
+        customElasticAlert.put(alertName,
+            JSONObject.parseObject(JSONObject.toJSONString(middlewareLogAlertHelmDo)));
 
         common.put("customElasticAlert", customElasticAlert);
         values.put("common", common);
@@ -153,10 +151,11 @@ public class MiddlewareLogAlertsServiceImpl implements MiddlewareLogAlertsServic
 
         // 设置更新时间
         middlewareLogAlertDto.setUpdateTime(new Date());
-        MiddlewareLogAlertDo alertDo = new MiddlewareLogAlertDo(middlewareLogAlertDto);
+        MiddlewareLogAlertHelmDo middlewareLogAlertHelmDo = new MiddlewareLogAlertHelmDo(middlewareLogAlertDto);
 
+        String alertName = middlewareLogAlertDto.getAlert();
         // 更新原生告警规则
-        elasticAlert.computeIfPresent(alertDo.getAlertmanagerAlertname(), (k, v) -> {
+        elasticAlert.computeIfPresent(alertName, (k, v) -> {
             // 序列化
             JSONObject rule = JSONObject.parseObject(JSONObject.toJSONString(v));
             rule.put("alertLevel", middlewareLogAlertDto.getLevel());
@@ -168,24 +167,24 @@ public class MiddlewareLogAlertsServiceImpl implements MiddlewareLogAlertsServic
         });
         common.put("elasticAlert", elasticAlert);
         // 更新自定义告警规则
-        customElasticAlert.computeIfPresent(alertDo.getAlertmanagerAlertname(), (k, v) -> {
+        customElasticAlert.computeIfPresent(alertName, (k, v) -> {
             // 序列化
-            JSONObject rule = JSONObject.parseObject(JSONObject.toJSONString(v));
-            rule.put("alertLevel", middlewareLogAlertDto.getLevel());
-            rule.put("threshold", middlewareLogAlertDto.getNumEvents());
-            rule.put("silence", middlewareLogAlertDto.getSilence());
-            rule.put("interval", middlewareLogAlertDto.getTimeframe());
-
-            rule.put("type", alertDo.getType());
-            rule.put("filter", JSONObject.parseArray(JSONObject.toJSONString(alertDo.getFilter())));
-            rule.put("alertTextArgs", JSONObject.parseArray(JSONObject.toJSONString(alertDo.getAlertTextArgs())));
-            rule.put("alertText", alertDo.getAlertText());
-            if ("blacklist".equals(alertDo.getType())){
-                rule.put("compare_key", alertDo.getCompareKey());
-                rule.put("blacklist", JSONArray.parseArray(JSONObject.toJSONString(alertDo.getBlacklist())));
-            }
+//            JSONObject rule = JSONObject.parseObject(JSONObject.toJSONString(v));
+//            rule.put("alertLevel", middlewareLogAlertDto.getLevel());
+//            rule.put("threshold", middlewareLogAlertDto.getNumEvents());
+//            rule.put("silence", middlewareLogAlertDto.getSilence());
+//            rule.put("interval", middlewareLogAlertDto.getTimeframe());
+//
+//            rule.put("type", alertDo.getType());
+//            rule.put("filter", JSONObject.parseArray(JSONObject.toJSONString(alertDo.getFilter())));
+//            rule.put("alertTextArgs", JSONObject.parseArray(JSONObject.toJSONString(alertDo.getAlertTextArgs())));
+//            rule.put("alertText", alertDo.getAlertText());
+//            if ("blacklist".equals(alertDo.getType())){
+//                rule.put("compare_key", alertDo.getCompareKey());
+//                rule.put("blacklist", JSONArray.parseArray(JSONObject.toJSONString(alertDo.getBlacklist())));
+//            }
             // 返回rule
-            return rule;
+            return JSONObject.parseObject(JSONObject.toJSONString(middlewareLogAlertHelmDo));
         });
         common.put("customElasticAlert", customElasticAlert);
 
