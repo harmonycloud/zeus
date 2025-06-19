@@ -7,10 +7,7 @@ import static com.middleware.zeus.common.constants.NameConstant.UPDATE_TIME;
 import static com.middleware.zeus.common.constants.user.UserConstant.ADMIN;
 
 import java.math.BigDecimal;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -64,6 +61,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
     private final String SYSTEM_ALERT = "system_alert";
     private final String MIDDLEWARE_BACKUP_FAILED = "middlewareBackupFailed";
     private final String CUSTOM_ALERT_RULES = "customAlertRules";
+    private final String ALERT_RULES = "alertRules";
 
     @Autowired
     private HelmChartService helmChartService;
@@ -100,8 +98,8 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         //校验备份告警规则是否存在
         checkBackupAlert(clusterId, namespace, middlewareName, type);
         // 根据更新时间排序
-        middlewareAlertsDTOList.sort((o1, o2) -> o1.getUpdateTime() == null ? -1
-            : o2.getUpdateTime() == null ? -1 : o2.getUpdateTime().compareTo(o1.getUpdateTime()));
+        middlewareAlertsDTOList.sort(
+            Comparator.comparing(MiddlewareAlertsDTO::getUpdateTime, Comparator.nullsLast(Comparator.reverseOrder())));
         return middlewareAlertsDTOList;
     }
 
@@ -554,7 +552,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         }
         // 获取自定义告警对象和非自定义告警对象
         JSONObject customAlertRules = values.getJSONObject(CUSTOM_ALERT_RULES);
-        JSONObject alertRules = values.getJSONObject(CUSTOM_ALERT_RULES);
+        JSONObject alertRules = values.getJSONObject(ALERT_RULES);
         for (MiddlewareAlertsDTO middlewareAlertsDTO : middlewareAlertsDTOList){
             if (alertRules != null && alertRules.getJSONObject(middlewareAlertsDTO.getAlert()) != null){
                 JSONObject alert = alertRules.getJSONObject(middlewareAlertsDTO.getAlert());
