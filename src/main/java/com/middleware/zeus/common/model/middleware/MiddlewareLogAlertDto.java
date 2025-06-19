@@ -150,7 +150,7 @@ public class MiddlewareLogAlertDto {
         // 设置告警沉默时间 并添加默认单位m
         if (alertDo.getAlertmanagerAnnotations().containsKey("silence")) {
             String silence = alertDo.getAlertmanagerAnnotations().get("silence");
-            if (!silence.endsWith("m") || !silence.endsWith("h")) {
+            if (!silence.endsWith("m") && !silence.endsWith("h")) {
                 silence = silence + "m";
             }
             this.silence = silence;
