@@ -121,25 +121,27 @@ public class MiddlewareLogAlertDto {
             this.content = alertText;
         }
 
-        List<MatchRule> matchRuleList = new ArrayList<>();
-        // 通过解析filter中的内容，设置完全匹配和模糊匹配的规则
-        if (alertDo.getFilter() != null) {
-            for (MiddlewareLogAlertDo.Filter filter : alertDo.getFilter()) {
-                if (filter.getTerm() != null) {
-                    for (String key : filter.getTerm().keySet()) {
-                        matchRuleList
-                            .add(new MatchRule().setKey(key).setValue(filter.getTerm().get(key)).setFuzzy(false));
-                    }
-                }
-                if (filter.getQueryString() != null) {
-                    for (String key : filter.getQueryString().keySet()) {
-                        matchRuleList
-                            .add(new MatchRule().setKey(key).setValue(filter.getQueryString().get(key)).setFuzzy(true));
-                    }
-                }
-            }
-        }
-        this.matchRuleList = matchRuleList;
+        // 封装过滤匹配字段
+        convertFilter(alertDo.getFilter());
+//        List<MatchRule> matchRuleList = new ArrayList<>();
+//        // 通过解析filter中的内容，设置完全匹配和模糊匹配的规则
+//        if (alertDo.getFilter() != null) {
+//            for (MiddlewareLogAlertDo.Filter filter : alertDo.getFilter()) {
+//                if (filter.getTerm() != null) {
+//                    for (String key : filter.getTerm().keySet()) {
+//                        matchRuleList
+//                            .add(new MatchRule().setKey(key).setValue(filter.getTerm().get(key)).setFuzzy(false));
+//                    }
+//                }
+//                if (filter.getQueryString() != null) {
+//                    for (String key : filter.getQueryString().keySet()) {
+//                        matchRuleList
+//                            .add(new MatchRule().setKey(key).setValue(filter.getQueryString().get(key)).setFuzzy(true));
+//                    }
+//                }
+//            }
+//        }
+//        this.matchRuleList = matchRuleList;
 
         // 设置更新时间
         if (alertDo.getAlertmanagerAnnotations().containsKey("update_time")) {
@@ -159,6 +161,52 @@ public class MiddlewareLogAlertDto {
         if (alertDo.getAlertmanagerAnnotations().containsKey("unit")) {
             this.unit = alertDo.getAlertmanagerAnnotations().get("unit");
         }
+    }
+
+    public MiddlewareLogAlertDto(MiddlewareLogAlertHelmDo alertHelmDo) {
+        this.alertMode = alertHelmDo.getType();
+        this.index = alertHelmDo.getIndex();
+        this.compareKey = alertHelmDo.getCompareKey();
+        this.blacklist = alertHelmDo.getBlacklist();
+        if (alertHelmDo.getInterval() != null) {
+            this.timeframe = alertHelmDo.getInterval();
+        }
+        this.numEvents = alertHelmDo.getThreshold();
+        this.silence = alertHelmDo.getSilence();
+        // 封装过滤匹配字段
+        convertFilter(alertHelmDo.getFilter());
+
+        if (alertHelmDo.getAlertText() != null && alertHelmDo.getAlertTextArgs() != null) {
+            String alertText = alertHelmDo.getAlertText();
+            for (int i = 0; i < alertHelmDo.getAlertTextArgs().size(); i++) {
+                alertText = alertText.replace("{" + i + "}", "${" + alertHelmDo.getAlertTextArgs().get(i) + "}");
+            }
+            this.content = alertText;
+        }
+
+        this.updateTime = DateUtils.parseDate(alertHelmDo.getUpdateTime(), DateUtils.YYYY_MM_DD_HH_MM_SS);
+    }
+    
+    private void convertFilter(List<MiddlewareLogAlertDo.Filter> filterList){
+        List<MatchRule> matchRuleList = new ArrayList<>();
+        // 通过解析filter中的内容，设置完全匹配和模糊匹配的规则
+        if (filterList != null) {
+            for (MiddlewareLogAlertDo.Filter filter : filterList) {
+                if (filter.getTerm() != null) {
+                    for (String key : filter.getTerm().keySet()) {
+                        matchRuleList
+                                .add(new MatchRule().setKey(key).setValue(filter.getTerm().get(key)).setFuzzy(false));
+                    }
+                }
+                if (filter.getQueryString() != null) {
+                    for (String key : filter.getQueryString().keySet()) {
+                        matchRuleList
+                                .add(new MatchRule().setKey(key).setValue(filter.getQueryString().get(key)).setFuzzy(true));
+                    }
+                }
+            }
+        }
+        this.matchRuleList = matchRuleList;
     }
 
 }
