@@ -100,6 +100,10 @@ public class MiddlewareLogAlertsServiceImpl implements MiddlewareLogAlertsServic
                 if (alertDto.getUpdateTime() != null){
                     middlewareLogAlertDto.setUpdateTime(alertDto.getUpdateTime());
                 }
+                // 特殊处理silence时间为60m的情况，转换为1h
+                if (middlewareLogAlertDto.getSilence() != null && middlewareLogAlertDto.getSilence().equals("60m")) {
+                    middlewareLogAlertDto.setSilence("1h");
+                }
             }
         }
         // 排序
