@@ -338,10 +338,14 @@
             <artifactId>spring-context-support</artifactId>
             <version>4.2.5.RELEASE</version>
         </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.sun.mail</groupId>-->
+<!--            <artifactId>javax.mail</artifactId>-->
+<!--            <version>1.6.2</version>-->
+<!--        </dependency>-->
         <dependency>
-            <groupId>com.sun.mail</groupId>
-            <artifactId>javax.mail</artifactId>
-            <version>1.6.2</version>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
         </dependency>
         <!-- https://mvnrepository.com/artifact/commons-net/commons-net -->
         <dependency>

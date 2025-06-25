@@ -18,16 +18,14 @@ public interface MailService {
      * 使用QQ或者163邮箱发邮件
      * @param alertRecordDo 告警记录
      * @param alertUserDoList 告警用户列表
-     * @throws IOException
-     * @throws MessagingException
      */
-    void sendHtmlMail(AlertRecordDo alertRecordDo, List<AlertUserDo> alertUserDoList) throws IOException, MessagingException;
+    void sendHtmlMail(AlertRecordDo alertRecordDo, List<AlertUserDo> alertUserDoList);
 
     /**
      * 添加邮箱
      * @param mailInfo
      */
-    void insertMail(MailInfo mailInfo) throws IllegalAccessException;
+    void insertMail(MailInfo mailInfo);
 
     /**
      * 邮箱信息回显
@@ -41,14 +39,4 @@ public interface MailService {
      * @return
      */
     void checkEmail(MailInfo mailInfo);
-
-    /**
-     * 使用新浪邮箱发送邮件
-     * @param mailInfo
-     * @param alertRecordDo
-     * @param alertUserDo
-     * @throws MessagingException
-     * @throws IOException
-     */
-    void sendMail(MailInfo mailInfo, AlertRecordDo alertRecordDo, AlertUserDo alertUserDo) throws MessagingException, IOException;
 }
