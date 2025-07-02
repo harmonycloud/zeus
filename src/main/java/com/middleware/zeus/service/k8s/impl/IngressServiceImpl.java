@@ -48,9 +48,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.middleware.zeus.common.constants.CommonConstant.*;
-import static com.middleware.zeus.common.constants.LdapConfigConstant.PORT;
-import static com.middleware.zeus.common.constants.NameConstant.REDIS;
-import static com.middleware.zeus.common.constants.NameConstant.SENTINEL;
+import static com.middleware.zeus.common.constants.NameConstant.*;
+import static com.middleware.zeus.common.constants.NameConstant.KUBE_SYSTEM;
 import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.*;
 import static com.middleware.zeus.common.constants.registry.HelmChartConstant.*;
 

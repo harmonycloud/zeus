@@ -40,12 +40,5 @@ public class LdapController {
         return BaseResult.ok(ldapService.queryLdapDetail());
     }
 
-    @ApiOperation(value = "禁用ldap", notes = "禁用ldap")
-    @PutMapping("/disable")
-    public BaseResult disable(){
-        ldapService.disable();
-        return BaseResult.ok();
-    }
-
 
 }

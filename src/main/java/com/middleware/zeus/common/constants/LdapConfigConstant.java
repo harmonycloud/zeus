@@ -14,14 +14,16 @@ public class LdapConfigConstant {
     public static final String LDAP_ENABLE = "1";
     public static final String LDAP_DISABLE = "0";
 
-    public static final String IS_ON = "is_on";
-    public static final String IP = "ip";
-    public static final String PORT = "port";
+
+    public static final String URL = "url";
     public static final String BASE = "base";
-    public static final String USERDN = "userdn";
+    public static final String USERNAME = "username";
     public static final String PASSWORD = "password";
-    public static final String SEARCH_ATTRIBUTE = "search_attribute";
-    public static final String OBJECT_CLASS = "object_class";
-    public static final String DISPLAY_NAME_ATTRIBUTE = "display_name_attribute";
+    public static final String OBJECT_TYPE = "object_type";
+    public static final String ACCOUNT_TYPE = "account_type";
+    public static final String DISPLAY_NAME = "display_name";
+    public static final String MAIL = "mail";
+    public static final String PHONE = "phone";
+    public static final String FILTER_CONDITION = "filter_condition";
 
 }

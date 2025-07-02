@@ -9,33 +9,36 @@ import java.io.Serializable;
 @Data
 @ApiModel("ldap服务器信息")
 public class LdapConfigDto implements Serializable {
-    private Integer id;
 
-    @ApiModelProperty("ip地址")
-    private String ip;
 
-    @ApiModelProperty("端口")
-    private String port;
+    @ApiModelProperty("服务器地址")
+    private String url;
 
     @ApiModelProperty("基准DN")
     private String base;
 
     @ApiModelProperty("管理DN")
-    private String userdn;
+    private String username;
 
-    @ApiModelProperty("密码")
+    @ApiModelProperty("管理DN密码")
     private String password;
 
-    @ApiModelProperty("是否开启ldap,1:开启，0:关闭")
-    private Integer isOn;
+    @ApiModelProperty("对象类型")
+    private String objectType;
+
+    @ApiModelProperty("账户属性")
+    private String accountType;
+
+    @ApiModelProperty("用户名映射")
+    private String displayName;
+
+    @ApiModelProperty("邮箱映射")
+    private String mail;
+
+    @ApiModelProperty("手机号映射")
+    private String phone;
 
     @ApiModelProperty("过滤条件")
-    private String objectClass;
-
-    @ApiModelProperty("用户属性名")
-    private String searchAttribute;
-
-    @ApiModelProperty("用户姓名属性名")
-    private String displayNameAttribute;
+    private String filterCondition;
 
 }

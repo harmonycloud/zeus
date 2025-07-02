@@ -216,6 +216,7 @@ public enum ErrorMessage {
     DING_SERVER_CONNECT_FAILED(400025, "connect to ding server failed", "钉钉连接失败"),
     DING_INCOMPLETE_PARAMETERS(400026, "Incomplete parameters", "钉钉参数不全"),
     WEB_HOOK_REPETITION(400027,"webhook repetition","webhook重复"),
+    LDAP_USER_NOT_EXIST(400028, "ldap user not exist", "ldap 用户不存在"),
 
     // mysql database manage
     MYSQL_INCOMPLETE_PARAMETERS(400050, "Incomplete parameters", "参数不全"),

@@ -42,11 +42,6 @@ public interface LdapService {
     void update(BeanSystemConfig ldapConfig);
 
     /**
-     * 关闭ldap
-     */
-    void disable();
-
-    /**
      * 查询ldap详细配置
      * @return
      */

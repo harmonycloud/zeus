@@ -1,5 +1,6 @@
 package com.middleware.zeus.service.user.impl;
 
+import cn.hutool.core.util.ObjectUtil;
 import com.middleware.zeus.common.enums.DictEnum;
 import com.middleware.zeus.common.enums.ErrorMessage;
 import com.middleware.zeus.common.exception.BusinessException;
@@ -14,6 +15,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.ldap.core.AttributesMapper;
 import org.springframework.ldap.core.ContextMapper;
 import org.springframework.ldap.core.DirContextAdapter;
 import org.springframework.ldap.core.LdapTemplate;
@@ -22,12 +24,12 @@ import org.springframework.ldap.filter.EqualsFilter;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import javax.annotation.Resource;
 import javax.naming.Name;
+import javax.naming.NamingException;
+import javax.naming.directory.Attribute;
 import javax.naming.directory.Attributes;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static com.middleware.zeus.common.constants.LdapConfigConstant.*;
 
@@ -41,9 +43,6 @@ public class AuthManager4LdapImpl implements AuthManager4Ldap {
 
     private static Logger LOGGER = LoggerFactory.getLogger(AuthManager4LdapImpl.class);
 
-    private String searchType = "person";
-    private String objectClass = "cn";
-
     @Autowired
     private UserService userService;
 
@@ -51,27 +50,35 @@ public class AuthManager4LdapImpl implements AuthManager4Ldap {
     public UserDto auth(String userName, String password, LdapConfigDto ldapConfigDto) throws Exception {
         AssertUtil.notBlank(userName, DictEnum.USERNAME);
         AssertUtil.notBlank(password, DictEnum.PASSWORD);
-        if (StringUtils.isBlank(ldapConfigDto.getObjectClass())) {
-            ldapConfigDto.setObjectClass(objectClass);
-        }
-        if (StringUtils.isBlank(ldapConfigDto.getSearchAttribute())) {
-            ldapConfigDto.setSearchAttribute(searchType);
-        }
-        Map<String, String> userAttributes = this.getUserFromLdap(userName, password, ldapConfigDto);
+
+        Map<String, String> userAttributes = this.getUserFromLdap(userName, ldapConfigDto);
         // 对ldap认证通过的用户,判断是否已经记录,如果没有，则记录用户,并返回该用户
+        if (userAttributes.get("userPassword") != null && !userAttributes.get("userPassword").equals(password)) {
+            throw new BusinessException(ErrorMessage.LOGIN_FAILED);
+        }
         return saveUserInfo(userName, password, ldapConfigDto, userAttributes);
     }
 
-    private Map<String, String> getUserFromLdap(String userName, String password, LdapConfigDto ldapConfigDto) {
+    private Map<String, String> getUserFromLdap(String username, LdapConfigDto ldapConfigDto) {
         LdapTemplate template = LdapServiceImpl.getTemplate(ldapConfigDto);
-        Map<String, String> userAttribute = getUserAttribute(userName, template, ldapConfigDto);
-        boolean authenticated = template.authenticate(userAttribute.get("dn"),
-                new EqualsFilter("objectClass", ldapConfigDto.getObjectClass()).encode(), password);
-        if (authenticated) {
-            return userAttribute;
-        } else {
-            throw new BusinessException(ErrorMessage.LOGIN_FAILED);
+        String filter = "(&" + "(" + ldapConfigDto.getObjectType() + ")" +
+                "(uid=" + username + ")" +
+                (ObjectUtil.isNull(ldapConfigDto.getFilterCondition()) ? "" : ldapConfigDto.getFilterCondition()) + ")";
+        List<Map<String, String>> infoList = template.search("", filter, (AttributesMapper<Map<String, String>>) attributes -> {
+            Map<String, String> map = new HashMap<>();
+            for (Enumeration<? extends Attribute> e = attributes.getAll(); e.hasMoreElements();) {
+                Attribute attribute = e.nextElement();
+                map.put(attribute.getID(), attribute.get().toString());
+                if (attribute.getID().equals("userPassword") && attribute.get() instanceof byte[]) {
+                    map.put(attribute.getID(), new String((byte[])attribute.get()));
+                }
+            }
+            return map;
+        });
+        if (CollectionUtils.isEmpty(infoList)) {
+            throw new BusinessException(ErrorMessage.LDAP_USER_NOT_EXIST);
         }
+        return infoList.get(0);
     }
 
     /**
@@ -91,7 +98,7 @@ public class AuthManager4LdapImpl implements AuthManager4Ldap {
             user.setEmail(userAttributes.get(LDAP_MAIL));
             user.setPhone(userAttributes.get(LDAP_MOBILE));
             user.setCreateTime(new Date());
-            user.setAliasName(userAttributes.get(ldapConfigDto.getDisplayNameAttribute()) == null ? userName : userAttributes.get(ldapConfigDto.getDisplayNameAttribute()));
+            user.setAliasName(userAttributes.get(ldapConfigDto.getDisplayName()) == null ? userName : userAttributes.get(ldapConfigDto.getDisplayName()));
             userService.create(user);
             return userService.getUserDto(userName, true);
         }
@@ -116,19 +123,6 @@ public class AuthManager4LdapImpl implements AuthManager4Ldap {
             userService.update(user);
         }
         return userService.getUserDto(userName, true);
-    }
-
-    private Map<String, String> getUserAttribute(String cn, LdapTemplate template, LdapConfigDto ldapConfigDto) {
-        AndFilter andFilter = new AndFilter();
-        andFilter.and(new EqualsFilter("objectClass", ldapConfigDto.getObjectClass()));
-        andFilter.and(new EqualsFilter(ldapConfigDto.getSearchAttribute(), cn));
-
-        List<Map<String, String>> results = template.search("", andFilter.encode(), new DnMapper());
-
-        if (CollectionUtils.isEmpty(results)) {
-            throw new BusinessException(ErrorMessage.USER_NOT_EXIT);
-        }
-        return results.get(0);
     }
 
     /**

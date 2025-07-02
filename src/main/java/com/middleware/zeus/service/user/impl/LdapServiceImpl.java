@@ -1,26 +1,27 @@
 package com.middleware.zeus.service.user.impl;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.ldap.core.LdapTemplate;
+import org.springframework.ldap.core.support.LdapContextSource;
+import org.springframework.stereotype.Service;
+
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.middleware.zeus.bean.BeanSystemConfig;
 import com.middleware.zeus.common.constants.LdapConfigConstant;
 import com.middleware.zeus.common.enums.ErrorMessage;
 import com.middleware.zeus.common.exception.BusinessException;
 import com.middleware.zeus.common.model.LdapConfigDto;
-import com.middleware.zeus.bean.BeanSystemConfig;
 import com.middleware.zeus.dao.BeanSystemConfigMapper;
+import com.middleware.zeus.service.user.AuthManager4Ldap;
 import com.middleware.zeus.service.user.LdapService;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.ldap.core.ContextMapper;
-import org.springframework.ldap.core.LdapTemplate;
-import org.springframework.ldap.core.support.LdapContextSource;
-import org.springframework.ldap.filter.AndFilter;
-import org.springframework.ldap.filter.EqualsFilter;
-import org.springframework.ldap.filter.LikeFilter;
-import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * @author liyinlong
@@ -31,7 +32,9 @@ import java.util.Map;
 public class LdapServiceImpl implements LdapService {
 
     @Autowired
-    BeanSystemConfigMapper ldapConfigMapper;
+    private BeanSystemConfigMapper ldapConfigMapper;
+    @Autowired
+    private AuthManager4Ldap authManager4Ldap;
 
     @Override
     public void save(BeanSystemConfig ldapConfig) {
@@ -62,29 +65,21 @@ public class LdapServiceImpl implements LdapService {
     @Override
     public void save(LdapConfigDto ldapConfigDto) {
         this.connectionCheck(ldapConfigDto);
-        saveSingle(LdapConfigConstant.IS_ON, String.valueOf(ldapConfigDto.getIsOn()));
-        saveSingle(LdapConfigConstant.IP, ldapConfigDto.getIp());
+        saveSingle(LdapConfigConstant.URL, ldapConfigDto.getUrl());
         saveSingle(LdapConfigConstant.BASE, ldapConfigDto.getBase());
-        saveSingle(LdapConfigConstant.OBJECT_CLASS, ldapConfigDto.getObjectClass());
+        saveSingle(LdapConfigConstant.USERNAME, ldapConfigDto.getUsername());
         saveSingle(LdapConfigConstant.PASSWORD, ldapConfigDto.getPassword());
-        saveSingle(LdapConfigConstant.PORT, String.valueOf(ldapConfigDto.getPort()));
-        saveSingle(LdapConfigConstant.USERDN, ldapConfigDto.getUserdn());
-        saveSingle(LdapConfigConstant.SEARCH_ATTRIBUTE, ldapConfigDto.getSearchAttribute());
-        saveSingle(LdapConfigConstant.DISPLAY_NAME_ATTRIBUTE, ldapConfigDto.getDisplayNameAttribute());
+        saveSingle(LdapConfigConstant.OBJECT_TYPE, ldapConfigDto.getObjectType());
+        saveSingle(LdapConfigConstant.ACCOUNT_TYPE, ldapConfigDto.getAccountType());
+        saveSingle(LdapConfigConstant.DISPLAY_NAME, ldapConfigDto.getDisplayName());
+        saveSingle(LdapConfigConstant.MAIL, ldapConfigDto.getMail());
+        saveSingle(LdapConfigConstant.PHONE, ldapConfigDto.getPhone());
+        saveSingle(LdapConfigConstant.FILTER_CONDITION, ldapConfigDto.getFilterCondition());
     }
 
     @Override
     public void update(BeanSystemConfig ldapConfig) {
         ldapConfigMapper.updateById(ldapConfig);
-    }
-
-    @Override
-    public void disable() {
-        BeanSystemConfig isOnConfig = findByConfigName(LdapConfigConstant.IS_ON);
-        if (isOnConfig != null) {
-            isOnConfig.setConfigValue(LdapConfigConstant.LDAP_DISABLE);
-            update(isOnConfig);
-        }
     }
 
     @Override
@@ -94,32 +89,35 @@ public class LdapServiceImpl implements LdapService {
         LdapConfigDto ldapConfigDto = new LdapConfigDto();
         ldapConfigs.forEach(config -> {
             switch (config.getConfigName()) {
-                case LdapConfigConstant.IS_ON:
-                    ldapConfigDto.setIsOn(Integer.parseInt(config.getConfigValue()));
-                    break;
-                case LdapConfigConstant.IP:
-                    ldapConfigDto.setIp(config.getConfigValue());
+                case LdapConfigConstant.URL:
+                    ldapConfigDto.setUrl(config.getConfigValue());
                     break;
                 case LdapConfigConstant.BASE:
                     ldapConfigDto.setBase(config.getConfigValue());
                     break;
-                case LdapConfigConstant.OBJECT_CLASS:
-                    ldapConfigDto.setObjectClass(config.getConfigValue());
+                case LdapConfigConstant.USERNAME:
+                    ldapConfigDto.setUsername(config.getConfigValue());
                     break;
                 case LdapConfigConstant.PASSWORD:
                     ldapConfigDto.setPassword(config.getConfigValue());
                     break;
-                case LdapConfigConstant.PORT:
-                    ldapConfigDto.setPort(config.getConfigValue());
+                case LdapConfigConstant.OBJECT_TYPE:
+                    ldapConfigDto.setObjectType(config.getConfigValue());
                     break;
-                case LdapConfigConstant.USERDN:
-                    ldapConfigDto.setUserdn(config.getConfigValue());
+                case LdapConfigConstant.ACCOUNT_TYPE:
+                    ldapConfigDto.setAccountType(config.getConfigValue());
                     break;
-                case LdapConfigConstant.SEARCH_ATTRIBUTE:
-                    ldapConfigDto.setSearchAttribute(config.getConfigValue());
+                case LdapConfigConstant.DISPLAY_NAME:
+                    ldapConfigDto.setDisplayName(config.getConfigValue());
                     break;
-                case LdapConfigConstant.DISPLAY_NAME_ATTRIBUTE:
-                    ldapConfigDto.setDisplayNameAttribute(config.getConfigValue());
+                case LdapConfigConstant.MAIL:
+                    ldapConfigDto.setMail(config.getConfigValue());
+                    break;
+                case LdapConfigConstant.PHONE:
+                    ldapConfigDto.setPhone(config.getConfigValue());
+                    break;
+                case LdapConfigConstant.FILTER_CONDITION:
+                    ldapConfigDto.setFilterCondition(config.getConfigValue());
                     break;
             }
         });
@@ -130,38 +128,43 @@ public class LdapServiceImpl implements LdapService {
     public void connectionCheck(LdapConfigDto ldapConfigDto) {
         paramCheck(ldapConfigDto);
         try {
-            log.info("开始ldap连接测试", ldapConfigDto);
-            LdapTemplate template = getTemplate(ldapConfigDto);
-            AndFilter andFilter = new AndFilter();
-            andFilter.and(new EqualsFilter("objectClass", ldapConfigDto.getObjectClass()));
-            andFilter.and(new LikeFilter(ldapConfigDto.getSearchAttribute(), "*"));
-            andFilter.and(new LikeFilter(ldapConfigDto.getDisplayNameAttribute(), "*"));
-            List<Map<String, String>> results = template.search("", andFilter.encode(), (ContextMapper<Map<String, String>>) o -> null);
-            if (!(results.size() > 0)) {
-                throw new BusinessException(ErrorMessage.LDAP_SERVER_CONNECT_FAILED);
-            }
+            LdapContextSource contextSource = getLdapContextSource(ldapConfigDto);
+            contextSource.afterPropertiesSet();
+            LdapTemplate ldapTemplate = new LdapTemplate(contextSource);
+            ldapTemplate.setIgnorePartialResultException(true);
+            contextSource.getReadOnlyContext();
         } catch (Exception e) {
             log.error("ldap连接失败", e);
             throw new BusinessException(ErrorMessage.LDAP_SERVER_CONNECT_FAILED);
         }
     }
 
-    public static LdapTemplate getTemplate(LdapConfigDto ldapConfigDto) {
+    private static @NotNull LdapContextSource getLdapContextSource(LdapConfigDto ldapConfigDto) {
         LdapContextSource contextSource = new LdapContextSource();
-        contextSource.setUrl("ldap://" + ldapConfigDto.getIp() + ":" + ldapConfigDto.getPort() + "");
+        Map<String, Object> config = new HashMap<>();
+        contextSource.setUrl(ldapConfigDto.getUrl());
         contextSource.setBase(ldapConfigDto.getBase());
-        contextSource.setUserDn(ldapConfigDto.getUserdn());
+        contextSource.setUserDn(ldapConfigDto.getUsername());
         contextSource.setPassword(ldapConfigDto.getPassword());
+
+        //  解决乱码
+        config.put("java.naming.ldap.attributes.binary", "objectGUID");
+        //关闭ldap pooling
+        contextSource.setPooled(false);
+        contextSource.setBaseEnvironmentProperties(config);
+        return contextSource;
+    }
+
+    public static LdapTemplate getTemplate(LdapConfigDto ldapConfigDto) {
+        LdapContextSource contextSource = getLdapContextSource(ldapConfigDto);
         contextSource.afterPropertiesSet();
-        LdapTemplate template = new LdapTemplate();
-        template.setContextSource(contextSource);
-        return template;
+        return new LdapTemplate(contextSource);
     }
 
     public void paramCheck(LdapConfigDto ldapConfigDto) {
-        if (StringUtils.isAnyBlank(ldapConfigDto.getIp(), ldapConfigDto.getPort(), ldapConfigDto.getPassword(),
-                ldapConfigDto.getUserdn(), ldapConfigDto.getBase(), ldapConfigDto.getPassword(), ldapConfigDto.getSearchAttribute(),
-                ldapConfigDto.getDisplayNameAttribute(), ldapConfigDto.getObjectClass(), ldapConfigDto.getSearchAttribute())) {
+        if (StringUtils.isAnyBlank(ldapConfigDto.getUrl(), ldapConfigDto.getBase(), ldapConfigDto.getUsername(),
+            ldapConfigDto.getPassword(), ldapConfigDto.getObjectType(), ldapConfigDto.getAccountType(),
+            ldapConfigDto.getDisplayName())) {
             throw new BusinessException(ErrorMessage.LDAP_INCOMPLETE_PARAMETERS);
         }
     }
