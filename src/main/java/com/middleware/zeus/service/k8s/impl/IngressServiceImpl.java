@@ -888,11 +888,6 @@ public class IngressServiceImpl implements IngressService {
                         enableExternal.set(true);
                     }
                     break;
-                case REDIS:
-                    if (ingressDTO.getServiceList().size() > 1){
-                        enableExternal.set(true);
-                    }
-                    break;
                 default:
             }
         });
@@ -2174,9 +2169,13 @@ public class IngressServiceImpl implements IngressService {
             }
 
             // 哨兵模式服务暴露处理
-            if (ingressDTOList.stream().anyMatch(ingressDTO -> ingressDTO.getName().matches(
-                    "^" + middleware.getName() + LINE + SENTINEL + LINE + TCP + LINE + ".+" + "$"))) {
-                IngressDTO ingressDTO = ingressDTOList.get(0);
+            if (ingressDTOList.stream().anyMatch(ingressDTO -> ingressDTO.getName()
+                .matches("^" + middleware.getName() + LINE + SENTINEL + LINE + TCP + LINE + ".+" + "$"))) {
+                // 获取符合哨兵模式服务暴露的ingress
+                IngressDTO ingressDTO = ingressDTOList.stream()
+                    .filter(dto -> dto.getName()
+                        .matches("^" + middleware.getName() + LINE + SENTINEL + LINE + TCP + LINE + ".+" + "$"))
+                    .collect(Collectors.toList()).get(0);
                 ingressDTO.setExternalEnable(true);
                 // 记录无需整合的临时IngressList
                 List<IngressDTO> tempIngressList = new ArrayList<>();
