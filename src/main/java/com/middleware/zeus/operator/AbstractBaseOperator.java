@@ -757,10 +757,10 @@ public abstract class AbstractBaseOperator {
         if (helms.stream().noneMatch(h -> middleware.getName().equals(h.getName()))) {
             throw new BusinessException(DictEnum.MIDDLEWARE, middleware.getName(), ErrorMessage.NOT_EXIST);
         }
-        // 分区配额校验
-        if (!middlewareService.middlewareResourceCheck(middleware)){
-            throw new BusinessException(ErrorMessage.NAMESPACE_QUOTA_NOT_ENOUGH);
-        }
+//        // 分区配额校验
+//        if (!middlewareService.middlewareResourceCheck(middleware)){
+//            throw new BusinessException(ErrorMessage.NAMESPACE_QUOTA_NOT_ENOUGH);
+//        }
     }
 
     public void convertDynamicValues(Middleware middleware, JSONObject values) {
