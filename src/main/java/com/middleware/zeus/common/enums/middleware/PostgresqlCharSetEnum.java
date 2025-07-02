@@ -23,7 +23,7 @@ public enum PostgresqlCharSetEnum {
 
     private static Map<String, List<String>> Version() {
         Map<String, List<String>> mp = new HashMap<>();
-        mp.put("UTF8",Arrays.asList("zh_CN.UTF-8","en_US.UTF-8","zh_TW.UTF-8"));
+        mp.put("UTF8",Arrays.asList("zh_CN.UTF-8","en_US.UTF-8","zh_TW.UTF-8", "C.UTF-8"));
         return mp;
     }
 
