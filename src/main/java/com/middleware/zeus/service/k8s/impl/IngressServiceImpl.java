@@ -2006,6 +2006,10 @@ public class IngressServiceImpl implements IngressService {
         if(CollectionUtils.isEmpty(serviceDTOList)){
             return;
         }
+        // ha版本redis哨兵服务暴露分为多端口和单端口，若未申明为多端口则返回
+        if (ingressDTO.getExternalEnable() == null || !ingressDTO.getExternalEnable() ) {
+            return;
+        }
         // 非哨兵服务暴露返回
         if (serviceDTOList.stream().noneMatch(serviceDTO -> serviceDTO.getServiceName().equals(middlewareName + LINE + SENTINEL))){
             return;
