@@ -556,7 +556,18 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
      */
     public String getSymbol(String expr) {
         expr = Pattern.compile(".+}").matcher(expr).replaceAll("");
-        return Pattern.compile("[^<|^>|^>=|^<=|^!=|^==]").matcher(expr).replaceAll("");
+        // 用于匹配逻辑运算符
+        Pattern pattern = Pattern.compile("<|<=|>|>=|!=|==");
+        Matcher matcher = pattern.matcher(expr);
+
+        String lastSymbol = null;
+
+        // 遍历所有匹配内容，保留最后一个匹配值
+        while (matcher.find()) {
+            lastSymbol = matcher.group();
+        }
+
+        return lastSymbol;
     }
 
     /**
