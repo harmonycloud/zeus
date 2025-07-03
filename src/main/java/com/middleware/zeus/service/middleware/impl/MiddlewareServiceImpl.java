@@ -137,6 +137,8 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
     private MiddlewarePvcService middlewarePvcService;
     @Autowired
     private OpsManagerService opsManagerService;
+    @Autowired
+    private MiddlewareDisableVersionService middlewareDisableVersionService;
 
     @Value("${system.privateRegistry.middlewareServiceAccount:default}")
     private String middlewareServiceAccount;
@@ -633,6 +635,9 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
         // 将倒序转为正序
         Collections.reverse(middlewareInfos);
         Middleware middleware = detail(clusterId, namespace, name, type);
+        // 获取过滤掉的版本
+        List<MiddlewareDisableVersionDo> middlewareDisableVersionDoList = middlewareDisableVersionService
+            .get(middleware.getClusterId(), type, middleware.getChartVersion());
         // 升级服务时，只能升级到当前服务的上一个版本，不能跨版本升级,设置标志变量existNow来判断是否是上一个版本
         List<MiddlewareInfoDTO> resList = middlewareInfos.stream().map(info -> {
             MiddlewareInfoDTO dto = new MiddlewareInfoDTO();
@@ -644,11 +649,19 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             } else {
                 dto.setVersionStatus("future");
             }
+            if (info.getVersion() != null && !CollectionUtils.isEmpty(middlewareDisableVersionDoList)) {
+                List<String> versionList = Arrays.asList(info.getVersion().split(","));
+                versionList = versionList.stream()
+                    .filter(version -> middlewareDisableVersionDoList.stream()
+                        .noneMatch(disableVersionDo -> disableVersionDo.getVersion().equals(version)))
+                    .collect(Collectors.toList());
+                // 将version写会以，分隔的字符串
+                dto.setVersion(StringUtils.join(versionList, ","));
+            }
+
             return dto;
-        }).collect(Collectors.toList());
-        resList.sort(((o1, o2) -> {
-            return ChartVersionUtil.compare(o1.getChartVersion(), o2.getChartVersion());
-        }));
+        }).sorted(((o1, o2) -> ChartVersionUtil.compare(o1.getChartVersion(), o2.getChartVersion())))
+            .collect(Collectors.toList());
         return resList;
     }
 
