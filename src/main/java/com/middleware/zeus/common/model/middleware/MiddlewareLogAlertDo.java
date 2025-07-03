@@ -10,6 +10,7 @@ import com.middleware.zeus.util.date.DateUtils;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import io.swagger.models.auth.In;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -40,7 +41,7 @@ public class MiddlewareLogAlertDo {
 
     @ApiModelProperty("次数")
     @JSONField(name = "num_events")
-    private int numEvents;
+    private Integer numEvents;
 
     @ApiModelProperty("黑名单匹配时的关键词")
     @JSONField(name = "compare_key")
