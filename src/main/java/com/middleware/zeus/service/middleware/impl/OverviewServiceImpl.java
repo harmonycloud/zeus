@@ -1028,22 +1028,47 @@ public class OverviewServiceImpl implements OverviewService {
                 log.debug("查询多集群中间件信息失败", e);
             }
         }
+        // ! Creating 启动中
+        // ! Recover 恢复中
+        // ! Running 运行正常
+        // ! Failed 运行异常
+        // ! RunningError  运行异常
+        // ! Preparing 创建中
+        // ! failed 创建失败
+        // ! Deleted 已删除
+        // ! Deleting 数据删除中
+        // ! GracefulRestart 重启中
         // 对list进行排序，优先运行异常，然后启动中等其他状态，最后运行正常
         list.sort(Comparator.comparingInt(middleware -> {
-            if (StringUtils.isEmpty(middleware.getStatus())) {
-                return 0;
+            String status = middleware.getStatus();
+            if (StringUtils.isEmpty(status)) {
+                return Integer.MAX_VALUE; // 空状态放到最后
             }
-            if (!NameConstant.RUNNING.equalsIgnoreCase(middleware.getStatus())) {
-                if ("Creating".equals(middleware.getStatus()) || "Recover".equals(middleware.getStatus())
-                        || "GracefulRestart".equals(middleware.getStatus()) || "Preparing".equals(middleware.getStatus())
-                        || "Deleted".equals(middleware.getStatus()) || "Deleting".equals(middleware.getStatus())) {
-                    return 1;
-                } else {
-                    return 0;
-                }
+
+            switch (status) {
+                case "Failed":
+                case "failed":
+                case "RunningError":
+                    return 1; // 优先级最高，排最前
+
+                case "Deleting":
+                case "SyncFailed":
+                case "RecoverFailed":
+                case "Creating":
+                case "Recover":
+                case "Preparing":
+                case "Deleted":
+                case "GracefulRestart":
+                    return 2;
+
+                case "Running":
+                    return 3; // 优先级最低，排最后
+
+                default:
+                    return 1; // 其他未知状态基本都属于异常状态，放在前面
             }
-            return 1; // 正常运行状态
         }));
+
         return list;
     }
 
