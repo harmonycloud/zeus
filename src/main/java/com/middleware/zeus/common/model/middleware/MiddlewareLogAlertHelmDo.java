@@ -78,7 +78,8 @@ public class MiddlewareLogAlertHelmDo {
         alertDto.getMatchRuleList().forEach(rule -> {
             // 若fuzzy为true，则为模糊匹配
             if (rule.getFuzzy() != null && rule.getFuzzy()) {
-                filterList.add(new MiddlewareLogAlertDo.Filter().setQueryString(Map.of(rule.getKey(), rule.getValue())));
+                filterList.add(new MiddlewareLogAlertDo.Filter().setBool(List.of(new MiddlewareLogAlertDo.Bool()
+                    .setShould(List.of(new MiddlewareLogAlertDo.Should().setTerm(Map.of(rule.getKey(), rule.getValue())))))));
             } else {
                 filterList.add(new MiddlewareLogAlertDo.Filter().setTerm(Map.of(rule.getKey(), rule.getValue())));
             }

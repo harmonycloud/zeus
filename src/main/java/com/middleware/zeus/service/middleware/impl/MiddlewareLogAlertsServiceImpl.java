@@ -14,6 +14,7 @@ import java.util.List;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.yaml.snakeyaml.Yaml;
 
 import com.alibaba.fastjson.JSONObject;
@@ -91,7 +92,7 @@ public class MiddlewareLogAlertsServiceImpl implements MiddlewareLogAlertsServic
                 // 数据结构转化
                 MiddlewareLogAlertDto alertDto = new MiddlewareLogAlertDto(middlewareLogAlertHelmDo);
                 // 补充内容
-                if (alertDto.getMatchRuleList() != null) {
+                if (!CollectionUtils.isEmpty(alertDto.getMatchRuleList())) {
                     middlewareLogAlertDto.setMatchRuleList(alertDto.getMatchRuleList());
                 }
                 if (alertDto.getContent() != null){

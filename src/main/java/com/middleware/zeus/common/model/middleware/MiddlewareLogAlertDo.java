@@ -96,8 +96,21 @@ public class MiddlewareLogAlertDo {
     @Accessors(chain = true)
     public static class Filter {
         private Map<String, String> term;
-        @JSONField(name = "query_string")
-        private Map<String, String> queryString;
+        private List<Bool> bool;
+    }
+
+    @Data
+    @Accessors(chain = true)
+    public static class Bool {
+        @JSONField(name = "minimum_should_match")
+        private Integer minimumShouldMatch;
+        private List<Should> should;
+    }
+
+    @Data
+    @Accessors(chain = true)
+    public static class Should {
+        private Map<String, String> term;
     }
 
     @Data

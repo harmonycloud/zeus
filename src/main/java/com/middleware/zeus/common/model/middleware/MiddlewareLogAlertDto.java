@@ -192,16 +192,24 @@ public class MiddlewareLogAlertDto {
         // 通过解析filter中的内容，设置完全匹配和模糊匹配的规则
         if (filterList != null) {
             for (MiddlewareLogAlertDo.Filter filter : filterList) {
-                if (filter.getTerm() != null) {
-                    for (String key : filter.getTerm().keySet()) {
-                        matchRuleList
-                                .add(new MatchRule().setKey(key).setValue(filter.getTerm().get(key)).setFuzzy(false));
-                    }
-                }
-                if (filter.getQueryString() != null) {
-                    for (String key : filter.getQueryString().keySet()) {
-                        matchRuleList
-                                .add(new MatchRule().setKey(key).setValue(filter.getQueryString().get(key)).setFuzzy(true));
+//                if (filter.getTerm() != null) {
+//                    for (String key : filter.getTerm().keySet()) {
+//                        matchRuleList
+//                                .add(new MatchRule().setKey(key).setValue(filter.getTerm().get(key)).setFuzzy(false));
+//                    }
+//                }
+                if (filter.getBool() != null) {
+                    for (MiddlewareLogAlertDo.Bool bool : filter.getBool()) {
+                        if (bool.getShould() != null) {
+                            for (MiddlewareLogAlertDo.Should should : bool.getShould()) {
+                                if (should.getTerm() != null) {
+                                    for (String key : should.getTerm().keySet()) {
+                                        matchRuleList.add(new MatchRule().setKey(key)
+                                            .setValue(should.getTerm().get(key)).setFuzzy(true));
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
