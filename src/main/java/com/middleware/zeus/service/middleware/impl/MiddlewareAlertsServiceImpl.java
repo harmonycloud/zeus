@@ -555,7 +555,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
      * 获取符号:>,<,!=...
      */
     public String getSymbol(String expr) {
-        expr = Pattern.compile(".+}").matcher(expr).replaceAll("");
+        //expr = Pattern.compile(".+}").matcher(expr).replaceAll("");
         // 用于匹配逻辑运算符
         Pattern pattern = Pattern.compile("<|<=|>|>=|!=|==");
         Matcher matcher = pattern.matcher(expr);
@@ -694,8 +694,9 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             annotations.put("target_type", "backup");
             middlewareAlertsDTO.setAnnotations(annotations);
 
-            // todo
-            //updateServiceAlerts2Prometheus(clusterId, namespace, middlewareName, middlewareAlertsDTO);
+            // 创建备份告警
+            createRules(clusterId, namespace, middlewareName,
+                new MiddlewareAlertsListDto().setMiddlewareAlertsDTOList(List.of(middlewareAlertsDTO)));
         }
     }
 
