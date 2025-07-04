@@ -238,7 +238,7 @@ public abstract class AbstractBaseOperator {
             }
         });
         // 5. 修改prometheusRules添加集群
-        updateAlerts(middleware);
+        // updateAlerts(middleware);
         // add2sql(middleware);
         //6. 删除告警记录
         deleteRecord(middleware.getClusterId(), middleware.getNamespace(), middleware.getType(), middleware.getName());

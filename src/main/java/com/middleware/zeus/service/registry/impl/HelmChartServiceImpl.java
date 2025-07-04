@@ -552,7 +552,7 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
             FileUtil.deleteFile(tempValuesYamlPath, getHelmChartFilePath(chartName, chartVersion));
         }
 
-        baseOperator.updateAlerts(middleware);
+        // baseOperator.updateAlerts(middleware);
     }
 
     @Override
@@ -676,7 +676,7 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
                 getHelmChartFilePath(chartName, chartVersion));
         }
 
-        baseOperator.updateAlerts(middleware);
+        // baseOperator.updateAlerts(middleware);
     }
 
     @Override
