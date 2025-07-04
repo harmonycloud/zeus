@@ -238,7 +238,7 @@ public abstract class AbstractBaseOperator {
             }
         });
         // 5. 修改prometheusRules添加集群
-        // updateAlerts(middleware);
+        updateAlerts(middleware);
         // add2sql(middleware);
         //6. 删除告警记录
         deleteRecord(middleware.getClusterId(), middleware.getNamespace(), middleware.getType(), middleware.getName());
@@ -1232,23 +1232,6 @@ public abstract class AbstractBaseOperator {
      * 更新prometheusRules
      */
     public void updateAlerts(Middleware middleware) {
-        // 获取cr
-        try {
-            PrometheusRule prometheusRule =
-                prometheusRuleService.get(middleware.getClusterId(), middleware.getNamespace(), middleware.getName());
-            prometheusRule.getSpec().getGroups().forEach(group -> group.getRules().forEach(rule -> {
-                if (!CollectionUtils.isEmpty(rule.getLabels())) {
-                    rule.getLabels().put("clusterId", middleware.getClusterId());
-                    rule.getLabels().put("namespace", middleware.getNamespace());
-                    rule.getLabels().put("service", middleware.getName());
-                    rule.getLabels().put("middleware", middleware.getType());
-                }
-            }));
-            prometheusRuleService.update(middleware.getClusterId(), prometheusRule);
-        } catch (Exception e) {
-            log.error("集群{} 分区{} 中间件{}， 告警规则标签添加集群失败", middleware.getClusterId(), middleware.getNamespace(),
-                middleware.getName());
-        }
         try {
             // 开启备份通知
             middlewareAlertsService.editBackupAlert(middleware.getClusterId(), middleware.getNamespace(), middleware.getName(), middleware.getType(), true);
@@ -1256,7 +1239,6 @@ public abstract class AbstractBaseOperator {
             log.error("集群{} 分区{} 中间件{}， 开启备份通知失败", middleware.getClusterId(), middleware.getNamespace(),
                     middleware.getName());
         }
-
     }
 
     /**

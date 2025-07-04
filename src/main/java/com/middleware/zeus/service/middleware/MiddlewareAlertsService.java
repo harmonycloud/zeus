@@ -190,4 +190,9 @@ public interface MiddlewareAlertsService {
      */
     void editBackupAlert(String clusterId, String namespace, String middlewareName, String type, Boolean enable);
 
+    /**
+     * 刷新告警规则
+     */
+    void refresh();
+
 }

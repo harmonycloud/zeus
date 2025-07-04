@@ -12,17 +12,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import com.middleware.zeus.common.enums.ComponentsEnum;
-import com.middleware.zeus.common.enums.middleware.MiddlewareTypeEnum;
-import com.middleware.zeus.common.model.*;
 import com.middleware.zeus.integration.cluster.bean.MiddlewareCR;
-import com.middleware.zeus.integration.cluster.bean.prometheus.PrometheusRuleGroups;
-import com.middleware.zeus.integration.cluster.bean.prometheus.PrometheusRuleSpec;
-import com.middleware.zeus.integration.cluster.bean.prometheus.PrometheusRules;
-import com.middleware.zeus.service.components.api.AlertManagerService;
-import com.middleware.zeus.service.k8s.ClusterComponentService;
-import com.middleware.zeus.service.k8s.MiddlewareCRService;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,12 +20,19 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import com.alibaba.fastjson.JSONObject;
+import com.middleware.zeus.common.enums.middleware.MiddlewareTypeEnum;
+import com.middleware.zeus.common.model.*;
 import com.middleware.zeus.common.model.middleware.Middleware;
 import com.middleware.zeus.common.model.middleware.MiddlewareAlertsDTO;
 import com.middleware.zeus.common.model.middleware.MiddlewareClusterDTO;
 import com.middleware.zeus.common.model.user.UserDto;
 import com.middleware.zeus.integration.cluster.bean.prometheus.PrometheusRule;
+import com.middleware.zeus.integration.cluster.bean.prometheus.PrometheusRuleGroups;
+import com.middleware.zeus.integration.cluster.bean.prometheus.PrometheusRuleSpec;
+import com.middleware.zeus.integration.cluster.bean.prometheus.PrometheusRules;
+import com.middleware.zeus.service.components.api.AlertManagerService;
 import com.middleware.zeus.service.k8s.ClusterService;
+import com.middleware.zeus.service.k8s.MiddlewareCRService;
 import com.middleware.zeus.service.k8s.PrometheusRuleService;
 import com.middleware.zeus.service.middleware.MiddlewareAlertsService;
 import com.middleware.zeus.service.registry.HelmChartService;
@@ -45,10 +42,8 @@ import com.middleware.zeus.service.user.UserService;
 import com.middleware.zeus.util.date.DateUtils;
 import com.middleware.zeus.util.uuid.UUIDUtils;
 
+import io.fabric8.kubernetes.api.model.ObjectMeta;
 import lombok.extern.slf4j.Slf4j;
-import org.yaml.snakeyaml.Yaml;
-
-import javax.annotation.PostConstruct;
 
 /**
  * @author xutianhong
@@ -78,6 +73,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
     private ClusterService clusterService;
     @Autowired
     private AlertManagerService alertManagerService;
+    @Autowired
     private MiddlewareCRService middlewareCRService;
 
     @Override
@@ -105,8 +101,6 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
                 middlewareAlertsDTO.setSilence(clusterComponentsDto.getSilentTime());
             }
         }
-        //校验备份告警规则是否存在
-        checkBackupAlert(clusterId, namespace, middlewareName, type);
         // 根据更新时间排序
         middlewareAlertsDTOList.sort(
             Comparator.comparing(MiddlewareAlertsDTO::getUpdateTime, Comparator.nullsLast(Comparator.reverseOrder())));
@@ -400,10 +394,12 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
     }
 
     @Override
-    public void editBackupAlert(String clusterId, String namespace, String middlewareName, String type, Boolean enable) {
+    public void editBackupAlert(String clusterId, String namespace, String middlewareName, String type,
+        Boolean enable) {
         // 备份告警通知开关更新
         alertUserService.delete(null, clusterId, namespace, middlewareName, BACKUP);
-        if (enable){
+        if (enable) {
+            // 保存告警用户
             AlertUserDo alertUserDo = new AlertUserDo();
             alertUserDo.setClusterId(clusterId);
             alertUserDo.setNamespace(namespace);
@@ -411,8 +407,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
             alertUserDo.setAlertType(BACKUP);
             alertUserService.add(alertUserDo);
         }
-
-        //校验备份告警规则是否存在
+        // 校验备份告警规则是否存在
         checkBackupAlert(clusterId, namespace, middlewareName, type);
     }
 
@@ -764,52 +759,46 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         return middlewareAlertsDTOList;
     }
 
+    @Override
+    public void refresh() {
+        try {
+            List<MiddlewareClusterDTO> clusterList = clusterService.listClusters();
+            if (CollectionUtils.isEmpty(clusterList)) {
+                return;
+            }
+            clusterList.forEach(cluster -> {
+                // 查询middleware
+                List<Middleware> middlewareList = middlewareCRService.list(cluster.getId(), null, null, false);
+                // 查询环境中的prometheusrules文件
+                List<PrometheusRule> prometheusRuleList = prometheusRuleService.list(cluster.getId(), null, null);
 
-//    @PostConstruct
-//    public void refresh() {
-//        try {
-//            List<MiddlewareClusterDTO> clusterList = clusterService.listClusters();
-//            if (CollectionUtils.isEmpty(clusterList)) {
-//                return;
-//            }
-//            clusterList.forEach(cluster -> {
-//                // 查询环境中的prometheusrules文件
-//                List<PrometheusRule> prometheusRuleList = prometheusRuleService.list(cluster.getId(), null, null);
-//                // 查询middleware列表
-//                List<MiddlewareCR> middlewareCRList = middlewareCRService.listCR(cluster.getId(), null, null);
-//                for (PrometheusRule prometheusRule : prometheusRuleList) {
-//                    if (!prometheusRule.getMetadata().getName().startsWith(ZEUS)) {
-//                        continue;
-//                    }
-//                    String middlewareName = prometheusRule.getMetadata().getName().substring(ZEUS.length() + 1);
-//                    String namespace = prometheusRule.getMetadata().getNamespace();
-//                    if (middlewareCRList.stream()
-//                        .noneMatch(middlewareCR -> middlewareCR.getSpec().getName().equals(middlewareName)
-//                            && middlewareCR.getMetadata().getNamespace().equals(namespace))) {
-//                        // 删除原有prometheusRule
-//                        prometheusRuleService.delete(cluster.getId(), namespace,
-//                            prometheusRule.getMetadata().getName());
-//                    }
-//
-//                    // // 解析其中的告警规则，添加进部署配置中
-//                    // List<MiddlewareAlertsDTO> middlewareAlertsDTOList =
-//                    // prometheusRuleService.convertPrometheusRule(prometheusRule);
-//                    // if (CollectionUtils.isEmpty(middlewareAlertsDTOList)) {
-//                    // continue;
-//                    // }
-//                    // // 过滤备份告警
-//                    // middlewareAlertsDTOList
-//                    // .removeIf(middlewareAlertsDTO ->
-//                    // "middlewareBackupFailed".equals(middlewareAlertsDTO.getAlert()));
-//                    // // 重新创建额外的告警任务
-//                    // createRules(cluster.getId(), namespace, middlewareName,
-//                    // new MiddlewareAlertsListDto().setMiddlewareAlertsDTOList(middlewareAlertsDTOList));
-//                    // // 删除该prometheusRule
-//                    // prometheusRuleService.delete(cluster.getId(), namespace, prometheusRule.getMetadata().getName());
-//                }
-//            });
-//        } catch (Exception e) {
-//            log.error("refresh prometheus rule error", e);
-//        }
-//    }
+                for (PrometheusRule prometheusRule : prometheusRuleList) {
+                    if (!prometheusRule.getMetadata().getName().startsWith(ZEUS)) {
+                        continue;
+                    }
+                    String middlewareName = prometheusRule.getMetadata().getName().substring(ZEUS.length() + 1);
+                    String namespace = prometheusRule.getMetadata().getNamespace();
+
+                    // 删除当前prometheusRule
+                    prometheusRuleService.delete(cluster.getId(), namespace, prometheusRule.getMetadata().getName());
+
+                    if (middlewareList.stream().anyMatch(middleware -> middleware.getNamespace().equals(namespace)
+                        && middleware.getName().equals(middlewareName))) {
+                        // 解析其中的告警规则，添加进部署配置中
+                        List<MiddlewareAlertsDTO> middlewareAlertsDTOList =
+                            prometheusRuleService.convertPrometheusRule(prometheusRule);
+                        if (CollectionUtils.isEmpty(middlewareAlertsDTOList)) {
+                            continue;
+                        }
+
+                        // 重新创建额外的告警任务
+                        createRules(cluster.getId(), namespace, middlewareName,
+                            new MiddlewareAlertsListDto().setMiddlewareAlertsDTOList(middlewareAlertsDTOList));
+                    }
+                }
+            });
+        } catch (Exception e) {
+            log.error("refresh prometheus rule error", e);
+        }
+    }
 }
