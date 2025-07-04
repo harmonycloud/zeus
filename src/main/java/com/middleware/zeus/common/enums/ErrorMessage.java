@@ -13,7 +13,7 @@ public enum ErrorMessage {
     IO_FAILED(100006, "I/O failed", "I/O失败"),
     AUTH_FAILED(100007, "Auth failed", "认证失败"),
     YAML_FORMAT_WRONG(100008,"yaml format incorrect.","yaml格式不正确！"),
-    PARSE_OBJECT_TO_CONFIGMAP_FAILED(10009,"failed to parse object to configmap","转换为configmap失败"),
+    PARSE_OBJECT_TO_CONFIGMAP_FAILED(100009,"failed to parse object to configmap","转换为configmap失败"),
     CERTIFICATE_AUTH_FAILED(100010, "Auth failed", "认证失败,您的集群证书信息可能有误"),
     PARAMETER_NOT_COMPLETE(100011, "Parameter is not complete", "参数不全"),
     QUERY_FAIL(100012, "Query failed.", "查询失败"),
@@ -490,4 +490,10 @@ public enum ErrorMessage {
         return zhMsg;
     }
 
+
+    public static void main(String[] args) {
+        for (ErrorMessage errorMessage : ErrorMessage.values()) {
+            System.out.println(errorMessage.getCode() + "=" + errorMessage.getEnMsg());
+        }
+    }
 }
