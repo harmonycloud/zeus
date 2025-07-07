@@ -42,12 +42,4 @@ public class MiddlewareDisableVersionDo {
         this.enable = false;
     }
 
-    public MiddlewareDisableVersionDo(MiddlewareDisableVersionDto dto) {
-        this.chartName = dto.getChartName();
-        this.chartVersion = dto.getChartVersion();
-        this.clusterId = dto.getClusterId();
-        this.version = dto.getVersion();
-        this.enable = dto.getEnable();
-    }
-
 }

@@ -531,7 +531,7 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
     }
 
     @Override
-    public List<MiddlewareDisableVersionDto> disableVersion(String clusterId, String type, String chartVersion) {
+    public MiddlewareDisableVersionDto disableVersion(String clusterId, String type, String chartVersion) {
         BeanMiddlewareInfo mwInfo = get(type, chartVersion);
         String versions = mwInfo.getVersion();
         if (StringUtils.isEmpty(versions)) {
@@ -546,23 +546,22 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         List<String> disableVersionList =
             disableVersionDoList.stream().map(MiddlewareDisableVersionDo::getVersion).collect(Collectors.toList());
 
-        return versionList.stream().map(version -> {
-            MiddlewareDisableVersionDto versionDto = new MiddlewareDisableVersionDto();
-            versionDto.setVersion(version);
-            if (disableVersionList.contains(version)) {
-                versionDto.setEnable(false);
-            }
-            return versionDto;
-        }).collect(Collectors.toList());
+        MiddlewareDisableVersionDto dto = new MiddlewareDisableVersionDto();
+        dto.setClusterId(clusterId);
+        dto.setChartName(type);
+        dto.setChartVersion(chartVersion);
+        dto.setVersionList(versionList.stream().map(version -> {
+            MiddlewareDisableVersionDto.Version middlewareDisableVersion = new MiddlewareDisableVersionDto.Version();
+            middlewareDisableVersion.setVersion(version);
+            middlewareDisableVersion.setEnable(!disableVersionList.contains(version));
+            return middlewareDisableVersion;
+        }).collect(Collectors.toList()));
+        return dto;
     }
 
     @Override
-    public synchronized void setDisableVersion(List<MiddlewareDisableVersionDto> middlewareDisableVersionDtoList) {
-        if (CollectionUtils.isEmpty(middlewareDisableVersionDtoList)) {
-            return;
-        }
-
-        MiddlewareDisableVersionDto middlewareDisableVersionDto = middlewareDisableVersionDtoList.get(0);
+    public synchronized void setDisableVersion(MiddlewareDisableVersionDto middlewareDisableVersionDto) {
+//        MiddlewareDisableVersionDto middlewareDisableVersionDto = middlewareDisableVersionDtoList.get(0);
         String clusterId = middlewareDisableVersionDto.getClusterId();
         String type = middlewareDisableVersionDto.getChartName();
         String chartVersion = middlewareDisableVersionDto.getChartVersion();
@@ -576,7 +575,7 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         List<String> versionList = Arrays.asList(versions.split(","));
         // 过滤获取应当被禁用了的版本，middlewareDisableVersionDtoList中的是被勾选为可用的版本列表
         versionList = versionList.stream()
-                .filter(version -> middlewareDisableVersionDtoList.stream()
+                .filter(version -> middlewareDisableVersionDto.getVersionList().stream()
                         .noneMatch(dto -> dto.getVersion().equals(version)))
                 .collect(Collectors.toList());
 
@@ -585,12 +584,12 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
 
         // 设置新的中间件禁用版本
         for (String version : versionList) {
-            MiddlewareDisableVersionDto dto = new MiddlewareDisableVersionDto();
-            dto.setClusterId(clusterId);
-            dto.setChartName(type);
-            dto.setChartVersion(chartVersion);
-            dto.setVersion(version);
-            middlewareDisableVersionService.add(new MiddlewareDisableVersionDo(dto));
+            MiddlewareDisableVersionDo middlewareDisableVersionDo = new MiddlewareDisableVersionDo();
+            middlewareDisableVersionDo.setClusterId(clusterId);
+            middlewareDisableVersionDo.setChartName(type);
+            middlewareDisableVersionDo.setChartVersion(chartVersion);
+            middlewareDisableVersionDo.setVersion(version);
+            middlewareDisableVersionService.add(middlewareDisableVersionDo);
         }
     }
 

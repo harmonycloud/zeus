@@ -2,7 +2,6 @@ package com.middleware.zeus.controller.middleware;
 
 import com.dtflys.forest.annotation.Post;
 import com.middleware.zeus.common.model.middleware.MiddlewareDisableVersionDto;
-import com.middleware.zeus.common.model.middleware.MiddlewareDisableVersionDtoList;
 import com.middleware.zeus.service.middleware.MiddlewareInfoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -111,21 +110,21 @@ public class MiddlewareInfoController {
             @ApiImplicitParam(name = "chartVersion", value = "chart版本", paramType = "query", dataTypeClass = String.class),
     })
     @GetMapping("/{type}/disableVersion")
-    public BaseResult<List<MiddlewareDisableVersionDto>> disableVersion(@PathVariable("type") String type,
-                                                                        @RequestParam("clusterId") String clusterId,
-                                                                        @RequestParam("chartVersion") String chartVersion) {
+    public BaseResult<MiddlewareDisableVersionDto> disableVersion(@PathVariable("type") String type,
+                                                                  @RequestParam("clusterId") String clusterId,
+                                                                  @RequestParam("chartVersion") String chartVersion) {
         return BaseResult.ok(middlewareInfoService.disableVersion(clusterId, type, chartVersion));
     }
 
     @ApiOperation(value = "设置中间件禁用版本", notes = "设置中间件禁用版本")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "type", value = "类型", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "middlewareDisableVersionDtoList", value = "禁用版本列表", paramType = "query", dataTypeClass = MiddlewareDisableVersionDtoList.class)
+            @ApiImplicitParam(name = "middlewareDisableVersionDto", value = "禁用版本列表", paramType = "query", dataTypeClass = MiddlewareDisableVersionDto.class)
     })
     @PostMapping("/{type}/disableVersion")
     public BaseResult addDisableVersion(@PathVariable("type") String type,
-                                        @RequestBody MiddlewareDisableVersionDtoList middlewareDisableVersionDtoList) {
-        middlewareInfoService.setDisableVersion(middlewareDisableVersionDtoList.getMiddlewareDisableVersionDtoList());
+                                        @RequestBody MiddlewareDisableVersionDto middlewareDisableVersionDto) {
+        middlewareInfoService.setDisableVersion(middlewareDisableVersionDto);
         return BaseResult.ok();
     }
 }

@@ -144,16 +144,16 @@ public interface MiddlewareInfoService {
      * @param clusterId 集群id
      * @param type 类型
      * @param chartVersion 中间件chart版本
-     * @return List<MiddlewareDisableVersionDto>
+     * @return MiddlewareDisableVersionDto
      */
-    List<MiddlewareDisableVersionDto> disableVersion(String clusterId, String type, String chartVersion);
+    MiddlewareDisableVersionDto disableVersion(String clusterId, String type, String chartVersion);
 
     /**
      * 设置指定中间件的禁用版本列表
      *
-     * @param middlewareDisableVersionDtoList 禁用版本列表
+     * @param middlewareDisableVersionDto 禁用版本列表
      */
-    void setDisableVersion(List<MiddlewareDisableVersionDto> middlewareDisableVersionDtoList);
+    void setDisableVersion(MiddlewareDisableVersionDto middlewareDisableVersionDto);
 
 
     /**
