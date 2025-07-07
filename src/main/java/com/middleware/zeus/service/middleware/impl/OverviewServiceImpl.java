@@ -1052,8 +1052,6 @@ public class OverviewServiceImpl implements OverviewService {
                     return 1; // 优先级最高，排最前
 
                 case "Deleting":
-                case "SyncFailed":
-                case "RecoverFailed":
                 case "Creating":
                 case "Recover":
                 case "Preparing":
