@@ -10,10 +10,15 @@ import com.middleware.zeus.bean.BeanSystemConfig;
 public interface LdapService {
 
     /**
-     * 添加一条ldap配置
-     * @param ldapConfig
+     * 开启/关闭ldap
+     * @param enable 是否启用
      */
-    void save(BeanSystemConfig ldapConfig);
+    void enable(Boolean enable);
+
+    /**
+     * 查看ldap开关
+     */
+    Boolean enableInfo();
 
     /**
      * 根据name查询配置记录

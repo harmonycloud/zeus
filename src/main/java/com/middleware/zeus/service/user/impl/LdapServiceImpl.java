@@ -37,8 +37,26 @@ public class LdapServiceImpl implements LdapService {
     private AuthManager4Ldap authManager4Ldap;
 
     @Override
-    public void save(BeanSystemConfig ldapConfig) {
-        ldapConfigMapper.insert(ldapConfig);
+    public void enable(Boolean enable) {
+        BeanSystemConfig ldapConfig = findByConfigName(LdapConfigConstant.LDAP_ENABLE);
+        if (ldapConfig == null) {
+            ldapConfig = new BeanSystemConfig();
+            ldapConfig.setConfigName(LdapConfigConstant.LDAP_ENABLE);
+            ldapConfig.setConfigValue(enable.toString());
+            ldapConfigMapper.insert(ldapConfig);
+        } else {
+            ldapConfig.setConfigValue(enable.toString());
+            ldapConfigMapper.updateById(ldapConfig);
+        }
+    }
+
+    @Override
+    public Boolean enableInfo() {
+        BeanSystemConfig ldapConfig = findByConfigName(LdapConfigConstant.LDAP_ENABLE);
+        if (ldapConfig == null) {
+            return false;
+        }
+        return Boolean.parseBoolean(ldapConfig.getConfigValue());
     }
 
     @Override

@@ -11,9 +11,7 @@ public class LdapConfigConstant {
     public static final String LDAP_MOBILE = "mobile";
     public static final String LDAP = "ldap";
 
-    public static final String LDAP_ENABLE = "1";
-    public static final String LDAP_DISABLE = "0";
-
+    public static final String LDAP_ENABLE = "ldap_enable";
 
     public static final String URL = "url";
     public static final String BASE = "base";
