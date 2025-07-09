@@ -2193,23 +2193,36 @@ public class IngressServiceImpl implements IngressService {
             // 哨兵模式服务暴露处理
             if (ingressDTOList.stream().anyMatch(ingressDTO -> ingressDTO.getName()
                 .matches("^" + middleware.getName() + LINE + SENTINEL + LINE + TCP + LINE + ".+" + "$"))) {
-//                // 根据values.yaml 获取端口范围
-//                List<Integer> portList;
-//                JSONObject addresses = redis.getJSONObject("externalAccess").getJSONObject("addresses");
-//                portList = addresses.keySet().stream()
-//                    .map(key -> Integer.parseInt(addresses.getString(key).split(":")[1])).collect(Collectors.toList());
-//                // 根据端口范围，过滤获取需要处理的ingressList
-//                ingressDTOList.removeIf(ing -> ing.getServiceList().stream()
-//                    .noneMatch(serviceDTO -> portList.contains(Integer.parseInt(serviceDTO.getExposePort()))));
-
+                // 记录无需整合的临时IngressList
+                List<IngressDTO> tempIngressList = new ArrayList<>();
+                // 根据values.yaml 获取端口范围
+                JSONObject externalAccess = redis.getJSONObject("externalAccess");
+                if (externalAccess.containsKey(middleware.getName() + LINE + SENTINEL)) {
+                    List<Integer> portList;
+                    JSONObject addresses = redis.getJSONObject("externalAccess").getJSONObject("addresses");
+                    // 获取redis实例端口列表
+                    portList =
+                        addresses.keySet().stream().map(key -> Integer.parseInt(addresses.getString(key).split(":")[1]))
+                            .collect(Collectors.toList());
+                    // 获取哨兵端口
+                    portList.add(Integer
+                        .parseInt(externalAccess.getString(middleware.getName() + LINE + SENTINEL).split(":")[1]));
+                    // 根据端口范围，记录无需处理的ingress
+                    tempIngressList.addAll(ingressDTOList.stream()
+                        .filter(ing -> ing.getServiceList().stream()
+                            .noneMatch(serviceDTO -> portList.contains(Integer.parseInt(serviceDTO.getExposePort()))))
+                        .collect(Collectors.toList()));
+                    // 移除对应的ingress
+                    ingressDTOList.removeIf(ing -> ing.getServiceList().stream()
+                        .noneMatch(serviceDTO -> portList.contains(Integer.parseInt(serviceDTO.getExposePort()))));
+                }
                 // 获取符合哨兵模式服务暴露的ingress
                 IngressDTO ingressDTO = ingressDTOList.stream()
                     .filter(dto -> dto.getName()
                         .matches("^" + middleware.getName() + LINE + SENTINEL + LINE + TCP + LINE + ".+" + "$"))
                     .collect(Collectors.toList()).get(0);
                 ingressDTO.setExternalEnable(true);
-                // 记录无需整合的临时IngressList
-                List<IngressDTO> tempIngressList = new ArrayList<>();
+
                 // 将pod service合并进哨兵服务的ingress对象内
                 List<ServiceDTO> serviceList = new ArrayList<>();
                 for (IngressDTO ing : ingressDTOList) {
