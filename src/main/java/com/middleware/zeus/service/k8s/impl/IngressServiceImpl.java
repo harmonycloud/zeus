@@ -321,6 +321,7 @@ public class IngressServiceImpl implements IngressService {
             });
         }
         // 查询traefik 端口
+        portSet.addAll(getTraefikUsedPort(cluster));
         if (filter){
             List<IngressComponentDto> traefikComponentDtoList = ingressComponentService.list(cluster.getId(), IngressEnum.TRAEFIK.getName());
             for (IngressComponentDto ingress : traefikComponentDtoList) {
