@@ -21,6 +21,7 @@ public class LdapController {
     private LdapService ldapService;
 
     @ApiOperation(value = "保存ldap配置", notes = "保存ldap配置")
+    @PostMapping
     public BaseResult save(@RequestBody LdapConfigDto ldapConfigDto) {
         ldapService.save(ldapConfigDto);
         return BaseResult.ok();
