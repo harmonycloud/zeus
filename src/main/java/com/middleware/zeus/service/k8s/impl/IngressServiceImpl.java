@@ -2073,23 +2073,25 @@ public class IngressServiceImpl implements IngressService {
         }
         externalAccess.put("enabled", true);
 
+        // 设置redis服务暴露地址
+        String host = cluster.getHost();
+        if (ingressDTO.getExposeType().equals(MIDDLEWARE_EXPOSE_NODEPORT)){
+            host = cluster.getHost();
+        } else if (ingressDTO.getExposeType().equals(MIDDLEWARE_EXPOSE_INGRESS)){
+            List<String> ipList = listIngressIp(clusterId, ingressDTO.getIngressClassName());
+            if (!CollectionUtils.isEmpty(ipList)){
+                host = ipList.get(0);
+            }
+        }
+
         JSONObject addresses = new JSONObject();
         for (ServiceDTO serviceDTO : serviceDTOList){
             if (serviceDTO.getServiceName().equals(middlewareName + LINE + SENTINEL)){
+                externalAccess.put(serviceDTO.getServiceName(), host + ":" + serviceDTO.getExposePort());
                 continue;
             }
             // 设置pod名称
             String podName = serviceDTO.getServiceName().replace(LINE + POD, "");
-            // 设置redis服务暴露地址
-            String host = cluster.getHost();
-            if (ingressDTO.getExposeType().equals(MIDDLEWARE_EXPOSE_NODEPORT)){
-                host = cluster.getHost();
-            } else if (ingressDTO.getExposeType().equals(MIDDLEWARE_EXPOSE_INGRESS)){
-                List<String> ipList = listIngressIp(clusterId, ingressDTO.getIngressClassName());
-                if (!CollectionUtils.isEmpty(ipList)){
-                    host = ipList.get(0);
-                }
-            }
             addresses.put(podName, host + ":" + serviceDTO.getExposePort());
         }
         externalAccess.put("addresses", addresses);
@@ -2182,14 +2184,24 @@ public class IngressServiceImpl implements IngressService {
                     || values.getJSONObject(REDIS).getBoolean("hostNetwork")) {
                 return;
             }
-            if (values.getJSONObject("externalAccess") == null
-                || values.getJSONObject("externalAccess").getBoolean("enabled") == null
-                || !values.getJSONObject("externalAccess").getBoolean("enabled")) {
+            JSONObject redis = values.getJSONObject(REDIS);
+            if (redis == null || redis.getJSONObject("externalAccess") == null
+                || redis.getJSONObject("externalAccess").getBoolean("enabled") == null
+                || !redis.getJSONObject("externalAccess").getBoolean("enabled")) {
                 return;
             }
             // 哨兵模式服务暴露处理
             if (ingressDTOList.stream().anyMatch(ingressDTO -> ingressDTO.getName()
                 .matches("^" + middleware.getName() + LINE + SENTINEL + LINE + TCP + LINE + ".+" + "$"))) {
+//                // 根据values.yaml 获取端口范围
+//                List<Integer> portList;
+//                JSONObject addresses = redis.getJSONObject("externalAccess").getJSONObject("addresses");
+//                portList = addresses.keySet().stream()
+//                    .map(key -> Integer.parseInt(addresses.getString(key).split(":")[1])).collect(Collectors.toList());
+//                // 根据端口范围，过滤获取需要处理的ingressList
+//                ingressDTOList.removeIf(ing -> ing.getServiceList().stream()
+//                    .noneMatch(serviceDTO -> portList.contains(Integer.parseInt(serviceDTO.getExposePort()))));
+
                 // 获取符合哨兵模式服务暴露的ingress
                 IngressDTO ingressDTO = ingressDTOList.stream()
                     .filter(dto -> dto.getName()
