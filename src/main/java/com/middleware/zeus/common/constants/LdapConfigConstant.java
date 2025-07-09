@@ -8,7 +8,7 @@ public class LdapConfigConstant {
 
     public static final String LDAP_MAIL = "mail";
     public static final String LDAP_REAL_NAME = "displayname";
-    public static final String LDAP_MOBILE = "mobile";
+    public static final String LDAP_MOBILE = "telephoneNumber";
     public static final String LDAP = "ldap";
 
     public static final String LDAP_ENABLE = "ldap_enable";

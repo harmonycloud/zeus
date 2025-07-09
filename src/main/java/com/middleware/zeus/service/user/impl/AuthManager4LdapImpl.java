@@ -91,32 +91,35 @@ public class AuthManager4LdapImpl implements AuthManager4Ldap {
      */
     private UserDto saveUserInfo(String userName, String password, LdapConfigDto ldapConfigDto, Map<String, String> userAttributes) throws Exception {
         BeanUser user = userService.get(userName);
+        String phoneStr = ldapConfigDto.getPhone() == null ?  LDAP_MOBILE : ldapConfigDto.getPhone();
+        String mailStr = ldapConfigDto.getMail() == null ? LDAP_MAIL : ldapConfigDto.getMail();
         if (user == null) {
             user = new BeanUser();
             user.setUserName(userName);
             user.setPassword(PasswordUtils.md5(password));
-            user.setEmail(userAttributes.get(LDAP_MAIL));
-            user.setPhone(userAttributes.get(LDAP_MOBILE));
+            user.setPhone(userAttributes.get(ldapConfigDto.getPhone()));
+            user.setEmail(userAttributes.get(phoneStr));
             user.setCreateTime(new Date());
-            user.setAliasName(userAttributes.get(ldapConfigDto.getDisplayName()) == null ? userName : userAttributes.get(ldapConfigDto.getDisplayName()));
+            user.setAliasName(userAttributes.get(ldapConfigDto.getDisplayName()));
             userService.create(user);
             return userService.getUserDto(userName, true);
         }
         boolean userInfoChanged = false;
-        if (StringUtils.isNotBlank(userAttributes.get(LDAP_MAIL)) && !userAttributes.get(LDAP_MAIL).equals(user.getEmail())) {
-            user.setEmail(userAttributes.get(LDAP_MAIL));
+        if (StringUtils.isNotBlank(userAttributes.get(mailStr)) && !userAttributes.get(mailStr).equals(user.getEmail())) {
+            user.setEmail(userAttributes.get(mailStr));
             userInfoChanged = true;
         }
-        if (StringUtils.isNotBlank(userAttributes.get(LDAP_MOBILE)) && !userAttributes.get(LDAP_MOBILE).equals(user.getPhone())) {
-            user.setPhone(userAttributes.get(LDAP_MOBILE));
+        if (StringUtils.isNotBlank(userAttributes.get(phoneStr)) && !userAttributes.get(phoneStr).equals(user.getPhone())) {
+            user.setPhone(userAttributes.get(phoneStr));
             userInfoChanged = true;
         }
-        if (StringUtils.isNotBlank(userAttributes.get(LDAP_REAL_NAME)) && !userAttributes.get(LDAP_REAL_NAME).equals(user.getAliasName())) {
-            user.setAliasName(userAttributes.get(LDAP_REAL_NAME));
+        if (StringUtils.isNotBlank(userAttributes.get(ldapConfigDto.getDisplayName())) && !userAttributes.get(ldapConfigDto.getDisplayName()).equals(user.getAliasName())) {
+            user.setAliasName(userAttributes.get(ldapConfigDto.getDisplayName()));
             userInfoChanged = true;
         }
         if (!user.getPassword().equals(PasswordUtils.md5(password))) {
             user.setPassword(PasswordUtils.md5(password));
+            userInfoChanged = true;
         }
 
         if (userInfoChanged) {
