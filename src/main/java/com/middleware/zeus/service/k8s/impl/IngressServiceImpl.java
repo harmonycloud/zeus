@@ -2181,7 +2181,11 @@ public class IngressServiceImpl implements IngressService {
                     || values.getJSONObject(REDIS).getBoolean("hostNetwork")) {
                 return;
             }
-
+            if (values.getJSONObject("externalAccess") == null
+                || values.getJSONObject("externalAccess").getBoolean("enabled") == null
+                || !values.getJSONObject("externalAccess").getBoolean("enabled")) {
+                return;
+            }
             // 哨兵模式服务暴露处理
             if (ingressDTOList.stream().anyMatch(ingressDTO -> ingressDTO.getName()
                 .matches("^" + middleware.getName() + LINE + SENTINEL + LINE + TCP + LINE + ".+" + "$"))) {
