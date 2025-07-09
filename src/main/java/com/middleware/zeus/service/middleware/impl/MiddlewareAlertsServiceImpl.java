@@ -92,7 +92,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         for (MiddlewareAlertsDTO middlewareAlertsDTO : middlewareAlertsDTOList) {
             middlewareAlertsDTO.setSymbol(getSymbol(middlewareAlertsDTO.getExpr()));
             middlewareAlertsDTO.setThreshold(getThreshold(middlewareAlertsDTO.getExpr()));
-            if (middlewareAlertsDTO.getSymbol().equals("==") || middlewareAlertsDTO.getSymbol().equals("!=")){
+            if (filterExpr(middlewareAlertsDTO.getExpr()) || middlewareAlertsDTO.getSymbol().equals("==") || middlewareAlertsDTO.getSymbol().equals("!=")){
                 middlewareAlertsDTO.setAlertMode("eventAlert");
             } else {
                 middlewareAlertsDTO.setAlertMode("metricsAlert");
@@ -257,7 +257,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         for (MiddlewareAlertsDTO middlewareAlertsDTO : middlewareAlertsDTOList){
             middlewareAlertsDTO.setSymbol(getSymbol(middlewareAlertsDTO.getExpr()));
             middlewareAlertsDTO.setThreshold(getThreshold(middlewareAlertsDTO.getExpr()));
-            if (middlewareAlertsDTO.getSymbol().equals("==") || middlewareAlertsDTO.getSymbol().equals("!=")){
+            if (filterExpr(middlewareAlertsDTO.getExpr()) || middlewareAlertsDTO.getSymbol().equals("==") || middlewareAlertsDTO.getSymbol().equals("!=")){
                 middlewareAlertsDTO.setAlertMode("eventAlert");
             } else {
                 middlewareAlertsDTO.setAlertMode("metricsAlert");
