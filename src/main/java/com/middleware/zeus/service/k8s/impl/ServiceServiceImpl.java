@@ -2,6 +2,7 @@ package com.middleware.zeus.service.k8s.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.middleware.zeus.common.model.k8s.OwnerReferencesDo;
 import com.middleware.zeus.common.model.k8s.ServiceDo;
 import com.middleware.zeus.common.model.middleware.PortDetailDTO;
 import com.middleware.zeus.common.model.middleware.ServicePortDTO;
@@ -18,16 +19,14 @@ import com.middleware.zeus.service.registry.HelmChartService;
 import com.middleware.zeus.util.middleware.InternalServiceFilterUtil;
 import com.middleware.zeus.util.middleware.MiddlewareServicePurposeUtil;
 import com.skyview.language.annotations.TranslateAfterResult;
-import io.fabric8.kubernetes.api.model.IntOrString;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
-import io.fabric8.kubernetes.api.model.ServicePort;
-import io.fabric8.kubernetes.api.model.ServiceSpec;
+import io.fabric8.kubernetes.api.model.*;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -248,6 +247,19 @@ public class ServiceServiceImpl implements ServiceService {
         meta.setName(serviceDo.getName());
         meta.setLabels(serviceDo.getLabels());
         meta.setAnnotations(serviceDo.getAnnotations());
+
+        // 设置OwnerReference
+        if (!CollectionUtils.isEmpty(serviceDo.getOwnerReferencesDoList())){
+            OwnerReferencesDo ownerReferencesDo = serviceDo.getOwnerReferencesDoList().get(0);
+            OwnerReference ownerReference = new OwnerReference();
+            ownerReference.setApiVersion(ownerReferencesDo.getApiVersion());
+            ownerReference.setKind(ownerReferencesDo.getKind());
+            ownerReference.setName(ownerReferencesDo.getName());
+            ownerReference.setController(ownerReferencesDo.getController());
+            ownerReference.setBlockOwnerDeletion(ownerReferencesDo.getBlockOwnerDeletion());
+            ownerReference.setUid(ownerReferencesDo.getUid());
+            meta.setOwnerReferences(Collections.singletonList(ownerReference));
+        }
 
         ServiceSpec spec = new ServiceSpec();
         List<ServicePort> servicePortList = new ArrayList<>();

@@ -104,7 +104,7 @@ public class MiddlewareServicePurposeUtil {
         } else if (serviceName.equals(middlewareName + "-sentinel")) {
             return "哨兵";
         } else {
-            return null;
+            return "读写";
         }
     }
 

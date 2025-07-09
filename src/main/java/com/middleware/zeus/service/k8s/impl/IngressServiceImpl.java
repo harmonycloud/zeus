@@ -12,14 +12,12 @@ import com.middleware.zeus.common.exception.BusinessException;
 import com.middleware.zeus.common.exception.CaasRuntimeException;
 import com.middleware.zeus.common.model.IngressComponentDto;
 import com.middleware.zeus.common.model.TraefikPort;
+import com.middleware.zeus.common.model.k8s.OwnerReferencesDo;
 import com.middleware.zeus.common.model.k8s.ServiceDo;
 import com.middleware.zeus.common.model.middleware.Namespace;
 import com.middleware.zeus.common.model.middleware.*;
 import com.middleware.zeus.dao.BeanMiddlewareInfoMapper;
-import com.middleware.zeus.integration.cluster.ConfigMapWrapper;
-import com.middleware.zeus.integration.cluster.IngressRouteTCPWrapper;
-import com.middleware.zeus.integration.cluster.IngressWrapper;
-import com.middleware.zeus.integration.cluster.ServiceWrapper;
+import com.middleware.zeus.integration.cluster.*;
 import com.middleware.zeus.integration.cluster.bean.*;
 import com.middleware.zeus.service.k8s.*;
 import com.middleware.zeus.service.middleware.MiddlewareCrTypeService;
@@ -98,6 +96,8 @@ public class IngressServiceImpl implements IngressService {
     private MiddlewareService middlewareService;
     @Autowired
     private ServiceService serviceService;
+    @Autowired
+    private RedisClusterWrapper redisClusterWrapper;
 
     @Value("${k8s.ingress.default.name:nginx-ingress-controller}")
     private String defaultIngressName;
@@ -2018,6 +2018,19 @@ public class IngressServiceImpl implements IngressService {
             return;
         }
 
+        // 获取redisCluster,并封装ownerReferences
+        RedisCluster rec = redisClusterWrapper.get(clusterId, namespace, middlewareName);
+        if (rec == null){
+            throw new BusinessException(ErrorMessage.NOT_EXIST);
+        }
+        OwnerReferencesDo ownerReferencesDo = new OwnerReferencesDo();
+        ownerReferencesDo.setApiVersion(rec.getApiVersion());
+        ownerReferencesDo.setController(true);
+        ownerReferencesDo.setName(middlewareName);
+        ownerReferencesDo.setBlockOwnerDeletion(false);
+        ownerReferencesDo.setKind(rec.getKind());
+        ownerReferencesDo.setUid(rec.getMetadata().getUid());
+
         // 初始化serviceDo
         PortDetailDTO portDetailDTO = new PortDetailDTO();
         portDetailDTO.setName(REDIS);
@@ -2046,6 +2059,7 @@ public class IngressServiceImpl implements IngressService {
             selector.put("statefulset.kubernetes.io/pod-name", serviceDTO.getServiceName().replace(LINE + POD, ""));
 
             serviceDo.setName(serviceDTO.getServiceName());
+            serviceDo.setOwnerReferencesDoList(Collections.singletonList(ownerReferencesDo));
             serviceDo.setSelector(selector);
 
             serviceService.create(clusterId, namespace, serviceDo);

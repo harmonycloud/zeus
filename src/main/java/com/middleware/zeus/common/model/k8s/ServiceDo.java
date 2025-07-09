@@ -51,4 +51,7 @@ public class ServiceDo {
 
     @ApiModelProperty("服务")
     private List<PortDetailDTO> portDetailDtoList;
+
+    @ApiModelProperty("绑定上级对象")
+    private List<OwnerReferencesDo> ownerReferencesDoList;
 }
