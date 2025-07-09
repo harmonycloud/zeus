@@ -2087,7 +2087,7 @@ public class IngressServiceImpl implements IngressService {
         JSONObject addresses = new JSONObject();
         for (ServiceDTO serviceDTO : serviceDTOList){
             if (serviceDTO.getServiceName().equals(middlewareName + LINE + SENTINEL)){
-                externalAccess.put(serviceDTO.getServiceName(), host + ":" + serviceDTO.getExposePort());
+                values.put(serviceDTO.getServiceName(), host + ":" + serviceDTO.getExposePort());
                 continue;
             }
             // 设置pod名称
@@ -2196,8 +2196,7 @@ public class IngressServiceImpl implements IngressService {
                 // 记录无需整合的临时IngressList
                 List<IngressDTO> tempIngressList = new ArrayList<>();
                 // 根据values.yaml 获取端口范围
-                JSONObject externalAccess = redis.getJSONObject("externalAccess");
-                if (externalAccess.containsKey(middleware.getName() + LINE + SENTINEL)) {
+                if (values.containsKey(middleware.getName() + LINE + SENTINEL)) {
                     List<Integer> portList;
                     JSONObject addresses = redis.getJSONObject("externalAccess").getJSONObject("addresses");
                     // 获取redis实例端口列表
@@ -2206,7 +2205,7 @@ public class IngressServiceImpl implements IngressService {
                             .collect(Collectors.toList());
                     // 获取哨兵端口
                     portList.add(Integer
-                        .parseInt(externalAccess.getString(middleware.getName() + LINE + SENTINEL).split(":")[1]));
+                        .parseInt(values.getString(middleware.getName() + LINE + SENTINEL).split(":")[1]));
                     // 根据端口范围，记录无需处理的ingress
                     tempIngressList.addAll(ingressDTOList.stream()
                         .filter(ing -> ing.getServiceList().stream()
