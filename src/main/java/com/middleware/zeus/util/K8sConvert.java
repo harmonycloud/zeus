@@ -4,6 +4,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import com.alibaba.fastjson.JSONArray;
+import com.middleware.zeus.common.enums.ErrorMessage;
+import com.middleware.zeus.common.exception.BusinessException;
 import com.middleware.zeus.common.model.AffinityDTO;
 import io.fabric8.kubernetes.api.model.*;
 import org.apache.commons.lang3.StringUtils;
@@ -324,10 +326,13 @@ public class K8sConvert {
     public static JSONArray convertToleration2Json(List<String> tolerationList){
         JSONArray jsonArray = new JSONArray();
         tolerationList.forEach(tolerationStr ->{
-            Toleration toleration = convertToleration(tolerationStr);
-            if (toleration != null) {
+            try {
+                Toleration toleration = convertToleration(tolerationStr);
                 JSONObject jsonObject = convertObject2Json(toleration);
                 jsonArray.add(jsonObject);
+            } catch (Exception e) {
+                log.error("toleration转换错误", e);
+                throw new BusinessException(ErrorMessage.CREATE_FAIL);
             }
         });
         return jsonArray;
