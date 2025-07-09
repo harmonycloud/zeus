@@ -319,6 +319,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
                 alert.put("threshold", middlewareAlertsDTO.getThreshold());
                 alert.put("silence", middlewareAlertsDTO.getSilence());
                 alert.put("interval", Integer.valueOf(time));
+                alert.put("enable", true);
                 alert.put(UPDATE_TIME, DateUtils.dateToString(new Date(), DateUtils.YYYY_MM_DD_HH_MM_SS));
 
                 alertRules.put(middlewareAlertsDTO.getAlert(), alert);
