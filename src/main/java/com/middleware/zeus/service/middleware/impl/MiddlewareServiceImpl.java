@@ -649,8 +649,7 @@ public class MiddlewareServiceImpl extends AbstractBaseService implements Middle
             } else {
                 dto.setVersionStatus("future");
             }
-            if (info.getVersion() != null && !CollectionUtils.isEmpty(middlewareDisableVersionDoList)
-                && info.getChartVersion().equals(middleware.getChartVersion())) {
+            if (info.getVersion() != null && !CollectionUtils.isEmpty(middlewareDisableVersionDoList)) {
                 List<String> versionList = Arrays.asList(info.getVersion().split(","));
                 versionList = versionList.stream()
                     .filter(version -> middlewareDisableVersionDoList.stream()
