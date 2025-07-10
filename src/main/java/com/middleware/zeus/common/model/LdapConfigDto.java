@@ -10,6 +10,8 @@ import java.io.Serializable;
 @ApiModel("ldap服务器信息")
 public class LdapConfigDto implements Serializable {
 
+    @ApiModelProperty("是否启用")
+    private Boolean enable;
 
     @ApiModelProperty("服务器地址")
     private String url;

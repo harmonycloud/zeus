@@ -164,7 +164,7 @@ public class AuthServiceImpl extends AbstractAuthService implements AuthService 
     }
 
     private boolean isLdapOn(LdapConfigDto ldapConfigDto) {
-        return ldapConfigDto != null && StringUtils.isNotEmpty(ldapConfigDto.getUrl());
+        return ldapConfigDto != null && ldapConfigDto.getEnable() != null && ldapConfigDto.getEnable();
     }
 
 }

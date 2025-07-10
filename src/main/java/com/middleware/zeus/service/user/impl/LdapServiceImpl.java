@@ -107,6 +107,9 @@ public class LdapServiceImpl implements LdapService {
         LdapConfigDto ldapConfigDto = new LdapConfigDto();
         ldapConfigs.forEach(config -> {
             switch (config.getConfigName()) {
+                case LdapConfigConstant.LDAP_ENABLE:
+                    ldapConfigDto.setEnable(Boolean.parseBoolean(config.getConfigValue()));
+                    break;
                 case LdapConfigConstant.URL:
                     ldapConfigDto.setUrl(config.getConfigValue());
                     break;
