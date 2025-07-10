@@ -395,7 +395,7 @@ public class IngressServiceImpl implements IngressService {
                     String ingressRouteTcpName = ingressRouteTcp.getMetadata().getName();
                     // 解析该ingressroutetcp中的暴露端口
                     String exposePort = ingressRouteTcp.getSpec().getEntryPoints().get(0)
-                        .split(ingressDTO.getIngressClassName() + LINE)[1];
+                        .split(ingressDTO.getIngressClassName() + LINE + "p")[1];
                     // 匹配serviceList中的暴露端口，若匹配，则删除资源
                     if (ingressDTO.getServiceList().stream()
                         .anyMatch(serviceDTO -> serviceDTO.getExposePort().equals(exposePort))) {
