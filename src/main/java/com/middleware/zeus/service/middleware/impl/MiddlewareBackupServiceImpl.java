@@ -260,9 +260,9 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     @Override
     public void updateBackupSchedule(String backupName, MiddlewareBackupDTO backupDTO) {
         backupDTO.setBackupName(backupName);
-        MiddlewareBackupSchedule incrBaks = backupScheduleCRDService.get(backupDTO.getClusterId(), backupDTO.getNamespace(), backupName + "-" + INCR);
-        if ("day".equalsIgnoreCase(backupDTO.getDateUnit()) && incrBaks != null && incrBaks.getSpec() != null
-            && "off".equalsIgnoreCase(incrBaks.getSpec().getPause())) {
+        MiddlewareBackupSchedule incrBaks =
+            backupScheduleCRDService.get(backupDTO.getClusterId(), backupDTO.getNamespace(), backupName + "-" + INCR);
+        if ("day".equalsIgnoreCase(backupDTO.getDateUnit()) && incrBaks != null && incrBaks.getSpec() != null) {
             checkTimeLawful(backupDTO.getCron(), backupDTO.getRetentionTime());
         }
 
