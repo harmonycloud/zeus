@@ -62,7 +62,7 @@ public class AuthManager4LdapImpl implements AuthManager4Ldap {
     private Map<String, String> getUserFromLdap(String username, LdapConfigDto ldapConfigDto) {
         LdapTemplate template = LdapServiceImpl.getTemplate(ldapConfigDto);
         String filter = "(&" + "(" + ldapConfigDto.getObjectType() + ")" +
-                "(uid=" + username + ")" +
+                "(" + ldapConfigDto.getAccountType() + "=" + username + ")" +
                 (ObjectUtil.isNull(ldapConfigDto.getFilterCondition()) ? "" : ldapConfigDto.getFilterCondition()) + ")";
         List<Map<String, String>> infoList = template.search("", filter, (AttributesMapper<Map<String, String>>) attributes -> {
             Map<String, String> map = new HashMap<>();
