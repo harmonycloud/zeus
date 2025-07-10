@@ -195,12 +195,8 @@ public class IngressServiceImpl implements IngressService {
             }
         } else if (!CollectionUtils.isEmpty(ingressDTO.getServiceList())) {
             // 判断端口是否已被使用
-            ingressDTO.getServiceList().forEach(ingress -> {
-                if (StringUtils.isNotBlank(ingress.getExposePort())) {
-                    verifyServicePort(clusterId, ingressDTO.getIngressClassName(), ingressDTO.getExposeType(),
-                        Integer.parseInt(ingress.getExposePort()));
-                }
-            });
+            checkServiceTcpPort(clusterService.findById(clusterId), ingressDTO.getIngressClassName(),
+                ingressDTO.getExposeType(), ingressDTO.getServiceList());
         }
         // 对部分中间件做特殊处理
         configCustomMiddleware(clusterId, namespace, middlewareName, ingressDTO);
@@ -255,17 +251,28 @@ public class IngressServiceImpl implements IngressService {
     }
 
     @Override
-    public void checkServiceTcpPort(MiddlewareClusterDTO cluster, String ingressClassName, String exposeType,List<ServiceDTO> serviceList) {
+    public void checkServiceTcpPort(MiddlewareClusterDTO cluster, String ingressClassName, String exposeType,
+        List<ServiceDTO> serviceList) {
         if (CollectionUtils.isEmpty(serviceList)) {
             return;
         }
+        List<Integer> portList = new ArrayList<>();
+        for (ServiceDTO serviceDTO : serviceList) {
+            if (portList.contains(Integer.valueOf(serviceDTO.getExposePort()))) {
+                throw new BusinessException(ErrorMessage.TCP_PORT_ALREADY_USED);
+            }
+            portList.add(Integer.valueOf(serviceDTO.getExposePort()));
+        }
+
         // 当服务暴露方式不是traefik时，端口不可以在traefik定义的端口范围内
         IngressComponentDto ingressComponent = ingressComponentService.get(cluster.getId(), ingressClassName);
-        if (!(ingressComponent != null && StringUtils.equals(ingressComponent.getType(), IngressEnum.TRAEFIK.getName()))) {
-            List<IngressComponentDto> ingressComponentDtos = ingressComponentService.list(cluster.getId(), IngressEnum.TRAEFIK.getName());
+        if (!(ingressComponent != null
+            && StringUtils.equals(ingressComponent.getType(), IngressEnum.TRAEFIK.getName()))) {
+            List<IngressComponentDto> ingressComponentDtos =
+                ingressComponentService.list(cluster.getId(), IngressEnum.TRAEFIK.getName());
             List<TraefikPort> traefikPortList = new ArrayList<>();
-            ingressComponentDtos.forEach(ingressComponentDto -> traefikPortList.addAll(ingressComponentDto.getTraefikPortList()));
-            List<Integer> portList = serviceList.stream().map(serviceDTO -> Integer.parseInt(serviceDTO.getExposePort())).collect(Collectors.toList());
+            ingressComponentDtos
+                .forEach(ingressComponentDto -> traefikPortList.addAll(ingressComponentDto.getTraefikPortList()));
             for (Integer port : portList) {
                 for (TraefikPort traefikPort : traefikPortList) {
                     if (port >= traefikPort.getStartPort() && port <= traefikPort.getEndPort()) {
@@ -282,8 +289,8 @@ public class IngressServiceImpl implements IngressService {
         usedPort.addAll(getNodePortUsedPort(cluster));
 
         if (!CollectionUtils.isEmpty(usedPort)) {
-            serviceList.forEach(serviceDTO -> {
-                if (usedPort.contains(Integer.parseInt(serviceDTO.getExposePort()))) {
+            portList.forEach(port -> {
+                if (usedPort.contains(port)) {
                     throw new BusinessException(ErrorMessage.TCP_PORT_ALREADY_USED);
                 }
             });
@@ -568,14 +575,14 @@ public class IngressServiceImpl implements IngressService {
         return resList;
     }
 
-    @Override
-    public void verifyServicePort(String clusterId, String ingressClassName, String exposeType, Integer port) {
-        ServiceDTO serviceDTO = new ServiceDTO();
-        serviceDTO.setExposePort(String.valueOf(port));
-        List<ServiceDTO> serviceDTOList = new ArrayList<>();
-        serviceDTOList.add(serviceDTO);
-        checkServiceTcpPort(clusterService.findById(clusterId), ingressClassName, exposeType,serviceDTOList);
-    }
+    
+//    public void verifyServicePort(String clusterId, String ingressClassName, String exposeType, Integer port) {
+//        ServiceDTO serviceDTO = new ServiceDTO();
+//        serviceDTO.setExposePort(String.valueOf(port));
+//        List<ServiceDTO> serviceDTOList = new ArrayList<>();
+//        serviceDTOList.add(serviceDTO);
+//        checkServiceTcpPort(clusterService.findById(clusterId), ingressClassName, exposeType,serviceDTOList);
+//    }
 
     @Override
     public List<String> listIngressIp(String clusterId, String ingressClassName) {

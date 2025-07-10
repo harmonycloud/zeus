@@ -148,14 +148,6 @@ public interface IngressService {
     String getExposeIp(MiddlewareClusterDTO cluster, IngressDTO ingressDTO);
 
     /**
-     * 校验服务端口是否可用
-     *
-     * @param clusterId
-     * @param port
-     */
-    void verifyServicePort(String clusterId, String ingressClassName, String exposeType, Integer port);
-
-    /**
      * 查询ingress ip
      * @param clusterId
      * @param ingressClassName

@@ -101,18 +101,6 @@ public class IngressController {
         return BaseResult.ok(ingressService.getMiddlewareIngress(clusterId, namespace, type, middlewareName));
     }
 
-    @ApiOperation(value = "校验服务端口是否可用", notes = "校验服务端口是否可用")
-    @ApiImplicitParams({
-            @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
-            @ApiImplicitParam(name = "port", value = "中间件类型", paramType = "query", dataTypeClass = Integer.class)
-    })
-    @GetMapping("/verifyServicePort")
-    public BaseResult verifyServicePort(@PathVariable("clusterId") String clusterId,
-                                        @RequestParam("port") Integer port){
-        ingressService.verifyServicePort(clusterId, null,null,port);
-        return BaseResult.ok();
-    }
-
     @ApiOperation(value = "获取中间件HostNetwork对外访问", notes = "获取中间件HostNetwork对外访问")
     @ApiImplicitParams({
             @ApiImplicitParam(name = "clusterId", value = "集群id", paramType = "path", dataTypeClass = String.class),
