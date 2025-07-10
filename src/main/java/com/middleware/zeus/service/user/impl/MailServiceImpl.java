@@ -233,6 +233,7 @@ public class MailServiceImpl implements MailService {
             subject =
                 String.format("【%s】Zeus %s Alarm - %s - %s Name: %s", level, target, alertName, target, middlewareName);
         } else {
+            level = translateLevel(level);
             String target = alertType.equals(SERVICE) ? "中间件" : (alertType.equals(SYSTEM) ? "系统" : "集群");
             subject = String.format("【%s】Zeus%s告警-%s-%s名称: %s", level, target, alertName,
                 target.equals("中间件") ? "服务" : target, middlewareName);
