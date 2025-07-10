@@ -399,12 +399,17 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     public SwitchInfo getManualSwitch(Middleware middleware) {
         SwitchInfo switchInfo = new SwitchInfo().setStatus(true);
         // 获取mysqlCluster
-        MysqlCluster mysqlCluster =
-            mysqlClusterWrapper.get(middleware.getClusterId(), middleware.getNamespace(), middleware.getName());
-        List<Status.Condition> conditions = mysqlCluster.getStatus().getConditions();
-        List<Status.Condition> syncList =
-            conditions.stream().filter(con -> con.getType().equals("SyncSlave")).collect(Collectors.toList());
-        if (CollectionUtils.isEmpty(syncList)) {
+        try {
+            MysqlCluster mysqlCluster =
+                    mysqlClusterWrapper.get(middleware.getClusterId(), middleware.getNamespace(), middleware.getName());
+            List<Status.Condition> conditions = mysqlCluster.getStatus().getConditions();
+            List<Status.Condition> syncList =
+                    conditions.stream().filter(con -> con.getType().equals("SyncSlave")).collect(Collectors.toList());
+            if (CollectionUtils.isEmpty(syncList)) {
+                switchInfo.setStatus(false);
+            }
+        } catch (Exception e) {
+            log.error("通过mysqlCluster 获取节点角色异常", e);
             switchInfo.setStatus(false);
         }
         return switchInfo;
@@ -495,10 +500,16 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
         if (ObjectUtils.isEmpty(cm) || cm.getChartVersion() == null) {
             throw new BusinessException(ErrorMessage.OPERATOR_INFO_ERROR);
         }
-        if (ChartVersionUtil.compare(cm.getChartVersion(), "1.8.20") > 0) {
-            return switchByChangeCr(middleware, mysqlCluster);
-        } else {
-            return switchByCurl(middleware, mysqlCluster);
+        try {
+            if (ChartVersionUtil.compare(cm.getChartVersion(), "1.8.20") > 0) {
+                return switchByChangeCr(middleware, mysqlCluster);
+            } else {
+                return switchByCurl(middleware, mysqlCluster);
+            }
+        } catch (Exception e) {
+            log.error("集群id:{}，命名空间:{}，mysql集群:{}，手动切换异常", middleware.getClusterId(), middleware.getNamespace(),
+                    middleware.getName(), e);
+            throw new BusinessException(DictEnum.MYSQL_CLUSTER, middleware.getName(), ErrorMessage.SWITCH_FAILED);
         }
     }
 
