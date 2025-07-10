@@ -7,6 +7,7 @@ import com.middleware.zeus.common.model.middleware.MiddlewareDisableVersionDto;
 import com.middleware.zeus.dao.BeanMiddlewareDisableVersionMapper;
 import com.middleware.zeus.service.middleware.MiddlewareDisableVersionService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -29,9 +30,11 @@ public class MiddlewareDisableVersionServiceImpl implements MiddlewareDisableVer
     @Override
     public List<MiddlewareDisableVersionDo> get(String clusterId, String chartName, String chartVersion) {
         QueryWrapper<BeanMiddlewareDisableVersion> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("chart_name", chartName);
-        queryWrapper.eq("chart_version", chartVersion);
         queryWrapper.eq("cluster_id", clusterId);
+        queryWrapper.eq("chart_name", chartName);
+        if (StringUtils.isNotEmpty(chartVersion)){
+            queryWrapper.eq("chart_version", chartVersion);
+        }
 
         return beanMiddlewareDisableVersionMapper.selectList(queryWrapper).stream().map(MiddlewareDisableVersionDo::new)
             .collect(Collectors.toList());
