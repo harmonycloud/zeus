@@ -391,10 +391,14 @@ public class IngressServiceImpl implements IngressService {
                 getIngressTCPLabels(middlewareName, ingressDTO.getMiddlewareType(), ingressDTO.getIngressClassName()));
             if (!CollectionUtils.isEmpty(ingressRouteTcpList.getItems())) {
                 for (IngressRouteTcp ingressRouteTcp : ingressRouteTcpList.getItems()) {
+                    // 获取ingressroutetcp名称
                     String ingressRouteTcpName = ingressRouteTcp.getMetadata().getName();
-                    if (!CollectionUtils.isEmpty(ingressDTO.getServiceList())
-                        && ingressDTO.getServiceList().stream().anyMatch(serviceDTO -> ingressRouteTcpName
-                            .matches("^" + serviceDTO.getServiceName() + LINE + TCP + LINE + ".+" + "$"))) {
+                    // 解析该ingressroutetcp中的暴露端口
+                    String exposePort = ingressRouteTcp.getSpec().getEntryPoints().get(0)
+                        .split(ingressDTO.getIngressClassName() + LINE)[1];
+                    // 匹配serviceList中的暴露端口，若匹配，则删除资源
+                    if (ingressDTO.getServiceList().stream()
+                        .anyMatch(serviceDTO -> serviceDTO.getExposePort().equals(exposePort))) {
                         ingressRouteTCPWrapper.delete(clusterId, namespace, ingressRouteTcpName);
                     }
                 }
