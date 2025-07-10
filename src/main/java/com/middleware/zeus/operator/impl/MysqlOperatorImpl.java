@@ -396,6 +396,21 @@ public class MysqlOperatorImpl extends AbstractMysqlOperator implements MysqlOpe
     }
 
     @Override
+    public SwitchInfo getManualSwitch(Middleware middleware) {
+        SwitchInfo switchInfo = new SwitchInfo().setStatus(true);
+        // 获取mysqlCluster
+        MysqlCluster mysqlCluster =
+            mysqlClusterWrapper.get(middleware.getClusterId(), middleware.getNamespace(), middleware.getName());
+        List<Status.Condition> conditions = mysqlCluster.getStatus().getConditions();
+        List<Status.Condition> syncList =
+            conditions.stream().filter(con -> con.getType().equals("SyncSlave")).collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(syncList)) {
+            switchInfo.setStatus(false);
+        }
+        return switchInfo;
+    }
+
+    @Override
     public SwitchInfo getAutoSwitch(Middleware middleware) {
         SwitchInfo autoSwitchInfo = new SwitchInfo();
         MysqlCluster mysqlCluster = mysqlClusterWrapper.get(middleware.getClusterId(), middleware.getNamespace(), middleware.getName());
