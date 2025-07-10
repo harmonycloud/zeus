@@ -97,7 +97,7 @@ public class MailServiceImpl implements MailService {
                 //helper.setSubject("【中间件平台】" + alertRecordDo.getClusterId() + alertRecordDo.getTargetAliasName() + "告警");
                 //String target = alertRecordDo.getAlertType().equals(SERVICE) ? "中间件" : (alertRecordDo.getAlertType().equals(SYSTEM) ? "系统" : "集群");
                 //helper.setSubject(String.format("【%s】Zeus中间件%s告警-%s", alertRecordDo.getLevel(), target, alertRecordDo.getAlertName()));
-                helper.setSubject(buildSubject(alertRecordDo.getAlertType(), alertRecordDo.getLevel(), alertRecordDo.getAlertName()));
+                helper.setSubject(buildSubject(alertRecordDo.getAlertType(), alertRecordDo.getLevel(), alertRecordDo.getAlertName(), alertRecordDo.getTargetName()));
                 // 2.4 正文
                 helper.setText(buildContent(alertRecordDo), true);
 
@@ -224,15 +224,18 @@ public class MailServiceImpl implements MailService {
         }
     }
 
-    private String buildSubject(String alertType, String level, String alertName) {
+    private String buildSubject(String alertType, String level, String alertName, String middlewareName) {
         String language = CurrentLanguage.getLanguage();
         String subject;
         if ("en-US".equals(language)) {
-            String target = alertType.equals(SERVICE) ? "Middleware" : (alertType.equals(SYSTEM) ? "System" : "Cluster");
-            subject = String.format("【%s】Zeus中间件%s告警-%s", level, target, alertName);
+            String target =
+                alertType.equals(SERVICE) ? "Middleware" : (alertType.equals(SYSTEM) ? "System" : "Cluster");
+            subject =
+                String.format("【%s】Zeus %s Alarm - %s - %s Name: %s", level, target, alertName, target, middlewareName);
         } else {
             String target = alertType.equals(SERVICE) ? "中间件" : (alertType.equals(SYSTEM) ? "系统" : "集群");
-            subject = String.format("【%s】Zeus%s告警-%s", level, target, alertName);
+            subject = String.format("【%s】Zeus%s告警-%s-$s名称: $s", level, target, alertName,
+                target.equals("中间件") ? "服务" : target, middlewareName);
         }
         return subject;
     }
