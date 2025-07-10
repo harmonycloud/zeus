@@ -83,7 +83,7 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
         List<MiddlewareAlertsDTO> middlewareAlertsDTOList = getAllRules(clusterId, namespace, middlewareName);
         // 过滤备份告警规则
         middlewareAlertsDTOList = middlewareAlertsDTOList.stream()
-            .filter(middlewareAlertsDTO -> !MIDDLEWARE_BACKUP_FAILED.equals(middlewareAlertsDTO.getName()))
+            .filter(middlewareAlertsDTO -> !MIDDLEWARE_BACKUP_FAILED.equals(middlewareAlertsDTO.getAlert()))
             .collect(Collectors.toList());
         // 获取组件默认告警沉默时间
         ClusterComponentsDto clusterComponentsDto = new ClusterComponentsDto();
