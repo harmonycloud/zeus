@@ -98,7 +98,7 @@ public class MiddlewareInfoController {
     @GetMapping("/{type}/version")
     public BaseResult<List<MiddlewareVersionDto>> version(@PathVariable("type") String type,
                                                           @RequestParam("chartVersion") String chartVersion,
-                                                          @RequestParam("clusterId") String clusterId,
+                                                          @RequestParam(value = "clusterId", required = false) String clusterId,
                                                           @RequestParam(value = "filter", required = false, defaultValue = "true") Boolean filter) {
         return BaseResult.ok(middlewareInfoService.version(type, chartVersion, clusterId, filter));
     }

@@ -514,19 +514,21 @@ public class MiddlewareInfoServiceImpl implements MiddlewareInfoService {
         }
         // 查询当前禁用版本，并对返回数据进行过滤
         // 获取禁用版本
-        List<MiddlewareDisableVersionDo> disableVersionDoList =
-            middlewareDisableVersionService.get(clusterId, type, chartVersion);
-        // 根据version转化为List<String>
-        List<String> disableVersionList =
-            disableVersionDoList.stream().map(MiddlewareDisableVersionDo::getVersion).collect(Collectors.toList());
+        if (StringUtils.isNotEmpty(clusterId)) {
+            List<MiddlewareDisableVersionDo> disableVersionDoList =
+                    middlewareDisableVersionService.get(clusterId, type, chartVersion);
+            // 根据version转化为List<String>
+            List<String> disableVersionList =
+                    disableVersionDoList.stream().map(MiddlewareDisableVersionDo::getVersion).collect(Collectors.toList());
 
-        for (MiddlewareVersionDto middlewareVersionDto : versionList) {
-            // 移除位于禁用版本列表中的版本
-            middlewareVersionDto.getSlaveVersion().removeIf(disableVersionList::contains);
+            for (MiddlewareVersionDto middlewareVersionDto : versionList) {
+                // 移除位于禁用版本列表中的版本
+                middlewareVersionDto.getSlaveVersion().removeIf(disableVersionList::contains);
+            }
+            // 当slaveVersion为空时，移除大版本号
+            versionList.removeIf(versionDto -> CollectionUtils.isEmpty(versionDto.getSlaveVersion()));
+
         }
-        // 当slaveVersion为空时，移除大版本号
-        versionList.removeIf(versionDto -> CollectionUtils.isEmpty(versionDto.getSlaveVersion()));
-
         return versionList;
     }
 
