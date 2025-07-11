@@ -214,11 +214,6 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
         if (baks == null || baks.getSpec() == null || baks.getSpec().getSchedule() == null) {
             throw new BusinessException(ErrorMessage.FIND_BACKUP_SCHEDULE_CRON_FAILED);
         }
-        String cron = baks.getSpec().getSchedule().getCron();
-        Integer retentionTime = baks.getSpec().getSchedule().getRetentionTime();
-        if ("day".equalsIgnoreCase(baks.getMetadata().getLabels().get("unit")) && "off".equalsIgnoreCase(pause)) {
-            checkTimeLawful(cron, retentionTime);
-        }
         createOrReplaceIncBackup(clusterId, namespace, backupName, time, pause, baks);
     }
 
@@ -434,7 +429,13 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
             pause = ON;
         }
         Map<String, String> annotations = middlewareIncBackup.getAnnotations();
+        // 查询全量周期备份
         MiddlewareBackupSchedule cr = backupScheduleCRDService.get(clusterId, namespace, backupName);
+        // 查询增量周期备份 记录获取当前的增量备份的pause
+        MiddlewareBackupSchedule incCr = backupScheduleCRDService.get(clusterId, namespace, backupName + "-" + INCR);
+        if (incCr != null) {
+            pause = incCr.getSpec().getPause();
+        }
         objectMeta.setName(backupName + "-" + INCR);
         objectMeta.setNamespace(namespace);
         // 获取annotations
