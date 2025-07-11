@@ -10,6 +10,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import com.middleware.zeus.common.model.middleware.MiddlewareClusterDTO;
 import com.middleware.zeus.util.date.DateUtils;
 import com.middleware.zeus.integration.cluster.bean.prometheus.PrometheusRuleGroups;
 import com.middleware.zeus.integration.cluster.bean.prometheus.PrometheusRules;
@@ -409,6 +410,20 @@ public class AlertServiceImpl implements AlertService {
         alertUserService.delete(username, clusterId, null, null, SYSTEM);
         // 删除集群告警规则绑定的告警用户
         alertUserService.delete(username, clusterId, null, null, CLUSTER);
+    }
+
+    @Override
+    public void refreshPrometheusRulesLabels() {
+        List<MiddlewareClusterDTO> middlewareClusterDTOList = clusterService.listClusters();
+        for (MiddlewareClusterDTO middlewareClusterDTO : middlewareClusterDTOList) {
+            String clusterId = middlewareClusterDTO.getId();
+            // 查询所有平台标记了的告警规则文件
+            Map<String, String> labels = new HashMap<>();
+            labels.put("platform", "zeus");
+            List<PrometheusRule> prometheusRuleList = prometheusRuleService.list(clusterId, null, labels);
+            // 检查告警规则中的标识字段
+            checkPlatformLabels(clusterId, prometheusRuleList);
+        }
     }
 
     public List<AlertUserDto> listAlertUser(String clusterId){

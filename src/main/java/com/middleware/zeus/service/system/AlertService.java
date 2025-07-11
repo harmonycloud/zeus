@@ -92,4 +92,9 @@ public interface AlertService {
      */
     void removeAlertUser(String username, String clusterId);
 
+    /**
+     * 周期更新系统组件告警中的标签
+     */
+    void refreshPrometheusRulesLabels();
+
 }

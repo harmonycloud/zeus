@@ -3,6 +3,7 @@ package com.middleware.zeus.schedule;
 
 import com.middleware.zeus.service.middleware.AlertRecordService;
 import com.middleware.zeus.service.middleware.MiddlewareBackupService;
+import com.middleware.zeus.service.system.AlertService;
 import com.middleware.zeus.service.system.LicenseService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,8 @@ public class ScheduleTask {
     private MiddlewareBackupService middlewareBackupService;
     @Autowired
     private AlertRecordService alertRecordService;
+    @Autowired
+    private AlertService alertService;
 
     @Scheduled(fixedDelayString = "${system.license.refresh:60000}", initialDelay = 10 * 1000)
     public void calculateCpu() {
@@ -65,6 +68,16 @@ public class ScheduleTask {
         } catch (Exception e){
             log.error("清理回收失败的备份失败");
             log.debug("清理回收失败的备份失败", e);
+        }
+    }
+
+    @Scheduled(cron = "0 0 * ? * *")
+    public void refreshPrometheusRulesLabels() {
+        try {
+            alertService.refreshPrometheusRulesLabels();
+        } catch (Exception e){
+            log.error("刷新prometheus规则标签失败");
+            log.debug("刷新prometheus规则标签失败", e);
         }
     }
 
