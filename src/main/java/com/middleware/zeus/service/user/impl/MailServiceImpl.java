@@ -372,9 +372,10 @@ public class MailServiceImpl implements MailService {
                 case "critical":
                     return "重要";
                 case "major":
+                case "warning":
                     return "次要";
                 case "info":
-                    return "一般>";
+                    return "一般";
             }
         }
         return level;
