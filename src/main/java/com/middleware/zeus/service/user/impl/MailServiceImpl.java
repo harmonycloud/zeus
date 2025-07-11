@@ -20,7 +20,6 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
-import com.middleware.zeus.common.base.CurrentLanguage;
 import com.middleware.zeus.common.enums.DateType;
 import com.middleware.zeus.common.model.user.OrganizationDto;
 import com.middleware.zeus.common.model.user.ProjectNamespaceDo;
@@ -61,6 +60,9 @@ public class MailServiceImpl implements MailService {
 
     @Value("${system.mail.ssl.enable:false}")
     private Boolean mailSSL;
+
+    @Value("${system.mail.language:en-US}")
+    private String mailLanguage;
 
     @Autowired
     private MailMapper mailMapper;
@@ -225,9 +227,8 @@ public class MailServiceImpl implements MailService {
     }
 
     private String buildSubject(String alertType, String level, String alertName, String middlewareName) {
-        String language = CurrentLanguage.getLanguage();
         String subject;
-        if ("en-US".equals(language)) {
+        if ("en-US".equals(mailLanguage)) {
             String target =
                 alertType.equals(SERVICE) ? "Middleware" : (alertType.equals(SYSTEM) ? "System" : "Cluster");
             subject =
@@ -259,8 +260,6 @@ public class MailServiceImpl implements MailService {
             fileReader.close();
         }
 
-        String language = CurrentLanguage.getLanguage();
-
         String emailHeadColor = "";
         String level = translateLevel(alertRecordDo.getLevel());
         if ("critical".equals(alertRecordDo.getLevel())) {
@@ -275,7 +274,7 @@ public class MailServiceImpl implements MailService {
         
 
         String contentText;
-        switch (language) {
+        switch (mailLanguage) {
             case "zh-CN":
                 contentText = buildZhContent(alertRecordDo);
                 break;
@@ -368,8 +367,7 @@ public class MailServiceImpl implements MailService {
     }
 
     private String translateLevel(String level) {
-        String language = CurrentLanguage.getLanguage();
-        if (language.equals("zh-CN")) {
+        if (mailLanguage.equals("zh-CN")) {
             switch (level) {
                 case "critical":
                     return "重要";
