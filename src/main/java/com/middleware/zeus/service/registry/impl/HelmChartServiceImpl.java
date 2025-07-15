@@ -808,7 +808,7 @@ public class HelmChartServiceImpl extends AbstractRegistryService implements Hel
                 throw new BusinessException(ErrorMessage.NOT_EXIST);
             }
         } catch (Exception e) {
-            log.error("集群{} 中间件{} 创建operator失败", clusterId, helmChartFile.getChartName());
+            log.error("集群{} 中间件{} 创建operator失败", clusterId, helmChartFile.getChartName(), e);
             throw new BusinessException(ErrorMessage.CREATE_MIDDLEWARE_OPERATOR_FAILED);
         }
     }
