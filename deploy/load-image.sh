@@ -6,8 +6,8 @@ for file in $bashpath/*.tar; do
     for full_image in $old_full_image; do
        image=`echo $full_image | awk -F '[/]' '{print $NF}'`
        echo $image
-       docker tag $full_image $harbor/middleware/$image
-       docker push $harbor/middleware/$image &
+       docker tag $full_image $harbor/$image
+       docker push $harbor/$image &
     done
 done
 
