@@ -33,8 +33,9 @@ import com.middleware.zeus.service.user.MailService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.util.CollectionUtils;
 
-import static com.middleware.zeus.common.constants.AlertConstant.BACKUP;
-import static com.middleware.zeus.common.constants.AlertConstant.SERVICE;
+import static com.middleware.zeus.common.constants.AlertConstant.*;
+import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.MIDDLEWARE;
+import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.MIDDLEWARE_NAME;
 
 /**
  * @author xutianhong
@@ -94,19 +95,29 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
                 alertRecordDo.setAlertType(annotations.getString("target_type"));
                 alertRecordDo.setTargetName(annotations.getString("target_name"));
                 alertRecordDo.setTargetAliasName(annotations.getString("target_alias_name"));
-            } else if (labels.containsKey(SERVICE)) {
+            } else if (labels.containsKey("elastalert_rule")){
+                alertRecordDo.setAlertType(LOG);
+                alertRecordDo.setTargetName(labels.getString(MIDDLEWARE_NAME));
+                alertRecordDo.setTargetAliasName(labels.getString(MIDDLEWARE_NAME));
+                alertRecordDo.setMiddlewareType(labels.getString(MIDDLEWARE));
+            }else if (labels.containsKey(SERVICE)) {
                 if (annotations.containsKey("target_type")) {
                     alertRecordDo.setBackupAlert(true);
                 }
                 alertRecordDo.setAlertType(SERVICE);
                 alertRecordDo.setTargetName(labels.getString(SERVICE));
                 alertRecordDo.setTargetAliasName(labels.getString(SERVICE));
-                alertRecordDo.setMiddlewareType(labels.getString("middleware"));
+                alertRecordDo.setMiddlewareType(labels.getString(MIDDLEWARE));
             }
 
             alertRecordDo.setClusterId(labels.getString("clusterId"));
             alertRecordDo.setNamespace(labels.getString("namespace"));
-            alertRecordDo.setLevel(labels.getString("severity"));
+            // 针对日志告警进行适配
+            if (labels.containsKey("severity")){
+                alertRecordDo.setLevel(labels.getString("severity"));
+            } else if (annotations.containsKey("severity")){
+                alertRecordDo.setLevel(annotations.getString("severity"));
+            }
             alertRecordDo.setAlertName(labels.getString("alertname"));
             alertRecordDo.setMessage(annotations.getString("message"));
             if (StringUtils.isEmpty(alertRecordDo.getMessage())) {
@@ -193,6 +204,9 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
         body.put("comment", "silence");
         body.put("startsAt", DateUtils.dateToString(now, DateStyle.YYYY_MM_DD_T_HH_MM_SS_Z_SSS));
         String silence = alert.getJSONObject("annotations").getString("silence");
+        if (silence != null && !silence.endsWith("m") && !silence.endsWith("h")) {
+            silence = silence + "m";
+        }
         if (silence == null) {
             QueryWrapper<BeanSystemConfig> wrapper = new QueryWrapper<>();
             wrapper.eq("config_name", "Alertmanager_SilentTime");
