@@ -51,6 +51,15 @@ function deploy_helm() {
   fi
   helm install -n zeus zeus deploy/helm --set global.repository=$IMAGE_REPO,global.storageClass=$STORAGE_CLASS,$HELM_ARGS
 
+  # 创建monitoring命名空间
+  kubectl create ns monitoring
+  # 获取etcd证书
+  kubectl create secret generic etcd-certs --from-file=/etc/kubernetes/pki/etcd/healthcheck-client.crt --from-file=/etc/kubernetes/pki/etcd/healthcheck-client.key --from-file=/etc/kubernetes/pki/etcd/ca.crt -n monitoring --dry-run -oyaml  > src/main/resources/components/prometheus/templates/prometheus/etcd-certs.yaml
+  # 安装prometheus
+  helm install prometheus -n monitoring src/main/resources/components/prometheus --set prometheus.prometheusSpec.image.repository=$IMAGE_REPO/prometheus,kube-state-metrics.image.repository=$IMAGE_REPO/kube-state-metrics,prometheus-node-exporter.image.repository=$IMAGE_REPO/node-exporter,prometheusOperator.image.repository=$IMAGE_REPO/prometheus-operator,prometheusOperator.prometheusConfigReloader.image.repository=$IMAGE_REPO/prometheus-config-reloader,prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.storageClassName=$STORAGE_CLASS,prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.resources.requests.storage=30Gi,prometheus.prometheusSpec.replicas=3 -f src/main/resources/components/prometheus/values.yaml
+  # 安装alertmanager
+  helm install alertmanager -n monitoring src/main/resources/components/alertmanager --set alertmanager.alertmanagerSpec.image.repository=$IMAGE_REPO/alertmanager,alertmanager.alertmanagerSpec.replicas=3 -f src/main/resources/components/alertmanager/values.yaml -f src/main/resources/components/alertmanager/values-active-active.yaml
+
   # 创建logging命名空间
   kubectl create ns logging
   # 安装es operator
@@ -62,17 +71,9 @@ function deploy_helm() {
   # 安装logstash
   helm install logstash -n logging src/main/resources/components/logstash --set image=$IMAGE_REPO/logstash,replicas=2 -f src/main/resources/components/logstash/values.yaml -f src/main/resources/components/logstash/values-ha.yaml
 
-  # 创建monitoring命名空间
-  kubectl create ns monitoring
-  # 获取etcd证书
-  kubectl create secret generic etcd-certs --from-file=/etc/kubernetes/pki/etcd/healthcheck-client.crt --from-file=/etc/kubernetes/pki/etcd/healthcheck-client.key --from-file=/etc/kubernetes/pki/etcd/ca.crt -n monitoring --dry-run -oyaml  > src/main/resources/components/prometheus/templates/prometheus/etcd-certs.yaml
-  # 安装prometheus
-  helm install prometheus -n monitoring src/main/resources/components/prometheus --set prometheus.prometheusSpec.image.repository=$IMAGE_REPO/prometheus,kube-state-metrics.image.repository=$IMAGE_REPO/kube-state-metrics,prometheus-node-exporter.image.repository=$IMAGE_REPO/node-exporter,prometheusOperator.image.repository=$IMAGE_REPO/prometheus-operator,prometheusOperator.prometheusConfigReloader.image.repository=$IMAGE_REPO/prometheus-config-reloader,prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.storageClassName=$STORAGE_CLASS,prometheus.prometheusSpec.storageSpec.volumeClaimTemplate.spec.resources.requests.storage=30Gi,prometheus.prometheusSpec.replicas=3 -f src/main/resources/components/prometheus/values.yaml
-  # 安装alertmanager
-  helm install alertmanager -n monitoring src/main/resources/components/alertmanager --set alertmanager.alertmanagerSpec.image.repository=$IMAGE_REPO/alertmanager,alertmanager.alertmanagerSpec.replicas=3 -f src/main/resources/components/alertmanager/values.yaml -f src/main/resources/components/alertmanager/values-active-active.yaml
 
   # 安装中间件控制器
-  helm install middleware-controller -n middleware-operator --set global.repository=$IMAGE_REPO -f src/main/resources/components/platform/values.yaml -f src/main/resources/components/platform/values-active-active.yaml
+  helm install middleware-controller -n middleware-operator src/main/resources/components/platform --set global.repository=$IMAGE_REPO -f src/main/resources/components/platform/values.yaml -f src/main/resources/components/platform/values-active-active.yaml
   # 安装备份控制器
   helm install middlewarebackup-controller -n middleware-operator src/main/resources/components/middleware-backup --set global.repository=$IMAGE_REPO -f src/main/resources/components/middleware-backup/values.yaml -f src/main/resources/components/middleware-backup/values-active-active.yaml
   # 安装middleware webhook
