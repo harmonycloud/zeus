@@ -156,6 +156,10 @@ public class PrometheusWebhookServiceImpl implements PrometheusWebhookService {
                     alertRecordDo.setAlertType(SERVICE);
                 }
             }
+            // 若为日志告警  暂时也认为是服务告警
+            if (alertRecordDo.getAlertType().equals(LOG)){
+                alertRecordDo.setAlertType(SERVICE);
+            }
             // 获取告警通知用户
             List<AlertUserDo> alertUserDoList = alertUserService.listWithUserInfo(alertRecordDo.getClusterId(), alertRecordDo.getNamespace(), alertRecordDo.getTargetName(), alertRecordDo.getAlertType());
 
