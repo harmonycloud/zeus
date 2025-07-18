@@ -191,10 +191,12 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
                     time = middlewareAlertsDTO.getTime();
                 }
                 alert.put("interval", Integer.valueOf(time));
-                alert.put("alertText", annotations.getOrDefault("message", ""));
 
                 String oldThreshold = getThreshold(middlewareAlertsDTO.getExpr());
+                // 替换告警规则中的阈值
                 alert.put("alertExpr", middlewareAlertsDTO.getExpr().replace(oldThreshold, middlewareAlertsDTO.getThreshold()));
+                // 替换告警信息中的阈值
+                alert.put("alertText", annotations.getOrDefault("message", "").replace(oldThreshold, middlewareAlertsDTO.getThreshold()));
 
                 alert.put(CREATE_TIME, DateUtils.dateToString(new Date(), DateUtils.YYYY_MM_DD_HH_MM_SS));
                 alert.put(UPDATE_TIME, DateUtils.dateToString(new Date(), DateUtils.YYYY_MM_DD_HH_MM_SS));
@@ -314,12 +316,14 @@ public class MiddlewareAlertsServiceImpl implements MiddlewareAlertsService {
                 if (alertRules == null) {
                     alertRules = new JSONObject();
                 }
-                JSONObject alert = new JSONObject();
+                JSONObject alert = alertRules.getJSONObject(middlewareAlertsDTO.getAlert());
+                if (alert == null) {
+                    alert = new JSONObject();
+                }
                 alert.put("alertLevel", middlewareAlertsDTO.getLevel());
                 alert.put("threshold", middlewareAlertsDTO.getThreshold());
                 alert.put("silence", middlewareAlertsDTO.getSilence());
                 alert.put("interval", Integer.valueOf(time));
-                alert.put("enable", true);
                 alert.put(UPDATE_TIME, DateUtils.dateToString(new Date(), DateUtils.YYYY_MM_DD_HH_MM_SS));
 
                 alertRules.put(middlewareAlertsDTO.getAlert(), alert);
