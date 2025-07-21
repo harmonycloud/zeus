@@ -2334,6 +2334,9 @@ public class IngressServiceImpl implements IngressService {
                 serviceDTO.setExposePort(String.valueOf(targetPort));
                 // 移除该可用端口
                 portList.remove(targetPort);
+            } else {
+                // 端口未冲突，移除判断完成的端口，视为被其占用
+                portList.remove(Integer.valueOf(serviceDTO.getExposePort()));
             }
         }
     }
