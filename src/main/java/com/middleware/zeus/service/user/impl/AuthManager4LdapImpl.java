@@ -50,6 +50,9 @@ public class AuthManager4LdapImpl implements AuthManager4Ldap {
     public UserDto auth(String userName, String password, LdapConfigDto ldapConfigDto) throws Exception {
         AssertUtil.notBlank(userName, DictEnum.USERNAME);
         AssertUtil.notBlank(password, DictEnum.PASSWORD);
+        if (StringUtils.isEmpty(ldapConfigDto.getUrl())){
+            throw new BusinessException(ErrorMessage.LDAP_INCOMPLETE_PARAMETERS);
+        }
 
         Map<String, String> userAttributes = this.getUserFromLdap(userName, ldapConfigDto);
         // 对ldap认证通过的用户,判断是否已经记录,如果没有，则记录用户,并返回该用户
