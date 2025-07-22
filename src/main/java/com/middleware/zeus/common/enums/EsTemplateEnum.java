@@ -6,21 +6,8 @@ package com.middleware.zeus.common.enums;
  */
 public enum EsTemplateEnum {
     //模板类型
-    LOG_STASH("middlewarelogstash","{\n" +
-            "         \"order\": 2,     \"index_patterns\": [         \"middlewarelogstash-*\"     ], \"settings\": { \"index\"\n" +
-            "    : {             \"analysis\": {                 \"normalizer\": {\n" +
-            "            \"keyword_lowercase\": {                         \"filter\": [  \"lowercase\"],                         \"type\": \"custom\"                     }                 }             }\n" +
-            "       }     },     \"mappings\": {         \"doc\": {             \"properties\": {                 \"message\": { \"type\": \"text\",                     \"analyzer\": \"ik_max_word\",\n" +
-            "            \"fields\": {                         \"keyword\": {                             \"type\": \"keyword\", \"ignore_above\": 256,\n" +
-            "\"normalizer\": \"keyword_lowercase\"    }                     }                 },                 \"offset\": { \"type\": \"long\"                 },\n" +
-            "\"@timestamp\": {                     \"type\": \"date\"  },                 \"docker_container\": {                     \"type\": \"keyword\"                 }, \"k8s_pod\": {\"type\": \"keyword\"   },\n" +
-            "            \"k8s_node_name\": {                     \"type\": \"keyword\"                 }, \"k8s_pod_namespace\": {                     \"type\": \"keyword\"                 },                 \"source\": {\n" +
-            "            \"type\": \"keyword\"},                 \"index\": {\n" +
-            "            \"type\": \"keyword\"},                 \"k8s_container_name\": {\n" +
-            "            \"type\": \"keyword\"},                 \"k8s_resource_type\": {\n" +
-            "            \"type\": \"keyword\"},                 \"k8s_resource_name\": {\n" +
-            "            \"type\": \"keyword\"} }         }     }\n" +
-            "}"),
+    LOG_STASH("middlewarelogstash",
+        "{\"settings\":{\"index\":{\"analysis\":{\"normalizer\":{\"keyword_lowercase\":{\"filter\":[\"lowercase\"],\"type\":\"custom\"}}}}},\"mappings\":{\"doc\":{\"properties\":{\"error_severity\":{\"type\":\"keyword\"},\"sql_state_code\":{\"type\":\"keyword\"},\"offset\":{\"type\":\"long\"},\"k8s_resource_name\":{\"type\":\"keyword\"},\"k8s_pod\":{\"type\":\"keyword\"},\"index\":{\"type\":\"keyword\"},\"source\":{\"type\":\"keyword\"},\"message\":{\"analyzer\":\"ik_max_word\",\"type\":\"text\",\"fields\":{\"keyword\":{\"normalizer\":\"keyword_lowercase\",\"ignore_above\":256,\"type\":\"keyword\"}}},\"k8s_container_name\":{\"type\":\"keyword\"},\"k8s_node_name\":{\"type\":\"keyword\"},\"k8s_pod_namespace\":{\"type\":\"keyword\"},\"@timestamp\":{\"type\":\"date\"},\"docker_container\":{\"type\":\"keyword\"},\"k8s_resource_type\":{\"type\":\"keyword\"}}}},\"index_patterns\":[\"middlewarelogstash-*\"],\"order\":2}"),
     STDOUT("middlewarestdout", "{     \"order\": 2,     \"index_patterns\": [         \"middlewarestdout-*\"     ],     \"settings\": {" +
             "         \"index\": {             \"analysis\": {                 \"normalizer\": {                    " +
             " \"keyword_lowercase\": {                         \"filter\": [                             \"lowercase\"           " +
