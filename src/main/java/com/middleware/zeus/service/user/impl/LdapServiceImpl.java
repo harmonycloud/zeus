@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.middleware.zeus.config.TrustAllSocketFactory;
 import org.apache.commons.lang3.StringUtils;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -170,6 +171,10 @@ public class LdapServiceImpl implements LdapService {
 
         //  解决乱码
         config.put("java.naming.ldap.attributes.binary", "objectGUID");
+        // 关闭SSL证书验证
+        if (ldapConfigDto.getUrl().startsWith("ldaps://")) {
+            config.put("java.naming.ldap.factory.socket", TrustAllSocketFactory.class.getName());
+        }
         //关闭ldap pooling
         contextSource.setPooled(false);
         contextSource.setBaseEnvironmentProperties(config);
