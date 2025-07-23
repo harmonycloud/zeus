@@ -268,6 +268,7 @@ CREATE TABLE `backup_position` (
   `backup_server_id` int NOT NULL COMMENT '备份服务器id',
   `backup_position` varchar(512) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL COMMENT '备份路径（对于minio则是bucket）',
   `create_time` timestamp NULL DEFAULT NULL COMMENT '创建时间',
+  `backup_server_detail_id` int NOT NULL COMMENT '备份服务器详情id',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8 COLLATE=utf8_bin COMMENT='备份位置表';
 /*!40101 SET character_set_client = @saved_cs_client */;
@@ -1322,7 +1323,7 @@ INSERT INTO `resource_menu_role` VALUES (25,2,1,0);
 INSERT INTO `resource_menu_role` VALUES (26,2,2,0);
 INSERT INTO `resource_menu_role` VALUES (27,2,3,1);
 INSERT INTO `resource_menu_role` VALUES (28,2,4,1);
-INSERT INTO `resource_menu_role` VALUES (29,2,5,0);
+INSERT INTO `resource_menu_role` VALUES (29,2,5,1);
 INSERT INTO `resource_menu_role` VALUES (30,2,6,0);
 INSERT INTO `resource_menu_role` VALUES (31,2,7,0);
 INSERT INTO `resource_menu_role` VALUES (32,2,8,1);
@@ -1333,7 +1334,7 @@ INSERT INTO `resource_menu_role` VALUES (36,2,12,1);
 INSERT INTO `resource_menu_role` VALUES (37,2,13,0);
 INSERT INTO `resource_menu_role` VALUES (38,2,14,1);
 INSERT INTO `resource_menu_role` VALUES (39,2,15,1);
-INSERT INTO `resource_menu_role` VALUES (40,2,16,1);
+INSERT INTO `resource_menu_role` VALUES (40,2,16,0);
 INSERT INTO `resource_menu_role` VALUES (41,2,17,0);
 INSERT INTO `resource_menu_role` VALUES (42,2,18,0);
 INSERT INTO `resource_menu_role` VALUES (43,2,19,0);
@@ -1346,7 +1347,7 @@ INSERT INTO `resource_menu_role` VALUES (49,3,1,0);
 INSERT INTO `resource_menu_role` VALUES (50,3,2,0);
 INSERT INTO `resource_menu_role` VALUES (51,3,3,1);
 INSERT INTO `resource_menu_role` VALUES (52,3,4,1);
-INSERT INTO `resource_menu_role` VALUES (53,3,5,0);
+INSERT INTO `resource_menu_role` VALUES (53,3,5,1);
 INSERT INTO `resource_menu_role` VALUES (54,3,6,0);
 INSERT INTO `resource_menu_role` VALUES (55,3,7,0);
 INSERT INTO `resource_menu_role` VALUES (56,3,8,1);
@@ -1357,7 +1358,7 @@ INSERT INTO `resource_menu_role` VALUES (60,3,12,1);
 INSERT INTO `resource_menu_role` VALUES (61,3,13,0);
 INSERT INTO `resource_menu_role` VALUES (62,3,14,1);
 INSERT INTO `resource_menu_role` VALUES (63,3,15,1);
-INSERT INTO `resource_menu_role` VALUES (64,3,16,1);
+INSERT INTO `resource_menu_role` VALUES (64,3,16,0);
 INSERT INTO `resource_menu_role` VALUES (65,3,17,0);
 INSERT INTO `resource_menu_role` VALUES (66,3,18,0);
 INSERT INTO `resource_menu_role` VALUES (67,3,19,0);
@@ -1570,8 +1571,8 @@ DROP TABLE IF EXISTS `sys_regex_resource_config`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `sys_regex_resource_config` (
   `id` int NOT NULL AUTO_INCREMENT COMMENT '表ID 主健',
-  `group_name` varchar(64) COLLATE utf8_bin NOT NULL COMMENT '哪个正则组 利用正则组概念可以减少正则匹配次数',
-  `regex` varchar(512) COLLATE utf8_bin NOT NULL COMMENT '正则表达式',
+  `group_name` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL COMMENT '哪个正则组 利用正则组概念可以减少正则匹配次数',
+  `regex` varchar(512) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL COMMENT '正则表达式',
   PRIMARY KEY (`id`),
   UNIQUE KEY `group_regex` (`group_name`,`regex`) COMMENT '同一个正则组下的正则表达式不可以重复'
 ) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
@@ -1610,8 +1611,8 @@ DROP TABLE IF EXISTS `sys_regex_resource_translate_config`;
 CREATE TABLE `sys_regex_resource_translate_config` (
   `id` int NOT NULL AUTO_INCREMENT COMMENT '表ID 主健',
   `regex_id` int DEFAULT NULL COMMENT '正则表ID 定位到某一条匹配的正则表达式',
-  `language_code` char(16) COLLATE utf8_bin NOT NULL COMMENT '语种code',
-  `translation` varchar(512) COLLATE utf8_bin NOT NULL COMMENT '翻译',
+  `language_code` char(16) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL COMMENT '语种code',
+  `translation` varchar(512) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL COMMENT '翻译',
   PRIMARY KEY (`id`),
   UNIQUE KEY `group_regex_translate` (`regex_id`,`language_code`) COMMENT '同一条正则在某个语种下只能存在一条翻译'
 ) ENGINE=InnoDB AUTO_INCREMENT=29 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
@@ -1663,14 +1664,14 @@ DROP TABLE IF EXISTS `sys_resource_translate_config`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `sys_resource_translate_config` (
   `id` int NOT NULL AUTO_INCREMENT COMMENT '表ID 主健',
-  `group_name` varchar(64) COLLATE utf8_bin NOT NULL COMMENT '那个对象组',
-  `unique_value` varchar(64) COLLATE utf8_bin NOT NULL COMMENT '翻译的对象的instance_id',
-  `language_code` char(16) COLLATE utf8_bin NOT NULL COMMENT '语种code',
-  `property` varchar(128) COLLATE utf8_bin NOT NULL COMMENT '记录需要翻译的字段',
-  `translation` varchar(256) COLLATE utf8_bin NOT NULL COMMENT '翻译',
+  `group_name` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL COMMENT '那个对象组',
+  `unique_value` varchar(64) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL COMMENT '翻译的对象的instance_id',
+  `language_code` char(16) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL COMMENT '语种code',
+  `property` varchar(128) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL COMMENT '记录需要翻译的字段',
+  `translation` varchar(256) CHARACTER SET utf8 COLLATE utf8_bin NOT NULL COMMENT '翻译',
   PRIMARY KEY (`id`),
   UNIQUE KEY `table_key_translation` (`language_code`,`group_name`,`unique_value`,`property`) COMMENT '联合索引查找顺序'
-) ENGINE=InnoDB AUTO_INCREMENT=625 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
+) ENGINE=InnoDB AUTO_INCREMENT=643 DEFAULT CHARSET=utf8 COLLATE=utf8_bin;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -1755,12 +1756,6 @@ INSERT INTO `sys_resource_translate_config` VALUES (73,'operation_audit','服务
 INSERT INTO `sys_resource_translate_config` VALUES (74,'operation_audit','服务列表','en-US','childModuleChDesc','Middlewares');
 INSERT INTO `sys_resource_translate_config` VALUES (75,'operation_audit','服务管理','zh-HK','childModuleChDesc','服務管理');
 INSERT INTO `sys_resource_translate_config` VALUES (76,'operation_audit','服务管理','en-US','childModuleChDesc','Service Management');
-INSERT INTO `sys_resource_translate_config` VALUES (77,'operation_audit','Mysql管理面板','zh-HK','childModuleChDesc','Mysql管理面板');
-INSERT INTO `sys_resource_translate_config` VALUES (78,'operation_audit','Mysql管理面板','en-US','childModuleChDesc','Mysql Management Dashboard');
-INSERT INTO `sys_resource_translate_config` VALUES (79,'operation_audit','Postgresql管理面板','zh-HK','childModuleChDesc','Postgresql管理面板');
-INSERT INTO `sys_resource_translate_config` VALUES (80,'operation_audit','Postgresql管理面板','en-US','childModuleChDesc','Postgresql Management dashboard');
-INSERT INTO `sys_resource_translate_config` VALUES (81,'operation_audit','Redis管理面板','zh-HK','childModuleChDesc','Redis管理面板');
-INSERT INTO `sys_resource_translate_config` VALUES (82,'operation_audit','Redis管理面板','en-US','childModuleChDesc','Redis Management dashboard');
 INSERT INTO `sys_resource_translate_config` VALUES (83,'operation_audit','集群管理','zh-HK','moduleChDesc','集群管理');
 INSERT INTO `sys_resource_translate_config` VALUES (84,'operation_audit','集群管理','en-US','moduleChDesc','Clusters');
 INSERT INTO `sys_resource_translate_config` VALUES (85,'operation_audit','基础资源','zh-HK','childModuleChDesc','基礎資源');
@@ -2303,6 +2298,24 @@ INSERT INTO `sys_resource_translate_config` VALUES (621,'personal_config','中�
 INSERT INTO `sys_resource_translate_config` VALUES (622,'personal_config','中间件一体化管理平台','en-US','platform_alias_name','CloudDB');
 INSERT INTO `sys_resource_translate_config` VALUES (623,'personal_config','Zeus | 中间件管理一体化平台','zh-HK','platform_name','Zeus | 中間件管理一體化平台');
 INSERT INTO `sys_resource_translate_config` VALUES (624,'personal_config','Zeus | 中间件管理一体化平台','en-US','platform_name','Zeus | CloudDB');
+INSERT INTO `sys_resource_translate_config` VALUES (625,'servicePurpose','读写(Pgbouncer)','zh-HK','servicePurpose','讀寫(Pgbouncer)');
+INSERT INTO `sys_resource_translate_config` VALUES (626,'servicePurpose','读写(Pgbouncer)','en-US','servicePurpose','Read Write(Pgbouncer)');
+INSERT INTO `sys_resource_translate_config` VALUES (627,'operation_audit','获取项目下中间件资源','en-US','actionChDesc','Query middleware resources within the project');
+INSERT INTO `sys_resource_translate_config` VALUES (628,'operation_audit','获取项目下中间件资源','zh-HK','actionChDesc','獲取項目下中間件資源');
+INSERT INTO `sys_resource_translate_config` VALUES (629,'operation_audit','查询集群下中间件资源详情','en-US','actionChDesc','Query middleware resources within the cluster');
+INSERT INTO `sys_resource_translate_config` VALUES (630,'operation_audit','查询集群下中间件资源详情','zh-HK','actionChDesc','獲取集群下中間件資源');
+INSERT INTO `sys_resource_translate_config` VALUES (631,'operation_audit','禁用/启用备份任务','en-US','actionChDesc','enable/disable backup');
+INSERT INTO `sys_resource_translate_config` VALUES (632,'operation_audit','禁用/启用备份任务','zh-HK','actionChDesc','禁用/啟用備份熱任務');
+INSERT INTO `sys_resource_translate_config` VALUES (633,'operation_audit','查询集群下namespace资源详情','en-US','actionChDesc','Query namespace resource within the cluster');
+INSERT INTO `sys_resource_translate_config` VALUES (634,'operation_audit','查询集群下namespace资源详情','zh-HK','actionChDesc','查詢集群下namespace資源詳情');
+INSERT INTO `sys_resource_translate_config` VALUES (635,'operation_audit','运维面板','zh-HK','childModuleChDesc','運維面板');
+INSERT INTO `sys_resource_translate_config` VALUES (636,'operation_audit','运维面板','en-US','childModuleChDesc','O&M Dashboard');
+INSERT INTO `sys_resource_translate_config` VALUES (637,'operation_audit','Mysql运维面板','zh-HK','childModuleChDesc','Mysql運維面板');
+INSERT INTO `sys_resource_translate_config` VALUES (638,'operation_audit','Mysql运维面板','en-US','childModuleChDesc','Mysql Dashboard');
+INSERT INTO `sys_resource_translate_config` VALUES (639,'operation_audit','Postgresql运维面板','zh-HK','childModuleChDesc','Postgresql運維面板');
+INSERT INTO `sys_resource_translate_config` VALUES (640,'operation_audit','Postgresql运维面板','en-US','childModuleChDesc','Postgresql Dashboard');
+INSERT INTO `sys_resource_translate_config` VALUES (641,'operation_audit','Redis运维面板','zh-HK','childModuleChDesc','Redis運維面板');
+INSERT INTO `sys_resource_translate_config` VALUES (642,'operation_audit','Redis运维面板','en-US','childModuleChDesc','Redis Dashboard');
 /*!40000 ALTER TABLE `sys_resource_translate_config` ENABLE KEYS */;
 UNLOCK TABLES;
 
@@ -2366,4 +2379,4 @@ INSERT INTO `user` VALUES (1,'admin','超级管理员','6DA05F9A0ED31ABEEFD41C76
 UNLOCK TABLES;
 
 
--- Dump completed on 2024-11-17 19:14:29
+-- Dump completed on 2025-07-23  9:41:49
