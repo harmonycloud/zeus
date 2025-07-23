@@ -2,7 +2,7 @@ annotations:
   deprecatedVersion: 8.0.26
   owner: harmonycloud
   type: db
-  version: 8.0.39,5.7.44,5.7.35
+  version: 8.0.39,8.0.40,5.7.44,5.7.35
 apiVersion: v2
 appVersion: "8.0"
 dependencies:
@@ -10,8 +10,8 @@ dependencies:
   condition: mysql-operator.enabled
   name: mysql-operator
   repository: file://./charts/mysql-operator
-  version: 1.13.0
+  version: 1.14.0
 description: CloudDB MySQL数据库
 name: mysql
 type: application
-version: 1.13.0
+version: 1.14.0

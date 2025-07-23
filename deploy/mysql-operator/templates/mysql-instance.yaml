@@ -151,6 +151,10 @@ spec:
     initImage: {{ .Values.image.repository }}/mysql-init:{{ .Values.image.initImageTag_8}}
     middlewareImage: {{ .Values.image.repository }}/mysql-cluster:{{ .Values.image.middlewareImageTag_8_0_39}}
     backupRestoreImage: {{ .Values.image.repository }}/mysql-xtrabackup:{{ .Values.image.backupRestoreImageTag_8}}
+  {{- else if eq .Values.version "8.0.40" }}
+    initImage: {{ .Values.image.repository }}/mysql-init:{{ .Values.image.initImageTag_8}}
+    middlewareImage: {{ .Values.image.repository }}/mysql-cluster:{{ .Values.image.middlewareImageTag_8_0_40}}
+    backupRestoreImage: {{ .Values.image.repository }}/mysql-xtrabackup:{{ .Values.image.backupRestoreImageTag_8}}
   {{- else if eq .Values.version "5.7.39" }}
     initImage: {{ .Values.image.repository }}/mysql-init:{{ .Values.image.initImageTag}}
     middlewareImage: {{ .Values.image.repository }}/mysql-cluster:{{ .Values.image.middlewareImageTag_5_7_39}}

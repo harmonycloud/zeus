@@ -16,10 +16,19 @@ spec:
         metric: up
         product: harmonycloud
         service: metrics
+        {{- if .Values.alertRules.MySQLExporterDown.silence }}
+        silence: {{ .Values.alertRules.MySQLExporterDown.silence }}
+        {{- end }}
       expr: up{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}'} == 0
-      for: 5m
+      for: {{ .Values.alertRules.MySQLExporterDown.interval | default "5" }}m
       labels:
-        severity: warning
+        severity: {{ .Values.alertRules.MySQLExporterDown.alertLevel | default "warning" }}
+        middleware: mysql
+        namespace: {{ .Release.Namespace }}
+        service: {{ include "mysql.fullname" . }}
+        {{- if .Values.clusterId }}
+        clusterId: {{ .Values.clusterId }}
+        {{- end }}
   - name: mysql-cluster
     rules:
     - alert: MySQLReplicationNotRunning
@@ -28,22 +37,40 @@ spec:
         metric: mysql_slave_status_slave_io_running
         product: harmonycloud
         service: metrics
+        {{- if .Values.alertRules.MySQLReplicationNotRunning.silence }}
+        silence: {{ .Values.alertRules.MySQLReplicationNotRunning.silence }}
+        {{- end }}
       expr: mysql_slave_status_slave_io_running{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}'} == 0 or mysql_slave_status_slave_sql_running{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}'}
         == 0
-      for: 5m
+      for: {{ .Values.alertRules.MySQLReplicationNotRunning.interval | default "5" }}m
       labels:
-        severity: warning
+        severity: {{ .Values.alertRules.MySQLReplicationNotRunning.alertLevel | default "warning" }}
+        middleware: mysql
+        namespace: {{ .Release.Namespace }}
+        service: {{ include "mysql.fullname" . }}
+        {{- if .Values.clusterId }}
+        clusterId: {{ .Values.clusterId }}
+        {{- end }}
     - alert: MySQLReplicationLag
       annotations:
         message: "MySQL slave replication has fallen behind and is not recovering, current_value={{ `{{ $value }}` }}. (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})"
         metric: mysql_slave_lag_seconds
         product: harmonycloud
         service: metrics
-      expr: (mysql_slave_lag_seconds{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}'} > 30) and on(instance) (predict_linear(mysql_slave_lag_seconds{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}'}[5m],
+        {{- if .Values.alertRules.MySQLReplicationLag.silence }}
+        silence: {{ .Values.alertRules.MySQLReplicationLag.silence }}
+        {{- end }}
+      expr: (mysql_slave_lag_seconds{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}'} > {{ .Values.alertRules.MySQLReplicationLag.threshold | default 30 }}) and on(instance) (predict_linear(mysql_slave_lag_seconds{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}'}[5m],
         60 * 2) > 0)
-      for: 5m
+      for: {{ .Values.alertRules.MySQLReplicationLag.interval | default "5" }}m
       labels:
-        severity: warning
+        severity: {{ .Values.alertRules.MySQLReplicationLag.alertLevel | default "warning" }}
+        middleware: mysql
+        namespace: {{ .Release.Namespace }}
+        service: {{ include "mysql.fullname" . }}
+        {{- if .Values.clusterId }}
+        clusterId: {{ .Values.clusterId }}
+        {{- end }}
     - alert: MySQLInnoDBLogWaits
       annotations:
         message: "MySQL innodb logs are waiting for disk at a rate of {{`{{$value}}`}} second. (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})"
@@ -51,9 +78,19 @@ spec:
         product: harmonycloud
         service: metrics
         summary: MySQL innodb log writes stalling
-      expr: rate(mysql_global_status_innodb_log_waits{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}'}[15m]) > 10
+        {{- if .Values.alertRules.MySQLInnoDBLogWaits.silence }}
+        silence: {{ .Values.alertRules.MySQLInnoDBLogWaits.silence }}
+        {{- end }}
+      expr: rate(mysql_global_status_innodb_log_waits{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}'}[15m]) > {{ .Values.alertRules.MySQLInnoDBLogWaits.threshold | default 10 }}
+      for: {{ .Values.alertRules.MySQLInnoDBLogWaits.interval | default "5" }}m
       labels:
-        severity: warning
+        severity: {{ .Values.alertRules.MySQLInnoDBLogWaits.alertLevel | default "warning" }}
+        middleware: mysql
+        namespace: {{ .Release.Namespace }}
+        service: {{ include "mysql.fullname" . }}
+        {{- if .Values.clusterId }}
+        clusterId: {{ .Values.clusterId }}
+        {{- end }}
   - name: mysql-stats
     rules:
     - alert: MySQLInstanceDown
@@ -62,130 +99,256 @@ spec:
         metric: mysql_up
         product: harmonycloud
         service: metrics
+        {{- if .Values.alertRules.MySQLInstanceDown.silence }}
+        silence: {{ .Values.alertRules.MySQLInstanceDown.silence }}
+        {{- end }}
       expr: mysql_up{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}'} == 0 or kube_pod_container_status_running{container="mysql", namespace='{{ .Release.Namespace }}', pod=~"{{ include "mysql.fullname" . }}-[0-9]"} == 0
-      for: 5m
+      for: {{ .Values.alertRules.MySQLInstanceDown.interval | default "5" }}m
       labels:
-        severity: critical
+        severity: {{ .Values.alertRules.MySQLInstanceDown.alertLevel | default "critical" }}
+        middleware: mysql
+        namespace: {{ .Release.Namespace }}
+        service: {{ include "mysql.fullname" . }}
+        {{- if .Values.clusterId }}
+        clusterId: {{ .Values.clusterId }}
+        {{- end }}
     - alert: MySQLOpenFilesHigh
       annotations:
         message: 'MySQL Open files is high, Please consider increasing open_files_limit, current_value={{ `{{ printf "%.0f" $value }}` }}%. (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})'
         metric: mysql_global_status_innodb_num_open_files
         product: harmonycloud
         service: metrics
-      expr: mysql_global_status_innodb_num_open_files{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}'} * 100 / (mysql_global_variables_open_files_limit{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}'}) > 75
-      for: 5m
+        {{- if .Values.alertRules.MySQLOpenFilesHigh.silence }}
+        silence: {{ .Values.alertRules.MySQLOpenFilesHigh.silence }}
+        {{- end }}
+      expr: mysql_global_status_innodb_num_open_files{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}'} * 100 / (mysql_global_variables_open_files_limit{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}'}) > {{ .Values.alertRules.MySQLOpenFilesHigh.threshold | default 75 }}
+      for: {{ .Values.alertRules.MySQLOpenFilesHigh.interval | default "5" }}m
       labels:
-        severity: warning
+        severity: {{ .Values.alertRules.MySQLOpenFilesHigh.alertLevel | default "warning" }}
+        middleware: mysql
+        namespace: {{ .Release.Namespace }}
+        service: {{ include "mysql.fullname" . }}
+        {{- if .Values.clusterId }}
+        clusterId: {{ .Values.clusterId }}
+        {{- end }}
     - alert: MySQLReadBufferOutOfMaxAllow
       annotations:
         message: "MySQl read buffer size (read_buffer_size) is bigger than max. allowed packet size (max_allowed_packet).This can break your replication. (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})"
         metric: mysql_global_variables_read_buffer_size
         product: harmonycloud
         service: metrics
+        {{- if .Values.alertRules.MySQLReadBufferOutOfMaxAllow.silence }}
+        silence: {{ .Values.alertRules.MySQLReadBufferOutOfMaxAllow.silence }}
+        {{- end }}
       expr: mysql_global_variables_read_buffer_size{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}'} > mysql_global_variables_slave_max_allowed_packet{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}'}
-      for: 5m
+      for: {{ .Values.alertRules.MySQLReadBufferOutOfMaxAllow.interval | default "5" }}m
       labels:
-        severity: warning
+        severity: {{ .Values.alertRules.MySQLReadBufferOutOfMaxAllow.alertLevel | default "warning" }}
+        middleware: mysql
+        namespace: {{ .Release.Namespace }}
+        service: {{ include "mysql.fullname" . }}
+        {{- if .Values.clusterId }}
+        clusterId: {{ .Values.clusterId }}
+        {{- end }}
     - alert: MySQLTooManyConnections
       annotations:
         alertLevel: warning
-        message: 'MySQL instance used more than 80% of max connections limited, current_value={{ `{{ printf "%.0f" $value }}` }}%. (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})'
+        message: 'MySQL instance used more than {{ .Values.alertRules.MySQLTooManyConnections.threshold | default 80 }}% of max connections limited, current_value={{ `{{ printf "%.0f" $value }}` }}%. (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})'
         metric: mysql_global_status_max_used_connections
         product: harmonycloud
         service: metrics
-      expr: mysql_global_status_max_used_connections{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}'} * 100/ mysql_global_variables_max_connections{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}'} > 80
-      for: 5m
+        {{- if .Values.alertRules.MySQLTooManyConnections.silence }}
+        silence: {{ .Values.alertRules.MySQLTooManyConnections.silence }}
+        {{- end }}
+      expr: mysql_global_status_max_used_connections{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}'} * 100/ mysql_global_variables_max_connections{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}'} > {{ .Values.alertRules.MySQLTooManyConnections.threshold | default 80 }}
+      for: {{ .Values.alertRules.MySQLTooManyConnections.interval | default "5" }}m
       labels:
-        severity: warning
+        severity: {{ .Values.alertRules.MySQLTooManyConnections.alertLevel | default "warning" }}
+        middleware: mysql
+        namespace: {{ .Release.Namespace }}
+        service: {{ include "mysql.fullname" . }}
+        {{- if .Values.clusterId }}
+        clusterId: {{ .Values.clusterId }}
+        {{- end }}
     - alert: MySQLIOThreadStopped
       annotations:
         message: "MySQL instance IO thread has stopped. This is usually because it cannot connect to the Master any more. (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})"
         metric: mysql_slave_status_slave_io_running
         product: harmonycloud
         service: metrics
+        {{- if .Values.alertRules.MySQLIOThreadStopped.silence }}
+        silence: {{ .Values.alertRules.MySQLIOThreadStopped.silence }}
+        {{- end }}
       expr: mysql_slave_status_slave_io_running{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}'} != 1
-      for: 5m
+      for: {{ .Values.alertRules.MySQLIOThreadStopped.interval | default "5" }}m
       labels:
-        severity: critical
+        severity: {{ .Values.alertRules.MySQLIOThreadStopped.alertLevel | default "critical" }}
+        middleware: mysql
+        namespace: {{ .Release.Namespace }}
+        service: {{ include "mysql.fullname" . }}
+        {{- if .Values.clusterId }}
+        clusterId: {{ .Values.clusterId }}
+        {{- end }}
     - alert: MySQLSQLThreadStopped
       annotations:
         message: "MySQL instance SQL thread has stopped. This is usually because it cannot apply a SQL statement received from the master. (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})"
         metric: mysql_slave_status_slave_sql_running
         product: harmonycloud
         service: metrics
+        {{- if .Values.alertRules.MySQLSQLThreadStopped.silence }}
+        silence: {{ .Values.alertRules.MySQLSQLThreadStopped.silence }}
+        {{- end }}
       expr: mysql_slave_status_slave_sql_running{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}'} == 0
-      for: 5m
+      for: {{ .Values.alertRules.MySQLSQLThreadStopped.interval | default "5" }}m
       labels:
-        severity: critical
+        severity: {{ .Values.alertRules.MySQLSQLThreadStopped.alertLevel | default "critical" }}
+        middleware: mysql
+        namespace: {{ .Release.Namespace }}
+        service: {{ include "mysql.fullname" . }}
+        {{- if .Values.clusterId }}
+        clusterId: {{ .Values.clusterId }}
+        {{- end }}
     - alert: MySQLSQLThreadError
       annotations:
         message: "MySQL instance SQL thread has stopped. This is usually because it cannot apply a SQL statement received from the master. (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})"
         metric: mysql_slave_status_slave_sql_running
         product: harmonycloud
         service: metrics
+        {{- if .Values.alertRules.MySQLSQLThreadError.silence }}
+        silence: {{ .Values.alertRules.MySQLSQLThreadError.silence }}
+        {{- end }}
       expr: mysql_slave_status_slave_sql_running{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}'} != 1
-      for: 5m
+      for: {{ .Values.alertRules.MySQLSQLThreadError.interval | default "5" }}m
       labels:
-        severity: critical
+        severity: {{ .Values.alertRules.MySQLSQLThreadError.alertLevel | default "critical" }}
+        middleware: mysql
+        namespace: {{ .Release.Namespace }}
+        service: {{ include "mysql.fullname" . }}
+        {{- if .Values.clusterId }}
+        clusterId: {{ .Values.clusterId }}
+        {{- end }}
     - alert: MySQLSlaveLaggingBehindMaster
       annotations:
         message: "MySQL instance Slave is lagging behind Master. Please check if Slave threads are running and if there are some performance issues, current_value={{ `{{ $value }}` }}. (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})"
         metric: mysql_slave_status_seconds_behind_master
         product: harmonycloud
         service: metrics
-      expr: mysql_slave_status_seconds_behind_master{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}'} > 30
-      for: 5m
+        {{- if .Values.alertRules.MySQLSlaveLaggingBehindMaster.silence }}
+        silence: {{ .Values.alertRules.MySQLSlaveLaggingBehindMaster.silence }}
+        {{- end }}
+      expr: mysql_slave_status_seconds_behind_master{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}'} > {{ .Values.alertRules.MySQLSlaveLaggingBehindMaster.threshold | default 30 }}
+      for: {{ .Values.alertRules.MySQLSlaveLaggingBehindMaster.interval | default "5" }}m
       labels:
-        severity: warning
-    - alert: MySQLVolumeUsage70
-      expr:  (100 * kube_persistentvolumeclaim_info{namespace='{{ .Release.Namespace }}', persistentvolumeclaim=~"mysql-data-{{ include "mysql.fullname" . }}-[0-9]"}) * on(volumename) group_left max(label_replace ((used_size_kb / total_size_kb),"volumename", "$1", "pv", "(.+)")) by (volumename) > 70
-      for: 5m
+        severity: {{ .Values.alertRules.MySQLSlaveLaggingBehindMaster.alertLevel | default "warning" }}
+        middleware: mysql
+        namespace: {{ .Release.Namespace }}
+        service: {{ include "mysql.fullname" . }}
+        {{- if .Values.clusterId }}
+        clusterId: {{ .Values.clusterId }}
+        {{- end }}
+    - alert: MySQLVolumeUsageMinor
+      expr:  (100 * kube_persistentvolumeclaim_info{namespace='{{ .Release.Namespace }}', persistentvolumeclaim=~"mysql-data-{{ include "mysql.fullname" . }}-[0-9]"}) * on(volumename) group_left max(label_replace ((used_size_kb / total_size_kb),"volumename", "$1", "pv", "(.+)")) by (volumename) > {{ .Values.alertRules.MySQLVolumeUsageMinor.threshold | default 70 }}
+      for: {{ .Values.alertRules.MySQLVolumeUsageMinor.interval | default "5" }}m
       labels:
-        severity: warning
+        severity: {{ .Values.alertRules.MySQLVolumeUsageMinor.alertLevel | default "warning" }}
+        middleware: mysql
+        namespace: {{ .Release.Namespace }}
+        service: {{ include "mysql.fullname" . }}
+        {{- if .Values.clusterId }}
+        clusterId: {{ .Values.clusterId }}
+        {{- end }}
       annotations:
         product: harmonycloud
-        message: 'The disk usage of MySQL has exceeded 70%, current_value={{ `{{ printf "%.0f" $value }}` }}%.  (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Persistentvolumeclaim: {{`{{ $labels.persistentvolumeclaim }}`}})'
+        message: 'The disk usage of MySQL has exceeded {{ .Values.alertRules.MySQLVolumeUsageMinor.threshold | default 70 }}%, current_value={{ `{{ printf "%.0f" $value }}` }}%.  (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Persistentvolumeclaim: {{`{{ $labels.persistentvolumeclaim }}`}})'
+        {{- if .Values.alertRules.MySQLVolumeUsageMinor.silence }}
+        silence: {{ .Values.alertRules.MySQLVolumeUsageMinor.silence }}
+        {{- end }}
 
-    - alert: MySQLVolumeUsage85
-      expr: (100 * kube_persistentvolumeclaim_info{namespace='{{ .Release.Namespace }}', persistentvolumeclaim=~"mysql-data-{{ include "mysql.fullname" . }}-[0-9]"}) * on(volumename) group_left max(label_replace ((used_size_kb / total_size_kb),"volumename", "$1", "pv", "(.+)")) by (volumename) > 85
-      for: 5m
+    - alert: MySQLVolumeUsageMajor
+      expr: (100 * kube_persistentvolumeclaim_info{namespace='{{ .Release.Namespace }}', persistentvolumeclaim=~"mysql-data-{{ include "mysql.fullname" . }}-[0-9]"}) * on(volumename) group_left max(label_replace ((used_size_kb / total_size_kb),"volumename", "$1", "pv", "(.+)")) by (volumename) > {{ .Values.alertRules.MySQLVolumeUsageMajor.threshold | default 85 }}
+      for: {{ .Values.alertRules.MySQLVolumeUsageMajor.interval | default "5" }}m
       labels:
-        severity: critical
+        severity: {{ .Values.alertRules.MySQLVolumeUsageMajor.alertLevel | default "critical" }}
+        middleware: mysql
+        namespace: {{ .Release.Namespace }}
+        service: {{ include "mysql.fullname" . }}
+        {{- if .Values.clusterId }}
+        clusterId: {{ .Values.clusterId }}
+        {{- end }}
       annotations:
         product: harmonycloud
-        message: 'The disk usage of MySQL has exceeded 85%, current_value={{ `{{ printf "%.0f" $value }}` }}%.  (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Persistentvolumeclaim: {{`{{ $labels.persistentvolumeclaim }}`}})'
+        message: 'The disk usage of MySQL has exceeded {{ .Values.alertRules.MySQLVolumeUsageMajor.threshold | default 85 }}%, current_value={{ `{{ printf "%.0f" $value }}` }}%.  (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Persistentvolumeclaim: {{`{{ $labels.persistentvolumeclaim }}`}})'
+        {{- if .Values.alertRules.MySQLVolumeUsageMajor.silence }}
+        silence: {{ .Values.alertRules.MySQLVolumeUsageMajor.silence }}
+        {{- end }}
 
     - alert: MySQLFailOver
       annotations:
         message: 'The MySQL instance occurs Master-slave switchover or failover. (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}'
+        {{- if .Values.alertRules.MySQLFailOver.silence }}
+        silence: {{ .Values.alertRules.MySQLFailOver.silence }}
+        {{- end }}
       expr: delta(mysql_global_variables_read_only{namespace='{{ .Release.Namespace }}',pod=~'{{ include "mysql.fullname" . }}-[0-9]'}[5m]) > 0
-      for: 20s
+      for: {{ .Values.alertRules.MySQLFailOver.interval | default "1" }}m
       labels:
-        severity: warning
+        severity: {{ .Values.alertRules.MySQLFailOver.alertLevel | default "warning" }}
+        middleware: mysql
+        namespace: {{ .Release.Namespace }}
+        service: {{ include "mysql.fullname" . }}
+        {{- if .Values.clusterId }}
+        clusterId: {{ .Values.clusterId }}
+        {{- end }}
 
-    - alert: MySQLWorkingSetMemoryUsageHigh95
+    - alert: MySQLWorkingSetMemoryUsageHigh
       annotations:
-        message: 'The workingSet memory(include Active Pages in the File System Cache) usage of MySQL has exceeded 95%, current_value={{ `{{ printf "%.0f" $value }}` }}%.  (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})'
-      expr: sum(container_memory_working_set_bytes{namespace='{{ .Release.Namespace }}',pod=~'{{ include "mysql.fullname" . }}-[0-9]',endpoint!="",container="mysql"}) by (pod) * 100 / sum(kube_pod_container_resource_requests{namespace='{{ .Release.Namespace }}',pod=~'{{ include "mysql.fullname" . }}-[0-9]',resource="memory",container="mysql"}) by (pod) > 95
-      for: 5m
+        message: 'The workingSet memory(include Active Pages in the File System Cache) usage of MySQL has exceeded {{ .Values.alertRules.MySQLWorkingSetMemoryUsageHigh.threshold | default 95 }}%, current_value={{ `{{ printf "%.0f" $value }}` }}%.  (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})'
+        {{- if .Values.alertRules.MySQLWorkingSetMemoryUsageHigh.silence }}
+        silence: {{ .Values.alertRules.MySQLWorkingSetMemoryUsageHigh.silence }}
+        {{- end }}
+      expr: sum(container_memory_working_set_bytes{namespace='{{ .Release.Namespace }}',pod=~'{{ include "mysql.fullname" . }}-[0-9]',endpoint!="",container="mysql"}) by (pod) * 100 / sum(kube_pod_container_resource_requests{namespace='{{ .Release.Namespace }}',pod=~'{{ include "mysql.fullname" . }}-[0-9]',resource="memory",container="mysql"}) by (pod) > {{ .Values.alertRules.MySQLWorkingSetMemoryUsageHigh.threshold | default 95 }}
+      for: {{ .Values.alertRules.MySQLWorkingSetMemoryUsageHigh.interval | default "5" }}m
       labels:
-        severity: warning
+        severity: {{ .Values.alertRules.MySQLWorkingSetMemoryUsageHigh.alertLevel | default "warning" }}
+        middleware: mysql
+        namespace: {{ .Release.Namespace }}
+        service: {{ include "mysql.fullname" . }}
+        {{- if .Values.clusterId }}
+        clusterId: {{ .Values.clusterId }}
+        {{- end }}
 
-    - alert: MySQLRSSMemoryUsageHigh80
+    - alert: MySQLRSSMemoryUsageHigh
       annotations:
-        message: 'The rss memory usage of MySQL has exceeded 80%, current_value={{ `{{ printf "%.0f" $value }}` }}%.  (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})'
-      expr: sum(container_memory_rss{namespace='{{ .Release.Namespace }}',pod=~'{{ include "mysql.fullname" . }}-[0-9]',endpoint!="",container="mysql"}) by (pod) * 100 / sum(kube_pod_container_resource_requests{namespace='{{ .Release.Namespace }}',pod=~'{{ include "mysql.fullname" . }}-[0-9]',resource="memory",container="mysql"}) by (pod) > 80
-      for: 5m
+        message: 'The rss memory usage of MySQL has exceeded {{ .Values.alertRules.MySQLRSSMemoryUsageHigh.threshold | default 80 }}%, current_value={{ `{{ printf "%.0f" $value }}` }}%.  (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})'
+        {{- if .Values.alertRules.MySQLRSSMemoryUsageHigh.silence }}
+        silence: {{ .Values.alertRules.MySQLRSSMemoryUsageHigh.silence }}
+        {{- end }}
+      expr: sum(container_memory_rss{namespace='{{ .Release.Namespace }}',pod=~'{{ include "mysql.fullname" . }}-[0-9]',endpoint!="",container="mysql"}) by (pod) * 100 / sum(kube_pod_container_resource_requests{namespace='{{ .Release.Namespace }}',pod=~'{{ include "mysql.fullname" . }}-[0-9]',resource="memory",container="mysql"}) by (pod) > {{ .Values.alertRules.MySQLRSSMemoryUsageHigh.threshold | default 80 }}
+      for: {{ .Values.alertRules.MySQLRSSMemoryUsageHigh.interval | default "5" }}m
       labels:
-        severity: warning
+        severity: {{ .Values.alertRules.MySQLRSSMemoryUsageHigh.alertLevel | default "warning" }}
+        middleware: mysql
+        namespace: {{ .Release.Namespace }}
+        service: {{ include "mysql.fullname" . }}
+        {{- if .Values.clusterId }}
+        clusterId: {{ .Values.clusterId }}
+        {{- end }}
 
     - alert: MySQLCpuUsageHigh
       annotations:
-        message: 'The cpu usage of MySQL has exceeded 90%, current_value={{ `{{ printf "%.0f" $value }}` }}%.  (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})'
-      expr: sum(rate (container_cpu_usage_seconds_total{namespace='{{ .Release.Namespace }}',pod=~'{{ include "mysql.fullname" . }}-[0-9]',endpoint!="",container="mysql"}[5m]) ) by (pod) * 100 / sum(kube_pod_container_resource_requests{namespace='{{ .Release.Namespace }}',pod=~'{{ include "mysql.fullname" . }}-[0-9]',resource="cpu",container="mysql"}) by (pod)  > 90
-      for: 5m
+        message: 'The cpu usage of MySQL has exceeded {{ .Values.alertRules.MySQLCpuUsageHigh.threshold | default 90 }}%, current_value={{ `{{ printf "%.0f" $value }}` }}%.  (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})'
+        {{- if .Values.alertRules.MySQLCpuUsageHigh.silence }}
+        silence: {{ .Values.alertRules.MySQLCpuUsageHigh.silence }}
+        {{- end }}
+      expr: sum(rate (container_cpu_usage_seconds_total{namespace='{{ .Release.Namespace }}',pod=~'{{ include "mysql.fullname" . }}-[0-9]',endpoint!="",container="mysql"}[5m]) ) by (pod) * 100 / sum(kube_pod_container_resource_requests{namespace='{{ .Release.Namespace }}',pod=~'{{ include "mysql.fullname" . }}-[0-9]',resource="cpu",container="mysql"}) by (pod)  > {{ .Values.alertRules.MySQLCpuUsageHigh.threshold | default 90 }}
+      for: {{ .Values.alertRules.MySQLCpuUsageHigh.interval | default "5" }}m
       labels:
-        severity: warning
+        severity: {{ .Values.alertRules.MySQLCpuUsageHigh.alertLevel | default "warning" }}
+        middleware: mysql
+        namespace: {{ .Release.Namespace }}
+        service: {{ include "mysql.fullname" . }}
+        {{- if .Values.clusterId }}
+        clusterId: {{ .Values.clusterId }}
+        {{- end }}
 
 
 
@@ -198,49 +361,118 @@ spec:
         metric: up
         product: harmonycloud
         service: metrics
+        {{- if .Values.alertRules.ProxySqlInstanceDown.silence }}
+        silence: {{ .Values.alertRules.ProxySqlInstanceDown.silence }}
+        {{- end }}
       expr: up{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}'}== 0 or kube_pod_container_status_running{container="proxysql", pod=~"{{ include "mysql.fullname" . }}-proxy.*"} == 0
-      for: 5m
+      for: {{ .Values.alertRules.ProxySqlInstanceDown.interval | default "5" }}m
       labels:
-        severity: warning
+        severity: {{ .Values.alertRules.ProxySqlInstanceDown.alertLevel | default "warning" }}
+        middleware: mysql
+        namespace: {{ .Release.Namespace }}
+        service: {{ include "mysql.fullname" . }}
+        {{- if .Values.clusterId }}
+        clusterId: {{ .Values.clusterId }}
+        {{- end }}
     - alert: ProxySqlConnectCheckErr
       annotations:
         message: "MySQL ProxySQL connect check err. (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})"
         metric: up
         product: harmonycloud
         service: metrics
+        {{- if .Values.alertRules.ProxySqlConnectCheckErr.silence }}
+        silence: {{ .Values.alertRules.ProxySqlConnectCheckErr.silence }}
+        {{- end }}
       expr: irate(proxysql_mysql_monitor_connect_check_total{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}', status="err"}[5m]) > 0
-      for: 5m
+      for: {{ .Values.alertRules.ProxySqlConnectCheckErr.interval | default "5" }}m
       labels:
-        severity: warning
+        severity: {{ .Values.alertRules.ProxySqlConnectCheckErr.alertLevel | default "warning" }}
+        middleware: mysql
+        namespace: {{ .Release.Namespace }}
+        service: {{ include "mysql.fullname" . }}
+        {{- if .Values.clusterId }}
+        clusterId: {{ .Values.clusterId }}
+        {{- end }}
     - alert: ProxySqlPinCheckErr
       annotations:
         message: "MySQL ProxySQL ping check err. (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})"
         metric: up
         product: harmonycloud
         service: metrics
+        {{- if .Values.alertRules.ProxySqlPinCheckErr.silence }}
+        silence: {{ .Values.alertRules.ProxySqlPinCheckErr.silence }}
+        {{- end }}
       expr: irate(proxysql_mysql_monitor_ping_check_total{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}',status="err"}[5m]) > 0
-      for: 5m
+      for: {{ .Values.alertRules.ProxySqlPinCheckErr.interval | default "5" }}m
       labels:
-        severity: warning
+        severity: {{ .Values.alertRules.ProxySqlPinCheckErr.alertLevel | default "warning" }}
+        middleware: mysql
+        namespace: {{ .Release.Namespace }}
+        service: {{ include "mysql.fullname" . }}
+        {{- if .Values.clusterId }}
+        clusterId: {{ .Values.clusterId }}
+        {{- end }}
     - alert: ProxySqlReadOnlyCheckErr
       annotations:
         message: "MySQL ProxySQL read only check err. (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})"
         metric: up
         product: harmonycloud
         service: metrics
+        {{- if .Values.alertRules.ProxySqlReadOnlyCheckErr.silence }}
+        silence: {{ .Values.alertRules.ProxySqlReadOnlyCheckErr.silence }}
+        {{- end }}
       expr: irate(proxysql_mysql_monitor_read_only_check_total{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}',status="err"}[5m]) > 0
-      for: 5m
+      for: {{ .Values.alertRules.ProxySqlReadOnlyCheckErr.interval | default "5" }}m
       labels:
-        severity: warning
+        severity: {{ .Values.alertRules.ProxySqlReadOnlyCheckErr.alertLevel | default "warning" }}
+        middleware: mysql
+        namespace: {{ .Release.Namespace }}
+        service: {{ include "mysql.fullname" . }}
+        {{- if .Values.clusterId }}
+        clusterId: {{ .Values.clusterId }}
+        {{- end }}
     - alert: ProxySqlReplicationLagCheckErr
       annotations:
         message: "MySQL ProxySQL replication lag check err. (Namespace: {{ .Release.Namespace }}, ServiceName: {{ .Release.Name }}, Pod: {{`{{ $labels.pod }}`}})"
         metric: up
         product: harmonycloud
         service: metrics
+        {{- if .Values.alertRules.ProxySqlReplicationLagCheckErr.silence }}
+        silence: {{ .Values.alertRules.ProxySqlReplicationLagCheckErr.silence }}
+        {{- end }}
       expr: irate(proxysql_mysql_monitor_replication_lag_check_total{namespace='{{ .Release.Namespace }}', service='{{ include "mysql.fullname" . }}', status="err"}[5m]) >0
-      for: 5m
+      for: {{ .Values.alertRules.ProxySqlReplicationLagCheckErr.interval | default "5" }}m
       labels:
-        severity: warning
+        severity: {{ .Values.alertRules.ProxySqlReplicationLagCheckErr.alertLevel | default "warning" }}
+        middleware: mysql
+        namespace: {{ .Release.Namespace }}
+        service: {{ include "mysql.fullname" . }}
+        {{- if .Values.clusterId }}
+        clusterId: {{ .Values.clusterId }}
+        {{- end }}
 {{- end }}
+
+  {{- if .Values.customAlertRules }}
+  - name: custom-alert-rules
+    rules:
+    {{ $namespace := .Release.Namespace }}
+    {{- range $name, $rule := .Values.customAlertRules }}
+    - alert: {{ $name }}
+      expr: {{ $rule.alertExpr }}
+      for: {{ $rule.interval | default "5" }}m
+      labels:
+        severity: {{ $rule.alertLevel | default "warning" }}
+        middleware: mysql
+        namespace: {{ $namespace }}
+        service: {{ include "mysql.fullname" $ }}
+        {{- if $.Values.clusterId }}
+        clusterId: {{ $.Values.clusterId }}
+        {{- end }}
+      annotations:
+        message: '{{ $rule.alertText }}'
+        {{- if $rule.silence }}
+        silence: {{ $rule.silence }}
+        {{- end }}
+    {{- end }}
+  {{- end }}
 {{- end }}
