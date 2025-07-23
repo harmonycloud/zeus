@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.middleware.zeus.common.constants.NameConstant.POSITION_ID;
@@ -55,8 +56,6 @@ public class BackupPositionServiceImpl implements BackupPositionService {
     private BackupServerDetailService backupServerDetailService;
     @Autowired
     private NamespaceService namespaceService;
-    @Autowired
-    private MiddlewareBackupNameService middlewareBackupNameService;
     @Autowired
     private MiddlewareService middlewareService;
     @Autowired
@@ -210,6 +209,13 @@ public class BackupPositionServiceImpl implements BackupPositionService {
         if (CollectionUtils.isEmpty(beanBackupPositions)) {
             return positionList;
         }
+        // 查询项目列表
+        List<ProjectDto> projectDtoList = projectService.list(null);
+        Map<String, ProjectDto> projectNameMap = new HashMap<>();
+        if (!CollectionUtils.isEmpty(projectDtoList)) {
+            projectNameMap = projectDtoList.stream().collect(Collectors.toMap(ProjectDto::getProjectId, Function.identity()));
+        }
+        
         Map<Integer, List<BeanBackupPosition>> postionMap = beanBackupPositions.stream().collect(Collectors.groupingBy(BeanBackupPosition::getBackupServerId));
         for (List<BeanBackupPosition> positions : postionMap.values()) {
             for (int i = 0; i < positions.size(); i++) {
@@ -219,14 +225,14 @@ public class BackupPositionServiceImpl implements BackupPositionService {
                 BackupPositionDTO backupPositionDTO = new BackupPositionDTO();
                 BeanBackupPosition beanBackupPosition = positions.get(i);
                 BeanUtil.copyProperties(beanBackupPosition, backupPositionDTO);
-                ProjectDto projectDto = projectService.get(beanBackupPosition.getOrganId(), beanBackupPosition.getProjectId());
-                if (projectDto != null) {
-                    backupPositionDTO.setProjectName(projectDto.getAliasName());
-                    backupPositionDTO.setBackupTaskNum(getBackupPositionBindCount(beanBackupPosition.getBackupServerId(), beanBackupPosition.getId()));
+                if (projectNameMap.get(beanBackupPosition.getProjectId()) != null) {
+                    // 设置项目名称
+                    backupPositionDTO.setProjectName(projectNameMap.get(beanBackupPosition.getProjectId()).getAliasName());
                     positionList.add(backupPositionDTO);
                 }
             }
         }
+        setBackupPositionBindCount(positionList);
         return positionList;
     }
 
@@ -249,6 +255,58 @@ public class BackupPositionServiceImpl implements BackupPositionService {
             count += middlewareBackupScheduleList.size();
         }
         return count;
+    }
+
+    public void setBackupPositionBindCount(List<BackupPositionDTO> backupPositionDTOList){
+        // 根据备份服务器id进行group，变相收缩相同集群
+        Map<Integer, List<BackupPositionDTO>> map =  backupPositionDTOList.stream().collect(Collectors.groupingBy(BackupPositionDTO::getBackupServerId));
+
+        // 被备份数据进行临时缓存，避免反复查询
+        Map<String, List<MiddlewareBackup>> middlewareBackupCache = new HashMap<>();
+        Map<String, List<MiddlewareBackupSchedule>> middlewareBackupScheduleCache = new HashMap<>();
+
+        for (Integer backupServerId : map.keySet()) {
+            // 获取备份服务器信息，通过此方法获取集群id
+            BeanBackupServer beanBackupServer = backupServerService.get(backupServerId);
+
+            List<MiddlewareBackup> middlewareBackupList;
+            List<MiddlewareBackupSchedule> middlewareBackupScheduleList;
+            // 根据集群情况，缓存查询到的备份和周期备份数据
+            String clusterId = beanBackupServer.getClusterId();
+            if (middlewareBackupCache.containsKey(clusterId)) {
+                middlewareBackupList = middlewareBackupCache.get(beanBackupServer.getClusterId());
+            } else {
+                middlewareBackupList = middlewareBackupCrService.list(clusterId, null, null);
+                middlewareBackupCache.put(clusterId, middlewareBackupList);
+            }
+            if (middlewareBackupScheduleCache.containsKey(clusterId)) {
+                middlewareBackupScheduleList =  middlewareBackupScheduleCache.get(beanBackupServer.getClusterId());
+            } else {
+                middlewareBackupScheduleList = middlewareBackupScheduleCrService.listByLabels(clusterId, null, null);
+                middlewareBackupScheduleCache.put(clusterId, middlewareBackupScheduleList);
+            }
+
+            for (BackupPositionDTO backupPositionDTO : map.get(backupServerId)) {
+                int count = 0;
+                // 计算备份任务的数量
+                count += (int)middlewareBackupList.stream()
+                    .filter(middlewareBackup -> middlewareBackup.getMetadata().getLabels() != null
+                        && middlewareBackup.getMetadata().getLabels().get(POSITION_ID) != null
+                        && middlewareBackup.getMetadata().getLabels().get(POSITION_ID)
+                            .equals(String.valueOf(backupPositionDTO.getId())))
+                    .count();
+                // 计算周期备份任务的数量
+                count += (int)middlewareBackupScheduleList.stream()
+                    .filter(middlewareBackupSchedule -> middlewareBackupSchedule.getMetadata().getLabels() != null
+                        && middlewareBackupSchedule.getMetadata().getLabels().get(POSITION_ID) != null
+                        && middlewareBackupSchedule.getMetadata().getLabels().get(POSITION_ID)
+                            .equals(String.valueOf(backupPositionDTO.getId())))
+                    .count();
+
+                backupPositionDTO.setBackupTaskNum(count);
+            }
+            
+        }
     }
 
 
