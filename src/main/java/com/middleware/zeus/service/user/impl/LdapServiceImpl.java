@@ -168,6 +168,7 @@ public class LdapServiceImpl implements LdapService {
         contextSource.setBase(ldapConfigDto.getBase());
         contextSource.setUserDn(ldapConfigDto.getUsername());
         contextSource.setPassword(ldapConfigDto.getPassword());
+        contextSource.setReferral("follow");
 
         //  解决乱码
         config.put("java.naming.ldap.attributes.binary", "objectGUID");
