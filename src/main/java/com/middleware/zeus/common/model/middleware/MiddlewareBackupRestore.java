@@ -1,5 +1,6 @@
 package com.middleware.zeus.common.model.middleware;
 
+import com.skyview.language.annotations.DirectTranslate;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -22,6 +23,7 @@ public class MiddlewareBackupRestore {
     private String restoreName;
 
     @ApiModelProperty("所属可用区")
+    @DirectTranslate(groupName="active_area",uniqueKeyName="activeArea", keyName="aliasName")
     private String activeArea;
 
     @ApiModelProperty("命名空间")

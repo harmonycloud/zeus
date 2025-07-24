@@ -1170,6 +1170,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
+    @TranslateAfterResult
     public List<MiddlewareBackupRecord> backupIncrRecords(String clusterId, String namespace, String middlewareName, String type, String backupId, String backupMode, String orderBy) {
         Map<String, MiddlewareBackupRecord> scheduleNamesMap = listMiddlewareBackupScheduleNamesMap(clusterId, namespace, backupId);
         Set<String> backupScheduleNames = scheduleNamesMap.keySet();
@@ -1200,6 +1201,7 @@ public class MiddlewareBackupServiceImpl implements MiddlewareBackupService {
     }
 
     @Override
+    @TranslateAfterResult
     public List<MiddlewareBackupRestore> backupRestores(String clusterId, String namespace, String backupId) {
         Map<String, String> labels = new HashMap<>();
         labels.put("backupId", backupId);
