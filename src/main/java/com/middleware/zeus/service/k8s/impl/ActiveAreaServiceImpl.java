@@ -186,7 +186,6 @@ public class ActiveAreaServiceImpl implements ActiveAreaService {
     }
 
     @Override
-    @TranslateAfterResult
     public List<ActiveAreaDto> list(String clusterId) {
         QueryWrapper<BeanActiveArea> wrapper = new QueryWrapper<BeanActiveArea>().eq("cluster_id", clusterId);
         List<BeanActiveArea> beanActiveAreaList;
