@@ -189,7 +189,7 @@ public class MiddlewareLogAlertDto {
                                 if (should.getTerm() != null) {
                                     for (String key : should.getTerm().keySet()) {
                                         matchRuleList.add(new MatchRule().setKey(key)
-                                            .setValue(should.getTerm().get(key)).setFuzzy(true));
+                                            .setValue(should.getTerm().get(key)).setFuzzy(false));
                                     }
                                 }
                             }
