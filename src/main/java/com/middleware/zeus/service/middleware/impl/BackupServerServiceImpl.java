@@ -205,16 +205,34 @@ public class BackupServerServiceImpl implements BackupServerService {
      * @return
      */
     private List<BackupServerDTO> convertToBackupServerDTO(List<BeanBackupServer> serverList, Boolean withDetail) {
-        return serverList.stream().map(backupServer -> {
+        // 封装数据结构
+        List<BackupServerDTO> backupServerDTOS = serverList.stream().map(backupServer -> {
             BackupServerDTO backupServerDTO = new BackupServerDTO();
             BeanUtil.copyProperties(backupServer, backupServerDTO);
-            backupServerDTO.setServerDetailList(backupServerDetailService.listBackupServerDetailDTOS(backupServer.getId()));
+            backupServerDTO
+                .setServerDetailList(backupServerDetailService.listBackupServerDetailDTOS(backupServer.getId()));
             backupServerDTO.setServerType(getServerType(backupServerDTO.getServerDetailList()));
-            if (withDetail) {
-                backupServerDTO.setPositionList(backupPositionService.list(null, null, backupServer.getId(), true));
-            }
             return backupServerDTO;
         }).collect(Collectors.toList());
+
+        if (withDetail) {
+            List<BackupPositionDTO> backupPositionDTOList = backupPositionService.list(null, null, null, true);
+            // 根据backupServerId进行group 分配到所有的备份服务器中
+            Map<Integer, List<BackupPositionDTO>> backupServerIdPositionMap =
+                backupPositionDTOList.stream().collect(Collectors.groupingBy(BackupPositionDTO::getBackupServerId));
+            // 遍历备份服务器列表，将备份位置信息添加到备份服务器对象中
+            for (BackupServerDTO backupServerDTO : backupServerDTOS) {
+                // 过滤掉没有备份位置的备份服务器
+                if (!backupServerIdPositionMap.containsKey(backupServerDTO.getId())) {
+                    continue;
+                }
+                List<BackupPositionDTO> positionList = backupServerIdPositionMap.get(backupServerDTO.getId());
+                if (!CollectionUtils.isEmpty(positionList)) {
+                    backupServerDTO.setPositionList(positionList);
+                }
+            }
+        }
+        return backupServerDTOS;
     }
 
     /**
