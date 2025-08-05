@@ -189,12 +189,12 @@ public class StorageServiceImpl implements StorageService {
             if (!annotations.containsKey(STORAGE_ID)){
                 annotations.put(STORAGE_ID, storageId);
             }
-//            // 双活配置
-//            if (storageDto.getIsActiveActive()) {
-//                String active = scList.stream().filter(storageClass -> !storageClass.getMetadata().getName().equals(sc.getMetadata().getName()))
-//                        .collect(Collectors.toList()).get(0).getMetadata().getName();
-//                annotations.put(ACTIVE_ACTIVE, active);
-//            }
+            // 双活配置，保留annotations中的该key，values没有意义，可以考虑修改为true
+            if (storageDto.getIsActiveActive()) {
+                String active = scList.stream().filter(storageClass -> !storageClass.getMetadata().getName().equals(sc.getMetadata().getName()))
+                        .collect(Collectors.toList()).get(0).getMetadata().getName();
+                annotations.put(ACTIVE_ACTIVE, active);
+            }
             sc.getMetadata().setAnnotations(annotations);
             storageClassWrapper.update(storageDto.getClusterId(), sc);
         }
