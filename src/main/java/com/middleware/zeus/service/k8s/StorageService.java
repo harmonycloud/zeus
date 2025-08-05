@@ -108,14 +108,6 @@ public interface StorageService {
     Map<String, String> checkHitachiAndGetParams(String clusterId, String storageName);
 
     /**
-     * 封装存储名称
-     *
-     * @param clusterId 集群id
-     * @return Map<String, String>
-     */
-    Map<String, String> convertStorageName(String clusterId);
-
-    /**
      * 查询storageClassInfo
      *
      * @param clusterId 集群id

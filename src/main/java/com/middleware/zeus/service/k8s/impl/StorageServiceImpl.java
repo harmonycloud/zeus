@@ -189,12 +189,12 @@ public class StorageServiceImpl implements StorageService {
             if (!annotations.containsKey(STORAGE_ID)){
                 annotations.put(STORAGE_ID, storageId);
             }
-            // 双活配置
-            if (storageDto.getIsActiveActive()) {
-                String active = scList.stream().filter(storageClass -> !storageClass.getMetadata().getName().equals(sc.getMetadata().getName()))
-                        .collect(Collectors.toList()).get(0).getMetadata().getName();
-                annotations.put(ACTIVE_ACTIVE, active);
-            }
+//            // 双活配置
+//            if (storageDto.getIsActiveActive()) {
+//                String active = scList.stream().filter(storageClass -> !storageClass.getMetadata().getName().equals(sc.getMetadata().getName()))
+//                        .collect(Collectors.toList()).get(0).getMetadata().getName();
+//                annotations.put(ACTIVE_ACTIVE, active);
+//            }
             sc.getMetadata().setAnnotations(annotations);
             storageClassWrapper.update(storageDto.getClusterId(), sc);
         }
@@ -224,6 +224,7 @@ public class StorageServiceImpl implements StorageService {
             annotations.remove(MIDDLEWARE);
             annotations.remove(ALIAS_NAME);
             annotations.remove(INTEGRATE_TIME);
+            // 已取消使用，保留移除的逻辑
             annotations.remove(ACTIVE_ACTIVE);
             annotations.remove(TOTAL_STORAGE);
             annotations.remove(STORAGE_ID);
@@ -408,13 +409,13 @@ public class StorageServiceImpl implements StorageService {
     /**
      * 封装业务对象
      */
-    public StorageDto convert(String clusterId, StorageClass storageClass){
+    public StorageDto convert(String clusterId, StorageClass storageClass) {
         MiddlewareClusterDTO cluster = clusterService.findById(clusterId);
         // 初始化业务对象
         StorageDto storageDto = new StorageDto();
         // 获取存储配额
         Map<String, String> annotations = storageClass.getMetadata().getAnnotations();
-        if (CollectionUtils.isEmpty(annotations)){
+        if (CollectionUtils.isEmpty(annotations)) {
             annotations = new HashMap<>();
         }
         // 获取中文名称
@@ -422,15 +423,16 @@ public class StorageServiceImpl implements StorageService {
             storageDto.setAliasName(annotations.get(ALIAS_NAME));
         }
         // 获取接入时间
-        if (annotations.containsKey(INTEGRATE_TIME)){
-            storageDto.setCreateTime(DateUtil.StringToDate(annotations.get(INTEGRATE_TIME), DateType.YYYY_MM_DD_T_HH_MM_SS_Z));
+        if (annotations.containsKey(INTEGRATE_TIME)) {
+            storageDto.setCreateTime(
+                DateUtil.StringToDate(annotations.get(INTEGRATE_TIME), DateType.YYYY_MM_DD_T_HH_MM_SS_Z));
         }
         // 获取配额总额
-        if (annotations.containsKey(TOTAL_STORAGE)){
+        if (annotations.containsKey(TOTAL_STORAGE)) {
             storageDto.setTotalStorage(Double.parseDouble(annotations.get(TOTAL_STORAGE)));
         }
         // 获取存储id
-        if(annotations.containsKey(STORAGE_ID)){
+        if (annotations.containsKey(STORAGE_ID)) {
             storageDto.setStorageId(annotations.get(STORAGE_ID));
         }
         storageDto.setClusterId(clusterId);
@@ -439,18 +441,30 @@ public class StorageServiceImpl implements StorageService {
         storageDto.getStorageClassList().add(convertSc(storageClass));
 
         // 双活配置
-        if (annotations.containsKey(ACTIVE_ACTIVE)){
+        if (annotations.containsKey(ACTIVE_ACTIVE)) {
             storageDto.setIsActiveActive(true);
             // 获取双活添加的其他sc
-            String activeName = annotations.get(ACTIVE_ACTIVE);
-            StorageClass activeSc = storageClassWrapper.get(clusterId, activeName);
-            if (activeSc == null) {
-                log.error("双活存储{}缺少对应StorageClass，平台将移除该存储",storageDto.getAliasName());
-                delete(clusterId, storageDto.getAliasName());
+            List<StorageClass> storageClassList = storageClassWrapper.list(clusterId);
+            if (CollectionUtils.isEmpty(storageClassList)) {
+                return storageDto;
             }
-            storageDto.getStorageClassList().add(convertSc(activeSc));
+            // 获取环境中其他的storageId与当前storageClass的id相同的sc
+            storageClassList = storageClassList.stream()
+                .filter(sc -> sc.getMetadata().getAnnotations() != null
+                    && sc.getMetadata().getAnnotations().get("storageId") != null && storageDto.getStorageId() != null
+                    && sc.getMetadata().getAnnotations().get("storageId").equals(storageDto.getStorageId()))
+                .collect(Collectors.toList());
+            if (CollectionUtils.isEmpty(storageClassList)) {
+                return storageDto;
+            }
+            // 再从中过滤掉当前已封装的sc
+            storageClassList = storageClassList.stream()
+                .filter(sc -> !sc.getMetadata().getName().equals(storageClass.getMetadata().getName()))
+                .collect(Collectors.toList());
+            for (StorageClass sc : storageClassList) {
+                storageDto.getStorageClassList().add(convertSc(sc));
+            }
         }
-
         return storageDto;
     }
 
@@ -534,13 +548,6 @@ public class StorageServiceImpl implements StorageService {
             params = storageClass.getParameters();
         }
         return params;
-    }
-    @Override
-    public Map<String, String> convertStorageName(String clusterId) {
-        // 查询存储列表
-        List<StorageDto> storageDtoList = this.list(clusterId, false);
-        // 封装获取包含storageClass 和 对应别名的map
-        return storageDtoList.stream().collect(Collectors.toMap(StorageDto::getStorageId, StorageDto::getAliasName));
     }
 
     @Override
