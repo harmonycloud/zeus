@@ -160,4 +160,7 @@ public class NameConstant {
     public static final String COMMON = "common";
     public final static String PORT = "port";
 
+    public static final String ACCESS_KEY = "accessKey";
+    public static final String SECRET_KEY = "secretKey";
+
 }

@@ -73,7 +73,18 @@ public interface SecretService {
      * @param namespace 分区
      * @param conf  user conf内容
      */
-    void saveUserConf(String clusterId, String namespace, String name, String conf);
+    void genericSecretWithConf(String clusterId, String namespace, String name, String contentName, String conf);
+
+    /**
+     * 创建secret
+     *
+     * @param clusterId 集群id
+     * @param namespace 分区
+     * @param name 名称
+     * @param username 用户名
+     * @param password 密码
+     */
+    void genericSecretWithUsername(String clusterId, String namespace, String name, String username, String password);
 
 
 }

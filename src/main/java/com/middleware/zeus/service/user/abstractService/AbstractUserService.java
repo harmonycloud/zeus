@@ -224,7 +224,7 @@ public abstract class AbstractUserService {
 
             conf = yaml.dumpAsMap(config);
             // 通过secret进行保存
-            secretService.saveUserConf(clusterId, ZEUS, ZEUS + LINE + username + LINE + "conf", conf);
+            secretService.genericSecretWithConf(clusterId, ZEUS, ZEUS + LINE + username + LINE + "conf", USER_CONF, conf);
         }
         return conf;
     }

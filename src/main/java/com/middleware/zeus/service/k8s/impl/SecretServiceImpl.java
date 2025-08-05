@@ -20,7 +20,7 @@ import com.middleware.zeus.integration.cluster.SecretWrapper;
 
 import lombok.extern.slf4j.Slf4j;
 
-import static com.middleware.zeus.common.constants.NameConstant.USER_CONF;
+import static com.middleware.zeus.common.constants.NameConstant.*;
 
 /**
  * @author xutianhong
@@ -94,12 +94,26 @@ public class SecretServiceImpl implements SecretService {
     }
 
     @Override
-    public void saveUserConf(String clusterId, String namespace, String name, String conf) {
+    public void genericSecretWithConf(String clusterId, String namespace, String name, String contentName, String conf) {
         Secret secret = new Secret();
         secret.setName(name);
         secret.setNamespace(namespace);
         Map<String, String> data = new HashMap<>();
-        data.put(USER_CONF, Base64.getEncoder().encodeToString(conf.getBytes(StandardCharsets.UTF_8)));
+        data.put(contentName, Base64.getEncoder().encodeToString(conf.getBytes(StandardCharsets.UTF_8)));
+
+        secret.setData(data);
+
+        this.create(clusterId, namespace, secret);
+    }
+
+    @Override
+    public void genericSecretWithUsername(String clusterId, String namespace, String name, String username, String password) {
+        Secret secret = new Secret();
+        secret.setName(name);
+        secret.setNamespace(namespace);
+        Map<String, String> data = new HashMap<>();
+        data.put(ACCESS_KEY, Base64.getEncoder().encodeToString(username.getBytes(StandardCharsets.UTF_8)));
+        data.put(SECRET_KEY, Base64.getEncoder().encodeToString(password.getBytes(StandardCharsets.UTF_8)));
 
         secret.setData(data);
 

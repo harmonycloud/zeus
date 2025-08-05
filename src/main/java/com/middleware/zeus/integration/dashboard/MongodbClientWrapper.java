@@ -289,5 +289,34 @@ public class  MongodbClientWrapper {
         return null;
     }
 
+    /**
+     * 查询快照列表
+     * @param clusterId 集群id
+     * @param projectId 项目id
+     * @param mongodbId mongodb集群id
+     * @param publicKey 私钥
+     * @param privateKey 公钥
+     * @return List<MongodbSnapshotsDo>
+     */
+    private List<MongodbSnapshotsDo> getSnapshots(String clusterId, String projectId, String mongodbId, String publicKey, String privateKey) {
+        // todo
+        return null;
+    }
+
+    // 创建单次备份
+
+    /**
+     * 创建单词快照
+     * @param clusterId 集群id
+     * @param groupId 项目id
+     * @param mongodbId mongodb集群id
+     * @param publicKey 私钥
+     * @param privateKey 公钥
+     */
+    private void createSnapshot(String clusterId, String groupId, String mongodbId, String publicKey, String privateKey){
+        // todo
+    }
+
+
 
 }
