@@ -2,9 +2,7 @@ package com.middleware.zeus.integration.cluster.bean.mongodb;
 
 import io.fabric8.kubernetes.api.model.Namespaced;
 import io.fabric8.kubernetes.client.CustomResource;
-import io.fabric8.kubernetes.model.annotation.Group;
-import io.fabric8.kubernetes.model.annotation.Plural;
-import io.fabric8.kubernetes.model.annotation.Version;
+import io.fabric8.kubernetes.model.annotation.*;
 import lombok.experimental.Accessors;
 
 import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant.*;
@@ -17,5 +15,7 @@ import static com.middleware.zeus.common.constants.middleware.MiddlewareConstant
 @Group("mongodb.com")
 @Version(V1)
 @Plural("opsmanagers")
+@Kind("MongoDBOpsManager")
+@Singular("opsmanager")
 public class OpsManager extends CustomResource<OpsManagerSpec, OpsManagerStatus> implements Namespaced {
 }

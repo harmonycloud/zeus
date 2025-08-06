@@ -3,6 +3,7 @@ package com.middleware.zeus.integration.cluster.bean.mongodb;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.middleware.zeus.common.model.middleware.mongodb.MongodbBackupServerDto;
 import io.fabric8.kubernetes.api.model.apps.StatefulSet;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.experimental.Accessors;
@@ -49,6 +50,8 @@ public class OpsManagerSpec {
         @Data
         @Accessors(chain = true)
         @JsonIgnoreProperties(ignoreUnknown = true)
+        @AllArgsConstructor
+        @NoArgsConstructor
         public static class Store {
             private boolean customCertificate;
             private List<CustomCertificateSecretRef> customCertificateSecretRefs;
